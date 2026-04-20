@@ -1,10 +1,5 @@
 import api from "@/config/api"
-import type {
-  Person,
-  Profession,
-  PaginatedResponse,
-  PersonStatus,
-} from "@/types/api.types"
+import type { Person, Profession, PaginatedResponse, PersonStatus } from "@/types/api.types"
 
 export interface PersonsParams {
   campId?: string
@@ -38,9 +33,7 @@ export interface BadgeDisplayBody {
   is_displayed: boolean
 }
 
-export const getPersons = async (
-  params?: PersonsParams,
-): Promise<PaginatedResponse<Person>> => {
+export const getPersons = async (params?: PersonsParams): Promise<PaginatedResponse<Person>> => {
   const { data } = await api.get<PaginatedResponse<Person>>("/users/persons", { params })
   return data
 }
@@ -72,23 +65,19 @@ export const deletePerson = async (id: string): Promise<void> => {
   await api.delete<void>(`/users/persons/${id}`)
 }
 
-export const getPersonStatsByStatus = async (
-  campId: string,
-): Promise<Record<string, number>> => {
-  const { data } = await api.get<Record<string, number>>(
-    "/users/persons/stats/by-status",
-    { params: { campId } },
-  )
+export const getPersonStatsByStatus = async (campId: string): Promise<Record<string, number>> => {
+  const { data } = await api.get<Record<string, number>>("/users/persons/stats/by-status", {
+    params: { campId },
+  })
   return data
 }
 
 export const getPersonStatsByProfession = async (
   campId: string,
 ): Promise<Record<string, number>> => {
-  const { data } = await api.get<Record<string, number>>(
-    "/users/persons/stats/by-profession",
-    { params: { campId } },
-  )
+  const { data } = await api.get<Record<string, number>>("/users/persons/stats/by-profession", {
+    params: { campId },
+  })
   return data
 }
 

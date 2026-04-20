@@ -47,17 +47,14 @@ export const getCampTransfers = async (
   campId: string,
   role?: TransferRole,
 ): Promise<IntercampRequest[]> => {
-  const { data } = await api.get<IntercampRequest[]>(
-    `/transfers/requests/camp/${campId}`,
-    { params: { role } },
-  )
+  const { data } = await api.get<IntercampRequest[]>(`/transfers/requests/camp/${campId}`, {
+    params: { role },
+  })
   return data
 }
 
 export const getPendingCampTransfers = async (campId: string): Promise<IntercampRequest[]> => {
-  const { data } = await api.get<IntercampRequest[]>(
-    `/transfers/requests/camp/${campId}/pending`,
-  )
+  const { data } = await api.get<IntercampRequest[]>(`/transfers/requests/camp/${campId}/pending`)
   return data
 }
 
@@ -70,10 +67,7 @@ export const approveOrRejectTransfer = async (
   id: string,
   body: ApprovalBody,
 ): Promise<IntercampRequest> => {
-  const { data } = await api.patch<IntercampRequest>(
-    `/transfers/requests/${id}/approval`,
-    body,
-  )
+  const { data } = await api.patch<IntercampRequest>(`/transfers/requests/${id}/approval`, body)
   return data
 }
 
