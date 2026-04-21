@@ -4,14 +4,15 @@
  */
 
 import { useState, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence, useMotionValue, useTransform, useMotionTemplate } from "framer-motion"
 import { BadgeLogin } from "../components/BadgeLogin"
 import { useNavigate } from "react-router-dom"
 type LoginStatus = "waiting" | "processing" | "granted" | "denied"
 
 export default function Login() {
   const navigate = useNavigate()
-  const [parallax, setParallax] = useState({ x: 0, y: 0 })
+  const mouseX = useMotionValue(0)
+  const mouseY = useMotionValue(0)
   const [loginStatus, setLoginStatus] = useState<LoginStatus>("waiting")
   const [isDoorOpen, setIsDoorOpen] = useState(false)
 
@@ -109,14 +110,27 @@ export default function Login() {
   }
 
   useEffect(() => {
+    let animationFrameId: number;
     const handleMouseMove = (e: MouseEvent) => {
-      const x = e.clientX / window.innerWidth - 0.5
-      const y = e.clientY / window.innerHeight - 0.5
-      setParallax({ x, y })
+      animationFrameId = requestAnimationFrame(() => {
+        mouseX.set(e.clientX / window.innerWidth - 0.5)
+        mouseY.set(e.clientY / window.innerHeight - 0.5)
+      })
     }
     document.addEventListener("mousemove", handleMouseMove)
-    return () => document.removeEventListener("mousemove", handleMouseMove)
-  }, [])
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove)
+      cancelAnimationFrame(animationFrameId)
+    }
+  }, [mouseX, mouseY])
+
+  const xLeft = useTransform(mouseX, x => x * -8)
+  const yLeft = useTransform(mouseY, y => y * -4)
+  const xRight = useTransform(mouseX, x => x * 6)
+  const yRight = useTransform(mouseY, y => y * -3)
+
+  const transformLeft = useMotionTemplate`translate(${xLeft}px, ${yLeft}px) scale(1.025)`
+  const transformRight = useMotionTemplate`translate(${xRight}px, ${yRight}px) scale(1.025)`
 
   return (
     <div className="fixed inset-0 overflow-hidden">
@@ -129,7 +143,7 @@ export default function Login() {
               <feTurbulence
                 type="fractalNoise"
                 baseFrequency="0 0.8"
-                numOctaves="4"
+                numOctaves="2"
                 seed="5"
                 result="noise"
               />
@@ -143,7 +157,7 @@ export default function Login() {
               <feTurbulence
                 type="fractalNoise"
                 baseFrequency="0.001 0.8"
-                numOctaves="3"
+                numOctaves="2"
                 seed="12"
                 result="brush"
               />
@@ -190,7 +204,7 @@ export default function Login() {
               <feTurbulence
                 type="fractalNoise"
                 baseFrequency="0.008"
-                numOctaves="4"
+                numOctaves="2"
                 seed="8"
                 result="noise"
               />
@@ -209,7 +223,7 @@ export default function Login() {
               <feTurbulence
                 type="fractalNoise"
                 baseFrequency="0.08"
-                numOctaves="6"
+                numOctaves="3"
                 seed="5"
                 result="baseNoise"
               />
@@ -217,7 +231,7 @@ export default function Login() {
               <feTurbulence
                 type="fractalNoise"
                 baseFrequency="0.8"
-                numOctaves="3"
+                numOctaves="1"
                 seed="15"
                 result="grit"
               />
@@ -360,11 +374,11 @@ export default function Login() {
         </svg>
 
         {/* LEFT PANEL (55%) */}
-        <div
+        <motion.div
           className="left-panel relative h-full overflow-hidden"
           style={{
             width: "55%",
-            transform: `translate(${parallax.x * -8}px, ${parallax.y * -4}px) scale(1.025)`,
+            transform: transformLeft,
             transition: "transform 0.1s ease-out",
             willChange: "transform",
           }}
@@ -620,7 +634,7 @@ export default function Login() {
 
           {/* Badge Login Component */}
           <BadgeLogin onLogin={handleLogin} isProcessing={loginStatus === "processing"} />
-        </div>
+        </motion.div>
 
         {/* VERTICAL DIVIDER */}
         <div
@@ -633,11 +647,11 @@ export default function Login() {
         />
 
         {/* RIGHT PANEL (45%) */}
-        <div
+        <motion.div
           className="right-panel relative h-full overflow-hidden bg-[#1a1d20]"
           style={{
             width: "45%",
-            transform: `translate(${parallax.x * 6}px, ${parallax.y * -3}px) scale(1.025)`,
+            transform: transformRight,
             transition: "transform 0.1s ease-out",
             willChange: "transform",
           }}
@@ -961,7 +975,7 @@ export default function Login() {
               }}
             />
           </div>
-        </div>
+        </motion.div>
 
         {/* FULL-SCREEN VIGNETTE */}
         <div
