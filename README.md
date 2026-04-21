@@ -17,11 +17,11 @@
 
 ## 📖 Overview
 
-The **Doomsday System UI** is the client-side architecture for the *Gestión del fin* platform. Designed with a strong focus on high performance and a premium user experience, this React-based Single Page Application (SPA) allows administrators to oversee critical survival camp operations.
+The **Doomsday System UI** is the client-side architecture for the _Gestión del fin_ platform. Designed with a strong focus on high performance and a premium user experience, this React-based Single Page Application (SPA) allows administrators to oversee critical survival camp operations.
 
 It utilizes a robust **Feature-Sliced Design (FSD)** architecture to maintain code scalability and includes built-in Axios interceptors for foolproof JWT authentication handling.
 
-> *Note: Place your UI mockup or screenshot here (e.g., `![Dashboard Preview](./docs/preview.png)`).*
+> _Note: Place your UI mockup or screenshot here (e.g., `![Dashboard Preview](./docs/preview.png)`)._
 
 ## ✨ Key Features
 
@@ -45,29 +45,34 @@ It utilizes a robust **Feature-Sliced Design (FSD)** architecture to maintain co
 Follow these steps to set up the development environment on your local machine.
 
 ### Prerequisites
+
 - Node.js (v18+ recommended)
 - The running instance of the [Doomsday System API](link-to-backend-repo-here).
 
 ### Installation
 
 1. **Clone the repository:**
+
    ```bash
    git clone https://github.com/your-username/doomsday-system-web.git
    cd doomsday-system-web
    ```
 
 2. **Install dependencies:**
+
    ```bash
    npm install
    ```
 
 3. **Configure Environment Variables:**
    Create a `.env` file in the root directory based on `.env.example`:
+
    ```env
    VITE_API_URL=http://localhost:3000/api
    ```
 
 4. **Start the Development Server:**
+
    ```bash
    npm run dev
    ```
@@ -91,7 +96,9 @@ src/
 ```
 
 ## 🤝 Contributing
+
 Contributions, issues, and feature requests are welcome. Feel free to check the [issues page](https://github.com/your-username/doomsday-system-web/issues) if you want to contribute.
 
 ## 📄 License
+
 This project is licensed under the MIT License.
