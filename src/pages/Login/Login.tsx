@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { BadgeLogin } from "../../components/BadgeLogin"
-import { motion } from "framer-motion"
+import { motion, useMotionValue, useTransform } from "framer-motion"
 import { useNavigate } from "react-router-dom"
 
 type LoginStatus = "waiting" | "processing" | "granted" | "denied"
@@ -9,7 +9,23 @@ export default function Login() {
   const navigate = useNavigate()
   const [loginStatus, setLoginStatus] = useState<LoginStatus>("waiting")
   const [isGateOpen, setIsGateOpen] = useState(false)
-  const [parallax, setParallax] = useState({ x: 0, y: 0 })
+  const rafRef = useRef<number | null>(null)
+
+  // MotionValues bypass React state — zero re-renders on mouse move
+  const mouseX = useMotionValue(0)
+  const mouseY = useMotionValue(0)
+  const bgX2  = useTransform(mouseX, v => v * -2)
+  const bgY2  = useTransform(mouseY, v => v * -2)
+  const bgX4  = useTransform(mouseX, v => v * -4)
+  const bgY4  = useTransform(mouseY, v => v * -4)
+  const bgX5  = useTransform(mouseX, v => v * -5)
+  const bgY5  = useTransform(mouseY, v => v * -5)
+  const bgX6  = useTransform(mouseX, v => v * -6)
+  const bgY6  = useTransform(mouseY, v => v * -6)
+  const bgX8  = useTransform(mouseX, v => v * -8)
+  const bgY8  = useTransform(mouseY, v => v * -8)
+  const bgX20 = useTransform(mouseX, v => v * -20)
+  const bgY20 = useTransform(mouseY, v => v * -20)
 
   const handleLogin = (u: string, p: string) => {
     setLoginStatus("processing")
@@ -39,45 +55,28 @@ export default function Login() {
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      const x = e.clientX / window.innerWidth - 0.5
-      const y = e.clientY / window.innerHeight - 0.5
-      setParallax({ x, y })
+      if (rafRef.current !== null) return
+      rafRef.current = requestAnimationFrame(() => {
+        const x = e.clientX / window.innerWidth - 0.5
+        const y = e.clientY / window.innerHeight - 0.5
+        // Update MotionValues directly — no React setState, no re-render
+        mouseX.set(x)
+        mouseY.set(y)
+        rafRef.current = null
+      })
     }
-    document.addEventListener("mousemove", handleMouseMove)
-    return () => document.removeEventListener("mousemove", handleMouseMove)
+    document.addEventListener("mousemove", handleMouseMove, { passive: true })
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove)
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current)
+    }
   }, [])
 
 
 
   return (
     <div className="industrial-login-page fixed inset-0 overflow-hidden bg-[#020202] font-sans selection:bg-[#4ade80] selection:text-black">
-      {/* SVG GLOBALS FOR FILTERS */}
-      <svg className="hidden">
-        <defs>
-          <filter id="dirt-texture">
-            <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="4" result="noise" />
-            <feColorMatrix
-              type="matrix"
-              values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1 0 0 0 0"
-              in="noise"
-              result="coloredNoise"
-            />
-            <feComposite operator="in" in="coloredNoise" in2="SourceGraphic" result="composite" />
-            <feBlend mode="multiply" in="composite" in2="SourceGraphic" />
-          </filter>
-          <filter id="rust-metallic">
-            <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="5" result="rust" />
-            <feColorMatrix
-              type="matrix"
-              values="0 0 0 0 0.4   0 0 0 0 0.2   0 0 0 0 0.1   1 0 0 0 0"
-              in="rust"
-              result="coloredRust"
-            />
-            <feComposite operator="in" in="coloredRust" in2="SourceGraphic" result="composite" />
-            <feBlend in="SourceGraphic" in2="composite" mode="multiply" />
-          </filter>
-        </defs>
-      </svg>
+      {/* SVG filters removed — they are very expensive on GPU */}
 
       {/* BACKGROUND SCENE: Realistic Cinematic Camp Entrance */}
       <div
@@ -106,11 +105,12 @@ export default function Login() {
         <motion.div
           className="absolute bottom-[25%] left-[-10%] w-[120%] h-[50vh] opacity-40 pointer-events-none mix-blend-screen"
           style={{
-            x: parallax.x * -2,
-            y: parallax.y * -2,
+            x: bgX2,
+            y: bgY2,
             backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 1000 200' preserveAspectRatio='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0,200 L0,120 L40,130 L60,90 L90,140 L130,110 L160,150 L200,80 L230,120 L270,100 L310,160 L360,70 L390,130 L450,110 L480,180 L520,130 L560,150 L600,90 L650,160 L700,80 L750,140 L800,100 L870,170 L920,80 L1000,150 L1000,200 Z' fill='%231a1510'/%3E%3C/svg%3E\")",
             backgroundSize: "100% 100%",
             backgroundRepeat: "no-repeat",
+            willChange: "transform",
           }}
         />
 
@@ -118,21 +118,22 @@ export default function Login() {
         <motion.div
           className="absolute bottom-[20%] left-[-5%] w-[110%] h-[45vh] opacity-60 pointer-events-none mix-blend-overlay"
           style={{
-            x: parallax.x * -4,
-            y: parallax.y * -4,
+            x: bgX4,
+            y: bgY4,
             backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 1000 200' preserveAspectRatio='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0,200 L0,150 L50,120 L120,160 L180,90 L200,120 L250,100 L280,140 L320,80 L350,150 L400,160 L440,110 L480,100 L550,150 L620,110 L680,140 L700,180 L740,150 L780,120 L820,140 L850,160 L890,110 L920,80 L960,130 L1000,150 L1000,200 Z' fill='%2305080e'/%3E%3C/svg%3E\")",
             backgroundSize: "100% 100%",
             backgroundRepeat: "no-repeat",
+            willChange: "transform",
           }}
         />
 
         {/* Glowing Atmosphere behind gates (Fixed clipping square artifact) */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(255,200,100,0.06)_0%,rgba(255,100,0,0.02)_30%,rgba(0,0,0,0)_60%)] pointer-events-none mix-blend-screen z-0" />
 
-        {/* Distant Watchtowers & Ruined Trees Silhouettes - Parallax Adjusted */}
+        {/* Distant Watchtowers & Ruined Trees Silhouettes */}
         <motion.div
           className="absolute bottom-[20%] left-0 w-full h-[50vh] opacity-80 pointer-events-none mix-blend-overlay flex justify-between z-0"
-          style={{ x: parallax.x * -6, y: parallax.y * -6 }}
+          style={{ x: bgX6, y: bgY6, willChange: "transform" }}
         >
           {/* Left Watchtower silhouette */}
           <div className="w-[15%] h-full relative" style={{ transform: "translateX(20%)" }}>
@@ -180,11 +181,12 @@ export default function Login() {
         <motion.div
           className="absolute bottom-[-10%] left-[-10%] w-[150%] h-[60vh] opacity-80 pointer-events-none flex items-end z-0"
           style={{
-            x: parallax.x * -8,
-            y: parallax.y * -8,
+            x: bgX8,
+            y: bgY8,
             backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 1000 200' preserveAspectRatio='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0,200 L0,180 Q10,140 20,190 T40,160 T60,200 T80,150 T100,190 T120,140 T140,180 T160,130 T180,170 T200,120 T220,180 T240,140 T260,190 T280,130 T300,180 T320,120 T340,170 T360,110 T380,160 T400,130 T420,180 T440,140 T460,190 T480,150 T500,180 T520,120 T540,170 T560,130 T580,180 T600,140 T620,190 T640,150 T660,200 T680,140 T700,190 T720,150 T740,200 T760,160 T780,190 L1000,190 L1000,200 Z' fill='%23050403'/%3E%3C/svg%3E\")",
             backgroundSize: "30% 100%",
             backgroundRepeat: "repeat-x",
+            willChange: "transform",
           }}
         >
           <div className="w-full h-1/2 bg-[#050403]" />
@@ -194,8 +196,9 @@ export default function Login() {
         <motion.div
           className="absolute inset-0 pointer-events-none transform-gpu flex items-center justify-center"
           style={{
-            x: parallax.x * -5,
-            y: parallax.y * -5,
+            x: bgX5,
+            y: bgY5,
+            willChange: "transform",
           }}
         >
           {/* The Massive Fence Gate - Left Gate */}
@@ -246,13 +249,11 @@ export default function Login() {
             <div className="absolute top-[30%] bottom-[35%] right-[20%] w-[120%] h-[20px] bg-gradient-to-b from-[#151515] via-[#2a2a2a] to-[#0a0a0a] shadow-[0_5px_15px_rgba(0,0,0,0.8)] border-y border-[#555]/20 z-0 origin-top-right -rotate-[30deg]" />
             <div className="absolute top-[65%] bottom-[-5%] right-[20%] w-[120%] h-[20px] bg-gradient-to-b from-[#151515] via-[#2a2a2a] to-[#0a0a0a] shadow-[0_5px_15px_rgba(0,0,0,0.8)] border-y border-[#555]/20 z-0 origin-top-right rotate-[30deg]" />
 
-            {/* Danger Stripes */}
+            {/* Danger Stripes - filter removed for performance */}
             <div
-              className="absolute bottom-[20%] w-[80%] h-[50px] opacity-70 mx-10 rotate-[-5deg] z-10 shadow-[0_5px_10px_rgba(0,0,0,0.8)]"
+              className="absolute bottom-[20%] w-[80%] h-[50px] opacity-70 mx-10 rotate-[-5deg] z-10"
               style={{
-                backgroundImage:
-                  "repeating-linear-gradient(45deg, #111, #111 20px, #b45309 20px, #b45309 40px)",
-                filter: "url(#dirt-texture)",
+                backgroundImage: "repeating-linear-gradient(45deg, #111, #111 20px, #b45309 20px, #b45309 40px)",
               }}
             />
           </motion.div>
@@ -305,31 +306,18 @@ export default function Login() {
             <div className="absolute top-[30%] bottom-[35%] left-[20%] w-[120%] h-[20px] bg-gradient-to-b from-[#151515] via-[#2a2a2a] to-[#0a0a0a] shadow-[0_5px_15px_rgba(0,0,0,0.8)] border-y border-[#555]/20 z-0 origin-top-left rotate-[30deg]" />
             <div className="absolute top-[65%] bottom-[-5%] left-[20%] w-[120%] h-[20px] bg-gradient-to-b from-[#151515] via-[#2a2a2a] to-[#0a0a0a] shadow-[0_5px_15px_rgba(0,0,0,0.8)] border-y border-[#555]/20 z-0 origin-top-left -rotate-[30deg]" />
 
-            {/* Danger Stripes */}
+            {/* Danger Stripes - filter removed for performance */}
             <div
-              className="absolute bottom-[10%] w-[80%] h-[50px] opacity-70 ml-10 rotate-[5deg] z-10 shadow-[0_5px_10px_rgba(0,0,0,0.8)]"
+              className="absolute bottom-[10%] w-[80%] h-[50px] opacity-70 ml-10 rotate-[5deg] z-10"
               style={{
-                backgroundImage:
-                  "repeating-linear-gradient(45deg, #111, #111 20px, #b45309 20px, #b45309 40px)",
-                filter: "url(#dirt-texture)",
+                backgroundImage: "repeating-linear-gradient(45deg, #111, #111 20px, #b45309 20px, #b45309 40px)",
               }}
             />
           </motion.div>
 
-          {/* Massive Concrete Pillars (Left and Right bounds of the gate fence) */}
-          <div className="absolute top-[10%] bottom-0 left-[-2%] w-[8vw] md:left-[-5%] md:w-[15%] bg-gradient-to-r from-[#050505] via-[#222] to-[#050505] shadow-[20px_0_50px_rgba(0,0,0,1)] border-r border-[#333] z-10 flex">
-            <div
-              className="absolute inset-0 opacity-40 mix-blend-multiply"
-              style={{ filter: "url(#dirt-texture)" }}
-            />
-          </div>
-
-          <div className="absolute top-[10%] bottom-0 right-[-2%] w-[8vw] md:right-[-5%] md:w-[15%] bg-gradient-to-l from-[#050505] via-[#222] to-[#050505] shadow-[-20px_0_50px_rgba(0,0,0,1)] border-l border-[#333] z-10 flex">
-            <div
-              className="absolute inset-0 opacity-40 mix-blend-multiply"
-              style={{ filter: "url(#dirt-texture)" }}
-            />
-          </div>
+          {/* Pillars - filter removed for performance */}
+          <div className="absolute top-[10%] bottom-0 left-[-2%] w-[8vw] md:left-[-5%] md:w-[15%] bg-gradient-to-r from-[#050505] via-[#222] to-[#050505] shadow-[20px_0_50px_rgba(0,0,0,1)] border-r border-[#333] z-10" />
+          <div className="absolute top-[10%] bottom-0 right-[-2%] w-[8vw] md:right-[-5%] md:w-[15%] bg-gradient-to-l from-[#050505] via-[#222] to-[#050505] shadow-[-20px_0_50px_rgba(0,0,0,1)] border-l border-[#333] z-10" />
         </motion.div>
 
         {/* FOREGROUND LAYER: Thick Fog/Atmosphere at the bottom of the gate */}
@@ -365,7 +353,7 @@ export default function Login() {
           transition={{ repeat: Infinity, duration: 15, ease: "easeInOut" }}
         />
 
-        {/* Parallax particles (dust floating in the air/ embers) */}
+        {/* Parallax particles (dust floating in the air / embers) */}
         <motion.div
           className="absolute inset-0 opacity-80 mix-blend-screen z-20 pointer-events-none"
           style={{
@@ -373,18 +361,18 @@ export default function Login() {
               "radial-gradient(circle at center, rgba(254,240,138,1) 1px, rgba(0,0,0,0) 2px), radial-gradient(circle at center, rgba(251,146,60,1) 1px, rgba(0,0,0,0) 1.5px)",
             backgroundSize: "120px 120px, 90px 90px",
             backgroundPosition: "0 0, 45px 45px",
-            transform: `translate(${parallax.x * -20}px, ${parallax.y * -20}px) scale(1.1)`,
+            x: bgX20,
+            y: bgY20,
+            willChange: "transform",
           }}
           animate={{ y: [0, -30, 0], x: [0, 10, 0] }}
           transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
         />
 
-        {/* Cinematic Spotlight focusing on the badge */}
-        <motion.div
-          className="absolute inset-0 z-30 pointer-events-none mix-blend-screen opacity-70"
-          style={{
-            background: `radial-gradient(circle at ${parallax.x * 30 + 50}% ${parallax.y * 30 + 50}%, rgba(220, 240, 255, 0.15) 0%, rgba(200, 220, 255, 0.05) 40%, rgba(0,0,0,0) 70%)`,
-          }}
+        {/* Cinematic Spotlight — static center, no mouse tracking (perf) */}
+        <div
+          className="absolute inset-0 z-30 pointer-events-none mix-blend-screen opacity-50"
+          style={{ background: "radial-gradient(circle at 50% 50%, rgba(220,240,255,0.12) 0%, rgba(200,220,255,0.04) 40%, rgba(0,0,0,0) 70%)" }}
         />
       </div>
 
