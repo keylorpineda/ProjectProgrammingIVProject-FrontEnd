@@ -70,7 +70,7 @@ export default function Login() {
       document.removeEventListener("mousemove", handleMouseMove)
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current)
     }
-  }, [])
+  }, [mouseX, mouseY])
 
 
 
