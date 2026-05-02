@@ -1,4 +1,5 @@
-import { ChangeEvent, FormEvent, useEffect, useState } from "react"
+import type { ChangeEvent, FormEvent} from "react";
+import { useEffect, useState } from "react"
 import { isAxiosError } from "axios"
 import { motion } from "framer-motion"
 import { ShieldAlert, CheckCircle, Loader2 } from "lucide-react"
@@ -211,8 +212,14 @@ export function AdmissionFormTemplate({
       >
         <div className="table-surface">
           <div className="military-map" />
-          <div className="bullet" style={{ top: "150px", left: "120px", transform: "rotate(45deg)" }} />
-          <div className="bullet" style={{ top: "160px", left: "135px", transform: "rotate(70deg)" }} />
+          <div
+            className="bullet"
+            style={{ top: "150px", left: "120px", transform: "rotate(45deg)" }}
+          />
+          <div
+            className="bullet"
+            style={{ top: "160px", left: "135px", transform: "rotate(70deg)" }}
+          />
           <div className="blood-splatter blood-1" />
           <div className="blood-splatter blood-2" />
 
@@ -450,7 +457,9 @@ export function AdmissionFormTemplate({
                     disabled={isSubmitting}
                     required
                   />
-                  {errors.condicion_fisica ? <p className="field-error">{errors.condicion_fisica}</p> : null}
+                  {errors.condicion_fisica ? (
+                    <p className="field-error">{errors.condicion_fisica}</p>
+                  ) : null}
                 </motion.div>
 
                 <motion.div
@@ -529,7 +538,11 @@ export function AdmissionFormTemplate({
                   className="submit-container"
                   style={{ marginTop: "1.5rem" }}
                 >
-                  <button type="submit" disabled={isSubmitting} className="military-stamp btn-submit">
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="military-stamp btn-submit"
+                  >
                     <div className="stamp-hover-bg" />
                     <span className="stamp-content">
                       {isSubmitting ? (
@@ -626,7 +639,8 @@ export default function AdmissionNew() {
     }
 
     if (!formData.salud.trim()) nextErrors.salud = "La salud es obligatoria"
-    if (!formData.condicion_fisica.trim()) nextErrors.condicion_fisica = "La condicion fisica es obligatoria"
+    if (!formData.condicion_fisica.trim())
+      nextErrors.condicion_fisica = "La condicion fisica es obligatoria"
     if (!formData.habilidades.trim()) nextErrors.habilidades = "Las habilidades son obligatorias"
 
     if (!formData.cedula.trim()) {
