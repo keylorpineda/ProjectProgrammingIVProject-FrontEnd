@@ -2,11 +2,14 @@ import { useState, useEffect, useRef } from "react"
 import { BadgeLogin } from "../../components/BadgeLogin"
 import { motion, useMotionValue, useTransform } from "framer-motion"
 import { useNavigate } from "react-router-dom"
+import { login } from "@/features/auth/services/auth.service"
+import { useAuthStore } from "@/store/useAuthStore"
 
 type LoginStatus = "waiting" | "processing" | "granted" | "denied"
 
 export default function Login() {
   const navigate = useNavigate()
+  const setAuth = useAuthStore((state) => state.setAuth)
   const [loginStatus, setLoginStatus] = useState<LoginStatus>("waiting")
   const [isGateOpen, setIsGateOpen] = useState(false)
   const rafRef = useRef<number | null>(null)
@@ -27,30 +30,31 @@ export default function Login() {
   const bgX20 = useTransform(mouseX, v => v * -20)
   const bgY20 = useTransform(mouseY, v => v * -20)
 
-  const handleLogin = (u: string, p: string) => {
+  const handleLogin = async (u: string, p: string) => {
     setLoginStatus("processing")
 
-    // Simulate audio
     let beeps = 0
     const beepInterval = setInterval(() => {
       beeps++
       if (beeps > 4) clearInterval(beepInterval)
     }, 150)
 
-    setTimeout(() => {
-      if (u.toLowerCase() === "admin" && p === "1234") {
-        setLoginStatus("granted")
+    try {
+      const response = await login({ username: u, password: p })
+      setAuth(response.access_token, response.user, response.refresh_token)
+
+      setLoginStatus("granted")
+      setTimeout(() => {
+        setIsGateOpen(true)
         setTimeout(() => {
-          setIsGateOpen(true)
-          setTimeout(() => {
-            navigate("/dashboard")
-          }, 3500)
-        }, 1500)
-      } else {
-        setLoginStatus("denied")
-        setTimeout(() => setLoginStatus("waiting"), 2000)
-      }
-    }, 1200)
+          const role = response.user.role?.toLowerCase()
+          navigate(role === "admin" || role === "superadmin" || role === "super_admin" ? "/admin/dashboard" : "/dashboard")
+        }, 3500)
+      }, 1500)
+    } catch {
+      setLoginStatus("denied")
+      setTimeout(() => setLoginStatus("waiting"), 2000)
+    }
   }
 
   useEffect(() => {
