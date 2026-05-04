@@ -4,9 +4,11 @@ import type { AuthUser } from "@/types/api.types"
 
 interface AuthState {
   token: string | null
+  refreshToken: string | null
   user: AuthUser | null
   isAuthenticated: boolean
-  setAuth: (token: string, user: AuthUser) => void
+  setAuth: (token: string, user: AuthUser, refreshToken?: string | null) => void
+  setRefreshToken: (refreshToken: string | null) => void
   logout: () => void
   isTokenExpired: () => boolean
 }
@@ -15,14 +17,18 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
       token: null,
+      refreshToken: null,
       user: null,
       isAuthenticated: false,
 
-      setAuth: (token, user) => set({ token, user, isAuthenticated: true }),
+      setAuth: (token, user, refreshToken = null) =>
+        set({ token, refreshToken, user, isAuthenticated: true }),
+
+      setRefreshToken: (refreshToken) => set({ refreshToken }),
 
       logout: () => {
         localStorage.clear()
-        set({ token: null, user: null, isAuthenticated: false })
+        set({ token: null, refreshToken: null, user: null, isAuthenticated: false })
       },
 
       isTokenExpired: () => {
