@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
 import Login from "./pages/Login/Login"
 import AdmissionNew from "./pages/AdmissionNew/AdmissionNew"
+import Admin from "./pages/Admin/Admin"
 
 function App() {
   return (
@@ -8,15 +9,9 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/admissions/new" element={<AdmissionNew />} />
+        <Route path="/admin/*" element={<Admin />} />
         <Route path="/register" element={<Navigate to="/admissions/new" replace />} />
-        <Route
-          path="/dashboard"
-          element={
-            <div style={{ padding: "2rem", color: "white" }}>
-              Dashboard principal - PRÓXIMAMENTE
-            </div>
-          }
-        />
+        <Route path="/dashboard" element={<Navigate to="/admin/dashboard" replace />} />
 
         {/* Redirect root to login */}
         <Route path="/" element={<Navigate to="/login" replace />} />
