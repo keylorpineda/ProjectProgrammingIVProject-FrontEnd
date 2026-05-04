@@ -1,0 +1,88 @@
+.journals-container {
+  display: flex;
+  gap: 30px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+.field-journal-page {
+  background: var(--bg-paper);
+  background-image: linear-gradient(transparent, transparent 29px, rgba(0, 0, 0, 0.1) 30px),
+    linear-gradient(90deg, rgba(255, 0, 0, 0.2) 1px, transparent 1px);
+  background-size: 100% 30px, 100% 100%;
+  background-position: 0 0, 50px 0;
+  width: 400px;
+  min-height: 500px;
+  border-radius: 5px 15px 15px 5px;
+  box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.6);
+  position: relative;
+  display: flex;
+  transform: rotate(-1deg);
+  transition: transform 0.3s;
+}
+
+.field-journal-page:nth-child(even) {
+  transform: rotate(2deg);
+}
+
+.journal-holes {
+  width: 40px;
+  border-right: 2px solid rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.05);
+  box-shadow: inset -2px 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.hole {
+  width: 15px;
+  height: 15px;
+  background: var(--bg-deep);
+  border-radius: 50%;
+  box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.5);
+}
+
+.journal-content {
+  padding: 30px 20px 30px 40px;
+  flex: 1;
+  font-family: var(--font-marker);
+  color: var(--ink-soft);
+  font-size: 1.1rem;
+  line-height: 30px;
+}
+
+.journal-content h3 {
+  font-family: var(--font-typewriter);
+  font-size: 1.3rem;
+  margin: 0;
+  color: var(--ink);
+  text-transform: uppercase;
+}
+
+.j-date {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  margin-bottom: 20px;
+}
+
+.signature-line {
+  margin-top: 50px;
+  border-top: 1px dashed var(--ink);
+  padding-top: 5px;
+  font-family: var(--font-typewriter);
+  font-size: 0.8rem;
+  position: relative;
+}
+
+.sign-marker {
+  font-family: "Permanent Marker", cursive;
+  font-size: 2rem;
+  color: var(--accent-warning-deep);
+  position: absolute;
+  top: -30px;
+  left: 20px;
+  transform: rotate(-10deg);
+  opacity: 0.8;
+}

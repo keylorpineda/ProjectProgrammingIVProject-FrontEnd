@@ -1,0 +1,21 @@
+.camp-selector {
+  font-family: var(--font-typewriter);
+  background: var(--bg-paper);
+  color: var(--ink);
+  border: 1px solid var(--ink);
+  padding: 5px 10px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.5);
+  outline: none;
+}
+
+.camp-selector:focus {
+  border-color: var(--accent-warning);
+}
+
+.camp-selector option {
+  background: var(--bg-paper);
+  color: var(--ink);
+}

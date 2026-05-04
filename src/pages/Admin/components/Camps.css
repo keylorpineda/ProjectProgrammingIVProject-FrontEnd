@@ -1,0 +1,87 @@
+.generic-container {
+  padding: 20px;
+}
+
+.generic-container h2 {
+  font-family: var(--font-typewriter);
+  border-bottom: 2px solid var(--ink);
+  padding-bottom: 10px;
+  margin-bottom: 30px;
+}
+
+.placeholder-text {
+  opacity: 0.8;
+  font-style: italic;
+  font-family: var(--font-mono);
+}
+
+.camps-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 30px;
+}
+
+.camp-card {
+  background: var(--bg-paper-dark);
+  border: 2px solid var(--ink);
+  padding: 20px;
+  position: relative;
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.5);
+  transition: transform 0.2s;
+}
+
+.c-status-indicator {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: var(--accent-mil);
+  box-shadow: 0 0 10px var(--accent-mil);
+}
+
+.camp-card.radiated .c-status-indicator {
+  background: var(--accent-critical);
+  box-shadow: 0 0 10px var(--accent-critical);
+  animation: flicker 1s infinite alternate;
+}
+
+.camp-card h3 {
+  font-family: var(--font-typewriter);
+  margin: 0 0 20px 0;
+  width: 80%;
+}
+
+.c-info {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+}
+
+.c-info span span {
+  color: var(--ink-soft);
+  font-weight: bold;
+}
+
+.c-stamp {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  font-family: var(--font-typewriter);
+  font-weight: bold;
+  font-size: 1.5rem;
+  opacity: 0.3;
+  transform: rotate(-10deg);
+}
+
+@keyframes flicker {
+  0% {
+    opacity: 0.4;
+  }
+  100% {
+    opacity: 1;
+  }
+}
