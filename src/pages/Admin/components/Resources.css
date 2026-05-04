@@ -1,0 +1,100 @@
+.inventory-sheet {
+  background: rgba(20, 18, 15, 0.85);
+  padding: 40px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.8), inset 0 0 10px rgba(255, 255, 255, 0.05);
+  margin-top: 30px;
+  max-width: 800px;
+  position: relative;
+  border: 1px solid var(--ink-soft);
+  border-radius: 4px;
+}
+
+.sheet-tape {
+  display: none;
+}
+
+.sheet-header {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-typewriter);
+  font-weight: bold;
+  font-size: 1.2rem;
+  border-bottom: 2px solid var(--ink-soft);
+  padding-bottom: 15px;
+  margin-bottom: 30px;
+  color: #ab9e8b;
+  text-shadow: 0 0 5px rgba(171, 158, 139, 0.3);
+}
+
+.inventory-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+}
+
+.inventory-table th {
+  text-align: left;
+  border-bottom: 1px solid var(--ink-soft);
+  padding: 12px 10px;
+  font-family: var(--font-typewriter);
+  color: #ab9e8b;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.inventory-table td {
+  padding: 15px 10px;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+  color: #d1c8ba;
+}
+
+.inventory-table tr:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.inventory-table tr.row-ok td {
+  color: #6eb578;
+  text-shadow: 0 0 5px rgba(110, 181, 120, 0.3);
+}
+
+.inventory-table tr.row-warning td {
+  color: #ebd363;
+  text-shadow: 0 0 5px rgba(235, 211, 99, 0.3);
+}
+
+.inventory-table tr.row-critical td {
+  color: #e65c53;
+  text-shadow: 0 0 5px rgba(230, 92, 83, 0.3);
+}
+
+.status-badge {
+  padding: 4px 10px;
+  border: 1px solid;
+  font-size: 0.8rem;
+  font-weight: bold;
+  border-radius: 2px;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.3);
+  display: inline-block;
+  transform: rotate(-2deg);
+}
+
+.status-badge.ok {
+  background-color: #3b6b41;
+  border-color: #6eb578;
+  color: #e3eedc;
+}
+
+.status-badge.warning {
+  background-color: #bd9126;
+  border-color: #ebd363;
+  color: #faf5eb;
+  transform: rotate(1deg);
+}
+
+.status-badge.critical {
+  background-color: #a32c24;
+  border-color: #e65c53;
+  color: #fae1e1;
+  transform: rotate(-1deg);
+}
