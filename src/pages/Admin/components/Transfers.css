@@ -1,0 +1,83 @@
+.transfers-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.transfer-carbon-copy {
+  background-color: #2b3a4a;
+  background-image: repeating-linear-gradient(0deg, transparent, transparent 20px, rgba(255, 255, 255, 0.05) 21px);
+  color: #a4c8e1;
+  padding: 20px 30px;
+  border: 1px dashed #557591;
+  font-family: var(--font-mono);
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5), 2px 2px 5px rgba(0, 0, 0, 0.3);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s;
+  cursor: pointer;
+}
+
+.t-header {
+  font-family: var(--font-typewriter);
+  font-size: 1.2rem;
+  font-weight: bold;
+  border-bottom: 2px solid rgba(164, 200, 225, 0.3);
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.t-route {
+  font-size: 1.5rem;
+  font-family: var(--font-marker);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 15px;
+}
+
+.t-items {
+  margin-bottom: 10px;
+}
+
+.t-date {
+  opacity: 0.7;
+  font-size: 0.8rem;
+}
+
+.t-status.in_transit {
+  color: #f39c12;
+}
+
+.t-status.completed,
+.t-status.approved {
+  color: #2ecc71;
+}
+
+.t-status.pending {
+  color: #e74c3c;
+}
+
+.t-status.rejected {
+  color: #e74c3c;
+}
+
+.t-status.cancelled {
+  color: #95a5a6;
+}
+
+.watermark-stamp {
+  position: absolute;
+  right: -20px;
+  bottom: -20px;
+  font-family: var(--font-typewriter);
+  font-size: 4rem;
+  color: rgba(0, 0, 0, 0.2);
+  transform: rotate(-15deg);
+  border: 10px solid rgba(0, 0, 0, 0.2);
+  padding: 10px;
+  pointer-events: none;
+}
