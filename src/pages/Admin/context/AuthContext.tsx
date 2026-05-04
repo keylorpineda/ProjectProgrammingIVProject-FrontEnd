@@ -1,14 +1,3 @@
-<<<<<<< HEAD
-import { useAuthStore } from "../../../store/useAuthStore"
-
-export const useAuth = () => {
-  const { isAuthenticated, user, logout } = useAuthStore()
-  return { isAuthenticated, user, logout }
-}
-
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  return <>{children}</>
-=======
 import { createContext, useCallback, useContext, useMemo } from "react"
 import type { ReactNode } from "react"
 import { login as loginService, logout as logoutService } from "@/features/auth/services/auth.service"
@@ -69,5 +58,4 @@ export const useAuth = () => {
     throw new Error("useAuth must be used within an AuthProvider")
   }
   return context
->>>>>>> 8728e35391faf84c95205ab7862bcbcfff50faf4
 }
