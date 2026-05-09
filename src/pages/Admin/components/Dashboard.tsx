@@ -45,7 +45,7 @@ export default function Dashboard() {
         setPendingAdmissions(admissions.length)
       } catch {
         if (!isMounted) return
-        setError("No se pudo cargar el tablero de situacion.")
+        setError("No se pudo cargar el tablero de situación.")
       } finally {
         if (isMounted) setIsLoading(false)
       }
@@ -59,19 +59,12 @@ export default function Dashboard() {
   }, [activeCampId])
 
   const cards = useMemo(() => {
-    const peopleSummary = metrics
+    const peopleGroups = metrics
       ? [
           {
-            label: "TOTAL CAMPAMENTO",
-            value: `${metrics.camp.totalPeople} / ${metrics.camp.campCapacity}`,
-          },
-          {
-            label: "TRABAJADORES ACTIVOS",
-            value: `${metrics.camp.activeWorkers}`,
-          },
-          {
-            label: "NO DISPONIBLES",
-            value: `${metrics.camp.unavailablePeople}`,
+            name: metrics.campId?.toUpperCase() ?? "CAMPAMENTO",
+            count: metrics.camp.totalPeople,
+            capacity: metrics.camp.campCapacity,
           },
         ]
       : []
@@ -83,23 +76,19 @@ export default function Dashboard() {
 
     return [
       {
-        title: "POBLACION POR CAMPAMENTO",
+        title: "POBLACIÓN POR CAMPAMENTO",
         content: (
           <ul style={{ listStyle: "none", padding: 0 }}>
-            {peopleSummary.map((item) => (
-              <li key={item.label} style={{ marginBottom: "8px" }}>
-                <strong style={{ fontFamily: "var(--font-mono)" }}>{item.label}</strong>
+            {peopleGroups.map((group) => (
+              <li key={group.name} style={{ marginBottom: "8px" }}>
+                <strong style={{ fontFamily: "var(--font-mono)" }}>{group.name}</strong>
                 <br />
-                {item.value}
+                Ocupación: {group.count} / {group.capacity}
               </li>
             ))}
-            {metrics?.camp.emptyProfessions?.length ? (
-              <li style={{ marginTop: "10px", fontSize: "0.85rem" }}>
-                <strong>VACANTES:</strong> {metrics.camp.emptyProfessions.join(", ")}
-              </li>
-            ) : null}
           </ul>
         ),
+        className: "",
       },
       {
         title: "ALERTAS RECURSOS",
@@ -114,15 +103,16 @@ export default function Dashboard() {
         pinClass: "red-pin",
       },
       {
-        title: "SOLICITUDES ADMISION",
+        title: "SOLICITUDES ADMISIÓN",
         content: (
           <div className="flex-row">
             <span className="big-number" style={{ fontSize: "3rem", color: "var(--accent-tape)" }}>
               {pendingAdmissions}
             </span>
-            <span className="small-text">PENDIENTES DE REVISION</span>
+            <span className="small-text">PENDIENTES DE REVISIÓN</span>
           </div>
         ),
+        className: "",
       },
       {
         title: "MOVIMIENTOS ACORDADOS",
@@ -134,10 +124,12 @@ export default function Dashboard() {
             <span className="small-text">TRANSFERENCIAS PENDIENTES</span>
           </div>
         ),
+        className: "",
       },
       {
-        title: "CUERPOS EXPLORACION",
-        content: <p>Equipos activos: {metrics?.camp.activeExplorations ?? 0}</p>,
+        title: "CUERPOS EXPLORACIÓN",
+        content: <p>{metrics ? `${metrics.camp.activeExplorations} Equipos en zona muerta` : "-"}</p>,
+        className: "",
       },
     ]
   }, [metrics, pendingAdmissions])
@@ -150,8 +142,8 @@ export default function Dashboard() {
       exit={{ opacity: 0 }}
     >
       <div className="board-header">
-        <h2>SITUATION BOARD</h2>
-        <div className="server-time">SERVER TIME: {time}</div>
+        <h2>TABLERO DE SITUACIÓN</h2>
+        <div className="server-time">HORA DEL SISTEMA: {time}</div>
       </div>
 
       {error ? (
@@ -167,7 +159,7 @@ export default function Dashboard() {
           {cards.map((card, index) => (
             <motion.div
               key={card.title}
-              className={`pinned-card ${card.className ?? ""}`}
+              className={`pinned-card ${card.className}`}
               initial={{ scale: 0, rotate: -20, opacity: 0 }}
               animate={{ scale: 1, rotate: index % 2 === 0 ? -1 : 2, opacity: 1 }}
               transition={{ type: "spring", stiffness: 120, delay: index * 0.15 }}

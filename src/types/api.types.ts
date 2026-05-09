@@ -12,6 +12,7 @@ export enum PersonStatus {
 
 export interface AuthUser {
   id: string
+  username?: string
   role: string
   campId: string
 }

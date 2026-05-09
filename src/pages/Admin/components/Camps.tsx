@@ -1,12 +1,22 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { getCamps } from "@/features/camps/services/camps.service"
 import type { Camp } from "@/types/api.types"
 import "./Camps.css"
 
+type CampView = {
+  id: string
+  name: string
+  pop: number | string
+  status: string
+  coordinates: string
+  inventory: string
+  transfers: string
+}
+
 export default function Camps() {
   const [camps, setCamps] = useState<Camp[]>([])
-  const [selectedCamp, setSelectedCamp] = useState<Camp | null>(null)
+  const [selectedCamp, setSelectedCamp] = useState<CampView | null>(null)
   const [error, setError] = useState("")
 
   useEffect(() => {
@@ -31,6 +41,20 @@ export default function Camps() {
     }
   }, [])
 
+  const campViews = useMemo<CampView[]>(
+    () =>
+      camps.map((camp) => ({
+        id: camp.id,
+        name: camp.name,
+        pop: camp.max_capacity ?? "N/D",
+        status: camp.is_active ? "EN LÍNEA" : "FUERA DE LÍNEA",
+        coordinates: camp.location ?? "N/D",
+        inventory: "N/D",
+        transfers: "N/D",
+      })),
+    [camps],
+  )
+
   const containerVariants = {
     hidden: { opacity: 0 },
     show: { opacity: 1, transition: { staggerChildren: 0.2 } },
@@ -50,32 +74,27 @@ export default function Camps() {
       ) : null}
 
       <motion.div className="camps-grid" variants={containerVariants} initial="hidden" animate="show">
-        {camps.map((camp) => {
-          const statusLabel = camp.is_active ? "ONLINE" : "OFFLINE"
-          const statusClass = camp.is_active ? "online" : "radiated"
-
-          return (
-            <motion.div
-              key={camp.id}
-              className={`camp-card ${statusClass}`}
-              variants={itemVariants}
-              whileHover={{ y: -10, boxShadow: "10px 10px 0 rgba(0,0,0,0.5)", cursor: "pointer" }}
-              onClick={() => setSelectedCamp(camp)}
-            >
-              <div className="c-status-indicator"></div>
-              <h3>{camp.name}</h3>
-              <div className="c-info">
-                <span>
-                  <span>UBICACION:</span> {camp.location ?? "N/D"}
-                </span>
-                <span>
-                  <span>CAPACIDAD:</span> {camp.max_capacity ?? "N/D"}
-                </span>
-              </div>
-              <div className="c-stamp">{statusLabel}</div>
-            </motion.div>
-          )
-        })}
+        {campViews.map((camp) => (
+          <motion.div
+            key={camp.id}
+            className={`camp-card ${camp.status === "IRRADIADO" ? "radiated" : ""}`}
+            variants={itemVariants}
+            whileHover={{ y: -10, boxShadow: "10px 10px 0 rgba(0,0,0,0.5)", cursor: "pointer" }}
+            onClick={() => setSelectedCamp(camp)}
+          >
+            <div className="c-status-indicator"></div>
+            <h3>{camp.name}</h3>
+            <div className="c-info">
+              <span>
+                <span>POBLACIÓN:</span> {camp.pop}
+              </span>
+              <span>
+                <span>COORDENADAS:</span> {camp.coordinates}
+              </span>
+            </div>
+            <div className="c-stamp">{camp.status}</div>
+          </motion.div>
+        ))}
       </motion.div>
 
       <AnimatePresence>
@@ -117,7 +136,7 @@ export default function Camps() {
             >
               <h2
                 style={{
-                  fontFamily: "var(--font-typewriter)",
+                  fontFamily: "var(--font-heading)",
                   borderBottom: "2px solid var(--ink)",
                   paddingBottom: "10px",
                 }}
@@ -128,20 +147,30 @@ export default function Camps() {
                 <strong>NOMBRE:</strong> {selectedCamp.name}
               </p>
               <p>
-                <strong>ESTADO:</strong> {selectedCamp.is_active ? "ONLINE" : "OFFLINE"}
+                <strong>ESTADO:</strong> {selectedCamp.status}
               </p>
               <p>
-                <strong>UBICACION:</strong> {selectedCamp.location ?? "N/D"}
+                <strong>POBLACIÓN ACTUAL:</strong> {selectedCamp.pop}
               </p>
-              <p>
-                <strong>CAPACIDAD MAXIMA:</strong> {selectedCamp.max_capacity ?? "N/D"}
-              </p>
+              <div style={{ marginTop: "20px", borderTop: "1px dashed var(--ink)", paddingTop: "10px" }}>
+                <p>
+                  <strong>INVENTARIO:</strong> {selectedCamp.inventory}
+                </p>
+                <p>
+                  <strong>TRANSFERENCIAS:</strong> {selectedCamp.transfers}
+                </p>
+              </div>
               <div style={{ marginTop: "20px", textAlign: "right" }}>
                 <button
                   onClick={() => setSelectedCamp(null)}
-                  style={{ border: "1px solid var(--ink)", background: "transparent", padding: "5px 15px", cursor: "pointer" }}
+                  style={{
+                    border: "1px solid var(--ink)",
+                    background: "transparent",
+                    padding: "5px 15px",
+                    cursor: "pointer",
+                  }}
                 >
-                  CERRAR CINTA CODIGO
+                  CERRAR CINTA CÓDIGO
                 </button>
               </div>
             </motion.div>

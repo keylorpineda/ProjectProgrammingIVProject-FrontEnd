@@ -9,9 +9,15 @@ export interface CreateCampBody {
 
 export type UpdateCampBody = Partial<CreateCampBody>
 
+type CampsResponse = Camp[] | { data?: Camp[]; items?: Camp[] }
+
 export const getCamps = async (): Promise<Camp[]> => {
-  const { data } = await api.get<Camp[]>("/camps")
-  return data
+  const { data } = await api.get<CampsResponse>("/camps")
+
+  if (Array.isArray(data)) return data
+  if (data?.data && Array.isArray(data.data)) return data.data
+  if (data?.items && Array.isArray(data.items)) return data.items
+  return []
 }
 
 export const getCampById = async (id: string): Promise<Camp> => {

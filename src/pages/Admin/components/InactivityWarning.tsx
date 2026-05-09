@@ -9,10 +9,10 @@ export default function InactivityWarning() {
   return (
     <div className="inactivity-warning-overlay">
       <div className="inactivity-warning-box">
-        <h2>SIGNAL LOSS IMMINENT</h2>
-        <p>TERMINAL DISCONNECT IN</p>
+        <h2>PÉRDIDA DE SEÑAL INMINENTE</h2>
+        <p>DESCONEXIÓN DEL TERMINAL EN</p>
         <div className="countdown">{secondsUntilLogout}s</div>
-        <p>MOVE CRSR TO ABORT</p>
+        <p>MUEVA EL CURSOR PARA ABORTAR</p>
       </div>
     </div>
   )

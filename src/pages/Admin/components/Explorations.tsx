@@ -12,6 +12,13 @@ const formatDate = (value: string) => {
   return date.toISOString().split("T")[0]
 }
 
+const formatStatus = (status?: string) => {
+  const normalized = status?.toLowerCase() ?? ""
+  if (normalized.includes("complete")) return "COMPLETADO"
+  if (normalized.includes("progress")) return "EN CURSO"
+  return status ? status.toUpperCase() : "N/D"
+}
+
 export default function Explorations() {
   const { activeCampId } = useCamp()
   const [explorations, setExplorations] = useState<Exploration[]>([])
@@ -48,9 +55,10 @@ export default function Explorations() {
           id: exploration.id,
           title: exploration.name,
           date: formatDate(exploration.departure_date),
-          status: exploration.status?.toUpperCase() ?? "N/D",
-          duration: `${exploration.estimated_days} DIAS`,
+          status: formatStatus(exploration.status),
+          duration: `${exploration.estimated_days} DÍAS`,
           group,
+          resources: "Pendiente",
           entry: exploration.notes ?? exploration.destination_description,
         }
       }),
@@ -60,7 +68,7 @@ export default function Explorations() {
   return (
     <div className="generic-container">
       <motion.h2 initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-        BITACORAS (FIELD JOURNALS)
+        BITÁCORAS DE CAMPO
       </motion.h2>
 
       {error ? (
@@ -84,27 +92,29 @@ export default function Explorations() {
               <div className="hole"></div>
             </div>
             <div className="journal-content">
-              <h3 style={{ borderBottom: "1px solid var(--ink)", paddingBottom: "5px" }}>
+              <h3 style={{ borderBottom: "1px solid #000", paddingBottom: "5px", color: "#000" }}>
                 {log.title}
                 <span
                   style={{
                     float: "right",
                     fontSize: "0.8em",
-                    color: log.status === "COMPLETED" ? "var(--ink)" : "var(--accent-warning-deep)",
+                    color: log.status === "COMPLETADO" ? "#000" : "var(--accent-warning-deep)",
                   }}
                 >
                   [{log.status}]
                 </span>
               </h3>
-              <div className="j-date">
-                DIA/MES/ANIO: {log.date} | {log.duration}
+              <div className="j-date" style={{ color: "#000", fontFamily: "var(--font-mono)" }}>
+                DÍA/MES/AÑO: {log.date} | {log.duration}
               </div>
-              <div style={{ margin: "10px 0", fontSize: "0.9em", fontFamily: "var(--font-mono)" }}>
-                <strong>GRUPO:</strong> {log.group.length > 0 ? log.group.join(", ") : "N/D"}
+              <div style={{ margin: "10px 0", fontSize: "0.9em", fontFamily: "var(--font-mono)", color: "#000" }}>
+                <strong>GRUPO:</strong> {log.group.join(", ") || "N/D"}
+                <br />
+                <strong>RECURSOS EXTRAÍDOS:</strong> {log.resources}
               </div>
-              <p style={{ marginTop: "10px" }}>{log.entry}</p>
+              <p style={{ marginTop: "10px", color: "#000" }}>{log.entry}</p>
               <div className="signature-line">
-                <span>FIRMA LIDER DE ESCUADRON</span>
+                <span>FIRMA LÍDER DE ESCUADRÓN</span>
                 <div className="sign-marker">{log.group[0] ?? "-"}</div>
               </div>
             </div>

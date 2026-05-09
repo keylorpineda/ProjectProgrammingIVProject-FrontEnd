@@ -5,25 +5,38 @@ import type { Person } from "@/types/api.types"
 import { useCamp } from "../context/CampContext"
 import "./People.css"
 
-const formatStatus = (status?: string) => {
-  if (!status) return "SIN ESTADO"
-  return status.replace(/_/g, " ").toUpperCase()
+type PersonView = {
+  id: string
+  name: string
+  status: string
+  profession: string
+  camp: string
+  age?: number | string
+}
+
+const statusLabels: Record<string, string> = {
+  active: "Activa",
+  sick: "Enfermo",
+  injured: "Herido",
+  exploring: "Explorando",
+  traveling: "En traslado",
+  resting: "Reposo",
+  idle: "Inactivo",
+  out_of_camp: "Fuera de campamento",
+  deceased: "Fallecido",
 }
 
 export default function People() {
   const { activeCampId, camps } = useCamp()
   const [people, setPeople] = useState<Person[]>([])
   const [page, setPage] = useState(1)
-  const [search, setSearch] = useState("")
+  const [filterCamp, setFilterCamp] = useState("")
   const [filterStatus, setFilterStatus] = useState("")
-  const [selectedPerson, setSelectedPerson] = useState<Person | null>(null)
-  const [total, setTotal] = useState(0)
+  const [selectedPerson, setSelectedPerson] = useState<PersonView | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState("")
 
-  const campById = useMemo(() => {
-    return new Map(camps.map((camp) => [camp.id, camp.name]))
-  }, [camps])
+  const campById = useMemo(() => new Map(camps.map((camp) => [camp.id, camp.name])), [camps])
 
   useEffect(() => {
     if (!activeCampId) return
@@ -33,15 +46,9 @@ export default function People() {
       setIsLoading(true)
       setError("")
       try {
-        const response = await getPersons({
-          campId: activeCampId,
-          page,
-          limit: 10,
-          search: search.trim() || undefined,
-        })
+        const response = await getPersons({ campId: activeCampId, page, limit: 10 })
         if (!isMounted) return
         setPeople(response.data)
-        setTotal(response.total)
       } catch {
         if (!isMounted) return
         setError("No se pudo cargar el listado de personas.")
@@ -56,13 +63,26 @@ export default function People() {
     return () => {
       isMounted = false
     }
-  }, [activeCampId, page, search])
+  }, [activeCampId, page])
 
-  const filteredPeople = useMemo(() => {
-    if (!filterStatus.trim()) return people
-    const normalizedStatus = filterStatus.trim().toLowerCase()
-    return people.filter((person) => (person.status ?? "").toLowerCase() === normalizedStatus)
-  }, [people, filterStatus])
+  const mappedPeople = useMemo<PersonView[]>(
+    () =>
+      people.map((person) => ({
+        id: person.id,
+        name: person.name,
+        status: statusLabels[person.status ?? ""] ?? (person.status ?? "N/D"),
+        profession: person.profession?.name ?? person.profession_id ?? "N/D",
+        camp: campById.get(person.camp_id) ?? person.camp_id,
+        age: "N/D",
+      })),
+    [people, campById],
+  )
+
+  const filteredPeople = mappedPeople.filter((person) => {
+    if (filterCamp && person.camp !== filterCamp) return false
+    if (filterStatus && person.status !== filterStatus) return false
+    return true
+  })
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -76,18 +96,18 @@ export default function People() {
 
   return (
     <div className="people-container">
-      <h2>DOSSIERS DEL SISTEMA {page > 1 ? `| PAGINA ${page}` : ""}</h2>
+      <h2>DOSSIERS DEL SISTEMA {page > 1 ? `| PÁGINA ${page}` : ""}</h2>
 
       <div className="filters-bar" style={{ display: "flex", gap: "20px", marginBottom: "20px" }}>
         <input
           className="vintage-input"
-          placeholder="Buscar por nombre"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
+          placeholder="Filtrar por campamento (ej: Sector 4)"
+          value={filterCamp}
+          onChange={(event) => setFilterCamp(event.target.value)}
         />
         <input
           className="vintage-input"
-          placeholder="Estado (ej: active, sick)"
+          placeholder="Estado (ej: Activa, Herido)"
           value={filterStatus}
           onChange={(event) => setFilterStatus(event.target.value)}
         />
@@ -116,10 +136,10 @@ export default function People() {
               </div>
               <div className="dossier-info">
                 <div className="d-name">{person.name}</div>
-                <div className="d-prof">{person.profession?.name ?? "SIN PROFESION"}</div>
-                <div className="d-status">STS: {formatStatus(person.status)}</div>
+                <div className="d-prof">{person.profession}</div>
+                <div className="d-status">STS: {person.status}</div>
                 <div className="d-camp" style={{ fontSize: "0.8rem", opacity: 0.7 }}>
-                  CMP: {campById.get(person.camp_id) ?? person.camp_id}
+                  CMP: {person.camp}
                 </div>
               </div>
             </motion.div>
@@ -131,10 +151,7 @@ export default function People() {
         <button onClick={() => setPage((prev) => Math.max(1, prev - 1))} disabled={page === 1}>
           ANTERIOR
         </button>
-        <button
-          onClick={() => setPage((prev) => (prev * 10 < total ? prev + 1 : prev))}
-          disabled={page * 10 >= total}
-        >
+        <button onClick={() => setPage((prev) => prev + 1)} disabled={people.length === 0}>
           SIGUIENTE
         </button>
       </div>
@@ -178,7 +195,7 @@ export default function People() {
             >
               <h2
                 style={{
-                  fontFamily: "var(--font-typewriter)",
+                  fontFamily: "var(--font-heading)",
                   borderBottom: "2px solid var(--ink)",
                   paddingBottom: "10px",
                 }}
@@ -189,13 +206,16 @@ export default function People() {
                 <strong>NOMBRE:</strong> {selectedPerson.name}
               </p>
               <p>
-                <strong>PROFESION:</strong> {selectedPerson.profession?.name ?? "SIN PROFESION"}
+                <strong>EDAD:</strong> {selectedPerson.age}
               </p>
               <p>
-                <strong>ESTADO:</strong> {formatStatus(selectedPerson.status)}
+                <strong>PROFESIÓN:</strong> {selectedPerson.profession}
               </p>
               <p>
-                <strong>CAMPAMENTO:</strong> {campById.get(selectedPerson.camp_id) ?? selectedPerson.camp_id}
+                <strong>ESTADO:</strong> {selectedPerson.status}
+              </p>
+              <p>
+                <strong>CAMPAMENTO:</strong> {selectedPerson.camp}
               </p>
               <div style={{ marginTop: "20px", textAlign: "right" }}>
                 <button

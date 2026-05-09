@@ -4,8 +4,8 @@
   --bg-paper-dark: #817769;
   --bg-paper-shadow: #635b50;
 
-  --ink: #1c1a17;
-  --ink-soft: #3a3630;
+  --ink: #000000;
+  --ink-soft: #111111;
 
   --accent-warning: #c27c2f;
   --accent-warning-deep: #8f581e;
@@ -25,7 +25,7 @@
   --bookWidth: 900px;
   --bookHeight: 550px;
 
-  color: var(--ink);
+  color: #e0d8cc;
   background-color: var(--bg-deep);
   min-height: 100vh;
   font-family: var(--font-body);
@@ -41,8 +41,8 @@
   padding: 10px 15px;
   font-family: var(--font-mono);
   background: var(--bg-paper-dark);
-  border: 1px solid var(--ink);
-  color: var(--ink);
+  border: 1px solid #000;
+  color: #000;
   width: 300px;
   outline: none;
   border-radius: 4px;
@@ -52,11 +52,11 @@
 
 .admin-root .vintage-input:focus {
   background: var(--bg-paper);
-  border-color: var(--ink);
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1), 0 0 0 2px rgba(51, 49, 46, 0.3);
+  border-color: #000;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1), 0 0 0 2px rgba(0, 0, 0, 0.3);
 }
 
 .admin-root .vintage-input::placeholder {
-  color: var(--ink-soft);
+  color: #333;
   opacity: 0.7;
 }

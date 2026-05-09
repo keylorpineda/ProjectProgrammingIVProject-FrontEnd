@@ -6,24 +6,24 @@ import { useCamp } from "../context/CampContext"
 import "./Resources.css"
 
 type InventoryRow = {
-  id: string
+  id: number
   name: string
+  camps: Record<string, number>
   total: number
   unit: string
-  minimum: number
-  status: "ok" | "warning" | "critical"
+  status: "OK" | "ADVERTENCIA" | "CRÍTICO"
 }
 
 const getStatus = (item: InventoryItem): InventoryRow["status"] => {
-  if (item.is_below_minimum) return "critical"
+  if (item.is_below_minimum) return "CRÍTICO"
   if (item.minimum_stock_required > 0 && item.current_quantity <= item.minimum_stock_required * 1.25) {
-    return "warning"
+    return "ADVERTENCIA"
   }
-  return "ok"
+  return "OK"
 }
 
 export default function Resources() {
-  const { activeCampId } = useCamp()
+  const { activeCampId, camps } = useCamp()
   const [items, setItems] = useState<InventoryItem[]>([])
   const [error, setError] = useState("")
 
@@ -50,22 +50,24 @@ export default function Resources() {
     }
   }, [activeCampId])
 
+  const campName = camps.find((camp) => camp.id === activeCampId)?.name ?? "Campamento"
+
   const rows = useMemo<InventoryRow[]>(
     () =>
-      items.map((item) => ({
-        id: item.resource_id,
+      items.map((item, index) => ({
+        id: index + 1,
         name: item.resource.name,
+        camps: { [campName]: item.current_quantity },
         total: item.current_quantity,
         unit: item.resource.unit,
-        minimum: item.minimum_stock_required,
         status: getStatus(item),
       })),
-    [items],
+    [items, campName],
   )
 
   return (
     <div className="generic-container">
-      <h2>MANIFIESTO DE ALMACEN</h2>
+      <h2>MANIFIESTO DE ALMACÉN</h2>
 
       {error ? (
         <div style={{ fontFamily: "var(--font-mono)", color: "var(--accent-critical)" }}>{error}</div>
@@ -84,10 +86,10 @@ export default function Resources() {
         <table className="inventory-table">
           <thead>
             <tr>
-              <th>ID ARTICULO</th>
-              <th>DESCRIPCION</th>
-              <th>CANTIDAD</th>
-              <th>MINIMO</th>
+              <th>ID ARTÍCULO</th>
+              <th>DESCRIPCIÓN</th>
+              <th>CANT. GLOBAL</th>
+              <th>DESGLOSE POR CAMPAMENTO</th>
               <th>ESTADO</th>
             </tr>
           </thead>
@@ -101,22 +103,33 @@ export default function Resources() {
             {rows.map((item) => (
               <motion.tr
                 key={item.id}
-                className={`row-${item.status}`}
+                className={`row-${item.status === "CRÍTICO" ? "critical" : item.status === "ADVERTENCIA" ? "warning" : "ok"}`}
                 variants={{
                   hidden: { opacity: 0, x: -20 },
                   show: { opacity: 1, x: 0 },
                 }}
               >
-                <td>{item.id}</td>
+                <td>{String(item.id).padStart(4, "0")}</td>
                 <td>{item.name}</td>
                 <td>
                   {item.total} {item.unit}
                 </td>
-                <td>
-                  {item.minimum} {item.unit}
+                <td style={{ fontSize: "0.85em", opacity: 0.9 }}>
+                  {Object.entries(item.camps).map(([camp, qty]) => (
+                    <div
+                      key={camp}
+                      style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px dotted rgba(255,255,255,0.1)" }}
+                    >
+                      <span>{camp}:</span> <span>{qty}</span>
+                    </div>
+                  ))}
                 </td>
                 <td>
-                  <span className={`status-badge ${item.status}`}>{item.status.toUpperCase()}</span>
+                  <span
+                    className={`status-badge ${item.status === "CRÍTICO" ? "critical" : item.status === "ADVERTENCIA" ? "warning" : "ok"}`}
+                  >
+                    {item.status}
+                  </span>
                 </td>
               </motion.tr>
             ))}

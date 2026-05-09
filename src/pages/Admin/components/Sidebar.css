@@ -11,12 +11,12 @@
 
 .sidebar-tab {
   background-color: var(--bg-paper-dark);
-  color: var(--ink);
+  color: #000;
   font-family: var(--font-typewriter);
   padding: 15px 20px;
   margin: 5px 0 5px -10px;
   border-radius: 0 10px 10px 0;
-  border: 1px solid var(--ink);
+  border: 1px solid #000;
   border-left: none;
   cursor: pointer;
   text-decoration: none;

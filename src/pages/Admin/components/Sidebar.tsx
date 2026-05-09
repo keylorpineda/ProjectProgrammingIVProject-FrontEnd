@@ -4,13 +4,13 @@ import "./Sidebar.css"
 
 export default function Sidebar() {
   const tabs = [
-    { name: "DASHBOARD", path: "/admin/dashboard" },
-    { name: "ADMISSIONS", path: "/admin/admissions" },
-    { name: "PEOPLE", path: "/admin/people" },
-    { name: "CAMPS", path: "/admin/camps" },
-    { name: "EXPLORATIONS", path: "/admin/explorations" },
-    { name: "RESOURCES", path: "/admin/resources" },
-    { name: "TRANSFERS", path: "/admin/transfers" },
+    { name: "TABLERO", path: "/admin/dashboard" },
+    { name: "ADMISIONES", path: "/admin/admissions" },
+    { name: "PERSONAL", path: "/admin/people" },
+    { name: "CAMPAMENTOS", path: "/admin/camps" },
+    { name: "EXPLORACIONES", path: "/admin/explorations" },
+    { name: "RECURSOS", path: "/admin/resources" },
+    { name: "TRASLADOS", path: "/admin/transfers" },
   ]
 
   return (

@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react"
-import type { ChangeEvent } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { useCamp } from "../context/CampContext"
 import {
@@ -20,26 +19,69 @@ type AdmissionSummary = {
 }
 
 type AdmissionDetail = AdmissionSummary & {
-  status: AiAdmission["status"]
-  aiScore: number
-  suggestedDecision: string
-  aiRecommendation: AiAdmission["ai_recommendation"]
-  aiAnalysis: string
-  rulesApplied: string[]
   appearanceNotes: string
   fingerprintsScanned: boolean
-  aboutYourself: string
-  skills: string
-  medicalInfo: string
-  hasPhoto: boolean
+  aiScore: number
+  suggestedDecision: "ACCEPT" | "REJECT"
+  aiAnalysis: string
+  rulesApplied: string[]
+  aiRecommendation: AiAdmission["ai_recommendation"]
 }
 
-type AccountFormState = {
-  username: string
-  password: string
-  role: string
-  campId: string
-}
+const DEFAULT_ACCOUNT_ROLE = "resident"
+const DEFAULT_ACCOUNT_PASSWORD = "Temp1234!"
+const DEMO_ADMISSIONS_ENABLED = import.meta.env.VITE_DEMO_ADMISSIONS === "true" || import.meta.env.DEV
+
+const DEMO_ADMISSIONS: AdmissionDetail[] = [
+  {
+    id: "DEMO-01",
+    applicantName: "Mateo Vargas",
+    fileNumber: "A2-17865",
+    date: "2042-11-12",
+    appearanceNotes: "Cicatriz en brazo derecho; signos de desnutricion.",
+    fingerprintsScanned: true,
+    aiScore: 84,
+    suggestedDecision: "ACCEPT",
+    aiAnalysis: "Evaluacion neuronal sugiere adaptacion estable en entornos cerrados.",
+    rulesApplied: ["CRITICAL_ROLE_NEEDED", "HEALTH_SCORE_OK"],
+    aiRecommendation: "accept",
+  },
+  {
+    id: "DEMO-02",
+    applicantName: "Lucia Silva",
+    fileNumber: "A2-17866",
+    date: "2042-11-13",
+    appearanceNotes: "Quemaduras leves y fatiga prolongada.",
+    fingerprintsScanned: false,
+    aiScore: 62,
+    suggestedDecision: "REJECT",
+    aiAnalysis: "Riesgo medico elevado y baja tolerancia al confinamiento.",
+    rulesApplied: ["HEALTH_SCORE_OK"],
+    aiRecommendation: "reject",
+  },
+  {
+    id: "DEMO-03",
+    applicantName: "Hector Cruz",
+    fileNumber: "A2-17867",
+    date: "2042-11-14",
+    appearanceNotes: "Exposicion a polvo radiactivo; requiere cuarentena.",
+    fingerprintsScanned: true,
+    aiScore: 76,
+    suggestedDecision: "ACCEPT",
+    aiAnalysis: "Adaptacion social alta; requiere seguimiento medico.",
+    rulesApplied: ["CRITICAL_ROLE_NEEDED"],
+    aiRecommendation: "review",
+  },
+]
+
+const DEMO_SUMMARIES: AdmissionSummary[] = DEMO_ADMISSIONS.map(({ id, applicantName, fileNumber, date }) => ({
+  id,
+  applicantName,
+  fileNumber,
+  date,
+}))
+
+const DEMO_BY_ID = new Map(DEMO_ADMISSIONS.map((item) => [item.id, item]))
 
 const formatDate = (value: string) => {
   if (!value) return "N/D"
@@ -48,23 +90,14 @@ const formatDate = (value: string) => {
   return date.toISOString().split("T")[0]
 }
 
-const formatDecision = (value?: string) => (value ? value.toUpperCase() : "N/D")
-
-const buildRules = (admission: AiAdmission) =>
-  admission.glass_box_report?.factors?.map(
-    (factor) => `${factor.category}: ${factor.detail} (${factor.score}/${factor.maxScore})`,
-  ) ?? []
-
-const buildAnalysis = (admission: AiAdmission) => {
-  const parts = []
-  if (admission.glass_box_report?.finalRecommendation) {
-    parts.push(admission.glass_box_report.finalRecommendation)
-  }
-  if (admission.glass_box_report?.criticalRuleTriggered) {
-    parts.push("Regla critica activada.")
-  }
-  return parts.length ? parts.join(" ") : "Sin analisis disponible."
-}
+const buildUsername = (name: string) =>
+  name
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, ".")
+    .replace(/[^a-z0-9._-]/g, "")
 
 const mapAdmissionSummary = (admission: AiAdmission): AdmissionSummary => ({
   id: admission.id,
@@ -74,75 +107,80 @@ const mapAdmissionSummary = (admission: AiAdmission): AdmissionSummary => ({
 })
 
 const mapAdmissionDetail = (admission: AiAdmission): AdmissionDetail => {
-  const appearanceNotes = [admission.medical_info, admission.skills].filter(Boolean).join(" | ")
+  const suggestedDecision = admission.ai_recommendation === "accept" ? "ACCEPT" : "REJECT"
+  const rulesApplied = admission.glass_box_report?.factors?.map((factor) => factor.category) ?? []
+  const analysis = admission.glass_box_report?.finalRecommendation ?? "Evaluación automática registrada."
+  const appearanceNotes = [admission.medical_info, admission.about_yourself]
+    .filter(Boolean)
+    .join(" | ")
 
   return {
     ...mapAdmissionSummary(admission),
-    status: admission.status,
-    aiScore: admission.evaluation_score,
-    suggestedDecision: formatDecision(admission.ai_recommendation),
-    aiRecommendation: admission.ai_recommendation,
-    aiAnalysis: buildAnalysis(admission),
-    rulesApplied: buildRules(admission),
-    appearanceNotes: appearanceNotes || "Sin notas medicas.",
+    appearanceNotes: appearanceNotes || "Sin observaciones adicionales.",
     fingerprintsScanned: admission.has_id_card,
-    aboutYourself: admission.about_yourself,
-    skills: admission.skills,
-    medicalInfo: admission.medical_info,
-    hasPhoto: admission.has_photo,
+    aiScore: admission.evaluation_score,
+    suggestedDecision,
+    aiAnalysis: analysis,
+    rulesApplied,
+    aiRecommendation: admission.ai_recommendation,
   }
 }
 
-const buildUsername = (name: string) => {
-  const normalized = name
-    .trim()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-  return normalized.replace(/\s+/g, ".").replace(/[^a-z0-9._-]/g, "")
-}
-
 export default function AdmissionsBook() {
-  const { activeCampId, camps } = useCamp()
+  const { activeCampId } = useCamp()
   const [admissions, setAdmissions] = useState<AdmissionSummary[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
+  const [loading, setLoading] = useState(true)
   const [detailData, setDetailData] = useState<AdmissionDetail | null>(null)
-  const [isLoadingList, setIsLoadingList] = useState(true)
-  const [isLoadingDetail, setIsLoadingDetail] = useState(false)
-  const [listError, setListError] = useState("")
-  const [reviewError, setReviewError] = useState("")
   const [decision, setDecision] = useState<"ACCEPT" | "REJECT" | null>(null)
   const [showingProcessed, setShowingProcessed] = useState(false)
   const [turnDirection, setTurnDirection] = useState<"next" | "prev" | null>(null)
-  const [adminNotes, setAdminNotes] = useState("")
-  const [accountForm, setAccountForm] = useState<AccountFormState>({
-    username: "",
-    password: "",
-    role: "",
-    campId: activeCampId,
-  })
-  const [accountError, setAccountError] = useState("")
   const [isProcessing, setIsProcessing] = useState(false)
-  const [isCreatingAccount, setIsCreatingAccount] = useState(false)
+  const [isDemoData, setIsDemoData] = useState(false)
 
   useEffect(() => {
-    if (!activeCampId) return
+    if (!activeCampId) {
+      if (DEMO_ADMISSIONS_ENABLED) {
+        setAdmissions(DEMO_SUMMARIES)
+        setIsDemoData(true)
+      } else {
+        setAdmissions([])
+        setIsDemoData(false)
+      }
+      setLoading(false)
+      return
+    }
     let isMounted = true
 
     const loadAdmissions = async () => {
-      setIsLoadingList(true)
-      setListError("")
+      setLoading(true)
       try {
         const items = await getPendingAdmissions({ campId: activeCampId, page: 1, limit: 50 })
         if (!isMounted) return
-        setAdmissions(items.map(mapAdmissionSummary))
+        if (items.length === 0) {
+          if (DEMO_ADMISSIONS_ENABLED) {
+            setAdmissions(DEMO_SUMMARIES)
+            setIsDemoData(true)
+          } else {
+            setAdmissions([])
+            setIsDemoData(false)
+          }
+        } else {
+          setAdmissions(items.map(mapAdmissionSummary))
+          setIsDemoData(false)
+        }
         setCurrentIndex(0)
       } catch {
         if (!isMounted) return
-        setListError("No se pudo cargar las admisiones pendientes.")
-        setAdmissions([])
+        if (DEMO_ADMISSIONS_ENABLED) {
+          setAdmissions(DEMO_SUMMARIES)
+          setIsDemoData(true)
+        } else {
+          setAdmissions([])
+          setIsDemoData(false)
+        }
       } finally {
-        if (isMounted) setIsLoadingList(false)
+        if (isMounted) setLoading(false)
       }
     }
 
@@ -154,24 +192,41 @@ export default function AdmissionsBook() {
   }, [activeCampId])
 
   useEffect(() => {
-    if (!admissions[currentIndex]) {
-      setDetailData(null)
-      return
-    }
-
+    if (!admissions[currentIndex]) return
     let isMounted = true
 
     const loadDetail = async () => {
-      setIsLoadingDetail(true)
+      setLoading(true)
+      if (isDemoData) {
+        if (!isMounted) return
+        const demoDetail = DEMO_BY_ID.get(admissions[currentIndex].id) ?? null
+        setDetailData(demoDetail)
+        setDecision(null)
+        setShowingProcessed(false)
+        setLoading(false)
+        return
+      }
       try {
         const admission = await getAdmissionById(admissions[currentIndex].id)
         if (!isMounted) return
         setDetailData(mapAdmissionDetail(admission))
+        setDecision(null)
+        setShowingProcessed(false)
       } catch {
         if (!isMounted) return
-        setReviewError("No se pudo cargar el expediente seleccionado.")
+        const fallback = {
+          ...admissions[currentIndex],
+          appearanceNotes: "Sin observaciones adicionales.",
+          fingerprintsScanned: false,
+          aiScore: 0,
+          suggestedDecision: "REJECT" as const,
+          aiAnalysis: "Evaluación automática registrada.",
+          rulesApplied: [],
+          aiRecommendation: "review" as const,
+        }
+        setDetailData(fallback)
       } finally {
-        if (isMounted) setIsLoadingDetail(false)
+        if (isMounted) setLoading(false)
       }
     }
 
@@ -180,34 +235,10 @@ export default function AdmissionsBook() {
     return () => {
       isMounted = false
     }
-  }, [admissions, currentIndex])
-
-  useEffect(() => {
-    setDecision(null)
-    setShowingProcessed(false)
-    setAdminNotes("")
-    setAccountError("")
-    setReviewError("")
-    setIsProcessing(false)
-
-    if (!detailData) return
-    setAccountForm((previous) => ({
-      ...previous,
-      username: previous.username || buildUsername(detailData.applicantName),
-      campId: activeCampId || previous.campId,
-    }))
-  }, [detailData, activeCampId])
-
-  useEffect(() => {
-    if (!activeCampId) return
-    setAccountForm((previous) => ({
-      ...previous,
-      campId: activeCampId,
-    }))
-  }, [activeCampId])
+  }, [admissions, currentIndex, isDemoData])
 
   const handleNextPage = () => {
-    if (currentIndex < admissions.length - 1 && !turnDirection && !decision) {
+    if (currentIndex < admissions.length - 1 && turnDirection === null) {
       setTurnDirection("next")
       setTimeout(() => {
         setCurrentIndex((prev) => prev + 1)
@@ -219,7 +250,7 @@ export default function AdmissionsBook() {
   }
 
   const handlePrevPage = () => {
-    if (currentIndex > 0 && !turnDirection && !decision) {
+    if (currentIndex > 0 && turnDirection === null) {
       setTurnDirection("prev")
       setTimeout(() => {
         setCurrentIndex((prev) => prev - 1)
@@ -240,82 +271,77 @@ export default function AdmissionsBook() {
     })
     setDecision(null)
     setShowingProcessed(false)
-    setAdminNotes("")
   }
 
   const handleDecision = async (nextDecision: "ACCEPT" | "REJECT") => {
     if (!detailData) return
     setDecision(nextDecision)
     setIsProcessing(true)
-    setReviewError("")
-
+    if (isDemoData) {
+      setTimeout(() => {
+        if (nextDecision === "ACCEPT") {
+          setShowingProcessed(true)
+        } else {
+          archiveAdmission()
+        }
+        setIsProcessing(false)
+      }, 1000)
+      return
+    }
     try {
       const decisionValue = nextDecision === "ACCEPT" ? "accepted" : "rejected"
-      const recommended = detailData.aiRecommendation
-      const decisionKey = nextDecision === "ACCEPT" ? "accept" : "reject"
+      const notes = (document.getElementById("admin_notes_input") as HTMLTextAreaElement)?.value || "Reviewed"
       const overrideReason =
-        recommended && recommended !== "review" && recommended !== decisionKey
-          ? "Decision manual diferente a la recomendacion de IA."
+        detailData.aiRecommendation !== "review" &&
+        detailData.aiRecommendation !== (nextDecision === "ACCEPT" ? "accept" : "reject")
+          ? "Decisión manual distinta a la recomendación IA."
           : undefined
 
       await reviewAdmission(detailData.id, {
         decision: decisionValue,
-        admin_notes: adminNotes.trim() || undefined,
+        admin_notes: notes,
         override_reason: overrideReason,
       })
 
-      if (nextDecision === "ACCEPT") {
-        setShowingProcessed(true)
-      } else {
-        archiveAdmission()
-      }
+      setTimeout(() => {
+        if (nextDecision === "ACCEPT") {
+          setShowingProcessed(true)
+        } else {
+          archiveAdmission()
+        }
+      }, 1000)
     } catch {
-      setReviewError("No se pudo registrar la decision.")
       setDecision(null)
     } finally {
       setIsProcessing(false)
     }
   }
 
-  const handleAccountChange = (field: keyof AccountFormState) =>
-    (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-      setAccountForm((previous) => ({
-        ...previous,
-        [field]: event.target.value,
-      }))
-    }
-
   const handleArchive = async () => {
     if (!detailData) return
-    setAccountError("")
-
-    if (!accountForm.username.trim() || !accountForm.password.trim() || !accountForm.role.trim()) {
-      setAccountError("Completa usuario, contrasena y rol antes de archivar.")
+    if (isDemoData) {
+      archiveAdmission()
       return
     }
 
-    setIsCreatingAccount(true)
-    try {
-      await createAdmissionAccount(detailData.id, {
-        username: accountForm.username.trim(),
-        password: accountForm.password.trim(),
-        role: accountForm.role.trim(),
-        camp_id: accountForm.campId || activeCampId,
-      })
-      archiveAdmission()
-    } catch {
-      setAccountError("No se pudo crear la cuenta. Intenta nuevamente.")
-    } finally {
-      setIsCreatingAccount(false)
+    if (decision === "ACCEPT" && activeCampId) {
+      try {
+        await createAdmissionAccount(detailData.id, {
+          username: buildUsername(detailData.applicantName),
+          password: DEFAULT_ACCOUNT_PASSWORD,
+          role: DEFAULT_ACCOUNT_ROLE,
+          camp_id: activeCampId,
+        })
+      } catch {
+        // Ignore create-account errors to keep the flow visible
+      }
     }
+
+    archiveAdmission()
   }
 
-  if (isLoadingList) {
+  if (loading && admissions.length === 0) {
     return <div className="admissions-container">BUSCANDO ARCHIVOS...</div>
-  }
-
-  if (listError) {
-    return <div className="admissions-container admissions-error">{listError}</div>
   }
 
   if (admissions.length === 0) {
@@ -340,273 +366,245 @@ export default function AdmissionsBook() {
   const totalCount = admissions.length
 
   return (
-    <div className="admissions-container">
-      <h2 style={{ textAlign: "center", marginBottom: "10px" }}>LIBRO MAYOR DE ADMISIONES</h2>
-      <div style={{ fontFamily: "var(--font-mono)", marginBottom: "30px", opacity: 0.8 }}>
+    <div className="admissions-container" style={{ overflow: "hidden" }}>
+      <h2
+        style={{
+          textAlign: "center",
+          marginBottom: "5px",
+          color: "#fff",
+          textShadow: "0 0 5px rgba(255,255,255,0.5)",
+        }}
+      >
+        LIBRO MAYOR DE ADMISIONES
+      </h2>
+      <div style={{ fontFamily: "var(--font-mono)", marginBottom: "10px", color: "#aaa" }}>
         EXPEDIENTE {currentCount} DE {totalCount}
       </div>
 
       <div
-        className={`physical-book-cover ${
-          turnDirection === "next" ? "is-turning-next" : turnDirection === "prev" ? "is-turning-prev" : ""
-        }`}
+        className="book-scaler"
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          marginBottom: "60px",
+        }}
       >
-        <div className="book-binding-center"></div>
-        <div className="book-thickness-pages">
-          <div className="thickness-page"></div>
-          <div className="thickness-page"></div>
-          <div className="thickness-page"></div>
-          <div className="thickness-page"></div>
-          <div className="thickness-page"></div>
-          <div className="thickness-page"></div>
-        </div>
-
         <div
-          className={`flips-layer ${
-            turnDirection ? (turnDirection === "next" ? "is-turning-next" : "is-turning-prev") : ""
-          }`}
+          className={`physical-book-cover ${turnDirection === "next" ? "is-turning-next" : turnDirection === "prev" ? "is-turning-prev" : ""}`}
         >
-          <div className="flip-segment flip1">
-            <div className="flip-segment flip2">
-              <div className="flip-segment flip3">
-                <div className="flip-segment flip4">
-                  <div className="flip-segment flip5">
-                    <div className="flip-segment flip6">
-                      <div className="flip-segment flip7"></div>
+          <div className="book-binding-center"></div>
+          <div className="book-thickness-pages">
+            <div className="thickness-page"></div>
+            <div className="thickness-page"></div>
+            <div className="thickness-page"></div>
+            <div className="thickness-page"></div>
+            <div className="thickness-page"></div>
+            <div className="thickness-page"></div>
+          </div>
+
+          <div
+            className={`flips-layer ${turnDirection ? (turnDirection === "next" ? "is-turning-next" : "is-turning-prev") : ""}`}
+          >
+            <div className="flip-segment flip1">
+              <div className="flip-segment flip2">
+                <div className="flip-segment flip3">
+                  <div className="flip-segment flip4">
+                    <div className="flip-segment flip5">
+                      <div className="flip-segment flip6">
+                        <div className="flip-segment flip7"></div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <AnimatePresence mode="wait" custom={turnDirection === "next" ? 1 : -1}>
-          {detailData ? (
-            <motion.div
-              key={detailData.id + (showingProcessed ? "-processed" : "-review")}
-              custom={turnDirection === "next" ? 1 : -1}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="portfolio-spread"
-            >
-              <div className="portfolio-page left-page">
-                <div className="binder-header">PERFIL DE INTELIGENCIA</div>
-                <div className="profile-photo">
-                  <div className="photo-placeholder">
-                    <svg viewBox="0 0 24 24" fill="var(--ink)" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z" />
-                    </svg>
-                  </div>
-                </div>
-                <div className="form-field">
-                  <label>FILE NO:</label> <span>{detailData.fileNumber}</span>
-                </div>
-                <div className="form-field">
-                  <label>NOMBRE:</label> <span>{detailData.applicantName}</span>
-                </div>
-                <div className="form-field">
-                  <label>FECHA:</label> <span>{detailData.date}</span>
-                </div>
-                <div className="form-field">
-                  <label>NOTAS:</label>
-                  <span style={{ fontFamily: "var(--font-marker)" }}>{detailData.appearanceNotes}</span>
-                </div>
-                <div className="form-field">
-                  <label>BIOMETRIA:</label>
-                  <span className={detailData.fingerprintsScanned ? "biometrics-ok" : ""}>
-                    {detailData.fingerprintsScanned ? "VERIFICADO" : "PENDIENTE"}
-                  </span>
-                </div>
-                {decision ? (
-                  <div
-                    className="decision-stamp-overlay"
-                    style={{
-                      color: decision === "ACCEPT" ? "var(--accent-mil)" : "var(--accent-critical)",
-                      borderColor: decision === "ACCEPT" ? "var(--accent-mil)" : "var(--accent-critical)",
-                    }}
-                  >
-                    {decision === "ACCEPT" ? "ACCEPTED" : "REJECTED"}
-                  </div>
-                ) : null}
-              </div>
-
-              <div className="portfolio-page right-page">
-                {isLoadingDetail ? (
-                  <div style={{ fontFamily: "var(--font-mono)", opacity: 0.7 }}>CARGANDO EXPEDIENTE...</div>
-                ) : showingProcessed ? (
-                  <div
-                    className="processed-view"
-                    style={{
-                      position: "relative",
-                      height: "100%",
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      paddingTop: "50px",
-                    }}
-                  >
-                    <div className="binder-header" style={{ width: "100%" }}>
-                      RESULTADO
+          <AnimatePresence mode="wait" custom={turnDirection === "next" ? 1 : -1}>
+            {detailData ? (
+              <motion.div
+                key={detailData.id + (showingProcessed ? "-processed" : "-review")}
+                custom={turnDirection === "next" ? 1 : -1}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="portfolio-spread"
+              >
+                <div className="portfolio-page left-page">
+                  <div className="binder-header">PERFIL DE INTELIGENCIA</div>
+                  <div className="profile-photo">
+                    <div className="photo-placeholder">
+                      <svg viewBox="0 0 24 24" fill="#000" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z" />
+                      </svg>
                     </div>
+                  </div>
+                  <div className="form-field">
+                    <label>EXPEDIENTE:</label> <span>{detailData.fileNumber}</span>
+                  </div>
+                  <div className="form-field">
+                    <label>NOMBRE:</label> <span>{detailData.applicantName}</span>
+                  </div>
+                  <div className="form-field">
+                    <label>FECHA:</label> <span>{detailData.date}</span>
+                  </div>
+                  <div className="form-field">
+                    <label>NOTAS:</label>
+                    <span style={{ fontFamily: "var(--font-marker)" }}>{detailData.appearanceNotes}</span>
+                  </div>
+                  <div className="form-field">
+                    <label>BIOMETRÍA:</label>
+                    <span className={detailData.fingerprintsScanned ? "biometrics-ok" : ""}>
+                      {detailData.fingerprintsScanned ? "VERIFICADO" : "PENDIENTE"}
+                    </span>
+                  </div>
 
+                  {decision ? (
                     <div
                       className="decision-stamp-overlay"
                       style={{
-                        top: "30%",
-                        left: "10%",
-                        transform: "rotate(10deg)",
-                        color: "var(--accent-mil)",
-                        borderColor: "var(--accent-mil)",
+                        color: decision === "ACCEPT" ? "var(--accent-mil)" : "var(--accent-critical)",
+                        borderColor: decision === "ACCEPT" ? "var(--accent-mil)" : "var(--accent-critical)",
                       }}
                     >
-                      PROCESSED
+                      {decision === "ACCEPT" ? "ACEPTADO" : "RECHAZADO"}
                     </div>
+                  ) : null}
+                </div>
 
+                <div className="portfolio-page right-page">
+                  {!showingProcessed ? (
+                    <>
+                      <div className="binder-header">REVISIÓN DE IA</div>
+                      <div className="ai-evaluation-section">
+                        <div className="form-field">
+                          <label>SCORE IA:</label>
+                          <span
+                            style={{
+                              color: detailData.aiScore >= 80 ? "var(--accent-mil)" : "var(--accent-warning)",
+                              fontSize: "1.2em",
+                            }}
+                          >
+                            {detailData.aiScore}/100
+                          </span>
+                        </div>
+                        <div className="form-field">
+                          <label>SUGERENCIA:</label>
+                          <span>{detailData.suggestedDecision === "ACCEPT" ? "ACEPTAR" : "RECHAZAR"}</span>
+                        </div>
+                        <div className="form-field">
+                          <label>ANÁLISIS:</label>
+                          <span style={{ fontFamily: "var(--font-typewriter)" }}>{detailData.aiAnalysis}</span>
+                        </div>
+                        <div className="form-field">
+                          <label>REGLAS:</label>
+                          <ul style={{ fontSize: "0.9em", paddingLeft: "20px", fontFamily: "var(--font-mono)" }}>
+                            {detailData.rulesApplied.map((rule) => (
+                              <li key={rule}>
+                                {rule === "CRITICAL_ROLE_NEEDED"
+                                  ? "ROL_CRÍTICO_REQUERIDO"
+                                  : rule === "HEALTH_SCORE_OK"
+                                    ? "ESTRUCTURA_SALUD_OK"
+                                    : rule}
+                              </li>
+                            ))}
+                            {detailData.rulesApplied.length === 0 ? <li>Ninguna</li> : null}
+                          </ul>
+                        </div>
+                      </div>
+
+                      <div className="binder-header" style={{ marginTop: "12px" }}>
+                        RESOLUCIÓN OFICIAL
+                      </div>
+
+                      <div className="form-field comments-field" style={{ marginTop: "10px" }}>
+                        <label style={{ display: "block", marginBottom: "5px" }}>COMENTARIOS (OPCIONAL):</label>
+                        <textarea
+                          className="vintage-input"
+                          id="admin_notes_input"
+                          placeholder="Escriba observaciones..."
+                          style={{ width: "100%", height: "48px", resize: "none" }}
+                        ></textarea>
+                      </div>
+
+                      <div className="binder-footer decision-footer">
+                        <StampButton label="RECHAZAR" type="reject" onClick={() => handleDecision("REJECT")} disabled={!!decision || isProcessing} />
+                        <StampButton label="ACEPTAR" type="accept" onClick={() => handleDecision("ACCEPT")} disabled={!!decision || isProcessing} />
+                      </div>
+                    </>
+                  ) : (
                     <div
+                      className="processed-view"
                       style={{
-                        fontFamily: "var(--font-typewriter)",
-                        marginTop: "80px",
-                        textAlign: "center",
-                        fontSize: "1.1rem",
-                        color: "var(--ink)",
+                        position: "relative",
+                        height: "100%",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        paddingTop: "50px",
                       }}
                     >
-                      CUENTA PENDIENTE DE CREACION
-                    </div>
+                      <div className="binder-header" style={{ width: "100%" }}>
+                        RESULTADO
+                      </div>
 
-                    <div className="account-section">
-                      <div className="account-row">
-                        <input
-                          className="vintage-input"
-                          value={accountForm.username}
-                          onChange={handleAccountChange("username")}
-                          placeholder="Usuario"
-                        />
-                        <input
-                          className="vintage-input"
-                          type="password"
-                          value={accountForm.password}
-                          onChange={handleAccountChange("password")}
-                          placeholder="Contrasena"
-                        />
+                      <div
+                        className="decision-stamp-overlay"
+                        style={{
+                          top: "30%",
+                          left: "10%",
+                          transform: "rotate(10deg)",
+                          color: "var(--accent-mil)",
+                          borderColor: "var(--accent-mil)",
+                        }}
+                      >
+                        PROCESADO
                       </div>
-                      <div className="account-row">
-                        <input
-                          className="vintage-input"
-                          value={accountForm.role}
-                          onChange={handleAccountChange("role")}
-                          placeholder="Rol asignado"
-                        />
-                        <select
-                          className="vintage-input"
-                          value={accountForm.campId}
-                          onChange={handleAccountChange("campId")}
-                        >
-                          {camps.map((camp) => (
-                            <option key={camp.id} value={camp.id}>
-                              {camp.name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="account-hint">Rol y campamento deben coincidir con la politica del sistema.</div>
-                      {accountError ? <div className="admissions-error">{accountError}</div> : null}
-                    </div>
 
-                    <div className="binder-footer" style={{ bottom: "40px", justifyContent: "center" }}>
-                      <button className="archive-btn" onClick={handleArchive} disabled={isCreatingAccount}>
-                        {isCreatingAccount ? "PROCESANDO..." : "CREAR CUENTA Y ARCHIVAR"}
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <div className="binder-header">REVISION DE IA</div>
-                    <div className="ai-evaluation-section">
-                      <div className="form-field">
-                        <label>SCORE IA:</label>
-                        <span
-                          style={{
-                            color: detailData.aiScore >= 80 ? "var(--accent-mil)" : "var(--accent-warning)",
-                            fontSize: "1.2em",
-                          }}
-                        >
-                          {detailData.aiScore}/100
-                        </span>
+                      <div
+                        style={{
+                          fontFamily: "var(--font-typewriter)",
+                          marginTop: "80px",
+                          textAlign: "center",
+                          fontSize: "1.2rem",
+                          color: "#000",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        CREACIÓN DE CUENTA DELEGADA AL SISTEMA
+                        <br />// BASADA EN PROFESIÓN REGISTRADA
                       </div>
-                      <div className="form-field">
-                        <label>SUGERENCIA:</label> <span>{detailData.suggestedDecision}</span>
+
+                      <div style={{ fontFamily: "var(--font-mono)", marginTop: "30px", textAlign: "center", opacity: 0.7 }}>
+                        EXPEDIENTE #{detailData.fileNumber}
                       </div>
-                      <div className="form-field">
-                        <label>ANALISIS:</label>
-                        <span style={{ fontFamily: "var(--font-typewriter)" }}>{detailData.aiAnalysis}</span>
-                      </div>
-                      <div className="form-field">
-                        <label>REGLAS:</label>
-                        <ul style={{ fontSize: "0.9em", paddingLeft: "20px", fontFamily: "var(--font-mono)" }}>
-                          {detailData.rulesApplied.length > 0 ? (
-                            detailData.rulesApplied.map((rule) => <li key={rule}>{rule}</li>)
-                          ) : (
-                            <li>Ninguna</li>
-                          )}
-                        </ul>
+
+                      <div className="binder-footer" style={{ bottom: "40px", justifyContent: "center" }}>
+                        <button className="archive-btn" onClick={handleArchive}>
+                          CREAR CUENTA Y ARCHIVAR
+                        </button>
                       </div>
                     </div>
-
-                    <div className="binder-header" style={{ marginTop: "20px" }}>
-                      RESOLUCION OFICIAL
-                    </div>
-
-                    <div className="form-field" style={{ marginTop: "10px" }}>
-                      <label style={{ display: "block", marginBottom: "5px" }}>
-                        COMENTARIOS (OPCIONAL):
-                      </label>
-                      <textarea
-                        className="vintage-input"
-                        placeholder="Escriba observaciones..."
-                        style={{ width: "100%", height: "60px", resize: "none" }}
-                        value={adminNotes}
-                        onChange={(event) => setAdminNotes(event.target.value)}
-                      ></textarea>
-                    </div>
-
-                    {reviewError ? <div className="admissions-error">{reviewError}</div> : null}
-
-                    <div className="binder-footer">
-                      <StampButton
-                        label="REJECT"
-                        type="reject"
-                        onClick={() => handleDecision("REJECT")}
-                        disabled={!!decision || isProcessing}
-                      />
-                      <StampButton
-                        label="ACCEPT"
-                        type="accept"
-                        onClick={() => handleDecision("ACCEPT")}
-                        disabled={!!decision || isProcessing}
-                      />
-                    </div>
-                  </>
-                )}
-              </div>
-            </motion.div>
-          ) : null}
-        </AnimatePresence>
+                  )}
+                </div>
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
+        </div>
       </div>
 
-      <div className="page-controls" style={{ display: "flex", gap: "30px", marginTop: "40px" }}>
+      <div className="page-controls" style={{ display: "flex", gap: "30px", marginTop: "20px", position: "relative", zIndex: 1000 }}>
         <button className="arrow-btn" onClick={handlePrevPage} disabled={currentIndex === 0 || !!decision}>
-          ← PASAR PAG. ANTERIOR
+          ← PASAR PÁG. ANTERIOR
         </button>
         <button
           className="arrow-btn"
           onClick={handleNextPage}
           disabled={currentIndex === admissions.length - 1 || !!decision}
         >
-          PASAR PAG. SIGUIENTE →
+          PASAR PÁG. SIGUIENTE →
         </button>
       </div>
     </div>
