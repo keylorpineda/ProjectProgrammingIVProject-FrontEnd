@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
+import type { Variants } from "framer-motion"
 import { getPersons } from "@/features/persons/services/persons.service"
 import type { Person } from "@/types/api.types"
 import { useCamp } from "../context/CampContext"
@@ -84,14 +85,14 @@ export default function People() {
     return true
   })
 
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     show: { opacity: 1, transition: { staggerChildren: 0.15 } },
   }
 
-  const cardVariants = {
+  const cardVariants: Variants = {
     hidden: { opacity: 0, y: 30, rotate: -5 },
-    show: { opacity: 1, y: 0, rotate: 0, transition: { type: "spring", stiffness: 200 } },
+    show: { opacity: 1, y: 0, rotate: 0, transition: { type: "spring" as const, stiffness: 200 } },
   }
 
   return (

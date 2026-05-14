@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { getCampTransfers } from "@/features/transfers/services/transfers.service"
-import type { IntercampRequest } from "@/types/api.types"
 import { useCamp } from "../context/CampContext"
 import "./Transfers.css"
 

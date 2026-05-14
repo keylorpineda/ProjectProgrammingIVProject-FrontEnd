@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes, useNavigate } from "react-router-dom"
+import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom"
 import { AuthProvider, useAuth } from "./context/AuthContext"
 import { CampProvider } from "./context/CampContext"
 import { SessionProvider } from "./context/SessionContext"
@@ -12,14 +12,14 @@ import Camps from "./components/Camps"
 import Explorations from "./components/Explorations"
 import Resources from "./components/Resources"
 import Transfers from "./components/Transfers"
+import MapTest from "./components/MapTest"
 import "./AdminTheme.css"
 import "./Admin.css"
 
 const RequireAdmin = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated, user } = useAuth()
-  const role = user?.role?.toLowerCase()
-  const isAdmin = role === "admin" || role === "super_admin" || role === "superadmin"
-
+  // const { isAuthenticated, user } = useAuth()
+  // const role = user?.role?.toLowerCase()
+  // const isAdmin = role === "admin" || role === "super_admin" || role === "superadmin"
   // if (!isAuthenticated || !user || !isAdmin) {
   //   return <Navigate to="/login" replace />
   // }
@@ -30,6 +30,8 @@ const RequireAdmin = ({ children }: { children: React.ReactNode }) => {
 const AdminLayout = () => {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+  const isMapTestRoute = location.pathname.startsWith("/admin/map-test")
 
   const handleLogout = () => {
     void logout().finally(() => navigate("/login"))
@@ -39,19 +41,28 @@ const AdminLayout = () => {
     <div className="admin-layout">
       <Sidebar />
       <div className="admin-main-content">
-        <header className="admin-topbar">
-          <div className="topbar-title">CONFIDENTIAL // CAMP ARCHIVE</div>
-          <div className="topbar-actions">
-            <CampSelector />
-            <div className="user-pill">
-              {user?.id ?? "USR"} [{user?.role ?? "role"}]
+        {!isMapTestRoute ? (
+          <header className="admin-topbar">
+            <div className="topbar-title">CONFIDENTIAL // CAMP ARCHIVE</div>
+            <div className="topbar-actions">
+              <CampSelector />
+              <div className="user-pill">
+                {user?.id ?? "USR"} [{user?.role ?? "role"}]
+              </div>
+              <button className="logout-btn" onClick={handleLogout}>
+                LOGOUT
+              </button>
             </div>
+          </header>
+        ) : (
+          <div className="admin-topbar-map-actions">
             <button className="logout-btn" onClick={handleLogout}>
               LOGOUT
             </button>
           </div>
-        </header>
-        <div className="admin-route-container">
+        )}
+
+        <div className={`admin-route-container ${isMapTestRoute ? "map-test-mode" : ""}`}>
           <Routes>
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="admissions" element={<AdmissionsBook />} />
@@ -60,6 +71,7 @@ const AdminLayout = () => {
             <Route path="explorations" element={<Explorations />} />
             <Route path="resources" element={<Resources />} />
             <Route path="transfers" element={<Transfers />} />
+            <Route path="map-test" element={<MapTest />} />
             <Route path="*" element={<Navigate to="dashboard" replace />} />
           </Routes>
         </div>

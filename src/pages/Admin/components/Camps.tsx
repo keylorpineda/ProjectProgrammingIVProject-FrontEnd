@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
+import type { Variants } from "framer-motion"
 import { getCamps } from "@/features/camps/services/camps.service"
 import type { Camp } from "@/types/api.types"
 import "./Camps.css"
@@ -55,14 +56,14 @@ export default function Camps() {
     [camps],
   )
 
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     show: { opacity: 1, transition: { staggerChildren: 0.2 } },
   }
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { opacity: 0, x: -50 },
-    show: { opacity: 1, x: 0, transition: { type: "spring", stiffness: 100 } },
+    show: { opacity: 1, x: 0, transition: { type: "spring" as const, stiffness: 100 } },
   }
 
   return (
