@@ -1,0 +1,225 @@
+@import url("https://fonts.googleapis.com/css2?family=Special+Elite&family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;700&family=VT323&display=swap");
+
+:root {
+  --bg-deep: #0f100f;
+  --bg-color: #121412;
+  --bg-paper: #eaddca;
+  --bg-paper-dark: #d2c1ae;
+  --bg-paper-shadow: rgba(0, 0, 0, 0.2);
+  --text-primary: #e5e7e5;
+  --text-secondary: #a1a1a1;
+  --ink: #1a1a1a;
+  --ink-soft: #4a4a4a;
+  --primary-color: #d97706;
+  --primary-glow: rgba(217, 119, 6, 0.3);
+  --accent-warning: #f59e0b;
+  --accent-critical: #991b1b;
+  --accent-critical-deep: #7f1d1d;
+  --accent-approved: #166534;
+  --accent-tape: #854d0e;
+  --font-typewriter: "Special Elite", system-ui;
+  --font-mono: "JetBrains Mono", monospace;
+  --font-body: "Inter", sans-serif;
+  --font-terminal: "VT323", monospace;
+  --glass-bg: rgba(15, 16, 15, 0.8);
+  --glass-border: rgba(255, 255, 255, 0.1);
+}
+
+.paper-panel {
+  background-color: var(--bg-paper);
+  background-image: url("https://www.transparenttextures.com/patterns/natural-paper.png");
+  border: 2px solid var(--ink);
+  color: var(--ink);
+  box-shadow: 5px 5px 0 var(--ink);
+}
+
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border);
+}
+
+.scanlines {
+  position: relative;
+}
+
+.tactical-photo {
+  background: white;
+  padding: 4px;
+  padding-bottom: 12px;
+  box-shadow: 2px 3px 6px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.tactical-photo:hover {
+  transform: scale(1.1) !important;
+  z-index: 50;
+  box-shadow: 4px 6px 12px rgba(0, 0, 0, 0.5);
+}
+
+.tactical-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  filter: sepia(0.3) contrast(1.1);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.tape-strip {
+  position: absolute;
+  background: rgba(180, 160, 110, 0.7);
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(1px);
+  z-index: 10;
+}
+
+.tape-top {
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-2deg);
+  width: 50%;
+  height: 14px;
+  clip-path: polygon(5% 0%, 95% 2%, 100% 50%, 98% 95%, 2% 100%, 0% 50%);
+}
+
+.tape-bottom {
+  bottom: -6px;
+  right: 10%;
+  transform: rotate(3deg);
+  width: 40%;
+  height: 12px;
+  clip-path: polygon(2% 15%, 98% 0%, 100% 85%, 5% 100%);
+  opacity: 0.6;
+}
+
+.handwritten-label {
+  font-family: var(--font-typewriter);
+  color: var(--accent-critical);
+  font-size: 8px;
+  line-height: 1.1;
+  font-weight: 800;
+  text-align: center;
+  margin-top: 1px;
+  padding: 0 4px;
+  transform: rotate(-1deg);
+  letter-spacing: -0.2px;
+  align-items: center;
+  justify-content: center;
+  height: calc(25% - 4px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
+.photo-alert-circle {
+  position: absolute;
+  inset: 4px;
+  border: 2px solid var(--accent-critical);
+  border-radius: 50%;
+  opacity: 1;
+  pointer-events: none;
+  z-index: 10;
+  background: radial-gradient(circle, transparent 40%, rgba(153, 27, 27, 0.1) 100%);
+}
+
+@keyframes hazard-pulse {
+  0% {
+    fill-opacity: 0.25;
+    stroke-opacity: 0.5;
+  }
+  50% {
+    fill-opacity: 0.55;
+    stroke-opacity: 0.9;
+  }
+  100% {
+    fill-opacity: 0.25;
+    stroke-opacity: 0.5;
+  }
+}
+
+.hazard-zone-animation {
+  animation: hazard-pulse 4s ease-in-out infinite;
+  filter: blur(2px);
+  pointer-events: none;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: var(--ink-soft);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--ink);
+  border: 1px solid var(--ink-soft);
+}
+
+.noise-overlay {
+  position: absolute;
+  inset: 0;
+  opacity: 0.03;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  z-index: 60;
+}
+
+.tactical-map-container .leaflet-container {
+  filter: sepia(0.3) brightness(0.8) contrast(1.2) saturate(0.8);
+  background: var(--bg-deep) !important;
+}
+
+.leaflet-container::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("https://www.transparenttextures.com/patterns/cartographer.png");
+  background-size: 800px;
+  opacity: 0.15;
+  pointer-events: none;
+  z-index: 400;
+  mix-blend-mode: multiply;
+}
+
+.vignette-tactical {
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 0 200px rgba(0, 0, 0, 0.9);
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.marching-ants {
+  stroke-dasharray: 10;
+  animation: dash 10s linear infinite;
+}
+
+@keyframes dash {
+  from {
+    stroke-dashoffset: 200;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.leaflet-pane,
+.leaflet-marker-icon,
+.leaflet-marker-shadow,
+.leaflet-tile,
+.leaflet-overlay-pane,
+.leaflet-map-pane {
+  visibility: visible !important;
+  opacity: 1 !important;
+}

@@ -105,6 +105,18 @@
   padding: 24px;
 }
 
+.admin-route-container.map-test-mode {
+  overflow: hidden;
+  padding: 0;
+}
+
+.admin-topbar-map-actions {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  z-index: 2050;
+}
+
 .admin-root ::-webkit-scrollbar {
   width: 10px;
 }
