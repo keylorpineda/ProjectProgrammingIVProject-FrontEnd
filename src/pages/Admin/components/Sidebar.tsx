@@ -11,6 +11,7 @@ export default function Sidebar() {
     { name: "EXPLORACIONES", path: "/admin/explorations" },
     { name: "RECURSOS", path: "/admin/resources" },
     { name: "TRASLADOS", path: "/admin/transfers" },
+    { name: "MAP/TEST", path: "/admin/map-test" },
   ]
 
   return (
