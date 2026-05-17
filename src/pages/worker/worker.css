@@ -1,0 +1,47 @@
+.worker-layout {
+  @apply flex h-screen overflow-hidden;
+}
+
+.worker-main-content {
+  @apply flex-1 flex flex-col min-w-0 bg-bunker-bg h-screen;
+}
+
+.worker-topbar {
+  @apply h-[60px] border-b-2 border-ink-black flex items-center justify-between px-8 z-40;
+}
+
+.worker-route-container {
+  @apply flex-1 overflow-y-auto custom-scrollbar bg-bunker-bg;
+}
+
+.worker-route-container.loading {
+  @apply flex items-center justify-center;
+}
+
+.worker-page-header {
+  @apply p-8 space-y-4;
+}
+
+.worker-page-header h2 {
+  @apply text-4xl uppercase mb-2 drop-shadow-[2px_2px_0px_rgba(154,144,128,0.2)];
+}
+
+.worker-page-header p {
+  @apply terminal-text opacity-90;
+}
+
+.worker-metrics-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6;
+}
+
+.worker-section-maintenance {
+  @apply p-8 flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4 opacity-50;
+}
+
+.worker-section-maintenance h2 {
+  @apply text-2xl uppercase font-display text-white;
+}
+
+.worker-section-maintenance p {
+  @apply font-mono text-xs text-paper-base uppercase;
+}
