@@ -4,6 +4,9 @@ import { useAuth } from '@/pages/admin/context/AuthContext'
 import WorkerSidebar from '@/components/ui/WorkerSidebar'
 import WorkerTopBar from '@/components/ui/WorkerTopBar'
 import WorkerDashboard from './WorkerDashboard'
+import WorkerProfile from './WorkerProfile'
+import WorkerProfessions from './WorkerProfessions'
+import WorkerResources from './WorkerResources'
 import './worker.css'
 
 export default function WorkerLayout() {
@@ -41,6 +44,9 @@ export default function WorkerLayout() {
           <div className="max-w-7xl mx-auto">
             <Routes>
               <Route path="dashboard" element={<WorkerDashboard activeTab={activeTab} />} />
+              <Route path="profile" element={<WorkerProfile activeTab={activeTab} />} />
+              <Route path="professions" element={<WorkerProfessions activeTab={activeTab} />} />
+              <Route path="resources" element={<WorkerResources activeTab={activeTab} />} />
               <Route path="*" element={<Navigate to="dashboard" replace />} />
             </Routes>
           </div>
