@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
 import Login from "./pages/Login/Login"
 import AdmissionNew from "./pages/AdmissionNew/AdmissionNew"
-import Admin from "./pages/Admin/Admin"
+import Admin from "./pages/admin/Admin"
 import WorkerLayout from "./pages/worker/WorkerLayout"
 import WorkerGuard from "./core/guards/WorkerGuard"
 

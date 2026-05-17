@@ -1,3 +1,5 @@
+@reference "../../styles/worker-theme.css";
+
 .worker-layout {
   @apply flex h-screen overflow-hidden;
 }
@@ -11,7 +13,24 @@
 }
 
 .worker-route-container {
-  @apply flex-1 overflow-y-auto custom-scrollbar bg-bunker-bg;
+  @apply flex-1 overflow-y-auto bg-bunker-bg;
+}
+
+.worker-route-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.worker-route-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.worker-route-container::-webkit-scrollbar-thumb {
+  background: rgba(156, 140, 120, 0.3);
+  border-radius: 3px;
+}
+
+.worker-route-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 140, 120, 0.5);
 }
 
 .worker-route-container.loading {
@@ -27,7 +46,7 @@
 }
 
 .worker-page-header p {
-  @apply terminal-text opacity-90;
+  @apply font-mono text-xs uppercase tracking-widest text-accent-orange opacity-90;
 }
 
 .worker-metrics-grid {

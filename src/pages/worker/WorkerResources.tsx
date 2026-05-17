@@ -1,9 +1,8 @@
-import React from 'react'
-import { Package, TrendingDown, TrendingUp, AlertTriangle, Loader2, BarChart3, History } from 'lucide-react'
+import { Package, TrendingDown, TrendingUp, Loader2, BarChart3, History } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useAuth } from '@/pages/admin/context/AuthContext'
-import { useInventory, useInventoryMovements, useInventoryStatus } from '@/features/worker/hooks/useWorkerAPI'
-import type { InventoryItem, InventoryMovement } from '@/types/worker.api.types'
+import { useInventory, useInventoryMovements } from '@/features/worker/hooks/useWorkerAPI'
+import type { InventoryItem } from '@/types/worker.api.types'
 
 interface WorkerResourcesProps {
   activeTab?: string
@@ -61,15 +60,14 @@ const getMovementTypeLabel = (type: string) => {
   return typeMap[type] || type.toUpperCase()
 }
 
-export default function WorkerResources({ activeTab }: WorkerResourcesProps) {
+export default function WorkerResources(_props: WorkerResourcesProps) {
   const { user } = useAuth()
 
   // Fetch data hooks
   const { data: inventory, isLoading: loadingInventory } = useInventory(user?.campId)
   const { data: movements, isLoading: loadingMovements } = useInventoryMovements(user?.campId)
-  const { stats: inventoryStats, isLoading: loadingStats } = useInventoryStatus(user?.campId)
 
-  const isLoading = loadingInventory || loadingMovements || loadingStats
+  const isLoading = loadingInventory || loadingMovements
 
   if (isLoading) {
     return (
@@ -119,13 +117,13 @@ export default function WorkerResources({ activeTab }: WorkerResourcesProps) {
 
                 return (
                   <motion.div
-                    key={item.id}
+                    key={item.resource_id}
                     whileHover={{ translateX: 4 }}
                     className="flex items-center justify-between p-4 bg-paper-dark/10 border border-ink-black/10 hover:bg-paper-dark/20 transition-colors"
                   >
                     <div className="space-y-1 flex-1">
-                      <p className="text-[12px] font-mono text-ink-black/80 font-bold uppercase">{item.id}</p>
-                      <p className="text-sm font-display">{item.name}</p>
+                      <p className="text-[12px] font-mono text-ink-black/80 font-bold uppercase">{item.resource_id}</p>
+                      <p className="text-sm font-display">{item.resource_name}</p>
                     </div>
                     <div className="text-right space-y-1">
                       <div className="flex items-center gap-2 justify-end">

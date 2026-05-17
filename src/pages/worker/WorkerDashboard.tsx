@@ -1,10 +1,9 @@
 import React from 'react'
-import { Activity, ShieldCheck, Database, Zap, AlertCircle, Loader2 } from 'lucide-react'
+import { Activity, ShieldCheck, Database, Zap, Loader2 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useAuth } from '@/pages/admin/context/AuthContext'
 import {
   useAssignedResources,
-  useProfessions,
   useProfessionMetrics,
   useInventoryStatus,
 } from '@/features/worker/hooks/useWorkerAPI'
@@ -41,7 +40,7 @@ const commandLogs = [
   { time: '12:50:04', message: 'PERSONNEL STATUS VERIFIED' },
 ]
 
-export default function WorkerDashboard({ activeTab }: WorkerDashboardProps) {
+export default function WorkerDashboard(_props: WorkerDashboardProps) {
   const { user } = useAuth()
 
   // Fetch data hooks

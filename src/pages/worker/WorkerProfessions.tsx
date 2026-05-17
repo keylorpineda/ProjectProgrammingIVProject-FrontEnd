@@ -109,7 +109,7 @@ const cardVariants = {
   },
 }
 
-export default function WorkerProfessions({ activeTab }: WorkerProfessionsProps) {
+export default function WorkerProfessions(_props: WorkerProfessionsProps) {
   const { user } = useAuth()
   const { data: professions, isLoading: loadingProfessions } = useProfessions()
   const { metrics, isLoading: loadingMetrics } = useProfessionMetrics()
@@ -230,7 +230,7 @@ export default function WorkerProfessions({ activeTab }: WorkerProfessionsProps)
         variants={containerVariants}
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
       >
-        {professions?.map((profession, index) => {
+        {professions?.map((profession) => {
           const Icon = getProfessionIcon(profession.name)
           const metric = metrics?.find((m) => m.id === profession.id)
           const metricsInfo = getProfessionMetricsInfo(profession.name)

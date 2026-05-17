@@ -1,4 +1,4 @@
-import type { PersonStatus, Profession, Resource } from '@/types/api.types'
+import type { Profession, Resource } from '@/types/api.types'
 
 export interface WorkerProfile {
   id: string

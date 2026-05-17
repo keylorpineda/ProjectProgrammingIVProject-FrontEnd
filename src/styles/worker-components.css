@@ -1,3 +1,5 @@
+@reference "./worker-theme.css";
+
 @layer components {
   .vintage-scanline {
     background: repeating-linear-gradient(

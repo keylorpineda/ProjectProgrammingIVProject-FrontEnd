@@ -1,4 +1,4 @@
-import axios, { AxiosError } from "axios"
+import axios, { type AxiosError, type AxiosResponse } from "axios"
 import api from "@/config/api"
 import type { Camp, HazardArea, ProfessionStat, Resource, TransferLine } from "../types/camp"
 
@@ -254,7 +254,7 @@ export class CampsService {
 
       const transfers = responses
         .filter(
-          (response): response is PromiseFulfilledResult<{ data: unknown }> =>
+          (response): response is PromiseFulfilledResult<AxiosResponse<unknown>> =>
             response.status === "fulfilled",
         )
         .flatMap((response) => asArray<RawTransfer>(response.value.data))

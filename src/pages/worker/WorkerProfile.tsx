@@ -1,5 +1,5 @@
 import React from 'react'
-import { User, MapPin, Briefcase, Users, Shield, Loader2, AlertTriangle } from 'lucide-react'
+import { Users, Shield, Loader2 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useAuth } from '@/pages/admin/context/AuthContext'
 import { useAssignedResources, useProfessions } from '@/features/worker/hooks/useWorkerAPI'
@@ -28,8 +28,19 @@ const itemVariants = {
   },
 }
 
+interface WorkerMetricStat {
+  label: string
+  val: string | number
+  status: string
+}
+
+interface WorkerMetricGroup {
+  title: string
+  stats: WorkerMetricStat[]
+}
+
 // Get metrics for worker's profession
-const getMetricsForWorker = (profession: any) => {
+const getMetricsForWorker = (profession: any): WorkerMetricGroup => {
   if (!profession) {
     return {
       title: 'ESTADO OPERATIVO GENERAL',
@@ -128,7 +139,7 @@ const getMetricsForWorker = (profession: any) => {
   }
 }
 
-export default function WorkerProfile({ activeTab }: WorkerProfileProps) {
+export default function WorkerProfile(_props: WorkerProfileProps) {
   const { user } = useAuth()
   const { data: assignedResources, isLoading: loadingResources } = useAssignedResources()
   const { data: professions, isLoading: loadingProfessions } = useProfessions()
@@ -260,7 +271,7 @@ export default function WorkerProfile({ activeTab }: WorkerProfileProps) {
             </h4>
 
             <div className="space-y-6">
-              {roleData.stats.map((stat, i) => (
+              {roleData.stats.map((stat, i: number) => (
                 <div key={i} className="space-y-2">
                   <div className="flex justify-between text-[13px] font-mono font-bold items-end">
                     <span className="text-white/80 uppercase">{stat.label}</span>
@@ -347,6 +358,7 @@ export default function WorkerProfile({ activeTab }: WorkerProfileProps) {
               </div>
             </div>
           </div>
+        </motion.div>
       </div>
 
       {/* Additional Info */}

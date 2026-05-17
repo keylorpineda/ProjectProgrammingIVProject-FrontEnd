@@ -154,7 +154,7 @@ export const workerService = {
   /**
    * Get resource status badge
    */
-  getResourceStatus(item: InventoryItem): 'OK' | 'LOW' | 'CRITICAL' => {
+  getResourceStatus(item: InventoryItem): 'OK' | 'LOW' | 'CRITICAL' {
     if (item.current_quantity === 0) return 'CRITICAL'
     if (item.alert_active) return 'CRITICAL'
     if (item.current_quantity < item.minimum_stock_required * 1.5) return 'LOW'
