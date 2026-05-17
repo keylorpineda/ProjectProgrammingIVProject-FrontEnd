@@ -14,6 +14,7 @@ import {
   Users,
 } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { useAuth } from '@/pages/admin/context/AuthContext'
 import { useProfessions, useProfessionMetrics } from '@/features/worker/hooks/useWorkerAPI'
 
 interface WorkerProfessionsProps {
@@ -109,6 +110,7 @@ const cardVariants = {
 }
 
 export default function WorkerProfessions({ activeTab }: WorkerProfessionsProps) {
+  const { user } = useAuth()
   const { data: professions, isLoading: loadingProfessions } = useProfessions()
   const { metrics, isLoading: loadingMetrics } = useProfessionMetrics()
 
@@ -119,34 +121,33 @@ export default function WorkerProfessions({ activeTab }: WorkerProfessionsProps)
     if (!professions) return []
     return [
       {
-        label: 'Total Workforce',
+        label: 'Fuerza Laboral Total',
         value: professions.reduce((sum, p) => sum + p.persons.length, 0),
-        sub: 'Active Personnel',
+        sub: 'Personal Activo',
         icon: Users,
       },
       {
-        label: 'Professions Available',
-        value: professions.length,
-        sub: 'Total Types',
+        label: 'Producción de Comida',
+        value: '+12.4%',
+        sub: 'vs Consumo',
         icon: TrendingUp,
         positive: true,
       },
       {
-        label: 'Critical Professions',
-        value: metrics?.filter((m) => m.status === 'CRÍTICO').length || 0,
-        sub: 'Below Minimum',
+        label: 'Tasa de Lesiones',
+        value: '6.4%',
+        sub: 'Últimos 7 Días',
         icon: AlertTriangle,
         positive: false,
       },
       {
-        label: 'At Full Capacity',
-        value: metrics?.filter((m) => m.status === 'OK').length || 0,
-        sub: 'Meeting Requirements',
+        label: 'Balance de Recursos',
+        value: '98%',
+        sub: 'Capacidad Sector',
         icon: Shield,
-        positive: true,
       },
     ]
-  }, [professions, metrics])
+  }, [professions])
 
   if (isLoading) {
     return (
@@ -166,16 +167,20 @@ export default function WorkerProfessions({ activeTab }: WorkerProfessionsProps)
     >
       {/* Page Header */}
       <motion.div variants={cardVariants} className="worker-page-header">
-        <h2>OCCUPATIONAL COMMAND</h2>
-        <p className="terminal-text opacity-90">Strategic skill assignment // efficiency analysis</p>
+        <h2 className="text-4xl uppercase mb-2 drop-shadow-[1px_1px_0px_rgba(154,144,128,0.2)]">
+          MANDO OCUPACIONAL
+        </h2>
+        <p className="terminal-text opacity-90 text-[10px] tracking-widest">
+          Asignación estratégica de habilidades // análisis de eficiencia
+        </p>
       </motion.div>
 
       {/* Operational Dashboard */}
-      <motion.div variants={cardVariants} className="worker-metrics-grid">
+      <motion.div variants={cardVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
         {dashboardStats.map((stat, i) => {
           const Icon = stat.icon
           return (
-            <div key={i} className="paper-card p-4 border-l-4 border-l-ink-black flex justify-between items-start">
+            <div key={i} className="paper-card p-3 border-l-4 border-l-ink-black flex justify-between items-start">
               <div>
                 <p className="text-[10px] font-mono text-ink-black/75 uppercase tracking-widest mb-1 font-bold">
                   {stat.label}
@@ -186,7 +191,7 @@ export default function WorkerProfessions({ activeTab }: WorkerProfessionsProps)
                 </p>
               </div>
               <Icon
-                className={`w-5 h-5 ${
+                className={`w-5 h-5 flex-shrink-0 ${
                   stat.positive === true
                     ? 'text-success-green'
                     : stat.positive === false
@@ -203,17 +208,17 @@ export default function WorkerProfessions({ activeTab }: WorkerProfessionsProps)
       {metrics && metrics.some((m) => m.status === 'CRÍTICO') && (
         <motion.div
           variants={cardVariants}
-          className="bg-accent-orange text-ink-black p-4 flex items-center justify-between border-2 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)]"
+          className="bg-accent-orange text-ink-black p-3 flex items-center justify-between border-2 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)]"
         >
           <div className="flex items-center gap-3">
             <AlertTriangle className="w-5 h-5 animate-pulse flex-shrink-0" />
             <div>
               <p className="text-xs font-display tracking-widest uppercase font-bold">
-                CRITICAL PERSONNEL ALERT
+                ALERTA CRÍTICA DE PERSONAL: SECTOR {user?.campId}
               </p>
               <p className="font-mono text-[8px] opacity-90 uppercase">
-                {metrics.filter((m) => m.status === 'CRÍTICO').length} profession(s) operating below
-                minimum survival thresholds.
+                {metrics.filter((m) => m.status === 'CRÍTICO').length} Sectores operando bajo mínimos de
+                supervivencia.
               </p>
             </div>
           </div>
@@ -223,7 +228,7 @@ export default function WorkerProfessions({ activeTab }: WorkerProfessionsProps)
       {/* Profession Grid */}
       <motion.div
         variants={containerVariants}
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
       >
         {professions?.map((profession, index) => {
           const Icon = getProfessionIcon(profession.name)

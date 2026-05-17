@@ -1,5 +1,5 @@
 import React from 'react'
-import { Activity, ShieldCheck, Database, AlertCircle, Loader2 } from 'lucide-react'
+import { Activity, ShieldCheck, Database, Zap, AlertCircle, Loader2 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useAuth } from '@/pages/admin/context/AuthContext'
 import {
@@ -33,6 +33,14 @@ const itemVariants = {
   },
 }
 
+// Mock command logs for display
+const commandLogs = [
+  { time: '14:02:01', message: 'ARCHIVE ACCESSED BY WORKER SESSION' },
+  { time: '13:45:30', message: 'AUTOMATED RESOURCE SYNC COMPLETED' },
+  { time: '13:12:11', message: 'SECTOR OPERATIONS RUNNING NOMINAL' },
+  { time: '12:50:04', message: 'PERSONNEL STATUS VERIFIED' },
+]
+
 export default function WorkerDashboard({ activeTab }: WorkerDashboardProps) {
   const { user } = useAuth()
 
@@ -45,38 +53,35 @@ export default function WorkerDashboard({ activeTab }: WorkerDashboardProps) {
 
   const isLoading = loadingResources || loadingMetrics || loadingInventory
 
-  // Calculate dashboard metrics
-  const dashboardMetrics = React.useMemo(() => {
+  // Calculate camp overview metrics
+  const campMetrics = React.useMemo(() => {
     return [
       {
         icon: Activity,
-        label: 'ASSIGNED RESOURCES',
-        value: assignedResources?.length || '0',
+        label: 'CAMP VITALITY',
+        value: '78%',
         color: 'text-success-green',
       },
       {
         icon: ShieldCheck,
-        label: 'PROFESSIONS AVAILABLE',
-        value: metrics?.length || '0',
+        label: 'SECURITY LEVEL',
+        value: 'B-SECURE',
         color: 'text-accent-orange',
       },
       {
         icon: Database,
-        label: 'INVENTORY STATUS',
-        value: `${inventoryStats?.okItems || 0}/${inventoryStats?.total || 0}`,
+        label: 'DATA INTEGRITY',
+        value: 'VERIFIED',
         color: 'text-paper-dark',
       },
       {
-        icon: AlertCircle,
-        label: 'CRITICAL ITEMS',
-        value: inventoryStats?.criticalItems || '0',
-        color:
-          inventoryStats?.criticalItems && inventoryStats?.criticalItems > 0
-            ? 'text-accent-orange'
-            : 'text-success-green',
+        icon: Zap,
+        label: 'POWER STATUS',
+        value: 'LOW GEAR',
+        color: 'text-accent-orange',
       },
     ]
-  }, [assignedResources, metrics, inventoryStats])
+  }, [])
 
   if (isLoading) {
     return (
@@ -95,14 +100,16 @@ export default function WorkerDashboard({ activeTab }: WorkerDashboardProps) {
       animate="visible"
     >
       {/* Page Header */}
-      <motion.div variants={itemVariants} className="worker-page-header">
-        <h2>WORKER DASHBOARD</h2>
-        <p className="terminal-text opacity-90">Camp: {user?.campId} // Operational Overview</p>
+      <motion.div variants={itemVariants}>
+        <h2 className="text-4xl uppercase mb-2 drop-shadow-[2px_2px_0px_rgba(154,144,128,0.2)]">
+          CAMP OVERVIEW
+        </h2>
+        <p className="terminal-text opacity-90">Sector {user?.campId} // Strategic Dashboard</p>
       </motion.div>
 
-      {/* Metrics Grid */}
-      <motion.div variants={itemVariants} className="worker-metrics-grid">
-        {dashboardMetrics.map((item, i) => {
+      {/* Camp Overview Metrics Grid */}
+      <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {campMetrics.map((item, i) => {
           const Icon = item.icon
 
           return (
@@ -122,6 +129,43 @@ export default function WorkerDashboard({ activeTab }: WorkerDashboardProps) {
             </motion.div>
           )
         })}
+      </motion.div>
+
+      {/* Command Logs & System Notices */}
+      <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Latest Command Logs */}
+        <div className="paper-card p-8">
+          <h3 className="text-xl uppercase font-display border-b border-ink-black pb-2 mb-6">
+            LATEST COMMAND LOGS
+          </h3>
+          <div className="space-y-4 font-mono text-xs">
+            {commandLogs.map((log, i) => (
+              <p key={i} className="text-ink-black/60">
+                <span className="text-ink-black font-bold">[{log.time}]</span> {log.message}
+              </p>
+            ))}
+          </div>
+        </div>
+
+        {/* System Notices */}
+        <div className="dashed-accent p-8 bg-paper-base/30 relative overflow-hidden flex flex-col justify-center">
+          <div className="relative z-10">
+            <h3 className="text-2xl uppercase font-display text-ink-black mb-4">SYSTEM NOTICES</h3>
+            <p className="marker-note text-xl">"Remember: Duty and dedication secure survival."</p>
+            <p className="mt-6 text-sm text-ink-black/70 leading-relaxed font-mono italic">
+              All resource movements must be logged in the system. Unauthorized removal of supplies
+              will result in immediate loss of privileges.
+              {inventoryStats?.criticalItems && inventoryStats.criticalItems > 0 && (
+                <span className="block mt-3 text-accent-orange font-bold">
+                  ⚠️ ALERT: {inventoryStats.criticalItems} critical resource(s) detected.
+                </span>
+              )}
+            </p>
+          </div>
+          <div className="absolute -bottom-10 -right-10 opacity-10 rotate-12">
+            <ShieldCheck className="w-64 h-64 text-ink-black" />
+          </div>
+        </div>
       </motion.div>
 
       {/* Assigned Resources Section */}
@@ -206,41 +250,6 @@ export default function WorkerDashboard({ activeTab }: WorkerDashboardProps) {
           </div>
         </motion.div>
       )}
-
-      {/* System Notices */}
-      <motion.div variants={itemVariants} className="dashed-accent p-8 bg-paper-base/30">
-        <div className="relative z-10">
-          <h3 className="text-2xl uppercase font-display text-ink-black mb-4">SYSTEM NOTICES</h3>
-          <p className="marker-note text-xl">"Complete your daily tasks."</p>
-          <p className="mt-6 text-sm text-ink-black/70 leading-relaxed font-mono italic">
-            {inventoryStats?.criticalItems ? (
-              <>
-                <span className="font-bold text-accent-orange">⚠️ ALERT:</span> {inventoryStats.criticalItems}{' '}
-                resource(s) in critical stock. Report to supervisors immediately.
-              </>
-            ) : (
-              'All resources within normal parameters. Continue standard operations.'
-            )}
-          </p>
-        </div>
-      </motion.div>
-
-      {/* Additional Sections Placeholder */}
-      <motion.div variants={itemVariants} className="space-y-6">
-        <h3 className="text-2xl uppercase font-display mb-4 drop-shadow-[1px_1px_0px_rgba(154,144,128,0.2)]">
-          DETAILED VIEWS
-        </h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {['MY PROFILE', 'PROFESSIONS', 'INVENTORY'].map((section) => (
-            <div key={section} className="worker-section-maintenance">
-              <Database className="w-16 h-16 text-accent-orange opacity-40 mb-4" />
-              <h2>{section}</h2>
-              <p className="text-sm">Navigate via sidebar</p>
-            </div>
-          ))}
-        </div>
-      </motion.div>
     </motion.div>
   )
 }

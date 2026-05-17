@@ -53,72 +53,97 @@ export default function WorkerProfile({ activeTab }: WorkerProfileProps) {
 
   return (
     <motion.div
-      className="p-8 space-y-8"
+      className="p-4 space-y-3 animate-in fade-in duration-500 max-w-6xl mx-auto"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
-      {/* Page Header */}
-      <motion.div variants={itemVariants} className="worker-page-header">
-        <h2>MI PERFIL</h2>
-        <p className="terminal-text opacity-90">Personal // Worker Assignment Data</p>
+      {/* Breadcrumbs / Status */}
+      <motion.div variants={itemVariants} className="flex justify-end items-center mb-4">
+        <p className="text-[10px] font-mono text-paper-base uppercase opacity-80">
+          IDENTIFICACIÓN CONFIRMADA // TERMINAL PERSONAL
+        </p>
       </motion.div>
 
-      {/* Profile Header Card */}
-      <motion.div variants={itemVariants} className="paper-card p-8">
-        <div className="flex flex-col md:flex-row items-start md:items-center gap-8">
-          {/* Avatar */}
-          <div className="flex-shrink-0">
-            <div className="w-24 h-24 bg-ink-black border-2 border-paper-base rounded-sm flex items-center justify-center">
-              <User className="w-12 h-12 text-paper-base" />
-            </div>
+      {/* Main Header */}
+      <motion.div
+        variants={itemVariants}
+        className="flex justify-between items-center bg-zinc-900/30 p-2 border border-paper-dark/10"
+      >
+        <h2 className="text-xl font-display text-white tracking-widest uppercase">EXPEDIENTE DE PERSONAL</h2>
+        <div className="px-4 py-1 border border-paper-dark/30 text-[9px] font-mono text-accent-orange bg-black/60 uppercase font-bold">
+          SECTOR {user?.campId}
+        </div>
+      </motion.div>
+
+      <motion.div variants={itemVariants} className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start pb-8">
+        {/* Main Dossier Card */}
+        <div className="xl:col-span-12 2xl:col-span-7 flex gap-3">
+          {/* Punched Paper Edge */}
+          <div className="flex flex-col gap-4 py-8 px-2 justify-center items-center bg-paper-dark/10 border border-paper-dark/20 rounded-l shadow-lg">
+            {[...Array(5)].map((_, i) => (
+              <motion.div
+                key={i}
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: i * 0.1 }}
+                className="punch-hole w-2.5 h-2.5 bg-bunker-bg border border-paper-dark/50 rounded-full"
+              />
+            ))}
           </div>
 
-          {/* Profile Info */}
-          <div className="flex-1 space-y-4">
-            <div>
-              <p className="text-xs font-mono text-ink-black/60 uppercase tracking-widest mb-1">
-                Worker ID
-              </p>
-              <p className="text-3xl font-display uppercase">{user?.id || 'N/A'}</p>
-            </div>
+          <motion.div
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            className="paper-card flex-1 p-8"
+          >
+            <div className="watermark bottom-4 right-8 text-xl opacity-5">CONFIDENCIAL</div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-ink-black/20">
+            <div className="space-y-6">
               <div>
-                <p className="text-xs font-mono text-ink-black/60 uppercase tracking-widest mb-1">
-                  Username
+                <h3 className="text-3xl font-display text-ink-black leading-tight border-b border-ink-black/20 pb-2">
+                  {user?.username?.toUpperCase()}
+                </h3>
+                <p className="text-accent-orange font-mono text-xs font-bold mt-2 tracking-tighter">
+                  [{user?.role?.toUpperCase()}]
                 </p>
-                <p className="text-lg font-display capitalize">{user?.username || 'Unknown'}</p>
               </div>
 
-              <div>
-                <p className="text-xs font-mono text-ink-black/60 uppercase tracking-widest mb-1">
-                  Role
-                </p>
-                <div className="flex items-center gap-2">
-                  <Shield className="w-4 h-4" />
-                  <p className="text-lg font-display uppercase">{user?.role || 'N/A'}</p>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-xs font-mono text-ink-black/60 uppercase tracking-widest mb-1">
+                    ID Interno
+                  </p>
+                  <p className="text-xl font-display">{user?.id}</p>
+                </div>
+
+                <div>
+                  <p className="text-xs font-mono text-ink-black/60 uppercase tracking-widest mb-1">
+                    Estado de Empleo
+                  </p>
+                  <p className="text-lg font-display text-success-green font-bold">APTO PARA TRABAJO</p>
+                </div>
+
+                <div>
+                  <p className="text-xs font-mono text-ink-black/60 uppercase tracking-widest mb-1">
+                    Campamento Asignado
+                  </p>
+                  <p className="text-lg font-display">Sector {user?.campId}</p>
+                </div>
+
+                <div className="pt-4 border-t border-ink-black/10">
+                  <p className="text-xs font-mono text-ink-black/60 uppercase tracking-widest mb-2">
+                    Descripción del Dossier
+                  </p>
+                  <p className="text-sm leading-relaxed font-mono text-ink-black/80 italic">
+                    Este expediente contiene datos completos de asignación: identificación del
+                    trabajador, rol asignado, ubicación del campamento, profesiones relacionadas y
+                    recursos. Toda información es auditada y verificada por comando central.
+                  </p>
                 </div>
               </div>
-
-              <div>
-                <p className="text-xs font-mono text-ink-black/60 uppercase tracking-widest mb-1">
-                  Camp Assignment
-                </p>
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4" />
-                  <p className="text-lg font-display">SECTOR {user?.campId || 'N/A'}</p>
-                </div>
-              </div>
-
-              <div>
-                <p className="text-xs font-mono text-ink-black/60 uppercase tracking-widest mb-1">
-                  Status
-                </p>
-                <span className="status-badge status-ok">ACTIVE</span>
-              </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </motion.div>
 
@@ -126,7 +151,7 @@ export default function WorkerProfile({ activeTab }: WorkerProfileProps) {
       {userProfession && (
         <motion.div variants={itemVariants} className="paper-card p-8">
           <h3 className="text-xl uppercase font-display border-b border-ink-black pb-2 mb-6">
-            ASSIGNED PROFESSION
+            PROFESIÓN ASIGNADA
           </h3>
 
           <div className="flex items-center gap-6">
@@ -139,28 +164,28 @@ export default function WorkerProfile({ activeTab }: WorkerProfileProps) {
 
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <p className="text-xs font-mono text-ink-black/60 uppercase">Total Personnel</p>
-                  <p className="text-2xl font-display mt-1">{userProfession.persons.length}</p>
+                  <p className="text-xs font-mono text-ink-black/60 uppercase">Personal Total</p>
+                  <p className="text-2xl font-display mt-1">{userProfession.persons?.length || 0}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-mono text-ink-black/60 uppercase">Active Now</p>
+                  <p className="text-xs font-mono text-ink-black/60 uppercase">Activos Ahora</p>
                   <p className="text-2xl font-display mt-1">
-                    {userProfession.persons.filter((p) => p.status === 'activo').length}
+                    {userProfession.persons?.filter((p) => p.status === 'activo').length || 0}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs font-mono text-ink-black/60 uppercase">Min Required</p>
+                  <p className="text-xs font-mono text-ink-black/60 uppercase">Mín Requerido</p>
                   <p className="text-2xl font-display mt-1">{userProfession.minimum_active_required}</p>
                 </div>
               </div>
 
               <div className="mt-4">
-                <p className="text-xs font-mono text-ink-black/60 uppercase mb-2">Can Explore</p>
+                <p className="text-xs font-mono text-ink-black/60 uppercase mb-2">Autorización de Exploración</p>
                 <p className="text-sm font-mono">
                   {userProfession.can_explore ? (
-                    <span className="text-success-green font-bold">✓ AUTHORIZED</span>
+                    <span className="text-success-green font-bold">✓ AUTORIZADO</span>
                   ) : (
-                    <span className="text-accent-orange font-bold">✗ RESTRICTED</span>
+                    <span className="text-accent-orange font-bold">✗ RESTRINGIDO</span>
                   )}
                 </p>
               </div>
@@ -173,7 +198,7 @@ export default function WorkerProfile({ activeTab }: WorkerProfileProps) {
       {assignedResources && assignedResources.length > 0 && (
         <motion.div variants={itemVariants} className="paper-card p-8">
           <h3 className="text-xl uppercase font-display border-b border-ink-black pb-2 mb-6">
-            RESOURCE ASSIGNMENT
+            ASIGNACIÓN DE RECURSOS
           </h3>
 
           <div className="space-y-4">
@@ -217,27 +242,28 @@ export default function WorkerProfile({ activeTab }: WorkerProfileProps) {
         </motion.div>
       )}
 
-      {/* Profile Description */}
+      {/* Profile Summary */}
       <motion.div
         variants={itemVariants}
         className="dashed-accent p-8 bg-paper-base/30 relative overflow-hidden"
       >
         <div className="relative z-10">
-          <h3 className="text-2xl uppercase font-display text-ink-black mb-4">PROFILE SUMMARY</h3>
+          <h3 className="text-2xl uppercase font-display text-ink-black mb-4">INFORMACIÓN DE AUDITORIA</h3>
           <p className="marker-note text-lg">"Duty and Dedication"</p>
           <p className="mt-6 text-sm text-ink-black/75 leading-relaxed font-mono italic">
-            This worker profile contains complete assignment data: worker identification, assigned
-            role, camp location, professions and related resources. All information is audited and
-            verified by central command. Unauthorized modification will be logged and reported.
+            Este dossier contiene información completa de asignación: identificación del trabajador,
+            rol asignado, ubicación del campamento, profesiones relacionadas y recursos. Toda información
+            es auditada y verificada por comando central. Modificaciones no autorizadas serán registradas
+            e informadas inmediatamente.
           </p>
 
           <div className="mt-6 pt-6 border-t border-ink-black/20">
-            <p className="text-xs font-mono text-ink-black/60 uppercase mb-2">Last Updated</p>
+            <p className="text-xs font-mono text-ink-black/60 uppercase mb-2">Última Actualización</p>
             <p className="font-mono text-sm">{new Date().toLocaleString()}</p>
           </div>
         </div>
 
-        <div className="absolute -bottom-8 -right-8 opacity-10 rotate-12">
+        <div className="absolute -bottom-8 -right-8 opacity-5 rotate-12">
           <Users className="w-64 h-64 text-ink-black" />
         </div>
       </motion.div>
@@ -260,7 +286,7 @@ export default function WorkerProfile({ activeTab }: WorkerProfileProps) {
           </div>
           <div>
             <p className="text-xs font-mono text-ink-black/70 uppercase font-bold">Crew Assignment</p>
-            <p className="text-sm font-display mt-1">CREW 07 - ACTIVE</p>
+            <p className="text-sm font-display mt-1">CREW {user?.campId} - ACTIVE</p>
           </div>
         </div>
       </motion.div>
