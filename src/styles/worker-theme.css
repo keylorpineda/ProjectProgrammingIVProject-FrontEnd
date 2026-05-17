@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-display: "Special Elite", cursive;
+  --font-marker: "Permanent Marker", cursive;
+
+  --color-bunker-bg: #161513;
+  --color-paper-base: #9a9080;
+  --color-paper-dark: #817769;
+  --color-ink-black: #000000;
+  --color-accent-orange: #c27c2f;
+  --color-alert-red: #a35a20;
+  --color-success-green: #4c6351;
+  --color-text-light: #e0d8cc;
+}
+
+@layer base {
+  body {
+    @apply bg-bunker-bg text-text-light font-sans selection:bg-accent-orange selection:text-ink-black;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display tracking-tight text-white;
+  }
+
+  .paper-card h1, 
+  .paper-card h2, 
+  .paper-card h3, 
+  .paper-card h4, 
+  .paper-card h5, 
+  .paper-card h6 {
+    @apply text-ink-black;
+  }
+}

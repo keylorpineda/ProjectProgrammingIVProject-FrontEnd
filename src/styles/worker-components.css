@@ -1,0 +1,80 @@
+@layer components {
+  .vintage-scanline {
+    background: repeating-linear-gradient(
+      rgba(0, 0, 0, 0) 0px,
+      rgba(0, 0, 0, 0.1) 1px,
+      rgba(0, 0, 0, 0) 2px
+    );
+    pointer-events: none;
+    z-index: 100;
+    @apply fixed inset-0 opacity-20;
+  }
+
+  .typewriter {
+    @apply font-mono uppercase tracking-[0.2em];
+  }
+
+  .paper-card {
+    @apply bg-paper-base border border-ink-black shadow-[4px_4px_0px_rgba(0,0,0,0.5)] relative overflow-hidden rounded-sm;
+  }
+
+  .paper-punched::before {
+    content: "";
+    @apply absolute left-4 top-0 bottom-0 w-px bg-ink-black/10;
+  }
+
+  .punch-hole {
+    @apply w-3 h-3 rounded-full bg-bunker-bg border border-ink-black/20 shadow-[inset_1px_1px_2px_rgba(0,0,0,0.5)];
+  }
+
+  .watermark {
+    @apply font-display text-4xl opacity-5 pointer-events-none select-none uppercase tracking-[0.5em] absolute;
+  }
+
+  .status-line {
+    @apply h-1.5 w-full bg-ink-black/10 rounded-full overflow-hidden;
+  }
+
+  .paper-card::after {
+    content: "";
+    @apply absolute inset-0 opacity-10 pointer-events-none;
+    background-image: url("https://www.transparenttextures.com/patterns/felt.png");
+  }
+
+  .terminal-text {
+    @apply font-mono text-xs uppercase tracking-widest text-accent-orange;
+  }
+
+  .status-badge {
+    @apply px-1.5 py-0.5 text-[10px] font-mono border border-ink-black uppercase tracking-tighter font-bold;
+  }
+
+  .status-ok { @apply bg-success-green text-white; }
+  .status-alert { @apply bg-ink-black text-paper-base; }
+  .status-warning { @apply bg-accent-orange text-ink-black; }
+
+  .dashed-accent {
+    @apply border-2 border-dashed border-accent-orange;
+  }
+
+  .marker-note {
+    @apply font-marker text-accent-orange italic -rotate-2 inline-block;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(156, 140, 120, 0.3);
+    border-radius: 3px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(156, 140, 120, 0.5);
+  }
+}
