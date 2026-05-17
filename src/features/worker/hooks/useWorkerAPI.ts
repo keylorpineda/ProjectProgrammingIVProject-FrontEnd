@@ -2,6 +2,12 @@ import React from 'react'
 import { useQuery, UseQueryResult } from '@tanstack/react-query'
 import { useAuthStore } from '@/store/useAuthStore'
 import workerService, { setAuthToken } from '@/features/worker/services/workerService'
+import {
+  fallbackAssignedResources,
+  fallbackInventory,
+  fallbackMovements,
+  fallbackProfessions,
+} from '@/features/worker/workerFallbackData'
 import type {
   WorkerAssignedResource,
   Profession,
@@ -44,6 +50,8 @@ export const useAssignedResources = (): UseQueryResult<
     queryKey: workerQueryKeys.assigned,
     queryFn: () => workerService.getAssignedResources(),
     enabled: !!token,
+    placeholderData: fallbackAssignedResources,
+    retry: 1,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
   })
@@ -64,6 +72,8 @@ export const useProfessions = (): UseQueryResult<Profession[], ApiError> => {
     queryKey: workerQueryKeys.professions,
     queryFn: () => workerService.getProfessions(),
     enabled: !!token,
+    placeholderData: fallbackProfessions,
+    retry: 1,
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 20 * 60 * 1000, // 20 minutes
   })
@@ -87,6 +97,7 @@ export const useResources = (
     queryFn: () =>
       workerService.getResources(params.page, params.limit, params.category),
     enabled: !!token,
+    retry: 1,
     staleTime: 15 * 60 * 1000, // 15 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
   })
@@ -112,6 +123,8 @@ export const useInventory = (
       return workerService.getInventory(campId)
     },
     enabled: !!token && !!campId,
+    placeholderData: fallbackInventory,
+    retry: 1,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
   })
@@ -138,6 +151,8 @@ export const useInventoryMovements = (
       return workerService.getInventoryMovements(campId, limit)
     },
     enabled: !!token && !!campId,
+    placeholderData: fallbackMovements,
+    retry: 1,
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 20 * 60 * 1000, // 20 minutes
   })

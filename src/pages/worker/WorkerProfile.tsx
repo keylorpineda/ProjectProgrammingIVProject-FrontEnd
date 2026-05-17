@@ -1,5 +1,4 @@
 import React from 'react'
-import { Users, Shield, Loader2 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useAuth } from '@/pages/admin/context/AuthContext'
 import { useAssignedResources, useProfessions } from '@/features/worker/hooks/useWorkerAPI'
@@ -141,10 +140,8 @@ const getMetricsForWorker = (profession: any): WorkerMetricGroup => {
 
 export default function WorkerProfile(_props: WorkerProfileProps) {
   const { user } = useAuth()
-  const { data: assignedResources, isLoading: loadingResources } = useAssignedResources()
-  const { data: professions, isLoading: loadingProfessions } = useProfessions()
-
-  const isLoading = loadingResources || loadingProfessions
+  const { data: assignedResources } = useAssignedResources()
+  const { data: professions } = useProfessions()
 
   // Find user's profession if exists
   const userProfession = React.useMemo(() => {
@@ -156,18 +153,9 @@ export default function WorkerProfile(_props: WorkerProfileProps) {
     return getMetricsForWorker(userProfession)
   }, [userProfession])
 
-  if (isLoading) {
-    return (
-      <div className="p-8 flex flex-col items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-12 h-12 animate-spin text-accent-orange opacity-60 mb-4" />
-        <p className="font-mono text-sm text-paper-base/70 uppercase">Loading profile...</p>
-      </div>
-    )
-  }
-
   return (
     <motion.div
-      className="p-4 space-y-3 animate-in fade-in duration-500 max-w-7xl mx-auto"
+      className="p-4 space-y-3 animate-in fade-in duration-500 max-w-6xl mx-auto"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
@@ -191,9 +179,9 @@ export default function WorkerProfile(_props: WorkerProfileProps) {
       </motion.div>
 
       {/* Main Content Grid */}
-      <motion.div variants={itemVariants} className="grid grid-cols-1 2xl:grid-cols-12 gap-8 items-start pb-8">
+      <motion.div variants={itemVariants} className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start pb-8">
         {/* Left: Main Dossier Card */}
-        <div className="2xl:col-span-7 flex gap-3">
+        <div className="xl:col-span-12 2xl:col-span-7 flex gap-3">
           {/* Punched Paper Edge */}
           <div className="flex flex-col gap-4 py-8 px-2 justify-center items-center bg-paper-dark/10 border border-paper-dark/20 rounded-l shadow-lg">
             {[...Array(5)].map((_, i) => (
@@ -210,7 +198,7 @@ export default function WorkerProfile(_props: WorkerProfileProps) {
           <motion.div
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            className="paper-card flex-1 p-8"
+            className="paper-card flex-1 p-8 paper-punched"
           >
             <div className="watermark bottom-4 right-8 text-xl opacity-5">CONFIDENCIAL</div>
 
@@ -259,7 +247,7 @@ export default function WorkerProfile(_props: WorkerProfileProps) {
         </div>
 
         {/* Right: Operational Status Panels */}
-        <div className="2xl:col-span-5 space-y-4">
+        <div className="xl:col-span-12 2xl:col-span-5 space-y-4">
           <motion.div
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -302,7 +290,7 @@ export default function WorkerProfile(_props: WorkerProfileProps) {
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="paper-card flex-1 p-6"
+          className="paper-card flex-1 p-6 paper-punched"
         >
           <div className="watermark bottom-4 right-8 text-xl opacity-5">CONFIDENCIAL</div>
           <h3 className="text-xl font-display text-ink-black border-b border-ink-black/10 pb-2 mb-4">
@@ -360,29 +348,6 @@ export default function WorkerProfile(_props: WorkerProfileProps) {
           </div>
         </motion.div>
       </div>
-
-      {/* Additional Info */}
-      <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="paper-card p-6 flex items-center gap-4">
-          <div className="w-12 h-12 bg-success-green rounded-sm flex items-center justify-center flex-shrink-0">
-            <Shield className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <p className="text-xs font-mono text-ink-black/70 uppercase font-bold">Security Status</p>
-            <p className="text-sm font-display mt-1">CLEARANCE GRANTED</p>
-          </div>
-        </div>
-
-        <div className="paper-card p-6 flex items-center gap-4">
-          <div className="w-12 h-12 bg-accent-orange rounded-sm flex items-center justify-center flex-shrink-0">
-            <Users className="w-6 h-6 text-ink-black" />
-          </div>
-          <div>
-            <p className="text-xs font-mono text-ink-black/70 uppercase font-bold">Crew Assignment</p>
-            <p className="text-sm font-display mt-1">CREW {user?.campId} - ACTIVE</p>
-          </div>
-        </div>
-      </motion.div>
     </motion.div>
   )
 }

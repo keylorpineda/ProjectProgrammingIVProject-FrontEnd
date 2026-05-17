@@ -13,6 +13,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://gestion-del-f
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
+  timeout: 6000,
   headers: {
     'Content-Type': 'application/json',
   },

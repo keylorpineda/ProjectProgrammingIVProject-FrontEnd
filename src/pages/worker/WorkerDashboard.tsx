@@ -1,5 +1,5 @@
 import React from 'react'
-import { Activity, ShieldCheck, Database, Zap, Loader2 } from 'lucide-react'
+import { Activity, ShieldCheck, Database, Zap } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useAuth } from '@/pages/admin/context/AuthContext'
 import {
@@ -44,13 +44,9 @@ export default function WorkerDashboard(_props: WorkerDashboardProps) {
   const { user } = useAuth()
 
   // Fetch data hooks
-  const { data: assignedResources, isLoading: loadingResources } = useAssignedResources()
-  const { metrics, isLoading: loadingMetrics } = useProfessionMetrics()
-  const { stats: inventoryStats, isLoading: loadingInventory } = useInventoryStatus(
-    user?.campId
-  )
-
-  const isLoading = loadingResources || loadingMetrics || loadingInventory
+  const { data: assignedResources } = useAssignedResources()
+  const { metrics } = useProfessionMetrics()
+  const { stats: inventoryStats } = useInventoryStatus(user?.campId)
 
   // Calculate camp overview metrics
   const campMetrics = React.useMemo(() => {
@@ -81,15 +77,6 @@ export default function WorkerDashboard(_props: WorkerDashboardProps) {
       },
     ]
   }, [])
-
-  if (isLoading) {
-    return (
-      <div className="p-8 flex flex-col items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-12 h-12 animate-spin text-accent-orange opacity-60 mb-4" />
-        <p className="font-mono text-sm text-paper-base/70 uppercase">Loading dashboard...</p>
-      </div>
-    )
-  }
 
   return (
     <motion.div
@@ -156,7 +143,7 @@ export default function WorkerDashboard(_props: WorkerDashboardProps) {
               will result in immediate loss of privileges.
               {inventoryStats?.criticalItems && inventoryStats.criticalItems > 0 && (
                 <span className="block mt-3 text-accent-orange font-bold">
-                  ⚠️ ALERT: {inventoryStats.criticalItems} critical resource(s) detected.
+                  ALERT: {inventoryStats.criticalItems} critical resource(s) detected.
                 </span>
               )}
             </p>

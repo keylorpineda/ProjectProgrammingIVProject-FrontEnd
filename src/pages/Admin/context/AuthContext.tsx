@@ -28,12 +28,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   )
 
   const logout = useCallback(async () => {
-    try {
-      if (refreshToken) {
-        await logoutService(refreshToken)
-      }
-    } finally {
-      storeLogout()
+    const tokenToClose = refreshToken
+    storeLogout()
+
+    if (tokenToClose) {
+      void logoutService(tokenToClose).catch((error) => {
+        console.warn("Remote logout failed after local session cleanup", error)
+      })
     }
   }, [refreshToken, storeLogout])
 

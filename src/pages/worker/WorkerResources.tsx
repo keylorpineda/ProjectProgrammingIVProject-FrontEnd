@@ -1,4 +1,4 @@
-import { Package, TrendingDown, TrendingUp, Loader2, BarChart3, History } from 'lucide-react'
+import { Package, TrendingDown, TrendingUp, BarChart3, History } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useAuth } from '@/pages/admin/context/AuthContext'
 import { useInventory, useInventoryMovements } from '@/features/worker/hooks/useWorkerAPI'
@@ -64,23 +64,12 @@ export default function WorkerResources(_props: WorkerResourcesProps) {
   const { user } = useAuth()
 
   // Fetch data hooks
-  const { data: inventory, isLoading: loadingInventory } = useInventory(user?.campId)
-  const { data: movements, isLoading: loadingMovements } = useInventoryMovements(user?.campId)
-
-  const isLoading = loadingInventory || loadingMovements
-
-  if (isLoading) {
-    return (
-      <div className="p-8 flex flex-col items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-12 h-12 animate-spin text-accent-orange opacity-60 mb-4" />
-        <p className="font-mono text-sm text-paper-base/70 uppercase">Loading resources...</p>
-      </div>
-    )
-  }
+  const { data: inventory } = useInventory(user?.campId)
+  const { data: movements } = useInventoryMovements(user?.campId)
 
   return (
     <motion.div
-      className="p-4 space-y-8"
+      className="p-8 space-y-8"
       variants={containerVariants}
       initial="hidden"
       animate="visible"

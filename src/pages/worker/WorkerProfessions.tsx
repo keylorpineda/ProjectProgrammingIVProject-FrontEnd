@@ -10,8 +10,8 @@ import {
   UserCog,
   AlertTriangle,
   TrendingUp,
-  Loader2,
   Users,
+  Database,
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useAuth } from '@/pages/admin/context/AuthContext'
@@ -32,7 +32,9 @@ const getProfessionIcon = (name: string) => {
   if (n.includes('agricultor')) return Wheat
   if (n.includes('constructor')) return Construction
   if (n.includes('aguatero')) return UserCog
-  return Users
+  if (n.includes('recolector')) return Hammer
+  if (n.includes('almacenista')) return Database
+  return UserCog
 }
 
 // Metrics for each profession type
@@ -111,10 +113,8 @@ const cardVariants = {
 
 export default function WorkerProfessions(_props: WorkerProfessionsProps) {
   const { user } = useAuth()
-  const { data: professions, isLoading: loadingProfessions } = useProfessions()
-  const { metrics, isLoading: loadingMetrics } = useProfessionMetrics()
-
-  const isLoading = loadingProfessions || loadingMetrics
+  const { data: professions } = useProfessions()
+  const { metrics } = useProfessionMetrics()
 
   // Dashboard stats
   const dashboardStats = React.useMemo(() => {
@@ -149,25 +149,16 @@ export default function WorkerProfessions(_props: WorkerProfessionsProps) {
     ]
   }, [professions])
 
-  if (isLoading) {
-    return (
-      <div className="p-8 flex flex-col items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-12 h-12 animate-spin text-accent-orange opacity-60 mb-4" />
-        <p className="font-mono text-sm text-paper-base/70 uppercase">Loading professions...</p>
-      </div>
-    )
-  }
-
   return (
     <motion.div
-      className="p-8 space-y-8"
+      className="p-4 space-y-4"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
       {/* Page Header */}
-      <motion.div variants={cardVariants} className="worker-page-header">
-        <h2 className="text-4xl uppercase mb-2 drop-shadow-[1px_1px_0px_rgba(154,144,128,0.2)]">
+      <motion.div variants={cardVariants}>
+        <h2 className="text-2xl uppercase mb-1 drop-shadow-[1px_1px_0px_rgba(154,144,128,0.2)]">
           MANDO OCUPACIONAL
         </h2>
         <p className="terminal-text opacity-90 text-[10px] tracking-widest">
@@ -185,7 +176,7 @@ export default function WorkerProfessions(_props: WorkerProfessionsProps) {
                 <p className="text-[10px] font-mono text-ink-black/75 uppercase tracking-widest mb-1 font-bold">
                   {stat.label}
                 </p>
-                <p className="text-3xl font-display leading-none">{stat.value}</p>
+                <p className="text-2xl font-display leading-none">{stat.value}</p>
                 <p className="text-[9px] font-mono text-ink-black/70 mt-2 uppercase italic font-bold">
                   {stat.sub}
                 </p>
@@ -247,7 +238,7 @@ export default function WorkerProfessions(_props: WorkerProfessionsProps) {
             <motion.div
               key={profession.id}
               variants={cardVariants}
-              whileHover={{ scale: 1.02 }}
+              whileHover={{ scale: 1.01 }}
               className="paper-card group flex flex-col h-full bg-paper-dark/10 relative"
             >
               {/* Status Badge */}
@@ -272,7 +263,7 @@ export default function WorkerProfessions(_props: WorkerProfessionsProps) {
                     <Icon className="w-5 h-5 text-paper-base" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h3 className="text-base leading-none uppercase font-display border-b border-ink-black/20 pb-0.5 pr-8">
+                    <h3 className="text-lg leading-none uppercase font-display border-b border-ink-black/20 pb-0.5 pr-8">
                       {profession.name}
                     </h3>
                     <p className="text-[9px] font-mono text-ink-black/70 mt-1 uppercase font-bold">
@@ -289,9 +280,7 @@ export default function WorkerProfessions(_props: WorkerProfessionsProps) {
                   <div className="flex items-end gap-3">
                     <div>
                       <p className="text-3xl font-display leading-none">{personCount}</p>
-                      <p className="text-[8px] font-mono text-ink-black/60 mt-1 uppercase">
-                        assigned
-                      </p>
+                      <p className="text-[8px] font-mono text-ink-black/60 mt-1 uppercase">assigned</p>
                     </div>
                     <div className="flex-1 text-right">
                       <p className="text-sm font-mono text-ink-black/70">
@@ -352,46 +341,6 @@ export default function WorkerProfessions(_props: WorkerProfessionsProps) {
           )
         })}
       </motion.div>
-
-      {/* Personnel Directory Section */}
-      {professions && professions.length > 0 && professions[0]?.persons.length > 0 && (
-        <motion.div variants={cardVariants} className="paper-card p-8">
-          <h3 className="text-xl uppercase font-display border-b border-ink-black pb-2 mb-6">
-            PERSONNEL DIRECTORY
-          </h3>
-          <p className="text-sm text-ink-black/70 mb-4 font-mono italic">
-            Sample personnel from first profession - full directory available upon request
-          </p>
-          <div className="space-y-2">
-            {professions[0]?.persons.slice(0, 5).map((person, i) => (
-              <div
-                key={i}
-                className="border border-ink-black/10 p-3 rounded-sm bg-bunker-bg flex items-center justify-between"
-              >
-                <div>
-                  <p className="font-display text-sm uppercase">
-                    {person.first_name} {person.last_name}
-                  </p>
-                  <p className="text-xs font-mono text-paper-base/70 mt-1">
-                    ID: {person.id} | Exp Lvl: {person.experience_level}
-                  </p>
-                </div>
-                <span
-                  className={`text-xs font-mono px-2 py-1 rounded font-bold ${
-                    person.status === 'activo'
-                      ? 'status-ok'
-                      : person.status === 'enfermo'
-                        ? 'status-warning'
-                        : 'status-alert'
-                  }`}
-                >
-                  {person.status.toUpperCase()}
-                </span>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-      )}
 
       {/* Manual Notation Placeholder */}
       <div className="relative h-16 flex items-center">

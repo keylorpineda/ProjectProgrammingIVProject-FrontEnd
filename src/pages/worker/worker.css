@@ -16,6 +16,31 @@
   @apply flex-1 overflow-y-auto bg-bunker-bg;
 }
 
+.worker-footer {
+  @apply h-8 bg-ink-black border-t border-paper-dark/20 flex items-center justify-between px-6 z-40;
+}
+
+.worker-footer p,
+.worker-footer span {
+  @apply text-[8px] font-mono uppercase;
+}
+
+.worker-footer p {
+  @apply text-paper-dark tracking-[0.3em];
+}
+
+.worker-footer-status {
+  @apply flex items-center gap-4 text-paper-base;
+}
+
+.worker-footer-status span:nth-child(2) {
+  @apply text-success-green;
+}
+
+.worker-link-dot {
+  @apply w-1.5 h-1.5 bg-success-green rounded-full shadow-[0_0_5px_rgba(76,99,81,0.5)];
+}
+
 .worker-route-container::-webkit-scrollbar {
   width: 6px;
 }
