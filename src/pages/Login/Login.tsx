@@ -36,14 +36,11 @@ export default function Login() {
       setIsGateOpen(true)
       setTimeout(() => {
         const normalizedRole = role?.toLowerCase()
-        const targetPath =
+        navigate(
           normalizedRole === "admin" || normalizedRole === "superadmin" || normalizedRole === "super_admin"
             ? "/admin/dashboard"
-            : normalizedRole === "worker"
-              ? "/worker/dashboard"
-              : "/dashboard"
-
-        navigate(targetPath)
+            : "/dashboard"
+        )
       }, 3500)
     }, 1500)
   }
@@ -66,12 +63,6 @@ export default function Login() {
       if (isDevBypass && u.toLowerCase() === "admin" && p === "1234") {
         setAuth("dev-admin-token", { id: "admin-dev", username: "Admin", role: "admin", campId: "" }, null)
         finalizeLogin("admin")
-        return
-      }
-
-      if (isDevBypass && u.toLowerCase() === "worker" && p === "1234") {
-        setAuth("dev-worker-token", { id: "worker-dev", username: "Worker", role: "worker", campId: "1" }, null)
-        finalizeLogin("worker")
         return
       }
 

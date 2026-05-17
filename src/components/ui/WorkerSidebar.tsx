@@ -17,7 +17,7 @@ const navItems = [
 
 export default function WorkerSidebar({ activeTab, setActiveTab, userName = 'WORKER', onLogout }: WorkerSidebarProps) {
   return (
-    <aside className="w-56 bg-bunker-bg border-r border-paper-dark/10 h-screen flex flex-col z-50 p-4">
+    <aside className="w-56 h-screen sticky left-0 top-0 shrink-0 bg-bunker-bg border-r border-paper-dark/10 flex flex-col z-50 p-4">
       <div className="sr-only">
         Worker Assignment {userName}
       </div>

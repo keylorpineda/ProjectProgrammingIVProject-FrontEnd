@@ -9,7 +9,7 @@ export default function WorkerTopBar({
   userName = 'WORKER' 
 }: WorkerTopBarProps) {
   return (
-    <header className="h-[70px] bg-bunker-bg border-b-2 border-ink-black flex items-center justify-between px-10 z-40">
+    <header className="sticky top-0 h-[70px] bg-bunker-bg border-b-2 border-ink-black flex items-center justify-between px-10 z-40">
       <div className="flex items-center gap-6 flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <p className="typewriter text-text-light text-sm tracking-[0.2em] whitespace-nowrap">

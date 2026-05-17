@@ -17,7 +17,7 @@
   }
 
   .paper-card {
-    @apply bg-paper-base border border-ink-black shadow-[4px_4px_0px_rgba(0,0,0,0.5)] relative overflow-hidden rounded-sm;
+    @apply bg-paper-base border border-ink-black shadow-[4px_4px_0px_rgba(0,0,0,1)] relative overflow-hidden rounded-sm;
   }
 
   .paper-punched::before {
