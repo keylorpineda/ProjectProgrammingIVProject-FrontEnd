@@ -392,6 +392,16 @@ export default function WorkerProfessions({ activeTab }: WorkerProfessionsProps)
           </div>
         </motion.div>
       )}
+
+      {/* Manual Notation Placeholder */}
+      <div className="relative h-16 flex items-center">
+        <div className="w-full h-px bg-paper-dark/20" />
+        <div className="absolute left-1/2 -translate-x-1/2 bg-bunker-bg px-4">
+          <span className="marker-note text-sm opacity-100 uppercase tracking-widest font-bold">
+            "REASIGNACIÓN DE PERSONAL INMINENTE"
+          </span>
+        </div>
+      </div>
     </motion.div>
   )
 }
