@@ -1,6 +1,6 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { useAuth } from '@/pages/admin/context/AuthContext'
+import { useAuth } from '@/pages/Admin/context/AuthContext'
 import { useAssignedResources, useProfessions } from '@/features/worker/hooks/useWorkerAPI'
 
 interface WorkerProfileProps {

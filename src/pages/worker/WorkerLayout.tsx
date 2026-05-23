@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
-import { useAuth } from '@/pages/admin/context/AuthContext'
+import { useAuth } from '@/pages/Admin/context/AuthContext'
 import WorkerSidebar from '@/components/ui/WorkerSidebar'
 import WorkerTopBar from '@/components/ui/WorkerTopBar'
 import WorkerDashboard from './WorkerDashboard'
