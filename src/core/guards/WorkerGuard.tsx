@@ -1,5 +1,5 @@
 import { Navigate } from 'react-router-dom'
-import { useAuth } from '@/pages/admin/context/AuthContext'
+import { useAuth } from '@/pages/Admin/context/AuthContext'
 
 interface WorkerGuardProps {
   children: React.ReactNode

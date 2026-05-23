@@ -1,0 +1,235 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Permanent+Marker&family=Special+Elite&display=swap');
+
+@theme {
+  --font-typewriter: "Special Elite", monospace;
+  --font-marker: "Permanent Marker", cursive;
+  --font-mono: "JetBrains Mono", monospace;
+  --font-body: "Inter", sans-serif;
+
+  --color-bg-deep: #161513;
+  --color-bg-paper: #9a9080;
+  --color-bg-paper-dark: #817769;
+  --color-bg-paper-shadow: #635b50;
+  --color-ink: #000000;
+  --color-ink-soft: #111111;
+  --color-accent-warning: #c27c2f;
+  --color-accent-warning-deep: #8f581e;
+  --color-accent-critical: #9c2720;
+  --color-accent-critical-deep: #611713;
+  --color-accent-tape: #ab9e8b;
+  --color-accent-emergency: #b38536;
+  --color-accent-mil: #3b4d3e;
+  --color-accent-approved: #4c6351;
+  --color-primary-amber: #fca311;
+  --color-primary-glow: rgba(252, 163, 17, 0.5);
+  --color-glass-bg: rgba(10, 10, 15, 0.65);
+}
+
+:root {
+  --bg-deep: #161513;
+  --bg-paper: #9a9080;
+  --bg-paper-dark: #817769;
+  --bg-paper-shadow: #635b50;
+  --ink: #000000;
+  --ink-soft: #111111;
+  --accent-warning: #c27c2f;
+  --accent-warning-deep: #8f581e;
+  --accent-critical: #9c2720;
+  --accent-critical-deep: #611713;
+  --accent-tape: #ab9e8b;
+  --accent-emergency: #b38536;
+  --accent-mil: #3b4d3e;
+  --accent-approved: #4c6351;
+  --scan-line: rgba(194, 124, 47, 0.08);
+
+  --font-typewriter: "Special Elite", monospace;
+  --font-marker: "Permanent Marker", cursive;
+  --font-mono: "JetBrains Mono", monospace;
+  --font-body: "Inter", sans-serif;
+}
+
+.campleader-view {
+  background-color: var(--bg-deep);
+  color: #e5e5e5;
+  font-family: var(--font-body);
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* Custom Vintage Styling rules */
+.font-typewriter {
+  font-family: var(--font-typewriter);
+}
+
+.font-marker {
+  font-family: var(--font-marker);
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+.font-body {
+  font-family: var(--font-body);
+}
+
+/* Paper Card: vintage aged file folder mockup */
+.paper-card {
+  background: var(--bg-paper);
+  border: 2px solid var(--ink);
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.85);
+  color: var(--ink);
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.paper-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.95);
+}
+
+/* Glass panel for high-tech CRT dashboard blocks */
+.glass-panel {
+  background: rgba(15, 15, 18, 0.85);
+  backdrop-filter: blur(12px);
+  border: 2px solid rgba(194, 124, 47, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
+  color: rgba(240, 240, 240, 0.95);
+}
+
+/* Accent taped sticker effect */
+.vintage-tape {
+  background: var(--accent-tape);
+  color: var(--ink);
+  font-family: var(--font-typewriter);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  padding: 0.25rem 1rem;
+  text-align: center;
+  text-transform: uppercase;
+  border-left: 3px dashed var(--ink-soft);
+  border-right: 3px dashed var(--ink-soft);
+  transform: rotate(-1deg);
+  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  display: inline-block;
+}
+
+/* Vintage input styles */
+.vintage-input {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--accent-warning);
+  color: #fff;
+  font-family: var(--font-mono);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  border-radius: 4px;
+}
+
+.vintage-input:focus {
+  outline: none;
+  border-color: #fca311;
+  box-shadow: 0 0 8px rgba(252, 163, 17, 0.3);
+}
+
+/* Paper view layout button */
+.vintage-btn {
+  font-family: var(--font-typewriter);
+  font-weight: bold;
+  text-transform: uppercase;
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--ink);
+  box-shadow: 2px 2px 0px var(--ink);
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.vintage-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0px 0px 0px var(--ink);
+}
+
+/* Scan lines pattern overlay for the screen */
+.crt-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%, 
+    rgba(0, 0, 0, 0.25) 50%
+  );
+  background-size: 100% 4px;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.4;
+}
+
+.crt-overlay::after {
+  content: " ";
+  display: block;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: radial-gradient(circle, transparent 40%, rgba(0,0,0,0.6) 100%);
+  pointer-events: none;
+  z-index: 10000;
+}
+
+/* Glowing text classes */
+.glow-text {
+  text-shadow: 0 0 8px rgba(252, 163, 17, 0.6);
+}
+
+.glow-text-red {
+  text-shadow: 0 0 8px rgba(156, 39, 32, 0.8);
+}
+
+/* Fluorescent Flicker Animation */
+@keyframes flicker {
+  0% { opacity: 0.98; }
+  10% { opacity: 0.95; }
+  10.1% { opacity: 0.4; }
+  10.2% { opacity: 0.97; }
+  35% { opacity: 0.99; }
+  35.1% { opacity: 0.6; }
+  35.3% { opacity: 0.98; }
+  70% { opacity: 0.95; }
+  70.2% { opacity: 0.5; }
+  70.3% { opacity: 0.99; }
+  100% { opacity: 0.98; }
+}
+
+.flicker-effect {
+  animation: flicker 14s infinite;
+}
+
+/* Dashed accent lines */
+.dashed-accent {
+  border: 2px dashed var(--accent-warning);
+}
+
+/* Crimson warning card overlay helper */
+.warning-card {
+  background: rgba(156, 39, 32, 0.12);
+  border: 2px solid var(--accent-critical);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.6);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-deep);
+}
+::-webkit-scrollbar-thumb {
+  background: #3c3c44;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-warning);
+}

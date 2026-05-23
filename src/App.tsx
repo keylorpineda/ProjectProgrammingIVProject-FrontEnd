@@ -1,9 +1,10 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
 import Login from "./pages/Login/Login"
 import AdmissionNew from "./pages/AdmissionNew/AdmissionNew"
-import Admin from "./pages/admin/Admin"
+import Admin from "./pages/Admin/Admin"
 import WorkerLayout from "./pages/worker/WorkerLayout"
 import WorkerGuard from "./core/guards/WorkerGuard"
+import CampLeaderLayout from "./pages/CampLeader/CampLeaderLayout"
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
             </WorkerGuard>
           }
         />
+        <Route path="/campleader/*" element={<CampLeaderLayout />} />
         <Route path="/register" element={<Navigate to="/admissions/new" replace />} />
         <Route path="/dashboard" element={<Navigate to="/admin/dashboard" replace />} />
 
