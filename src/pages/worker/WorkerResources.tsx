@@ -1,6 +1,6 @@
 import { Package, TrendingDown, TrendingUp, BarChart3, History } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { useAuth } from '@/pages/admin/context/AuthContext'
+import { useAuth } from '@/pages/Admin/context/AuthContext'
 import { useInventory, useInventoryMovements } from '@/features/worker/hooks/useWorkerAPI'
 import type { InventoryItem } from '@/types/worker.api.types'
 
