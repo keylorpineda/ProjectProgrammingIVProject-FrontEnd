@@ -39,6 +39,8 @@ export default function Login() {
         navigate(
           normalizedRole === "admin" || normalizedRole === "superadmin" || normalizedRole === "super_admin"
             ? "/admin/dashboard"
+            : normalizedRole === "campleader"
+            ? "/campleader"
             : "/dashboard"
         )
       }, 3500)
@@ -63,6 +65,12 @@ export default function Login() {
       if (isDevBypass && u.toLowerCase() === "admin" && p === "1234") {
         setAuth("dev-admin-token", { id: "admin-dev", username: "Admin", role: "admin", campId: "" }, null)
         finalizeLogin("admin")
+        return
+      }
+
+      if (u.toLowerCase() === "lider" && p === "1234") {
+        setAuth("lider-token", { id: "lider-dev", username: "Líder", role: "campleader", campId: "1" }, null)
+        finalizeLogin("campleader")
         return
       }
 

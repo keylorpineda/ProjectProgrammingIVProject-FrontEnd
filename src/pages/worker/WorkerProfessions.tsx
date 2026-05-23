@@ -14,7 +14,7 @@ import {
   Database,
 } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { useAuth } from '@/pages/admin/context/AuthContext'
+import { useAuth } from '@/pages/Admin/context/AuthContext'
 import { useProfessions, useProfessionMetrics } from '@/features/worker/hooks/useWorkerAPI'
 
 interface WorkerProfessionsProps {
