@@ -4,7 +4,6 @@ import { isAxiosError } from "axios"
 import { motion } from "framer-motion"
 import { ShieldAlert, CheckCircle, Loader2 } from "lucide-react"
 import { submitAdmission, trackAdmission } from "@/features/admissions/services/admissions.service"
-import type { AiAdmission } from "@/types/api.types"
 import "./AdmissionNew.css"
 
 type AdmissionFormData = {
@@ -23,8 +22,13 @@ type SubmissionDetails = {
   trackingCode: string
   recommendation: string
   score: number
-  status: AiAdmission["status"] | "pending"
+  status: string
 }
+
+// Public admission flow has no auth/camp context yet. The candidate is
+// effectively submitting "to the system" — we default to the primary camp.
+// TODO: replace with a real camp selector when the multi-camp signup UX exists.
+const DEFAULT_CAMP_ID = 1
 
 interface ApiErrorPayload {
   message?: string
@@ -46,21 +50,30 @@ export interface AdmissionFormProps {
 
 const cedulaPattern = /^[0-9]{9,20}$/
 
-const formatAboutYourself = (formData: AdmissionFormData): string => {
+const formatPersonalHistory = (formData: AdmissionFormData): string => {
   const parts = [
-    `Edad: ${formData.edad.trim()}`,
+    `Salud: ${formData.salud.trim()}`,
     `Condicion fisica: ${formData.condicion_fisica.trim()}`,
     `Cedula: ${formData.cedula.trim()}`,
   ]
   return `${parts.join(". ")}.`
 }
 
-const normalizeSkills = (rawSkills: string): string =>
+const splitName = (full: string): { first_name: string; last_name: string } => {
+  const cleaned = full.trim().replace(/\s+/g, " ")
+  if (!cleaned) return { first_name: "", last_name: "" }
+  const [first, ...rest] = cleaned.split(" ")
+  return {
+    first_name: first,
+    last_name: rest.length > 0 ? rest.join(" ") : first,
+  }
+}
+
+const parseSkills = (rawSkills: string): string[] =>
   rawSkills
     .split(",")
     .map((skill) => skill.trim())
     .filter(Boolean)
-    .join(", ")
 
 const extractApiErrorMessage = (error: unknown): string => {
   if (isAxiosError<ApiErrorPayload>(error)) {
@@ -670,31 +683,37 @@ export default function AdmissionNew() {
     setIsSubmitting(true)
 
     try {
-      const normalizedSkills = normalizeSkills(formData.habilidades)
+      const skillsList = parseSkills(formData.habilidades)
+      const { first_name, last_name } = splitName(formData.nombre)
+      const ageNumber = Number(formData.edad)
+
       const response = await submitAdmission({
-        name: formData.nombre.trim(),
-        about_yourself: formatAboutYourself(formData),
-        skills: normalizedSkills || formData.habilidades.trim(),
-        medical_info: formData.salud.trim(),
-        has_photo: Boolean(formData.foto),
-        has_id_card: cedulaPattern.test(formData.cedula.trim()),
+        first_name,
+        last_name,
+        age: Number.isFinite(ageNumber) ? ageNumber : 0,
+        health_status: 50,
+        physical_condition: 50,
+        skills: skillsList.length > 0 ? skillsList : [formData.habilidades.trim()],
+        criminal_record: false,
+        camp_id: DEFAULT_CAMP_ID,
+        personal_history: formatPersonalHistory(formData),
       })
 
-      let trackedStatus: AiAdmission["status"] | "pending" = "pending"
+      let trackedStatus: string = response.status
       const token = getStoredToken()
       if (token) {
         try {
           const trackedAdmission = await trackAdmission(response.tracking_code)
           trackedStatus = trackedAdmission.status
         } catch {
-          trackedStatus = "pending"
+          trackedStatus = response.status
         }
       }
 
       setSubmissionDetails({
         trackingCode: response.tracking_code,
-        recommendation: response.ai_recommendation,
-        score: response.evaluation_score,
+        recommendation: response.suggested_decision ?? "",
+        score: response.score ?? 0,
         status: trackedStatus,
       })
       setSubmitMessage("EVALUACION REGISTRADA.")

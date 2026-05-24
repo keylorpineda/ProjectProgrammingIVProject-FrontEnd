@@ -174,7 +174,7 @@ export default function WorkerProfile(_props: WorkerProfileProps) {
       >
         <h2 className="text-xl font-display text-white tracking-widest uppercase">EXPEDIENTE DE PERSONAL</h2>
         <div className="px-4 py-1 border border-paper-dark/30 text-[9px] font-mono text-accent-orange bg-black/60 uppercase font-bold">
-          SECTOR {user?.campId}
+          SECTOR {user?.camp_id}
         </div>
       </motion.div>
 
@@ -233,7 +233,7 @@ export default function WorkerProfile(_props: WorkerProfileProps) {
                 </div>
                 <div>
                   <p className="text-xs font-mono text-ink-black/60 uppercase tracking-widest mb-1 font-bold">Destino</p>
-                  <p className="text-sm font-mono font-bold text-ink-black">Sector {user?.campId}</p>
+                  <p className="text-sm font-mono font-bold text-ink-black">Sector {user?.camp_id}</p>
                 </div>
               </div>
 

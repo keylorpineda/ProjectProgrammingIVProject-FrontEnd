@@ -36,13 +36,17 @@ export default function Login() {
       setIsGateOpen(true)
       setTimeout(() => {
         const normalizedRole = role?.toLowerCase()
-        navigate(
-          normalizedRole === "admin" || normalizedRole === "superadmin" || normalizedRole === "super_admin"
+        const destination =
+          normalizedRole === "admin"
             ? "/admin/dashboard"
-            : normalizedRole === "campleader"
+            : normalizedRole === "worker"
+            ? "/worker"
+            : normalizedRole === "camp_leader"
             ? "/campleader"
-            : "/dashboard"
-        )
+            : normalizedRole === "resource_manager" || normalizedRole === "travel_manager"
+            ? "/admin/dashboard"
+            : "/login"
+        navigate(destination)
       }, 3500)
     }, 1500)
   }
@@ -61,19 +65,6 @@ export default function Login() {
       setAuth(response.access_token, response.user, response.refresh_token)
       finalizeLogin(response.user.role)
     } catch {
-      const isDevBypass = import.meta.env.DEV || import.meta.env.VITE_ADMIN_BYPASS === "true"
-      if (isDevBypass && u.toLowerCase() === "admin" && p === "1234") {
-        setAuth("dev-admin-token", { id: "admin-dev", username: "Admin", role: "admin", campId: "" }, null)
-        finalizeLogin("admin")
-        return
-      }
-
-      if (u.toLowerCase() === "lider" && p === "1234") {
-        setAuth("lider-token", { id: "lider-dev", username: "Líder", role: "campleader", campId: "1" }, null)
-        finalizeLogin("campleader")
-        return
-      }
-
       setLoginStatus("denied")
       setTimeout(() => setLoginStatus("waiting"), 2000)
     }

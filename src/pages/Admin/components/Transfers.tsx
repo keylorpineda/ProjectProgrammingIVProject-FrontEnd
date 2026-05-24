@@ -58,7 +58,7 @@ export default function Transfers() {
             dest: campById.get(transfer.camp_destination_id) ?? transfer.camp_destination_id,
             resources: [transfer.type.toUpperCase()],
             people: [],
-            date: formatDate(transfer.created_at),
+            date: formatDate(transfer.request_date),
           }
         })
         setTransfers(mapped)

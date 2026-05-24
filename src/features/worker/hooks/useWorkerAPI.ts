@@ -10,7 +10,7 @@ import {
 } from '@/features/worker/workerFallbackData'
 import type {
   WorkerAssignedResource,
-  Profession,
+  ProfessionWithPersons,
   Resource,
   InventoryItem,
   InventoryMovement,
@@ -61,7 +61,7 @@ export const useAssignedResources = (): UseQueryResult<
  * Hook to fetch all available professions
  * GET /api/users/professions
  */
-export const useProfessions = (): UseQueryResult<Profession[], ApiError> => {
+export const useProfessions = (): UseQueryResult<ProfessionWithPersons[], ApiError> => {
   const { token } = useAuthStore()
 
   React.useEffect(() => {

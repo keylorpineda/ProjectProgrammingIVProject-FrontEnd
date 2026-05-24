@@ -17,13 +17,11 @@ import "./AdminTheme.css"
 import "./Admin.css"
 
 const RequireAdmin = ({ children }: { children: React.ReactNode }) => {
-  // const { isAuthenticated, user } = useAuth()
-  // const role = user?.role?.toLowerCase()
-  // const isAdmin = role === "admin" || role === "super_admin" || role === "superadmin"
-  // if (!isAuthenticated || !user || !isAdmin) {
-  //   return <Navigate to="/login" replace />
-  // }
-
+  const { isAuthenticated, user } = useAuth()
+  const role = user?.role?.toLowerCase()
+  if (!isAuthenticated || !user || role !== "admin") {
+    return <Navigate to="/login" replace />
+  }
   return <>{children}</>
 }
 

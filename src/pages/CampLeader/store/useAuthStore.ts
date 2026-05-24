@@ -24,7 +24,7 @@ class AuthStore {
       user: {
         id: 77,
         username: "COMANDANTE_M_VANCE",
-        role: "encargado_viajes",
+        role: "camp_leader",
         campId: 1 // Refugio Alfa (Búnker Central)
       },
       isAuthenticated: true
@@ -49,7 +49,7 @@ class AuthStore {
       user: {
         id: Math.floor(Math.random() * 900) + 100,
         username: username.toUpperCase(),
-        role: "encargado_viajes",
+        role: "camp_leader",
         campId: campId
       },
       isAuthenticated: true

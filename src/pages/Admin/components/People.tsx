@@ -68,15 +68,21 @@ export default function People() {
 
   const mappedPeople = useMemo<PersonView[]>(
     () =>
-      people.map((person) => ({
-        id: person.id,
-        name: person.name,
-        status: statusLabels[person.status ?? ""] ?? (person.status ?? "N/D"),
-        profession: person.profession?.name ?? person.profession_id ?? "N/D",
-        camp: campById.get(person.camp_id) ?? person.camp_id,
-        age: "N/D",
-      })),
-    [people, campById],
+      people.map((person) => {
+        const name = [person.first_name, person.last_name, person.last_name2]
+          .filter(Boolean)
+          .join(" ")
+          .trim()
+        return {
+          id: person.id,
+          name: name || "N/D",
+          status: statusLabels[person.status ?? ""] ?? (person.status ?? "N/D"),
+          profession: person.profession?.name ?? person.profession_id ?? "N/D",
+          camp: campById.get(activeCampId) ?? activeCampId,
+          age: "N/D",
+        }
+      }),
+    [people, campById, activeCampId],
   )
 
   const filteredPeople = mappedPeople.filter((person) => {

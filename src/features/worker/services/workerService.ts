@@ -1,41 +1,30 @@
-import axios, { AxiosError } from 'axios'
+import axios from 'axios'
+import api from '@/config/api'
 import type {
   WorkerAssignedResource,
-  Profession,
+  ProfessionWithPersons,
   Resource,
   InventoryItem,
   InventoryMovement,
   ApiError,
 } from '@/types/worker.api.types'
 
-// API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://gestion-del-fin-api-614190957140.us-central1.run.app'
-
-const apiClient = axios.create({
-  baseURL: API_BASE_URL,
-  timeout: 6000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-})
-
-// Add token to requests
-export const setAuthToken = (token: string | null) => {
-  if (token) {
-    apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`
-  } else {
-    delete apiClient.defaults.headers.common['Authorization']
-  }
+// The worker module previously had its own axios instance and `setAuthToken`.
+// Per docs/ALIGNMENT_SPEC.md §1.5 / P0-5 there is exactly one HTTP client and
+// auth is attached by the shared `@/config/api` interceptor. This stub is kept
+// only so existing hooks that still call `setAuthToken(token)` compile until
+// they are cleaned up.
+export const setAuthToken = (_token: string | null) => {
+  /* no-op: the shared api client handles auth via its request interceptor */
 }
 
 // Error handler
 export const handleApiError = (error: unknown): ApiError => {
   if (axios.isAxiosError(error)) {
-    const axiosError = error as AxiosError<ApiError>
     return {
-      statusCode: axiosError.response?.status || 500,
-      message: axiosError.response?.data?.message || error.message,
-      error: axiosError.response?.data?.error || 'Unknown Error',
+      statusCode: error.response?.status || 500,
+      message: error.response?.data?.message || error.message,
+      error: error.response?.data?.error || 'Unknown Error',
     }
   }
 
@@ -49,15 +38,16 @@ export const handleApiError = (error: unknown): ApiError => {
 // Worker Service
 export const workerService = {
   /**
-   * Get resources assigned to the current user
-   * GET /api/users/me/assigned-resources
+   * GET /users/me/assigned-resources
    */
   async getAssignedResources(): Promise<WorkerAssignedResource[]> {
     try {
-      const response = await apiClient.get<{ resources: WorkerAssignedResource[] }>(
-        '/api/users/me/assigned-resources'
-      )
-      return response.data.resources || []
+      const response = await api.get<
+        WorkerAssignedResource[] | { resources: WorkerAssignedResource[] }
+      >('/users/me/assigned-resources')
+      const data = response.data
+      if (Array.isArray(data)) return data
+      return data?.resources ?? []
     } catch (error) {
       console.error('Error fetching assigned resources:', error)
       throw handleApiError(error)
@@ -65,15 +55,21 @@ export const workerService = {
   },
 
   /**
-   * Get all available professions
-   * GET /api/users/professions
+   * GET /users/professions
+   *
+   * The shared `Profession` contract type does not include a `persons[]` roster;
+   * the worker dashboard renders persons per profession, so we widen to
+   * `ProfessionWithPersons`. When the backend lacks the field at runtime the
+   * roster simply renders empty.
    */
-  async getProfessions(): Promise<Profession[]> {
+  async getProfessions(): Promise<ProfessionWithPersons[]> {
     try {
-      const response = await apiClient.get<{ professions: Profession[] }>(
-        '/api/users/professions'
-      )
-      return response.data.professions || []
+      const response = await api.get<
+        ProfessionWithPersons[] | { professions: ProfessionWithPersons[] }
+      >('/users/professions')
+      const data = response.data
+      if (Array.isArray(data)) return data
+      return data?.professions ?? []
     } catch (error) {
       console.error('Error fetching professions:', error)
       throw handleApiError(error)
@@ -81,28 +77,23 @@ export const workerService = {
   },
 
   /**
-   * Get all resources in the system
-   * GET /api/resources?page=1&limit=20&category=...
+   * GET /resources?page=1&limit=20&category=...
    */
   async getResources(
     page: number = 1,
     limit: number = 20,
-    category?: string
+    category?: string,
   ): Promise<Resource[]> {
     try {
-      const params = new URLSearchParams({
-        page: page.toString(),
-        limit: limit.toString(),
-      })
+      const params: Record<string, string | number> = { page, limit }
+      if (category) params.category = category
 
-      if (category) {
-        params.append('category', category)
-      }
-
-      const response = await apiClient.get<Resource[]>(
-        `/api/resources?${params.toString()}`
-      )
-      return response.data || []
+      const response = await api.get<
+        Resource[] | { data: Resource[] }
+      >('/resources', { params })
+      const data = response.data
+      if (Array.isArray(data)) return data
+      return data?.data ?? []
     } catch (error) {
       console.error('Error fetching resources:', error)
       throw handleApiError(error)
@@ -110,16 +101,16 @@ export const workerService = {
   },
 
   /**
-   * Get inventory for a specific camp
-   * GET /api/resources/inventory/:campId
+   * GET /resources/inventory/:campId
    */
   async getInventory(campId: string | number): Promise<InventoryItem[]> {
     try {
-      const response = await apiClient.get<{
-        camp_id: number
-        inventory_items: InventoryItem[]
-      }>(`/api/resources/inventory/${campId}`)
-      return response.data.inventory_items || []
+      const response = await api.get<
+        InventoryItem[] | { camp_id: number; inventory_items: InventoryItem[] }
+      >(`/resources/inventory/${campId}`)
+      const data = response.data
+      if (Array.isArray(data)) return data
+      return data?.inventory_items ?? []
     } catch (error) {
       console.error(`Error fetching inventory for camp ${campId}:`, error)
       throw handleApiError(error)
@@ -127,20 +118,24 @@ export const workerService = {
   },
 
   /**
-   * Get inventory movements history
-   * GET /api/resources/movements/:campId?limit=50
+   * GET /resources/movements/:campId?limit=50
    */
   async getInventoryMovements(
     campId: string | number,
-    limit: number = 50
+    limit: number = 50,
   ): Promise<InventoryMovement[]> {
     try {
-      const response = await apiClient.get<{
-        movements: InventoryMovement[]
-      }>(`/api/resources/movements/${campId}?limit=${limit}`)
-      return response.data.movements || []
+      const response = await api.get<
+        InventoryMovement[] | { movements: InventoryMovement[] }
+      >(`/resources/movements/${campId}`, { params: { limit } })
+      const data = response.data
+      if (Array.isArray(data)) return data
+      return data?.movements ?? []
     } catch (error) {
-      console.error(`Error fetching inventory movements for camp ${campId}:`, error)
+      console.error(
+        `Error fetching inventory movements for camp ${campId}:`,
+        error,
+      )
       throw handleApiError(error)
     }
   },

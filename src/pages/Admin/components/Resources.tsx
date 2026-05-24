@@ -15,7 +15,7 @@ type InventoryRow = {
 }
 
 const getStatus = (item: InventoryItem): InventoryRow["status"] => {
-  if (item.is_below_minimum) return "CRÍTICO"
+  if (item.alert_active) return "CRÍTICO"
   if (item.minimum_stock_required > 0 && item.current_quantity <= item.minimum_stock_required * 1.25) {
     return "ADVERTENCIA"
   }
@@ -56,10 +56,10 @@ export default function Resources() {
     () =>
       items.map((item, index) => ({
         id: index + 1,
-        name: item.resource.name,
-        camps: { [campName]: item.current_quantity },
-        total: item.current_quantity,
-        unit: item.resource.unit,
+        name: item.resource?.name ?? "N/D",
+        camps: { [campName]: Number(item.current_quantity) },
+        total: Number(item.current_quantity),
+        unit: item.resource?.unit ?? "",
         status: getStatus(item),
       })),
     [items, campName],

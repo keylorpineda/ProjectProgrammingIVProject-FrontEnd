@@ -2,11 +2,20 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import type { ReactNode } from "react"
 import type { Camp } from "@/types/api.types"
 import { getCamps } from "@/features/camps/services/camps.service"
+import { switchCamp as switchCampService } from "@/features/auth/services/auth.service"
+import { useAuthStore } from "@/store/useAuthStore"
 import { useAuth } from "./AuthContext"
 
 interface CampContextType {
   activeCampId: string
   setActiveCampId: (id: string) => void
+  /**
+   * User-driven camp switch. Calls PATCH /auth/switch-camp, persists the
+   * rotated tokens, and forces a full reload to the start screen so every
+   * cached camp-scoped query is rebuilt against the new JWT
+   * (see docs/MASTER_DOC.md §3.5).
+   */
+  switchActiveCamp: (id: string) => Promise<void>
   camps: Camp[]
   isLoading: boolean
 }
@@ -21,7 +30,7 @@ const getStoredCampId = () => {
 export const CampProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth()
   const [activeCampId, setActiveCampIdState] = useState<string>(
-    getStoredCampId() || user?.campId || "",
+    getStoredCampId() || user?.camp_id || "",
   )
   const [camps, setCamps] = useState<Camp[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -37,7 +46,7 @@ export const CampProvider = ({ children }: { children: ReactNode }) => {
         setCamps(data)
         setActiveCampIdState((current) => {
           if (current && data.some((camp) => camp.id === current)) return current
-          if (user?.campId && data.some((camp) => camp.id === user.campId)) return user.campId
+          if (user?.camp_id && data.some((camp) => camp.id === user.camp_id)) return user.camp_id
           return data[0]?.id ?? ""
         })
       } catch {
@@ -53,7 +62,7 @@ export const CampProvider = ({ children }: { children: ReactNode }) => {
     return () => {
       isMounted = false
     }
-  }, [user?.campId])
+  }, [user?.camp_id])
 
   const setActiveCampId = useCallback((id: string) => {
     setActiveCampIdState(id)
@@ -62,14 +71,30 @@ export const CampProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [])
 
+  const switchActiveCamp = useCallback(async (id: string) => {
+    const numericId = Number(id)
+    if (!Number.isFinite(numericId) || numericId <= 0) {
+      throw new Error("Invalid camp id")
+    }
+    const response = await switchCampService({ camp_id: numericId })
+    useAuthStore
+      .getState()
+      .setAuth(response.access_token, response.user, response.refresh_token)
+    if (typeof window !== "undefined") {
+      localStorage.setItem("active-camp-id", id)
+      window.location.assign("/admin/dashboard")
+    }
+  }, [])
+
   const value = useMemo(
     () => ({
       activeCampId,
       setActiveCampId,
+      switchActiveCamp,
       camps,
       isLoading,
     }),
-    [activeCampId, setActiveCampId, camps, isLoading],
+    [activeCampId, setActiveCampId, switchActiveCamp, camps, isLoading],
   )
 
   return <CampContext.Provider value={value}>{children}</CampContext.Provider>

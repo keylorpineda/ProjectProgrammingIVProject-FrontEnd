@@ -3,11 +3,16 @@ import type { Camp } from "@/types/api.types"
 
 export interface CreateCampBody {
   name: string
-  location: string
+  location_description?: string
+  latitude?: number
+  longitude?: number
   max_capacity?: number
+  foundation_date?: string
 }
 
-export type UpdateCampBody = Partial<CreateCampBody>
+export interface UpdateCampBody extends Partial<CreateCampBody> {
+  active?: boolean
+}
 
 type CampsResponse = Camp[] | { data?: Camp[]; items?: Camp[] }
 

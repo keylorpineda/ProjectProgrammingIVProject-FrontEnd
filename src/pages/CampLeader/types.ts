@@ -138,6 +138,6 @@ export interface CampStatistics {
 export interface User {
   id: number;
   username: string;
-  role: 'encargado_viajes';
+  role: 'camp_leader';
   campId: number;
 }

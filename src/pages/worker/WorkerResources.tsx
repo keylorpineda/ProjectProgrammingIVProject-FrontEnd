@@ -64,8 +64,8 @@ export default function WorkerResources(_props: WorkerResourcesProps) {
   const { user } = useAuth()
 
   // Fetch data hooks
-  const { data: inventory } = useInventory(user?.campId)
-  const { data: movements } = useInventoryMovements(user?.campId)
+  const { data: inventory } = useInventory(user?.camp_id)
+  const { data: movements } = useInventoryMovements(user?.camp_id)
 
   return (
     <motion.div
@@ -112,11 +112,11 @@ export default function WorkerResources(_props: WorkerResourcesProps) {
                   >
                     <div className="space-y-1 flex-1">
                       <p className="text-[12px] font-mono text-ink-black/80 font-bold uppercase">{item.resource_id}</p>
-                      <p className="text-sm font-display">{item.resource_name}</p>
+                      <p className="text-sm font-display">{item.resource?.name ?? ""}</p>
                     </div>
                     <div className="text-right space-y-1">
                       <div className="flex items-center gap-2 justify-end">
-                        <p className="text-xl font-mono font-bold">{item.current_quantity} {item.unit}</p>
+                        <p className="text-xl font-mono font-bold">{item.current_quantity} {item.resource?.unit ?? ""}</p>
                         {trend === 'down' ? (
                           <TrendingDown className="w-4 h-4 text-accent-orange" />
                         ) : trend === 'up' ? (
@@ -201,7 +201,7 @@ export default function WorkerResources(_props: WorkerResourcesProps) {
                           {movementDate.toLocaleString()}
                         </p>
                         <p className="text-ink-black/85 font-medium">
-                          {move.resource_name} ({move.quantity})
+                          {move.resource?.name ?? ""} ({move.quantity})
                         </p>
                       </div>
                       <div className="text-right">
@@ -212,7 +212,7 @@ export default function WorkerResources(_props: WorkerResourcesProps) {
                         >
                           {getMovementTypeLabel(move.type)}
                         </p>
-                        <p className="text-ink-black/70 italic font-medium">{move.user_name}</p>
+                        <p className="text-ink-black/70 italic font-medium">{move.user?.username ?? ""}</p>
                       </div>
                     </motion.div>
                   )

@@ -37,3 +37,17 @@ export const getSessionStatus = async (): Promise<SessionStatus> => {
   const { data } = await api.get<SessionStatus>("/auth/session-status")
   return data
 }
+
+export interface SwitchCampBody {
+  camp_id: number
+}
+
+/**
+ * PATCH /auth/switch-camp — rotates the JWT so the server-side camp_id matches
+ * the one the user picked. The response mirrors the login payload. Per
+ * docs/MASTER_DOC.md §3.5 the frontend must fully reload context after switching.
+ */
+export const switchCamp = async (body: SwitchCampBody): Promise<LoginResponse> => {
+  const { data } = await api.patch<LoginResponse>("/auth/switch-camp", body)
+  return data
+}

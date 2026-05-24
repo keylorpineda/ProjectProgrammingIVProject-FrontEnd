@@ -18,6 +18,8 @@ type AdmissionSummary = {
   date: string
 }
 
+type AiRecommendation = "accept" | "reject" | "review"
+
 type AdmissionDetail = AdmissionSummary & {
   appearanceNotes: string
   fingerprintsScanned: boolean
@@ -25,10 +27,13 @@ type AdmissionDetail = AdmissionSummary & {
   suggestedDecision: "ACCEPT" | "REJECT"
   aiAnalysis: string
   rulesApplied: string[]
-  aiRecommendation: AiAdmission["ai_recommendation"]
+  aiRecommendation: AiRecommendation
+  contactEmail: string | null
 }
 
-const DEFAULT_ACCOUNT_ROLE = "resident"
+// Default role assigned to newly admitted survivors. Matches `worker` role in
+// the seed (role_id=2). See docs/ALIGNMENT_SPEC.md §1.2 / P0-4.
+const DEFAULT_NEW_ACCOUNT_ROLE_ID = 2
 const DEFAULT_ACCOUNT_PASSWORD = "Temp1234!"
 const DEMO_ADMISSIONS_ENABLED = import.meta.env.VITE_DEMO_ADMISSIONS === "true" || import.meta.env.DEV
 
@@ -45,6 +50,7 @@ const DEMO_ADMISSIONS: AdmissionDetail[] = [
     aiAnalysis: "Evaluacion neuronal sugiere adaptacion estable en entornos cerrados.",
     rulesApplied: ["CRITICAL_ROLE_NEEDED", "HEALTH_SCORE_OK"],
     aiRecommendation: "accept",
+    contactEmail: null,
   },
   {
     id: "DEMO-02",
@@ -58,6 +64,7 @@ const DEMO_ADMISSIONS: AdmissionDetail[] = [
     aiAnalysis: "Riesgo medico elevado y baja tolerancia al confinamiento.",
     rulesApplied: ["HEALTH_SCORE_OK"],
     aiRecommendation: "reject",
+    contactEmail: null,
   },
   {
     id: "DEMO-03",
@@ -71,6 +78,7 @@ const DEMO_ADMISSIONS: AdmissionDetail[] = [
     aiAnalysis: "Adaptacion social alta; requiere seguimiento medico.",
     rulesApplied: ["CRITICAL_ROLE_NEEDED"],
     aiRecommendation: "review",
+    contactEmail: null,
   },
 ]
 
@@ -99,30 +107,63 @@ const buildUsername = (name: string) =>
     .replace(/\s+/g, ".")
     .replace(/[^a-z0-9._-]/g, "")
 
+const buildApplicantName = (admission: AiAdmission): string => {
+  const candidate = admission.candidate_data ?? ({} as AiAdmission["candidate_data"])
+  return [candidate.first_name, candidate.last_name, candidate.last_name2]
+    .filter((part) => typeof part === "string" && part.trim().length > 0)
+    .join(" ")
+    .trim()
+}
+
+const normalizeRecommendation = (
+  suggested: string | null | undefined,
+): AiRecommendation => {
+  const value = (suggested ?? "").toUpperCase()
+  if (value.includes("ACCEPT")) return "accept"
+  if (value.includes("REJECT")) return "reject"
+  return "review"
+}
+
 const mapAdmissionSummary = (admission: AiAdmission): AdmissionSummary => ({
   id: admission.id,
-  applicantName: admission.name,
+  applicantName: buildApplicantName(admission) || "Sin nombre",
   fileNumber: admission.tracking_code,
-  date: formatDate(admission.created_at),
+  date: formatDate(admission.submission_date),
 })
 
+const extractRulesApplied = (raw: unknown): string[] => {
+  if (!raw || typeof raw !== "object") return []
+  const factors = (raw as { nestjs_evaluation?: { factors?: Array<{ category?: string }> } })
+    .nestjs_evaluation?.factors
+  if (!Array.isArray(factors)) return []
+  return factors
+    .map((factor) => factor?.category)
+    .filter((category): category is string => typeof category === "string")
+}
+
 const mapAdmissionDetail = (admission: AiAdmission): AdmissionDetail => {
-  const suggestedDecision = admission.ai_recommendation === "accept" ? "ACCEPT" : "REJECT"
-  const rulesApplied = admission.glass_box_report?.factors?.map((factor) => factor.category) ?? []
-  const analysis = admission.glass_box_report?.finalRecommendation ?? "Evaluación automática registrada."
-  const appearanceNotes = [admission.medical_info, admission.about_yourself]
-    .filter(Boolean)
+  const aiRecommendation = normalizeRecommendation(admission.suggested_decision)
+  const suggestedDecision = aiRecommendation === "accept" ? "ACCEPT" : "REJECT"
+  const rulesApplied = extractRulesApplied(admission.raw_ai_response)
+  const analysis = admission.justification ?? "Evaluación automática registrada."
+  const candidate = admission.candidate_data ?? ({} as AiAdmission["candidate_data"])
+  const appearanceNotes = [
+    candidate.medical_conditions?.join(", "),
+    candidate.personal_history,
+  ]
+    .filter((part) => typeof part === "string" && part.trim().length > 0)
     .join(" | ")
 
   return {
     ...mapAdmissionSummary(admission),
     appearanceNotes: appearanceNotes || "Sin observaciones adicionales.",
-    fingerprintsScanned: admission.has_id_card,
-    aiScore: admission.evaluation_score,
+    fingerprintsScanned: Boolean(candidate.id_card_url),
+    aiScore: admission.score ?? 0,
     suggestedDecision,
     aiAnalysis: analysis,
     rulesApplied,
-    aiRecommendation: admission.ai_recommendation,
+    aiRecommendation,
+    contactEmail: candidate.contact_email ?? null,
   }
 }
 
@@ -155,8 +196,9 @@ export default function AdmissionsBook() {
     const loadAdmissions = async () => {
       setLoading(true)
       try {
-        const items = await getPendingAdmissions({ campId: activeCampId, page: 1, limit: 50 })
+        const response = await getPendingAdmissions({ campId: activeCampId, page: 1, limit: 50 })
         if (!isMounted) return
+        const items = response.data ?? []
         if (items.length === 0) {
           if (DEMO_ADMISSIONS_ENABLED) {
             setAdmissions(DEMO_SUMMARIES)
@@ -214,15 +256,16 @@ export default function AdmissionsBook() {
         setShowingProcessed(false)
       } catch {
         if (!isMounted) return
-        const fallback = {
+        const fallback: AdmissionDetail = {
           ...admissions[currentIndex],
           appearanceNotes: "Sin observaciones adicionales.",
           fingerprintsScanned: false,
           aiScore: 0,
-          suggestedDecision: "REJECT" as const,
+          suggestedDecision: "REJECT",
           aiAnalysis: "Evaluación automática registrada.",
           rulesApplied: [],
-          aiRecommendation: "review" as const,
+          aiRecommendation: "review",
+          contactEmail: null,
         }
         setDetailData(fallback)
       } finally {
@@ -291,16 +334,10 @@ export default function AdmissionsBook() {
     try {
       const decisionValue = nextDecision === "ACCEPT" ? "accepted" : "rejected"
       const notes = (document.getElementById("admin_notes_input") as HTMLTextAreaElement)?.value || "Reviewed"
-      const overrideReason =
-        detailData.aiRecommendation !== "review" &&
-        detailData.aiRecommendation !== (nextDecision === "ACCEPT" ? "accept" : "reject")
-          ? "Decisión manual distinta a la recomendación IA."
-          : undefined
 
       await reviewAdmission(detailData.id, {
         decision: decisionValue,
-        admin_notes: notes,
-        override_reason: overrideReason,
+        notes,
       })
 
       setTimeout(() => {
@@ -326,11 +363,13 @@ export default function AdmissionsBook() {
 
     if (decision === "ACCEPT" && activeCampId) {
       try {
+        const username = buildUsername(detailData.applicantName)
+        const email = detailData.contactEmail ?? `${username}@camp.local`
         await createAdmissionAccount(detailData.id, {
-          username: buildUsername(detailData.applicantName),
+          username,
+          email,
           password: DEFAULT_ACCOUNT_PASSWORD,
-          role: DEFAULT_ACCOUNT_ROLE,
-          camp_id: activeCampId,
+          role_id: DEFAULT_NEW_ACCOUNT_ROLE_ID,
         })
       } catch {
         // Ignore create-account errors to keep the flow visible

@@ -205,7 +205,7 @@ export default function WorkerProfessions(_props: WorkerProfessionsProps) {
             <AlertTriangle className="w-5 h-5 animate-pulse flex-shrink-0" />
             <div>
               <p className="text-xs font-display tracking-widest uppercase font-bold">
-                ALERTA CRÍTICA DE PERSONAL: SECTOR {user?.campId}
+                ALERTA CRÍTICA DE PERSONAL: SECTOR {user?.camp_id}
               </p>
               <p className="font-mono text-[8px] opacity-90 uppercase">
                 {metrics.filter((m) => m.status === 'CRÍTICO').length} Sectores operando bajo mínimos de

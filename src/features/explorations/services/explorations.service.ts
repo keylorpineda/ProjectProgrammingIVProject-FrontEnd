@@ -8,6 +8,8 @@ export interface ExplorationPersonBody {
 
 export interface ExplorationResourceBody {
   resource_id: string
+  /** "in" (brought back at return) or "out" (taken on the trip). */
+  flow: string
   quantity: number
 }
 

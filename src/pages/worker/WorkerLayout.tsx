@@ -50,8 +50,8 @@ export default function WorkerLayout() {
 
       {/* Main Content Area */}
       <div className="worker-main-content">
-        <WorkerTopBar 
-          campName={user?.campId}
+        <WorkerTopBar
+          campName={user?.camp_id ?? undefined}
           userName={user?.id}
         />
 

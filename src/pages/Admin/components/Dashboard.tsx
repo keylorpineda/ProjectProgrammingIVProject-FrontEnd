@@ -12,7 +12,7 @@ const formatTime = () => {
 }
 
 const formatCriticalResource = (resource: CriticalResource) =>
-  `${resource.resourceName}: ${resource.currentQuantity}/${resource.minimumRequired}`
+  `${resource.resource_name}: ${resource.current_quantity}/${resource.minimum_required}`
 
 export default function Dashboard() {
   const { activeCampId } = useCamp()
@@ -42,7 +42,7 @@ export default function Dashboard() {
 
         if (!isMounted) return
         setMetrics(metricsResponse)
-        setPendingAdmissions(admissions.length)
+        setPendingAdmissions(admissions?.total ?? admissions?.data?.length ?? 0)
       } catch {
         if (!isMounted) return
         setError("No se pudo cargar el tablero de situación.")
@@ -62,14 +62,14 @@ export default function Dashboard() {
     const peopleGroups = metrics
       ? [
           {
-            name: metrics.campId?.toUpperCase() ?? "CAMPAMENTO",
-            count: metrics.camp.totalPeople,
-            capacity: metrics.camp.campCapacity,
+            name: metrics.camp_id?.toUpperCase() ?? "CAMPAMENTO",
+            count: metrics.camp.total_people,
+            capacity: metrics.camp.camp_capacity,
           },
         ]
       : []
 
-    const criticalResources = metrics?.warehouse.criticalResources ?? []
+    const criticalResources = metrics?.warehouse?.critical_resources ?? []
     const resourceAlerts = criticalResources.length
       ? criticalResources.map(formatCriticalResource)
       : ["OK"]
@@ -119,7 +119,7 @@ export default function Dashboard() {
         content: (
           <div className="flex-row">
             <span className="big-number" style={{ fontSize: "3rem" }}>
-              {metrics?.transfers.pendingTransfers ?? 0}
+              {metrics?.transfers.pending_transfers ?? 0}
             </span>
             <span className="small-text">TRANSFERENCIAS PENDIENTES</span>
           </div>
@@ -128,7 +128,7 @@ export default function Dashboard() {
       },
       {
         title: "CUERPOS EXPLORACIÓN",
-        content: <p>{metrics ? `${metrics.camp.activeExplorations} Equipos en zona muerta` : "-"}</p>,
+        content: <p>{metrics ? `${metrics.camp.active_explorations} Equipos en zona muerta` : "-"}</p>,
         className: "",
       },
     ]

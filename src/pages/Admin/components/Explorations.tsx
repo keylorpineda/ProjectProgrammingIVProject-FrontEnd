@@ -50,7 +50,16 @@ export default function Explorations() {
   const logs = useMemo(
     () =>
       explorations.map((exploration) => {
-        const group = exploration.persons?.map((person) => person.person?.name ?? person.person_id) ?? []
+        const group =
+          exploration.explorationPersons?.map((member) => {
+            const person = member.person
+            if (!person) return member.person_id
+            const fullName = [person.first_name, person.last_name]
+              .filter(Boolean)
+              .join(" ")
+              .trim()
+            return fullName || member.person_id
+          }) ?? []
         return {
           id: exploration.id,
           title: exploration.name,

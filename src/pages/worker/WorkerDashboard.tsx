@@ -46,7 +46,7 @@ export default function WorkerDashboard(_props: WorkerDashboardProps) {
   // Fetch data hooks
   const { data: assignedResources } = useAssignedResources()
   const { metrics } = useProfessionMetrics()
-  const { stats: inventoryStats } = useInventoryStatus(user?.campId)
+  const { stats: inventoryStats } = useInventoryStatus(user?.camp_id)
 
   // Calculate camp overview metrics
   const campMetrics = React.useMemo(() => {
@@ -90,7 +90,7 @@ export default function WorkerDashboard(_props: WorkerDashboardProps) {
         <h2 className="text-4xl uppercase mb-2 drop-shadow-[2px_2px_0px_rgba(154,144,128,0.2)]">
           CAMP OVERVIEW
         </h2>
-        <p className="terminal-text opacity-90">Sector {user?.campId} // Strategic Dashboard</p>
+        <p className="terminal-text opacity-90">Sector {user?.camp_id} // Strategic Dashboard</p>
       </motion.div>
 
       {/* Camp Overview Metrics Grid */}
