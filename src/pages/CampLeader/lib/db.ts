@@ -77,7 +77,7 @@ const INITIAL_PERSONS = (professions: Profession[]): Person[] => {
       expeditionsSurvived: 12,
       previous_skills: "FUE RASTREADOR MILITAR EN EL DESIERTO NEGRO EN 2024.",
       photo_url: "https://images.unsplash.com/photo-1542385151-efd9000785a0?w=150&auto=format&fit=crop",
-      profession: findProf(1),
+      profession: findProf(1), achievements: ['VETERANO_PARAMO', 'SOBREVIVIENTE_ELITE'],
     },
     {
       id: 102,
@@ -91,7 +91,7 @@ const INITIAL_PERSONS = (professions: Profession[]): Person[] => {
       expeditionsSurvived: 24,
       previous_skills: "CIRUJANA CARDÍACA. ESPECIALISTA EN TOXINAS MUTANTES.",
       photo_url: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop",
-      profession: findProf(2),
+      profession: findProf(2), achievements: ['SOBREVIVIENTE_ELITE', 'PRIMEROS_AUXILIOS_AVANZADOS'],
     },
     {
       id: 103,
@@ -119,7 +119,7 @@ const INITIAL_PERSONS = (professions: Profession[]): Person[] => {
       expeditionsSurvived: 31,
       previous_skills: "EX-TTE. DE INFANTERÍA PESADA. PUNTERÍA ABSOLUTA CON FUSIL.",
       photo_url: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop",
-      profession: findProf(4),
+      profession: findProf(4), achievements: ['VETERANO_PARAMO'],
     },
     {
       id: 105,
@@ -147,7 +147,7 @@ const INITIAL_PERSONS = (professions: Profession[]): Person[] => {
       expeditionsSurvived: 9,
       previous_skills: "CONOCEDOR DETALLADO DEL METRO INUNDADO Y TÚNELES ALFA.",
       photo_url: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=150&auto=format&fit=crop",
-      profession: findProf(1),
+      profession: findProf(1), achievements: ['VETERANO_PARAMO', 'SOBREVIVIENTE_ELITE'],
     },
     {
       id: 107,
@@ -161,7 +161,7 @@ const INITIAL_PERSONS = (professions: Profession[]): Person[] => {
       expeditionsSurvived: 2,
       previous_skills: "NATIVA DEL SUBTERRÃNEO. SENTIDO AGUDO CONTRA ASALTIADOS.",
       photo_url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop",
-      profession: findProf(4),
+      profession: findProf(4), achievements: ['VETERANO_PARAMO'],
     },
   ];
 };
@@ -301,6 +301,7 @@ const INITIAL_MOVEMENTS: InventoryMovement[] = [
 
 // --- INITIALIZER ---
 export const initDb = () => {
+    localStorage.removeItem(KEYS.CAMPS);
   if (!localStorage.getItem(KEYS.CAMPS)) {
     localStorage.setItem(KEYS.CAMPS, JSON.stringify(INITIAL_CAMPS));
     localStorage.setItem(KEYS.PROFESSIONS, JSON.stringify(INITIAL_PROFESSIONS));

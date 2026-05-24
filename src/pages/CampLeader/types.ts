@@ -1,4 +1,4 @@
-﻿// @ts-nocheck
+// @ts-nocheck
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -25,6 +25,7 @@ export interface Person {
   previous_skills: string;
   photo_url?: string;
   profession: Profession;
+  achievements?: string[];
 }
 
 export interface Camp {
