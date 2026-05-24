@@ -1,4 +1,4 @@
-// @ts-nocheck
+ï»¿// @ts-nocheck
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -6,14 +6,22 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '../store/useAuthStore';
-import { Radio, AlertTriangle, ShieldCheck, Clock } from 'lucide-react';
+import { Radio, AlertTriangle, ShieldCheck, Clock, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface TopbarProps {
   survivalScore: number;
 }
 
 export default function Topbar({ survivalScore }: TopbarProps) {
-  const { user } = useAuthStore();
+  const { user, logout } = useAuthStore();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
   const [timeStr, setTimeStr] = useState("2026-05-23 01:59:17");
 
   // Keep a running Clock synchronized to the user timestamp simulation
@@ -58,7 +66,7 @@ export default function Topbar({ survivalScore }: TopbarProps) {
             DOOMSDAY CENTRAL CONTROL PORTAL
           </h1>
           <p className="font-mono text-[10px] text-[#fca311]/60 uppercase tracking-widest">
-            SALA DE MANDOS • CAMPAMENTO ALFA [ID: #{user?.campId || 1}]
+            SALA DE MANDOS CAMPAMENTO ALFA [ID: #{user?.campId || 1}]
           </p>
         </div>
       </div>
@@ -89,13 +97,22 @@ export default function Topbar({ survivalScore }: TopbarProps) {
               {user?.username || "DESCONOCIDO"}
             </span>
             <span className="text-[9px] font-mono bg-[#c27c2f] text-black px-1.5 py-0.5 rounded uppercase font-bold">
-              LÍDER DE VIAJES
+              LIDER DE VIAJES
             </span>
           </div>
           <div className="w-9 h-9 border border-[#c27c2f] flex items-center justify-center bg-[#111] rounded">
             <span className="font-typewriter text-[#c27c2f] text-sm font-bold">M</span>
           </div>
         </div>
+
+        {/* LOGOUT BUTTON */}
+        <button 
+          onClick={handleLogout}
+          className="ml-1 flex items-center gap-2 bg-red-900/20 hover:bg-red-600 text-[#ef4444] hover:text-white border border-[#ef4444] px-3 py-1.5 rounded font-mono text-[10px] font-bold uppercase tracking-widest transition-all duration-200 hover:shadow-[0_0_10px_rgba(239,68,68,0.4)]"
+        >
+          <LogOut className="w-3 h-3" />
+          <span className="hidden sm:inline">LOGOUT</span>
+        </button>
       </div>
     </header>
   );
