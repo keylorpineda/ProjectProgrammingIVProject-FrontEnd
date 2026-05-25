@@ -2,7 +2,6 @@ import { useEffect, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { useCamp } from "../context/CampContext"
 import {
-  createAdmissionAccount,
   getAdmissionById,
   getPendingAdmissions,
   reviewAdmission,
@@ -293,8 +292,6 @@ export default function AdmissionsBook() {
   const [showingProcessed, setShowingProcessed] = useState(false)
   const [turnDirection, setTurnDirection] = useState<"next" | "prev" | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
-  const [isArchiving, setIsArchiving] = useState(false)
-  const [archiveError, setArchiveError] = useState("")
   const [isDemoData, setIsDemoData] = useState(false)
   const [adminNotes, setAdminNotes] = useState("")
 
@@ -475,25 +472,6 @@ export default function AdmissionsBook() {
 
   const handleArchive = async () => {
     if (!detailData) return
-    setArchiveError("")
-    if (!isDemoData && detailData.contactEmail) {
-      setIsArchiving(true)
-      try {
-        const nameParts = detailData.applicantName.toLowerCase().replace(/\s+/g, ".")
-        const username = nameParts.slice(0, 20) || "survivor"
-        const tempPassword = `Temp${Math.random().toString(36).slice(2, 8)}!`
-        await createAdmissionAccount(detailData.id, {
-          username,
-          email: detailData.contactEmail,
-          password: tempPassword,
-          role_id: 2,
-        })
-      } catch {
-        setArchiveError("No se pudo crear la cuenta. El expediente se archivará de todos modos.")
-      } finally {
-        setIsArchiving(false)
-      }
-    }
     archiveAdmission()
   }
 
@@ -799,29 +777,12 @@ export default function AdmissionsBook() {
                         EXPEDIENTE #{detailData.fileNumber}
                       </div>
 
-                      {archiveError ? (
-                        <div
-                          style={{
-                            color: "var(--accent-critical)",
-                            fontSize: "10px",
-                            fontFamily: "var(--font-mono)",
-                            textAlign: "center",
-                            padding: "4px",
-                          }}
-                        >
-                          {archiveError}
-                        </div>
-                      ) : null}
                       <div
                         className="binder-footer"
                         style={{ bottom: "40px", justifyContent: "center" }}
                       >
-                        <button
-                          className="archive-btn"
-                          onClick={() => void handleArchive()}
-                          disabled={isArchiving}
-                        >
-                          {isArchiving ? "PROCESANDO..." : "ENVIAR CORREO Y ARCHIVAR"}
+                        <button className="book-archive-btn" onClick={handleArchive}>
+                          ARCHIVAR EXPEDIENTE
                         </button>
                       </div>
                     </div>
