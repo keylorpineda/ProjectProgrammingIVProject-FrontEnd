@@ -9,10 +9,11 @@ import "./People.css"
 type PersonView = {
   id: string
   name: string
+  statusKey: string
   status: string
   profession: string
   camp: string
-  age?: number | string
+  age: number | string
 }
 
 const statusLabels: Record<string, string> = {
@@ -27,12 +28,25 @@ const statusLabels: Record<string, string> = {
   deceased: "Fallecido",
 }
 
+const calculateAge = (birthDate: string | null): number | "N/D" => {
+  if (!birthDate) return "N/D"
+  const birth = new Date(birthDate)
+  if (Number.isNaN(birth.getTime())) return "N/D"
+  const now = new Date()
+  let age = now.getFullYear() - birth.getFullYear()
+  const monthDiff = now.getMonth() - birth.getMonth()
+  if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < birth.getDate())) {
+    age--
+  }
+  return age >= 0 ? age : "N/D"
+}
+
 export default function People() {
   const { activeCampId, camps } = useCamp()
   const [people, setPeople] = useState<Person[]>([])
   const [page, setPage] = useState(1)
-  const [filterCamp, setFilterCamp] = useState("")
   const [filterStatus, setFilterStatus] = useState("")
+  const [filterText, setFilterText] = useState("")
   const [selectedPerson, setSelectedPerson] = useState<PersonView | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState("")
@@ -73,21 +87,31 @@ export default function People() {
           .filter(Boolean)
           .join(" ")
           .trim()
+        const statusKey = (person.status ?? "").toLowerCase()
         return {
           id: person.id,
           name: name || "N/D",
-          status: statusLabels[person.status ?? ""] ?? (person.status ?? "N/D"),
+          statusKey,
+          status: statusLabels[statusKey] ?? (person.status ?? "N/D"),
           profession: person.profession?.name ?? person.profession_id ?? "N/D",
           camp: campById.get(activeCampId) ?? activeCampId,
-          age: "N/D",
+          age: calculateAge(person.birth_date),
         }
       }),
     [people, campById, activeCampId],
   )
 
   const filteredPeople = mappedPeople.filter((person) => {
-    if (filterCamp && person.camp !== filterCamp) return false
-    if (filterStatus && person.status !== filterStatus) return false
+    if (filterStatus && person.statusKey !== filterStatus) return false
+    if (filterText) {
+      const needle = filterText.toLowerCase()
+      if (
+        !person.name.toLowerCase().includes(needle) &&
+        !person.profession.toLowerCase().includes(needle)
+      ) {
+        return false
+      }
+    }
     return true
   })
 
@@ -105,19 +129,30 @@ export default function People() {
     <div className="people-container">
       <h2>DOSSIERS DEL SISTEMA {page > 1 ? `| PÁGINA ${page}` : ""}</h2>
 
-      <div className="filters-bar" style={{ display: "flex", gap: "20px", marginBottom: "20px" }}>
+      <div
+        className="filters-bar"
+        style={{ display: "flex", flexWrap: "wrap", gap: "20px", marginBottom: "20px" }}
+      >
         <input
           className="vintage-input"
-          placeholder="Filtrar por campamento (ej: Sector 4)"
-          value={filterCamp}
-          onChange={(event) => setFilterCamp(event.target.value)}
+          placeholder="Buscar por nombre o profesión"
+          value={filterText}
+          onChange={(event) => setFilterText(event.target.value)}
+          style={{ flex: "1 1 240px", minWidth: 0 }}
         />
-        <input
+        <select
           className="vintage-input"
-          placeholder="Estado (ej: Activa, Herido)"
           value={filterStatus}
           onChange={(event) => setFilterStatus(event.target.value)}
-        />
+          style={{ flex: "0 1 240px", minWidth: 0 }}
+        >
+          <option value="">Todos los estados</option>
+          {Object.entries(statusLabels).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
       </div>
 
       {error ? (

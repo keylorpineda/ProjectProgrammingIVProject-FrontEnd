@@ -16,7 +16,9 @@ export interface RefreshResponse {
 
 export interface SessionStatus {
   isActive: boolean
-  minutesRemaining: number
+  lastActivity: string
+  minutesUntilExpiration: number
+  willExpireSoon: boolean
 }
 
 export const login = async (body: LoginBody): Promise<LoginResponse> => {

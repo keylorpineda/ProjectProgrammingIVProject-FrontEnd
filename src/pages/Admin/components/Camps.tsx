@@ -1,23 +1,31 @@
 import { useEffect, useMemo, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import type { Variants } from "framer-motion"
-import { getCamps } from "@/features/camps/services/camps.service"
+import { getCampById, getCamps } from "@/features/camps/services/camps.service"
+import type { CampDetail } from "@/features/camps/services/camps.service"
 import type { Camp } from "@/types/api.types"
 import "./Camps.css"
 
 type CampView = {
   id: string
   name: string
-  pop: number | string
+  capacity: number | string
   status: string
   coordinates: string
-  inventory: string
-  transfers: string
+}
+
+const formatCoordinates = (camp: Camp): string => {
+  if (camp.latitude != null && camp.longitude != null) {
+    return `${Number(camp.latitude).toFixed(4)}, ${Number(camp.longitude).toFixed(4)}`
+  }
+  return camp.location_description ?? "N/D"
 }
 
 export default function Camps() {
   const [camps, setCamps] = useState<Camp[]>([])
   const [selectedCamp, setSelectedCamp] = useState<CampView | null>(null)
+  const [selectedDetail, setSelectedDetail] = useState<CampDetail | null>(null)
+  const [isLoadingDetail, setIsLoadingDetail] = useState(false)
   const [error, setError] = useState("")
 
   useEffect(() => {
@@ -47,14 +55,36 @@ export default function Camps() {
       camps.map((camp) => ({
         id: camp.id,
         name: camp.name,
-        pop: camp.max_capacity ?? "N/D",
+        capacity: camp.max_capacity ?? "N/D",
         status: camp.active ? "EN LÍNEA" : "FUERA DE LÍNEA",
-        coordinates: camp.location_description ?? "N/D",
-        inventory: "N/D",
-        transfers: "N/D",
+        coordinates: formatCoordinates(camp),
       })),
     [camps],
   )
+
+  useEffect(() => {
+    if (!selectedCamp) {
+      setSelectedDetail(null)
+      setIsLoadingDetail(false)
+      return
+    }
+    let isMounted = true
+    setSelectedDetail(null)
+    setIsLoadingDetail(true)
+    void getCampById(selectedCamp.id)
+      .then((detail) => {
+        if (isMounted) setSelectedDetail(detail)
+      })
+      .catch(() => {
+        if (isMounted) setSelectedDetail(null)
+      })
+      .finally(() => {
+        if (isMounted) setIsLoadingDetail(false)
+      })
+    return () => {
+      isMounted = false
+    }
+  }, [selectedCamp])
 
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
@@ -87,7 +117,7 @@ export default function Camps() {
             <h3>{camp.name}</h3>
             <div className="c-info">
               <span>
-                <span>POBLACIÓN:</span> {camp.pop}
+                <span>CAPACIDAD MÁX.:</span> {camp.capacity}
               </span>
               <span>
                 <span>COORDENADAS:</span> {camp.coordinates}
@@ -151,15 +181,36 @@ export default function Camps() {
                 <strong>ESTADO:</strong> {selectedCamp.status}
               </p>
               <p>
-                <strong>POBLACIÓN ACTUAL:</strong> {selectedCamp.pop}
+                <strong>CAPACIDAD MÁX.:</strong> {selectedCamp.capacity}
+              </p>
+              <p>
+                <strong>COORDENADAS:</strong> {selectedCamp.coordinates}
               </p>
               <div style={{ marginTop: "20px", borderTop: "1px dashed var(--ink)", paddingTop: "10px" }}>
-                <p>
-                  <strong>INVENTARIO:</strong> {selectedCamp.inventory}
-                </p>
-                <p>
-                  <strong>TRANSFERENCIAS:</strong> {selectedCamp.transfers}
-                </p>
+                {isLoadingDetail ? (
+                  <p style={{ opacity: 0.7 }}>CARGANDO INVENTARIO...</p>
+                ) : selectedDetail ? (
+                  <>
+                    <p>
+                      <strong>RECURSOS REGISTRADOS:</strong> {selectedDetail.metrics.totalResources}
+                    </p>
+                    <p>
+                      <strong>ALERTAS ACTIVAS:</strong> {selectedDetail.metrics.resourcesWithAlerts}
+                    </p>
+                    {selectedDetail.metrics.inventorySummary.length > 0 ? (
+                      <ul style={{ marginTop: "10px", paddingLeft: "20px", fontSize: "0.85em" }}>
+                        {selectedDetail.metrics.inventorySummary.slice(0, 6).map((item) => (
+                          <li key={item.resource} style={{ color: item.alert ? "var(--accent-critical)" : "inherit" }}>
+                            {item.resource}: {item.quantity} {item.unit}
+                            {item.alert ? " [ALERTA]" : ""}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                  </>
+                ) : (
+                  <p style={{ opacity: 0.7 }}>SIN DATOS DE INVENTARIO</p>
+                )}
               </div>
               <div style={{ marginTop: "20px", textAlign: "right" }}>
                 <button

@@ -12,11 +12,17 @@ const formatDate = (value: string) => {
   return date.toISOString().split("T")[0]
 }
 
+const STATUS_LABELS: Record<string, string> = {
+  scheduled: "PROGRAMADA",
+  in_progress: "EN CURSO",
+  returned: "COMPLETADO",
+  completed: "COMPLETADO",
+  cancelled: "CANCELADA",
+}
+
 const formatStatus = (status?: string) => {
-  const normalized = status?.toLowerCase() ?? ""
-  if (normalized.includes("complete")) return "COMPLETADO"
-  if (normalized.includes("progress")) return "EN CURSO"
-  return status ? status.toUpperCase() : "N/D"
+  if (!status) return "N/D"
+  return STATUS_LABELS[status.toLowerCase()] ?? status.toUpperCase()
 }
 
 export default function Explorations() {
@@ -60,6 +66,14 @@ export default function Explorations() {
               .trim()
             return fullName || member.person_id
           }) ?? []
+
+        const resourceLines =
+          exploration.explorationResources?.map((item) => {
+            const name = item.resource?.name ?? item.resource_id
+            const flow = item.flow === "in" ? "regreso" : "salida"
+            return `${name} × ${item.quantity} (${flow})`
+          }) ?? []
+
         return {
           id: exploration.id,
           title: exploration.name,
@@ -67,7 +81,7 @@ export default function Explorations() {
           status: formatStatus(exploration.status),
           duration: `${exploration.estimated_days} DÍAS`,
           group,
-          resources: "Pendiente",
+          resources: resourceLines.length ? resourceLines.join(", ") : "Sin movimientos",
           entry: exploration.notes ?? exploration.destination_description,
         }
       }),

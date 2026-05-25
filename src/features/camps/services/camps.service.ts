@@ -14,6 +14,22 @@ export interface UpdateCampBody extends Partial<CreateCampBody> {
   active?: boolean
 }
 
+export interface CampInventorySummaryItem {
+  resource: string
+  quantity: number
+  unit: string
+  alert: boolean
+}
+
+export interface CampDetail {
+  camp: Camp
+  metrics: {
+    totalResources: number
+    resourcesWithAlerts: number
+    inventorySummary: CampInventorySummaryItem[]
+  }
+}
+
 type CampsResponse = Camp[] | { data?: Camp[]; items?: Camp[] }
 
 export const getCamps = async (): Promise<Camp[]> => {
@@ -25,8 +41,8 @@ export const getCamps = async (): Promise<Camp[]> => {
   return []
 }
 
-export const getCampById = async (id: string): Promise<Camp> => {
-  const { data } = await api.get<Camp>(`/camps/${id}`)
+export const getCampById = async (id: string): Promise<CampDetail> => {
+  const { data } = await api.get<CampDetail>(`/camps/${id}`)
   return data
 }
 

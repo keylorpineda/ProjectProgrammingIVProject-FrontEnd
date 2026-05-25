@@ -15,7 +15,7 @@ const formatCriticalResource = (resource: CriticalResource) =>
   `${resource.resource_name}: ${resource.current_quantity}/${resource.minimum_required}`
 
 export default function Dashboard() {
-  const { activeCampId } = useCamp()
+  const { activeCampId, camps } = useCamp()
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null)
   const [pendingAdmissions, setPendingAdmissions] = useState(0)
   const [time, setTime] = useState<string>(formatTime())
@@ -58,11 +58,14 @@ export default function Dashboard() {
     }
   }, [activeCampId])
 
+  const activeCampName =
+    camps.find((camp) => camp.id === activeCampId)?.name ?? "CAMPAMENTO ACTIVO"
+
   const cards = useMemo(() => {
     const peopleGroups = metrics
       ? [
           {
-            name: metrics.camp_id?.toUpperCase() ?? "CAMPAMENTO",
+            name: activeCampName.toUpperCase(),
             count: metrics.camp.total_people,
             capacity: metrics.camp.camp_capacity,
           },
@@ -76,7 +79,7 @@ export default function Dashboard() {
 
     return [
       {
-        title: "POBLACIÓN POR CAMPAMENTO",
+        title: `POBLACIÓN — ${activeCampName.toUpperCase()}`,
         content: (
           <ul style={{ listStyle: "none", padding: 0 }}>
             {peopleGroups.map((group) => (
@@ -132,7 +135,7 @@ export default function Dashboard() {
         className: "",
       },
     ]
-  }, [metrics, pendingAdmissions])
+  }, [metrics, pendingAdmissions, activeCampName])
 
   return (
     <motion.div

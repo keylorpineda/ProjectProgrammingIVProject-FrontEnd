@@ -31,21 +31,29 @@ export default function Login() {
   const bgY20 = useTransform(mouseY, v => v * -20)
 
   const finalizeLogin = (role?: string) => {
+    const normalizedRole = role?.toLowerCase()
+    const destination =
+      normalizedRole === "admin"
+        ? "/admin/dashboard"
+        : normalizedRole === "worker"
+          ? "/worker"
+          : normalizedRole === "camp_leader"
+            ? "/campleader"
+            : null
+
+    // Roles without a routed module (e.g. resource_manager, travel_manager) would
+    // bounce off RequireAdmin in an infinite loop, so flag them as denied here.
+    if (!destination) {
+      useAuthStore.getState().logout()
+      setLoginStatus("denied")
+      setTimeout(() => setLoginStatus("waiting"), 2000)
+      return
+    }
+
     setLoginStatus("granted")
     setTimeout(() => {
       setIsGateOpen(true)
       setTimeout(() => {
-        const normalizedRole = role?.toLowerCase()
-        const destination =
-          normalizedRole === "admin"
-            ? "/admin/dashboard"
-            : normalizedRole === "worker"
-              ? "/worker"
-              : normalizedRole === "camp_leader"
-                ? "/campleader"
-                : normalizedRole === "resource_manager" || normalizedRole === "travel_manager"
-                  ? "/admin/dashboard"
-                  : "/login"
         navigate(destination)
       }, 3500)
     }, 1500)
@@ -61,12 +69,6 @@ export default function Login() {
     }, 150)
 
     try {
-      if (u === "leader" && p === "123") {
-        setAuth("mock-token", { username: "Comandante", role: "camp_leader", id: 999 } as any, "mock-refresh")
-        finalizeLogin("camp_leader")
-        return
-      }
-
       const response = await login({ username: u, password: p })
       setAuth(response.access_token, response.user, response.refresh_token)
       finalizeLogin(response.user.role)

@@ -88,8 +88,8 @@ export default function Resources() {
             <tr>
               <th>ID ARTÍCULO</th>
               <th>DESCRIPCIÓN</th>
-              <th>CANT. GLOBAL</th>
-              <th>DESGLOSE POR CAMPAMENTO</th>
+              <th>CANTIDAD</th>
+              <th>CAMPAMENTO ACTIVO</th>
               <th>ESTADO</th>
             </tr>
           </thead>

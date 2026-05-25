@@ -178,6 +178,7 @@ export default function AdmissionsBook() {
   const [turnDirection, setTurnDirection] = useState<"next" | "prev" | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
   const [isDemoData, setIsDemoData] = useState(false)
+  const [adminNotes, setAdminNotes] = useState("")
 
   useEffect(() => {
     if (!activeCampId) {
@@ -199,18 +200,8 @@ export default function AdmissionsBook() {
         const response = await getPendingAdmissions({ campId: activeCampId, page: 1, limit: 50 })
         if (!isMounted) return
         const items = response.data ?? []
-        if (items.length === 0) {
-          if (DEMO_ADMISSIONS_ENABLED) {
-            setAdmissions(DEMO_SUMMARIES)
-            setIsDemoData(true)
-          } else {
-            setAdmissions([])
-            setIsDemoData(false)
-          }
-        } else {
-          setAdmissions(items.map(mapAdmissionSummary))
-          setIsDemoData(false)
-        }
+        setAdmissions(items.map(mapAdmissionSummary))
+        setIsDemoData(false)
         setCurrentIndex(0)
       } catch {
         if (!isMounted) return
@@ -239,6 +230,7 @@ export default function AdmissionsBook() {
 
     const loadDetail = async () => {
       setLoading(true)
+      setAdminNotes("")
       if (isDemoData) {
         if (!isMounted) return
         const demoDetail = DEMO_BY_ID.get(admissions[currentIndex].id) ?? null
@@ -333,7 +325,7 @@ export default function AdmissionsBook() {
     }
     try {
       const decisionValue = nextDecision === "ACCEPT" ? "accepted" : "rejected"
-      const notes = (document.getElementById("admin_notes_input") as HTMLTextAreaElement)?.value || "Reviewed"
+      const notes = adminNotes.trim() || "Reviewed"
 
       await reviewAdmission(detailData.id, {
         decision: decisionValue,
@@ -562,10 +554,11 @@ export default function AdmissionsBook() {
                         <label style={{ display: "block", marginBottom: "5px" }}>COMENTARIOS (OPCIONAL):</label>
                         <textarea
                           className="vintage-input"
-                          id="admin_notes_input"
+                          value={adminNotes}
+                          onChange={(event) => setAdminNotes(event.target.value)}
                           placeholder="Escriba observaciones..."
                           style={{ width: "100%", height: "48px", resize: "none" }}
-                        ></textarea>
+                        />
                       </div>
 
                       <div className="binder-footer decision-footer">

@@ -9,9 +9,16 @@ type TransferView = {
   status: string
   origin: string
   dest: string
+  type: string
   resources: string[]
   people: string[]
   date: string
+}
+
+const typeLabels: Record<string, string> = {
+  resources: "RECURSOS",
+  people: "PERSONAS",
+  both: "RECURSOS + PERSONAS",
 }
 
 const statusLabels: Record<string, string> = {
@@ -51,13 +58,29 @@ export default function Transfers() {
         if (!isMounted) return
         const mapped = response.map((transfer) => {
           const statusKey = transfer.status?.toLowerCase().replace(/\s+/g, "_")
+          const resourceLines =
+            transfer.resourceDetails?.map((detail) => {
+              const name = detail.resource?.name ?? `Recurso #${detail.resource_id}`
+              return `${name} × ${detail.requested_quantity}`
+            }) ?? []
+          const peopleLines =
+            transfer.personDetails?.map((detail) => {
+              const person = detail.person
+              const fullName = person
+                ? [person.first_name, person.last_name].filter(Boolean).join(" ").trim()
+                : ""
+              const base = fullName || `Persona #${detail.person_id}`
+              return detail.is_leader ? `${base} (Líder)` : base
+            }) ?? []
+          const typeKey = transfer.type?.toLowerCase() ?? ""
           return {
             id: transfer.id,
             status: statusLabels[statusKey ?? ""] ?? transfer.status,
             origin: campById.get(transfer.camp_origin_id) ?? transfer.camp_origin_id,
             dest: campById.get(transfer.camp_destination_id) ?? transfer.camp_destination_id,
-            resources: [transfer.type.toUpperCase()],
-            people: [],
+            type: typeLabels[typeKey] ?? transfer.type.toUpperCase(),
+            resources: resourceLines,
+            people: peopleLines,
             date: formatDate(transfer.request_date),
           }
         })
@@ -146,8 +169,13 @@ export default function Transfers() {
               <span className="location">{transfer.dest}</span>
             </div>
             <div className="t-items">
-              <strong>CARGA:</strong> {transfer.resources.join(", ")}
+              <strong>TIPO:</strong> {transfer.type}
             </div>
+            {transfer.resources.length > 0 ? (
+              <div className="t-items">
+                <strong>CARGA:</strong> {transfer.resources.join(", ")}
+              </div>
+            ) : null}
             {transfer.people.length > 0 ? (
               <div className="t-items" style={{ opacity: 0.8 }}>
                 <strong>PASAJEROS:</strong> {transfer.people.length}
@@ -214,6 +242,9 @@ export default function Transfers() {
                 <strong>ESTADO:</strong> {selectedTransfer.status}
               </p>
               <p>
+                <strong>TIPO:</strong> {selectedTransfer.type}
+              </p>
+              <p>
                 <strong>RUTA:</strong> {selectedTransfer.origin} ➔ {selectedTransfer.dest}
               </p>
               <div style={{ marginTop: "20px", borderTop: "1px dashed #777", paddingTop: "10px" }}>
@@ -221,9 +252,11 @@ export default function Transfers() {
                   <strong>RECURSOS ASIGNADOS:</strong>
                 </p>
                 <ul>
-                  {selectedTransfer.resources.map((resource) => (
-                    <li key={resource}>{resource}</li>
-                  ))}
+                  {selectedTransfer.resources.length > 0 ? (
+                    selectedTransfer.resources.map((resource) => <li key={resource}>{resource}</li>)
+                  ) : (
+                    <li>NINGUNO</li>
+                  )}
                 </ul>
                 <p>
                   <strong>PERSONAS AUTORIZADAS:</strong>
