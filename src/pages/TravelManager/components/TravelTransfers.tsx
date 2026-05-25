@@ -186,9 +186,9 @@ export default function TravelTransfers() {
   const filteredTransfers = useMemo(() => {
     return transfers.filter((t) => {
       const matchesSearch =
-        t.id.toLowerCase().includes(search.toLowerCase()) ||
-        t.camp_origin_id.toLowerCase().includes(search.toLowerCase()) ||
-        t.camp_destination_id.toLowerCase().includes(search.toLowerCase())
+        String(t.id).toLowerCase().includes(search.toLowerCase()) ||
+        String(t.camp_origin_id).toLowerCase().includes(search.toLowerCase()) ||
+        String(t.camp_destination_id).toLowerCase().includes(search.toLowerCase())
       const matchesStatus = statusFilter === 'all' || t.status === statusFilter
       const matchesRole =
         roleFilter === 'all' ||
@@ -311,26 +311,28 @@ export default function TravelTransfers() {
   }
 
   // ── Loading / Error guards ────────────────────────────────────────────────
-  if (isLoading) {
-    return (
-      <div className="travelmanager-page-content flex-1 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-accent-warning" />
-        <span className="ml-3 font-mono text-xs uppercase text-paper-dark">
-          Cargando traslados...
-        </span>
-      </div>
-    )
-  }
+  // El loader bloqueante ha sido desactivado para que la UI cargue inmediatamente
+  // if (isLoading) {
+  //   return (
+  //     <div className="travelmanager-page-content flex-1 flex items-center justify-center">
+  //       <Loader2 className="h-8 w-8 animate-spin text-accent-warning" />
+  //       <span className="ml-3 font-mono text-xs uppercase text-paper-dark">
+  //         Cargando traslados...
+  //       </span>
+  //     </div>
+  //   )
+  // }
 
-  if (error) {
-    return (
-      <div className="travelmanager-page-content">
-        <div className="warning-card p-4 font-mono text-xs text-accent-critical uppercase">
-          Error al cargar traslados. Verifique la conexión con el servidor.
-        </div>
-      </div>
-    )
-  }
+  // En caso de error de conexión, el UI sigue cargando vacío para permitir navegación
+  // if (error) {
+  //   return (
+  //     <div className="travelmanager-page-content">
+  //       <div className="warning-card p-4 font-mono text-xs text-accent-critical uppercase">
+  //         Error al cargar traslados. Verifique la conexión con el servidor.
+  //       </div>
+  //     </div>
+  //   )
+  // }
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -381,6 +383,13 @@ export default function TravelTransfers() {
           </button>
         </div>
       </div>
+
+      {error && (
+        <div className="mx-4 mt-2 bg-red-950/40 border border-red-500/50 p-3 font-mono text-[10px] text-red-400 uppercase flex items-center gap-2 shadow-lg">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>Error de conexión con la central. Modo fuera de línea activo. No se pudieron cargar los datos recientes.</span>
+        </div>
+      )}
 
       <div className="flex-1 flex flex-col gap-3 overflow-hidden px-4 pb-4">
         {/* ── Filtros ── */}

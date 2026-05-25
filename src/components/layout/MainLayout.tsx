@@ -3,6 +3,8 @@ import { useAuthStore } from '@/store/useAuthStore';
 import GlobalSidebar from './GlobalSidebar';
 import GlobalTopBar from './GlobalTopBar';
 import './main-layout.css';
+import { AuthProvider } from '@/pages/Admin/context/AuthContext';
+import { CampProvider } from '@/pages/Admin/context/CampContext';
 
 export default function MainLayout() {
   const navigate = useNavigate();
@@ -36,7 +38,11 @@ export default function MainLayout() {
           <div className="absolute inset-0 bg-paper-texture opacity-20 mix-blend-overlay pointer-events-none z-0" />
           
           <div className="relative z-10 p-6 h-full">
-            <Outlet />
+            <AuthProvider>
+              <CampProvider>
+                <Outlet />
+              </CampProvider>
+            </AuthProvider>
           </div>
         </main>
 

@@ -71,7 +71,9 @@ export default function GlobalSidebar() {
                   }`}
                 />
                 <span className="font-mono text-sm uppercase tracking-wide relative z-10">
-                  {item.label}
+                  {user?.role && item.roleLabels?.[user.role as Role] 
+                    ? item.roleLabels[user.role as Role] 
+                    : item.label}
                 </span>
                 {isActive && (
                   <div className="absolute right-4 w-1.5 h-1.5 bg-accent-orange rounded-full animate-pulse shadow-[0_0_8px_#d4a373]" />

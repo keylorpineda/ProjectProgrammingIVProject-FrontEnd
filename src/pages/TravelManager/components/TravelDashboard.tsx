@@ -8,7 +8,8 @@ import {
   MessageSquare,
   Radio,
   ChevronRight,
-  Users
+  Users,
+  AlertCircle
 } from 'lucide-react';
 import { motion, Variants } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -45,28 +46,30 @@ export default function TravelDashboard() {
   const baseCampId = user?.camp_id ?? '';
   const [consultedCampId, setConsultedCampId] = useState(baseCampId);
 
-  const { data: camps = [] } = useQuery({
+  const { data: camps = [], isError: campsError } = useQuery({
     queryKey: ['camps'],
     queryFn: getCamps
   });
 
-  const { data: explorations = [] } = useQuery({
+  const { data: explorations = [], isError: expError } = useQuery({
     queryKey: ['explorations', consultedCampId],
     queryFn: () => getExplorations({ campId: consultedCampId }),
     enabled: !!consultedCampId,
   });
 
-  const { data: transfers = [] } = useQuery({
+  const { data: transfers = [], isError: transfersError } = useQuery({
     queryKey: ['transfers', consultedCampId],
     queryFn: () => getCampTransfers(consultedCampId),
     enabled: !!consultedCampId,
   });
 
-  const { data: inventory = [] } = useQuery({
+  const { data: inventory = [], isError: invError } = useQuery({
     queryKey: ['inventory', consultedCampId],
     queryFn: () => getInventory(consultedCampId),
     enabled: !!consultedCampId,
   });
+
+  const hasError = campsError || expError || transfersError || invError;
 
   const baseCamp = camps.find(c => c.id === baseCampId);
   const consultedCamp = camps.find(c => c.id === consultedCampId) || baseCamp;
@@ -179,6 +182,13 @@ export default function TravelDashboard() {
           </div>
         </div>
       </motion.div>
+
+      {hasError && (
+        <div className="bg-red-950/40 border border-red-500/50 p-3 font-mono text-[10px] text-red-400 uppercase flex items-center gap-2 shadow-lg mb-2">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>Error de conexión con la central. Modo fuera de línea activo. No se pudieron cargar los datos recientes.</span>
+        </div>
+      )}
 
       {/* 2. OPERATIONAL GRID - 3 COLUMNS */}
       <div className="flex-1 grid grid-cols-1 md:grid-cols-12 gap-5 overflow-hidden">

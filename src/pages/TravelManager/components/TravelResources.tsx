@@ -16,7 +16,8 @@ import {
   Bed,
   Archive,
   Navigation,
-  ClipboardList
+  ClipboardList,
+  AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
@@ -49,16 +50,18 @@ export default function TravelResources() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   // Consultas asíncronas reales
-  const { data: campsData = [] } = useQuery({
+  const { data: campsData = [], isError: campsError } = useQuery({
     queryKey: ['camps'],
     queryFn: getCamps
   });
 
-  const { data: inventoryData = [] } = useQuery({
+  const { data: inventoryData = [], isError: inventoryError } = useQuery({
     queryKey: ['inventory', consultedCampId],
     queryFn: () => getInventory(consultedCampId),
     enabled: !!consultedCampId,
   });
+
+  const hasError = campsError || inventoryError;
 
   const camps = campsData.map((c: any) => ({
     id: String(c.id),
@@ -208,6 +211,13 @@ export default function TravelResources() {
           </div>
         </div>
       </div>
+
+      {hasError && (
+        <div className="bg-red-950/40 border border-red-500/50 p-3 font-mono text-[10px] text-red-400 uppercase flex items-center gap-2 shadow-lg mb-2">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>Error de conexión con la central. Modo fuera de línea activo. No se pudieron cargar los datos recientes.</span>
+        </div>
+      )}
 
       {/* 2. Barra de filtros compacta */}
       <div className="bg-[#12110f] p-2 px-4 rounded-lg flex items-center gap-4 shrink-0 border border-white/5">

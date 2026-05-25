@@ -10,7 +10,8 @@ import {
   Star,
   Archive,
   Navigation,
-  FileText
+  FileText,
+  AlertCircle
 } from 'lucide-react';
 import { motion, Variants, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
@@ -41,16 +42,18 @@ export default function TravelTeam() {
   const { user } = useAuth();
 
   // ── Data Fetching ──────────────────────────────────────────────────────────
-  const { data: personsResponse } = useQuery({
+  const { data: personsResponse, isError: personsError } = useQuery({
     queryKey: ['persons'],
     queryFn: () => getPersons({}),
   });
   const persons: Person[] = (personsResponse as any)?.data ?? personsResponse ?? [];
 
-  const { data: camps = [] } = useQuery({
+  const { data: camps = [], isError: campsError } = useQuery({
     queryKey: ['camps'],
     queryFn: getCamps,
   });
+
+  const hasError = personsError || campsError;
 
   // ── Local State ────────────────────────────────────────────────────────────
   const baseCampId = user?.camp_id ?? '';
@@ -215,6 +218,13 @@ export default function TravelTeam() {
           </div>
         </div>
       </motion.div>
+
+      {hasError && (
+        <div className="bg-red-950/40 border border-red-500/50 p-3 font-mono text-[10px] text-red-400 uppercase flex items-center gap-2 shadow-lg mb-2">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>Error de conexión con la central. Modo fuera de línea activo. No se pudieron cargar los datos recientes.</span>
+        </div>
+      )}
 
       {/* 2. OPERATIONAL GRID */}
       <div className="flex-1 grid grid-cols-1 md:grid-cols-12 gap-5 overflow-hidden">
