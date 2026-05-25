@@ -1,6 +1,7 @@
 import { Outlet, useNavigate, NavLink } from "react-router-dom"
 import { useAuthStore } from "@/store/useAuthStore"
 import { Compass, Users, Package, ArrowLeftRight, LayoutDashboard, LogOut } from "lucide-react"
+import InactivityGuard from "@/components/ui/InactivityGuard"
 
 export default function TravelManagerLayout() {
   const { user, logout } = useAuthStore()
@@ -35,6 +36,7 @@ export default function TravelManagerLayout() {
   }
 
   return (
+    <InactivityGuard isAuthenticated={!!user} onLogout={handleLogout}>
     <div className="flex h-screen bg-[#0a0a0a] text-white overflow-hidden">
       {/* SIDEBAR */}
       <aside className="w-[340px] md:w-96 bg-ink-black border-r border-accent-orange/20 flex flex-col h-full z-20 shrink-0 relative overflow-hidden shadow-[4px_0_24px_rgba(0,0,0,0.6)]">
@@ -124,5 +126,6 @@ export default function TravelManagerLayout() {
         <Outlet />
       </main>
     </div>
+    </InactivityGuard>
   )
 }

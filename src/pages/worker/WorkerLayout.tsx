@@ -5,6 +5,7 @@ import { useCamp } from "@/features/worker/hooks/useWorkerAPI"
 import WorkerSidebar from "@/components/ui/WorkerSidebar"
 import WorkerTopBar from "@/components/ui/WorkerTopBar"
 import FirstLoginAchievement from "@/components/ui/FirstLoginAchievement"
+import InactivityGuard from "@/components/ui/InactivityGuard"
 import WorkerDashboard from "./WorkerDashboard"
 import WorkerProfile from "./WorkerProfile"
 import WorkerProfessions from "./WorkerProfessions"
@@ -36,6 +37,10 @@ export default function WorkerLayout() {
   }
 
   return (
+    <InactivityGuard
+      isAuthenticated={!!user}
+      onLogout={() => void logout().finally(() => navigate("/login"))}
+    >
     <div className="worker-layout relative selection:bg-accent-orange selection:text-ink-black uppercase">
       <div className="vintage-scanline" />
 
@@ -80,5 +85,6 @@ export default function WorkerLayout() {
         </footer>
       </div>
     </div>
+    </InactivityGuard>
   )
 }
