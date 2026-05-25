@@ -6,6 +6,7 @@ import Register from "./pages/Register/Register"
 import WorkerLayout from "./pages/worker/WorkerLayout"
 import WorkerGuard from "./core/guards/WorkerGuard"
 import CampLeaderLayout from "./pages/CampLeader/CampLeaderLayout"
+import DashboardManager from "./features/camp-manager/components/DashboardManager"
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
           }
         />
         <Route path="/campleader/*" element={<CampLeaderLayout />} />
+        <Route path="/camp-manager/*" element={<DashboardManager />} />
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard" element={<Navigate to="/admin/dashboard" replace />} />
 
