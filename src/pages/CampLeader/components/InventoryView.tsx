@@ -39,9 +39,9 @@ export default function InventoryView({ inventory }: InventoryViewProps) {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-10 space-y-8">
       {/* PAGE HEADER */}
-      <div className="border-b border-[#c27c2f]/30 pb-4 flex flex-col md:flex-row justify-between items-start md:items-center">
+      <div className="border-b border-[#c27c2f]/30 pb-6 flex flex-col md:flex-row justify-between items-start md:items-center">
         <div>
           <h2 className="font-typewriter text-2xl font-bold tracking-wider text-[#fca311] uppercase">
             BODEGA CENTRAL DE SUMINISTROS
@@ -54,10 +54,10 @@ export default function InventoryView({ inventory }: InventoryViewProps) {
       </div>
 
       {/* FILTER BUTTONS ROW */}
-      <div className="flex flex-wrap gap-2 bg-black/40 p-4 border border-[#3b4d3e] rounded">
+      <div className="flex flex-wrap gap-3 bg-black/40 p-5 border border-[#3b4d3e] rounded">
         <button
           onClick={() => setFilterCategory("ALL")}
-          className={`px-3 py-1.5 font-mono text-[10px] uppercase font-bold tracking-wider rounded border cursor-pointer ${
+          className={`px-4 py-2 font-mono text-xs uppercase font-bold tracking-wider rounded border cursor-pointer ${
             filterCategory === "ALL"
               ? "bg-[#c27c2f] text-black border-black font-semibold"
               : "bg-[#111] border-[#3b4d3e]/60 text-zinc-400 hover:text-[#fca311]"
@@ -80,7 +80,7 @@ export default function InventoryView({ inventory }: InventoryViewProps) {
             <button
               key={cat.id}
               onClick={() => setFilterCategory(cat.id as ResourceCategory)}
-              className={`px-3 py-1.5 font-mono text-[10px] uppercase font-bold tracking-wider rounded border flex items-center gap-1.5 cursor-pointer ${
+              className={`px-4 py-2 font-mono text-xs uppercase font-bold tracking-wider rounded border flex items-center gap-2 cursor-pointer ${
                 isActive
                   ? "bg-[#9a9080] text-black border-black font-semibold"
                   : "bg-[#111] border-[#3b4d3e]/60 text-zinc-400 hover:text-[#fca311]"
@@ -94,7 +94,7 @@ export default function InventoryView({ inventory }: InventoryViewProps) {
       </div>
 
       {/* WAREHOUSE GRID ITEMS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
         {filteredInventory.map((inv) => {
           const ratio = Math.min(
             100,
@@ -104,7 +104,7 @@ export default function InventoryView({ inventory }: InventoryViewProps) {
           return (
             <div
               key={inv.resource_id}
-              className={`bg-[#9a9080] border border-black relative overflow-hidden text-black transition-transform hover:scale-[1.01] p-5 relative overflow-hidden flex flex-col justify-between ${inv.alert_active ? "warning-card border-l-[12px]" : ""}`}
+              className={`bg-[#9a9080] border border-black relative overflow-hidden text-black transition-transform hover:scale-[1.01] p-7 flex flex-col justify-between ${inv.alert_active ? "warning-card border-l-[12px]" : ""}`}
               style={{ transform: `rotate(${Math.sin(inv.resource_id) * 0.4}deg)` }}
             >
               {/* Alert Active Pulsing design bar on background of cards */}
@@ -112,16 +112,16 @@ export default function InventoryView({ inventory }: InventoryViewProps) {
                 <div className="absolute top-0 right-0 left-0 h-1 bg-red-600 animate-pulse" />
               )}
 
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 border-2 border-black flex items-center justify-center bg-black/5 rounded">
+              <div className="flex justify-between items-start mb-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 border-2 border-black flex items-center justify-center bg-black/5 rounded shrink-0">
                     {getCategoryIcon(inv.resource.category)}
                   </div>
                   <div>
-                    <span className="text-[11px] font-mono font-bold tracking-widest text-zinc-600 block uppercase">
-                      CATEGORÍA: {inv.resource.category}
+                    <span className="text-xs font-mono font-bold tracking-widest text-zinc-600 block uppercase mb-1">
+                      {inv.resource.category}
                     </span>
-                    <h3 className="font-typewriter text-sm font-bold text-black uppercase tracking-tight">
+                    <h3 className="font-typewriter text-lg font-bold text-black uppercase tracking-tight">
                       {inv.resource.name}
                     </h3>
                   </div>
@@ -140,16 +140,16 @@ export default function InventoryView({ inventory }: InventoryViewProps) {
               </div>
 
               {/* Progress Quantity Bars */}
-              <div className="space-y-2 font-mono">
-                <div className="flex justify-between items-end text-xs">
-                  <span className="text-zinc-600">STOCK ALMACENADO:</span>
-                  <span className="font-typewriter text-md font-bold text-zinc-950">
-                    {inv.current_quantity} {inv.resource.unit}
+              <div className="space-y-3 font-mono">
+                <div className="flex justify-between items-end">
+                  <span className="text-sm text-zinc-600 font-bold uppercase">Stock:</span>
+                  <span className="font-typewriter text-2xl font-bold text-zinc-950">
+                    {inv.current_quantity} <span className="text-sm">{inv.resource.unit}</span>
                   </span>
                 </div>
 
                 {/* Main Progress bar */}
-                <div className="w-full h-3 bg-black/10 border border-black/25 rounded-sm overflow-hidden p-[2px]">
+                <div className="w-full h-4 bg-black/10 border border-black/25 rounded-sm overflow-hidden p-[2px]">
                   <div
                     className={`h-full rounded-sm transition-all duration-300 ${
                       inv.alert_active ? "bg-[#9c2720]" : "bg-[#3b4d3e]"
@@ -162,7 +162,7 @@ export default function InventoryView({ inventory }: InventoryViewProps) {
                   <span>
                     MÍN: {inv.minimum_stock_required} {inv.resource.unit}
                   </span>
-                  <span className="font-bold">{Math.round(ratio)}% STOCK</span>
+                  <span className="font-bold text-sm">{Math.round(ratio)}% STOCK</span>
                 </div>
               </div>
 

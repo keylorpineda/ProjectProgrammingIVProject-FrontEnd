@@ -63,9 +63,9 @@ export default function ProfileView({ user, statistics, residents }: ProfileView
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-10 space-y-10">
       {/* PAGE HEADER */}
-      <div className="border-b border-[#c27c2f]/30 pb-4 flex flex-col md:flex-row justify-between items-start md:items-center">
+      <div className="border-b border-[#c27c2f]/30 pb-6 flex flex-col md:flex-row justify-between items-start md:items-center">
         <div>
           <h2 className="font-typewriter text-2xl font-bold tracking-wider text-[#fca311] uppercase uppercase">
             EXPEDIENTE JURIDICO DEL REFUGIO Y COMBATIENTES
@@ -78,11 +78,11 @@ export default function ProfileView({ user, statistics, residents }: ProfileView
       </div>
 
       {/* COMMANDER & BUNKER MACRO OVERVIEWS */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* COL 1: COMMANDER METRICS OVERVIEW */}
         <div
           id="commander-manifest-card"
-          className="bg-[#9a9080] border border-black relative overflow-hidden text-black transition-transform hover:scale-[1.01] p-6 flex flex-col justify-between"
+          className="bg-[#9a9080] border border-black relative overflow-hidden text-black transition-transform hover:scale-[1.01] p-8 flex flex-col justify-between"
         >
           <div>
             <span className="font-mono text-[9px] font-bold text-zinc-600 block uppercase tracking-wider">
@@ -101,7 +101,7 @@ export default function ProfileView({ user, statistics, residents }: ProfileView
               </p>
               <p className="flex justify-between">
                 <span className="text-zinc-600 uppercase font-bold">CREDITO:</span>
-                <span className="font-bold">LIDER DE VIAJES</span>
+                <span className="font-bold">LIDER DE CAMPAMENTO</span>
               </p>
               <p className="flex justify-between">
                 <span className="text-zinc-600 uppercase font-bold">BASE ASIGNADA:</span>
@@ -126,7 +126,7 @@ export default function ProfileView({ user, statistics, residents }: ProfileView
         {/* COL 2: SURVIVAL STATS GRID */}
         <div
           id="bunker-audit-card"
-          className="bg-black/30 border border-[#3b4d3e] rounded-lg backdrop-blur-sm shadow-md p-6 flex flex-col justify-between col-span-2"
+          className="bg-black/30 border border-[#3b4d3e] rounded-lg backdrop-blur-sm shadow-md p-8 flex flex-col justify-between col-span-2"
         >
           <div>
             <div className="flex items-center gap-2 border-b border-[#c27c2f]/20 pb-3 mb-4">
@@ -137,52 +137,52 @@ export default function ProfileView({ user, statistics, residents }: ProfileView
             </div>
 
             {/* Stats list items */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-2">
-              <div className="bg-black/45 p-3 rounded border border-[#3b4d3e]/40 text-center">
-                <span className="text-[9px] font-mono text-[#ab9e8b] block uppercase">
-                  POBLACION TOTAL
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 mt-4">
+              <div className="bg-black/45 p-5 rounded border border-[#3b4d3e]/40 text-center">
+                <span className="text-xs font-mono text-[#ab9e8b] block uppercase mb-1">
+                  POBLACIÓN TOTAL
                 </span>
-                <span className="font-typewriter text-2xl font-bold text-amber-500">
+                <span className="font-typewriter text-4xl font-bold text-amber-500">
                   {statistics.total_persons}
                 </span>
-                <span className="text-[9px] font-mono text-zinc-500 block uppercase mt-1">
+                <span className="text-xs font-mono text-zinc-500 block uppercase mt-2">
                   SOBREVIVIENTES
                 </span>
               </div>
 
-              <div className="bg-black/45 p-3 rounded border border-[#3b4d3e]/40 text-center">
-                <span className="text-[9px] font-mono text-[#ab9e8b] block uppercase">
-                  MANO DE OBRA ACTIVA
+              <div className="bg-black/45 p-5 rounded border border-[#3b4d3e]/40 text-center">
+                <span className="text-xs font-mono text-[#ab9e8b] block uppercase mb-1">
+                  MANO DE OBRA
                 </span>
-                <span className="font-typewriter text-2xl font-bold text-emerald-500">
+                <span className="font-typewriter text-4xl font-bold text-emerald-500">
                   {statistics.active_workers}
                 </span>
-                <span className="text-[9px] font-mono text-zinc-500 block uppercase mt-1">
-                  OPERARIOS SANOS
+                <span className="text-xs font-mono text-zinc-500 block uppercase mt-2">
+                  OPERARIOS ACTIVOS
                 </span>
               </div>
 
-              <div className="bg-black/45 p-3 rounded border border-[#3b4d3e]/40 text-center">
-                <span className="text-[9px] font-mono text-[#ab9e8b] block uppercase">
-                  EN BUSQUEDA EXCLUSION
+              <div className="bg-black/45 p-5 rounded border border-[#3b4d3e]/40 text-center">
+                <span className="text-xs font-mono text-[#ab9e8b] block uppercase mb-1">
+                  EN EXPEDICIÓN
                 </span>
-                <span className="font-typewriter text-2xl font-bold text-blue-400">
+                <span className="font-typewriter text-4xl font-bold text-blue-400">
                   {statistics.exploring}
                 </span>
-                <span className="text-[9px] font-mono text-zinc-500 block uppercase mt-1">
+                <span className="text-xs font-mono text-zinc-500 block uppercase mt-2">
                   EMBARCADOS
                 </span>
               </div>
 
-              <div className="bg-black/45 p-3 rounded border border-[#3b4d3e]/40 text-center">
-                <span className="text-[9px] font-mono text-red-500 block uppercase">
-                  ENFERMOS O HERIDOS
+              <div className="bg-black/45 p-5 rounded border border-[#3b4d3e]/40 text-center">
+                <span className="text-xs font-mono text-red-400 block uppercase mb-1">
+                  ENFERMOS / HERIDOS
                 </span>
-                <span className="font-typewriter text-2xl font-bold text-red-500">
+                <span className="font-typewriter text-4xl font-bold text-red-500">
                   {statistics.injured_or_sick}
                 </span>
-                <span className="text-[9px] font-mono text-zinc-500 block uppercase mt-1">
-                  CAMP CUIDADOS
+                <span className="text-xs font-mono text-zinc-500 block uppercase mt-2">
+                  EN CUIDADOS
                 </span>
               </div>
             </div>
@@ -225,9 +225,9 @@ export default function ProfileView({ user, statistics, residents }: ProfileView
       {/* ROSTER PERSONS COMPREHENSIVE CITIZENRY FILE */}
       <div
         id="citizens-manifest-section"
-        className="bg-black/30 border border-[#3b4d3e] rounded-lg backdrop-blur-sm shadow-md p-6"
+        className="bg-black/30 border border-[#3b4d3e] rounded-lg backdrop-blur-sm shadow-md p-8"
       >
-        <div className="flex items-center gap-2 border-b border-[#c27c2f]/20 pb-3 mb-4">
+        <div className="flex items-center gap-3 border-b border-[#c27c2f]/20 pb-4 mb-6">
           <CheckCircle className="w-5 h-5 text-amber-500" />
           <h3 className="font-typewriter text-2xl font-bold tracking-wider text-[#fca311] uppercase">
             LISTADO OPERACIONAL DE PERSONAL EN BUNKER ALFA
@@ -242,15 +242,15 @@ export default function ProfileView({ user, statistics, residents }: ProfileView
               <div
                 key={p.id}
                 onClick={() => setSelectedPerson(p)}
-                className="bg-black/30 border border-[#3b4d3e]/30 p-4 rounded-lg flex flex-col sm:flex-row gap-4 relative hover:border-[#c27c2f]/50 hover:bg-black/50 transition-all duration-150 cursor-pointer group select-none"
+                className="bg-black/30 border border-[#3b4d3e]/30 p-6 rounded-lg flex flex-col sm:flex-row gap-5 relative hover:border-[#c27c2f]/50 hover:bg-black/50 transition-all duration-150 cursor-pointer group select-none"
               >
                 {/* ID Tag top corner */}
-                <div className="absolute top-2 right-2 text-[9px] font-mono text-zinc-500">
+                <div className="absolute top-3 right-3 text-[9px] font-mono text-zinc-500">
                   ID: #{p.id}
                 </div>
 
                 {/* Left Profile Avatar */}
-                <div className="w-20 h-20 bg-zinc-900 border border-zinc-800 shrink-0 flex items-center justify-center overflow-hidden rounded relative">
+                <div className="w-24 h-24 bg-zinc-900 border border-zinc-800 shrink-0 flex items-center justify-center overflow-hidden rounded relative">
                   {p.photo_url ? (
                     <img
                       src={p.photo_url}

@@ -4,7 +4,7 @@
  */
 
 
-import { LayoutDashboard, Compass, Truck, Boxes, User as UserIcon, Skull } from "lucide-react"
+import { LayoutDashboard, Compass, Truck, Boxes, User as UserIcon, Shield } from "lucide-react"
 import { useAuthStore } from "@/store/useAuthStore"
 
 interface SidebarProps {
@@ -32,29 +32,32 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
       }}
     >
       {/* Cabecera / Brand Header */}
-      <div className="mb-6 px-4 text-center hidden md:block shrink-0">
-        <h2
-          className="font-typewriter text-xl tracking-wider font-bold flex items-center justify-center gap-2"
-          style={{ color: "#fca311" }}
-        >
-          <Skull className="w-5 h-5 text-red-500 animate-pulse" />
-          DOOMSDAY
-        </h2>
+      <div className="mb-8 px-4 text-center hidden md:block shrink-0">
+        <div className="flex items-center justify-center gap-2 mb-1">
+          <Shield className="w-5 h-5" style={{ color: "#c27c2f" }} />
+          <h2
+            className="font-typewriter text-xl tracking-wider font-bold"
+            style={{ color: "#fca311" }}
+          >
+            DOOMSDAY
+          </h2>
+        </div>
         <span
-          className="text-[10px] font-mono opacity-80 block tracking-widest uppercase mt-1"
+          className="text-[10px] font-mono opacity-80 block tracking-widest uppercase"
           style={{ color: "#fca311" }}
         >
           REGISTRO DE REFUGIO
         </span>
+        <div className="mt-2 h-px w-3/4 mx-auto" style={{ backgroundColor: "#c27c2f40" }} />
       </div>
 
       {/* Cabecera para Móviles */}
       <div className="md:hidden mb-4 flex justify-center shrink-0">
-        <Skull className="w-8 h-8 animate-pulse" style={{ color: "#fca311" }} />
+        <Shield className="w-8 h-8" style={{ color: "#fca311" }} />
       </div>
 
       {/* Menú de Opciones en formato Carpetas Verticales */}
-      <nav className="flex-1 w-full px-4 overflow-y-auto flex flex-col gap-5">
+      <nav className="flex-1 w-full px-4 overflow-y-auto flex flex-col gap-3">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id
           const Icon = tab.icon
@@ -63,21 +66,20 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className="w-full text-left relative flex items-center gap-4 py-4 px-5 rounded-xl transition-all duration-150 group border cursor-pointer shrink-0 hover:translate-x-1 active:translate-y-0.5"
+              className="w-full text-left relative flex items-center gap-4 rounded-xl transition-all duration-150 group border cursor-pointer shrink-0 hover:translate-x-1 active:translate-y-0.5"
               style={{
                 backgroundColor: isActive ? "#c27c2f" : "#9a9080",
                 borderColor: "#000000",
                 borderWidth: "2px",
                 color: "#000000",
                 boxShadow: "3px 3px 0px #000000",
-                height: "52px",
-                minHeight: "52px",
-                marginBottom: "16px", // Espacio garantizado por si Tailwind falla
+                padding: "14px 20px",
+                minHeight: "60px",
               }}
             >
-              <Icon className="w-5 h-5 shrink-0 text-black font-extrabold" />
+              <Icon className="w-6 h-6 shrink-0 text-black font-extrabold" />
 
-              <span className="hidden md:inline font-typewriter text-xs md:text-xs lg:text-sm tracking-wider uppercase text-black font-extrabold select-none">
+              <span className="hidden md:inline font-typewriter text-sm tracking-wider uppercase text-black font-extrabold select-none">
                 {tab.label}
               </span>
 
