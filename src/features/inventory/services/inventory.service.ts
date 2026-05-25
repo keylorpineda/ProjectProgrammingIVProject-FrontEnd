@@ -7,11 +7,11 @@ export interface UpdateInventoryBody {
 }
 
 export interface CreateMovementBody {
-  camp_id: string
-  resource_id: string
+  camp_id: number
+  resource_id: number
   quantity: number
   type: string
-  description: string
+  description?: string
 }
 
 export interface DailyProductionBody {

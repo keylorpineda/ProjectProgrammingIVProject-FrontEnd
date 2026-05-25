@@ -17,7 +17,7 @@ export interface SubmitAdmissionBody {
   camp_id: number | string
   photo_url?: string
   id_card_url?: string
-  contact_email?: string
+  contact_email: string
   personal_history?: string
 }
 
@@ -92,5 +92,15 @@ export const createAdmissionAccount = async (
   body: CreateAccountBody,
 ): Promise<unknown> => {
   const { data } = await api.post<unknown>(`/ai/admissions/${id}/create-account`, body)
+  return data
+}
+
+export const completeRegistration = async (body: {
+  token: string
+  username: string
+  password: string
+  email: string
+}): Promise<unknown> => {
+  const { data } = await api.post<unknown>("/ai/admissions/complete-registration", body)
   return data
 }

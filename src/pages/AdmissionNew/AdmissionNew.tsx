@@ -13,6 +13,7 @@ type AdmissionFormData = {
   condicion_fisica: string
   habilidades: string
   cedula: string
+  correo: string
   foto: File | null
 }
 
@@ -55,6 +56,7 @@ const formatPersonalHistory = (formData: AdmissionFormData): string => {
     `Salud: ${formData.salud.trim()}`,
     `Condicion fisica: ${formData.condicion_fisica.trim()}`,
     `Cedula: ${formData.cedula.trim()}`,
+    `Contacto: ${formData.correo.trim()}`,
   ]
   return `${parts.join(". ")}.`
 }
@@ -241,13 +243,13 @@ export function AdmissionFormTemplate({
             <div className="digital-grid" />
             <div className="coffee-stain" />
             <div className="fedra-logo-stamp">
-              <span className="stamp-title">FEDRA</span>
-              <span className="stamp-subtitle">QZ VERIFIED</span>
+              <span className="stamp-title" style={{fontSize: "28px"}}>GESTIÓN DEL FIN</span>
+              <span className="stamp-subtitle">ZONA SEGURA VERIFICADA</span>
             </div>
 
             <div className="form-header">
               <h1 className="form-title">Formulario de admision</h1>
-              <p className="form-subtitle">FEDERAL DISASTER RESPONSE AGENCY - ZC CONFIDENCIAL</p>
+              <p className="form-subtitle">SISTEMA OFICIAL DE GESTIÓN DEL FIN - ZC CONFIDENCIAL</p>
             </div>
 
             {submitMessage ? (
@@ -343,6 +345,35 @@ export function AdmissionFormTemplate({
                     required
                   />
                   {errors.nombre ? <p className="field-error">{errors.nombre}</p> : null}
+                </motion.div>
+
+                <motion.div
+                  variants={{
+                    hidden: { opacity: 0, y: 10, rotateX: 10 },
+                    visible: {
+                      opacity: 1,
+                      y: 0,
+                      rotateX: 0,
+                      transition: { type: "spring", stiffness: 50 },
+                    },
+                  }}
+                  className="input-group"
+                >
+                  <label htmlFor="correo" className="input-label">
+                    Metodo de Contacto (Email) <span className="text-fedra-rust">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    id="correo"
+                    name="correo"
+                    value={formData.correo}
+                    onChange={onChange}
+                    className="typewriter-input"
+                    placeholder="ejemplo@qz.com"
+                    disabled={isSubmitting}
+                    required
+                  />
+                  {errors.correo ? <p className="field-error">{errors.correo}</p> : null}
                 </motion.div>
 
                 <div style={{ display: "flex", gap: "1rem", width: "100%" }}>
@@ -585,6 +616,7 @@ const initialFormData: AdmissionFormData = {
   condicion_fisica: "",
   habilidades: "",
   cedula: "",
+  correo: "",
   foto: null,
 }
 
@@ -662,6 +694,12 @@ export default function AdmissionNew() {
       nextErrors.cedula = "La cedula debe tener entre 9 y 20 digitos"
     }
 
+    if (!formData.correo.trim()) {
+      nextErrors.correo = "El correo de contacto es obligatorio"
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.correo.trim())) {
+      nextErrors.correo = "El formato de correo es invalido"
+    }
+
     if (!formData.foto) {
       nextErrors.foto = "La foto es obligatoria"
     } else if (!formData.foto.type.startsWith("image/")) {
@@ -696,6 +734,7 @@ export default function AdmissionNew() {
         skills: skillsList.length > 0 ? skillsList : [formData.habilidades.trim()],
         criminal_record: false,
         camp_id: DEFAULT_CAMP_ID,
+        contact_email: formData.correo.trim(),
         personal_history: formatPersonalHistory(formData),
       })
 

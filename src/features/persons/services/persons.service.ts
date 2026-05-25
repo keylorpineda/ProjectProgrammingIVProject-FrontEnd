@@ -9,24 +9,30 @@ export interface PersonsParams {
 }
 
 export interface CreatePersonBody {
-  name: string
-  camp_id: string
+  first_name: string
+  last_name: string
+  last_name2?: string
+  birth_date?: string
   profession_id?: string
-  status?: PersonStatus
+  previous_skills?: string
+  notes?: string
+  photo_url?: string
+  id_card_url?: string
 }
 
 export type UpdatePersonBody = Partial<CreatePersonBody>
 
 export interface UpdatePersonStatusBody {
   status: PersonStatus
-  can_work: boolean
+  notes?: string
 }
 
 export interface TemporaryAssignmentBody {
   person_id: string
-  new_profession_id: string
-  reason: string
+  profession_temporary_id: string
+  reason?: string
   duration_days?: number
+  start_date?: string
 }
 
 export interface BadgeDisplayBody {

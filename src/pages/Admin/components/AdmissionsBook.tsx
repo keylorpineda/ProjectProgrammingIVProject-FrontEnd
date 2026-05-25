@@ -2,7 +2,6 @@ import { useEffect, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { useCamp } from "../context/CampContext"
 import {
-  createAdmissionAccount,
   getAdmissionById,
   getPendingAdmissions,
   reviewAdmission,
@@ -33,8 +32,6 @@ type AdmissionDetail = AdmissionSummary & {
 
 // Default role assigned to newly admitted survivors. Matches `worker` role in
 // the seed (role_id=2). See docs/ALIGNMENT_SPEC.md §1.2 / P0-4.
-const DEFAULT_NEW_ACCOUNT_ROLE_ID = 2
-const DEFAULT_ACCOUNT_PASSWORD = "Temp1234!"
 const DEMO_ADMISSIONS_ENABLED = import.meta.env.VITE_DEMO_ADMISSIONS === "true" || import.meta.env.DEV
 
 const DEMO_ADMISSIONS: AdmissionDetail[] = [
@@ -97,15 +94,6 @@ const formatDate = (value: string) => {
   if (Number.isNaN(date.getTime())) return value
   return date.toISOString().split("T")[0]
 }
-
-const buildUsername = (name: string) =>
-  name
-    .trim()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\s+/g, ".")
-    .replace(/[^a-z0-9._-]/g, "")
 
 const buildApplicantName = (admission: AiAdmission): string => {
   const candidate = admission.candidate_data ?? ({} as AiAdmission["candidate_data"])
@@ -348,26 +336,6 @@ export default function AdmissionsBook() {
 
   const handleArchive = async () => {
     if (!detailData) return
-    if (isDemoData) {
-      archiveAdmission()
-      return
-    }
-
-    if (decision === "ACCEPT" && activeCampId) {
-      try {
-        const username = buildUsername(detailData.applicantName)
-        const email = detailData.contactEmail ?? `${username}@camp.local`
-        await createAdmissionAccount(detailData.id, {
-          username,
-          email,
-          password: DEFAULT_ACCOUNT_PASSWORD,
-          role_id: DEFAULT_NEW_ACCOUNT_ROLE_ID,
-        })
-      } catch {
-        // Ignore create-account errors to keep the flow visible
-      }
-    }
-
     archiveAdmission()
   }
 
@@ -605,8 +573,8 @@ export default function AdmissionsBook() {
                           fontWeight: "bold",
                         }}
                       >
-                        CREACIÓN DE CUENTA DELEGADA AL SISTEMA
-                        <br />// BASADA EN PROFESIÓN REGISTRADA
+                        ENVIANDO TRANSMISIÓN AL SOLICITANTE
+                        <br />{"// SE LE HA ENVIADO UN ENLACE DE REGISTRO AL CORREO"}
                       </div>
 
                       <div style={{ fontFamily: "var(--font-mono)", marginTop: "30px", textAlign: "center", opacity: 0.7 }}>
@@ -615,7 +583,7 @@ export default function AdmissionsBook() {
 
                       <div className="binder-footer" style={{ bottom: "40px", justifyContent: "center" }}>
                         <button className="archive-btn" onClick={handleArchive}>
-                          CREAR CUENTA Y ARCHIVAR
+                          ENVIAR CORREO Y ARCHIVAR
                         </button>
                       </div>
                     </div>
