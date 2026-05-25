@@ -1,56 +1,63 @@
 .generic-container {
-  padding: 20px;
+  padding: 32px;
 }
 
 .generic-container h2 {
   font-family: var(--font-typewriter);
   border-bottom: 2px solid var(--ink);
-  padding-bottom: 10px;
-  margin-bottom: 30px;
+  padding-bottom: 12px;
+  margin-bottom: 28px;
 }
 
-.placeholder-text {
-  opacity: 0.8;
-  font-style: italic;
-  font-family: var(--font-mono);
+.camps-page {
+  padding: 32px;
 }
 
 .camps-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 30px;
+  gap: 28px;
 }
 
 .camp-card {
   background: var(--bg-paper-dark);
   border: 2px solid var(--ink);
-  padding: 20px;
+  padding: 24px;
   position: relative;
   box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.5);
   transition: transform 0.2s;
+  min-height: 160px;
+}
+
+.camp-card.offline {
+  opacity: 0.65;
 }
 
 .c-status-indicator {
   position: absolute;
   top: 20px;
   right: 20px;
-  width: 15px;
-  height: 15px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
-  background: var(--accent-mil);
-  box-shadow: 0 0 10px var(--accent-mil);
 }
 
-.camp-card.radiated .c-status-indicator {
-  background: var(--accent-critical);
-  box-shadow: 0 0 10px var(--accent-critical);
-  animation: flicker 1s infinite alternate;
+.c-status-indicator.online {
+  background: var(--accent-mil);
+  box-shadow: 0 0 8px var(--accent-mil);
+}
+
+.c-status-indicator.offline-dot {
+  background: var(--bg-paper-shadow);
+  box-shadow: none;
 }
 
 .camp-card h3 {
   font-family: var(--font-typewriter);
-  margin: 0 0 20px 0;
+  margin: 0 0 18px 0;
   width: 80%;
+  font-size: 1.1rem;
+  line-height: 1.4;
 }
 
 .c-info {
@@ -58,23 +65,46 @@
   flex-direction: column;
   gap: 10px;
   font-family: var(--font-mono);
-  font-size: 0.9rem;
+  font-size: 0.88rem;
+  line-height: 1.5;
 }
 
-.c-info span span {
-  color: var(--ink-soft);
+.c-info-label {
   font-weight: bold;
+  opacity: 0.7;
 }
 
 .c-stamp {
   position: absolute;
-  bottom: 10px;
-  right: 10px;
+  bottom: 12px;
+  right: 12px;
   font-family: var(--font-typewriter);
   font-weight: bold;
-  font-size: 1.5rem;
-  opacity: 0.3;
+  font-size: 1.3rem;
+  opacity: 0.25;
   transform: rotate(-10deg);
+}
+
+.camp-inventory-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+}
+
+.camp-inv-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 5px 0;
+  border-bottom: 1px dotted rgba(255, 255, 255, 0.08);
+  line-height: 1.4;
+}
+
+.camp-inv-item.alert {
+  color: var(--accent-critical);
 }
 
 @keyframes flicker {

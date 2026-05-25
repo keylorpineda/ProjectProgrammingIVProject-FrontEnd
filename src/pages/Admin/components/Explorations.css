@@ -1,88 +1,152 @@
+.explorations-page {
+  padding: 32px;
+}
+
 .journals-container {
   display: flex;
-  gap: 30px;
+  gap: 28px;
   flex-wrap: wrap;
-  margin-top: 20px;
+  margin-top: 8px;
+  align-items: flex-start;
 }
 
 .field-journal-page {
   background: var(--bg-paper);
-  background-image: linear-gradient(transparent, transparent 29px, rgba(0, 0, 0, 0.1) 30px),
+  background-image:
+    linear-gradient(transparent, transparent 29px, rgba(0, 0, 0, 0.1) 30px),
     linear-gradient(90deg, rgba(255, 0, 0, 0.2) 1px, transparent 1px);
-  background-size: 100% 30px, 100% 100%;
-  background-position: 0 0, 50px 0;
-  width: 400px;
-  min-height: 500px;
-  border-radius: 5px 15px 15px 5px;
-  box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.6);
+  background-size:
+    100% 30px,
+    100% 100%;
+  background-position:
+    0 0,
+    50px 0;
+  width: 380px;
+  min-height: 480px;
+  border-radius: 5px 14px 14px 5px;
+  box-shadow: 5px 5px 14px rgba(0, 0, 0, 0.55);
   position: relative;
   display: flex;
-  transform: rotate(-1deg);
-  transition: transform 0.3s;
-}
-
-.field-journal-page:nth-child(even) {
-  transform: rotate(2deg);
+  transition: transform 0.2s;
 }
 
 .journal-holes {
   width: 40px;
-  border-right: 2px solid rgba(0, 0, 0, 0.1);
+  border-right: 2px solid rgba(0, 0, 0, 0.08);
   display: flex;
   flex-direction: column;
   justify-content: space-evenly;
   align-items: center;
-  background: rgba(0, 0, 0, 0.05);
-  box-shadow: inset -2px 0 5px rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, 0.04);
+  flex-shrink: 0;
 }
 
 .hole {
-  width: 15px;
-  height: 15px;
+  width: 14px;
+  height: 14px;
   background: var(--bg-deep);
   border-radius: 50%;
-  box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.5);
+  box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .journal-content {
-  padding: 30px 20px 30px 40px;
+  padding: 24px 20px 24px 18px;
   flex: 1;
   font-family: var(--font-marker);
   color: var(--ink-soft);
-  font-size: 1.1rem;
+  font-size: 1rem;
   line-height: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow: hidden;
 }
 
-.journal-content h3 {
+.journal-title {
   font-family: var(--font-typewriter);
-  font-size: 1.3rem;
-  margin: 0;
+  font-size: 1.1rem;
+  margin: 0 0 6px 0;
   color: var(--ink);
   text-transform: uppercase;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+  padding-bottom: 8px;
+  line-height: 1.4;
+}
+
+.journal-status {
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  flex-shrink: 0;
+  padding-top: 3px;
 }
 
 .j-date {
   font-family: var(--font-mono);
-  font-size: 0.8rem;
-  margin-bottom: 20px;
+  font-size: 0.78rem;
+  margin-bottom: 14px;
+  opacity: 0.8;
+  letter-spacing: 0.5px;
+}
+
+.j-details {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  line-height: 1.7;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--ink-soft);
+  margin-bottom: 10px;
+}
+
+.j-entry {
+  font-family: var(--font-marker);
+  font-size: 0.9rem;
+  color: var(--ink);
+  line-height: 1.6;
+  margin: 8px 0 0 0;
+  flex: 1;
 }
 
 .signature-line {
-  margin-top: 50px;
+  margin-top: 24px;
   border-top: 1px dashed var(--ink);
-  padding-top: 5px;
+  padding-top: 6px;
   font-family: var(--font-typewriter);
-  font-size: 0.8rem;
+  font-size: 0.72rem;
   position: relative;
+  color: var(--ink);
 }
 
 .sign-marker {
   font-family: "Permanent Marker", cursive;
-  font-size: 2rem;
+  font-size: 1.6rem;
   color: var(--accent-warning-deep);
   position: absolute;
-  top: -30px;
-  left: 20px;
+  top: -28px;
+  left: 16px;
   transform: rotate(-10deg);
-  opacity: 0.8;
+  opacity: 0.75;
+}
+
+.leader-label-expl {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  cursor: pointer;
+  white-space: nowrap;
+  color: var(--bg-paper);
+  flex-shrink: 0;
+}
+
+.leader-label-expl input[type="checkbox"] {
+  accent-color: var(--accent-warning);
+  width: 14px;
+  height: 14px;
 }

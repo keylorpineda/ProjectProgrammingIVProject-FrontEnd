@@ -110,7 +110,7 @@
   letter-spacing: -0.2px;
   align-items: center;
   justify-content: center;
-  height: calc(25% - 4px);
+  height: calc(26% - 4px);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: normal;
@@ -212,6 +212,60 @@
   to {
     stroke-dashoffset: 0;
   }
+}
+
+.danger-corner-flag {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0 14px 14px 0;
+  border-top-color: transparent;
+  border-bottom-color: transparent;
+  border-left-color: transparent;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.pop-badge {
+  position: absolute;
+  bottom: 2px;
+  left: 2px;
+  background: rgba(0, 0, 0, 0.72);
+  color: #e0d8cc;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 7px;
+  font-weight: bold;
+  padding: 1px 3px;
+  letter-spacing: 0.5px;
+  z-index: 15;
+  pointer-events: none;
+  line-height: 1.2;
+}
+
+.resource-bar-row {
+  display: flex;
+  gap: 2px;
+  padding: 2px 4px;
+  height: 10px;
+  align-items: flex-end;
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.res-bar-track {
+  flex: 1;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: flex-end;
+}
+
+.res-bar-fill {
+  width: 100%;
+  min-height: 1px;
+  transition: height 0.4s ease;
 }
 
 .leaflet-pane,

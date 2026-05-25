@@ -5,12 +5,7 @@
 // contract types so existing worker imports keep working, and only adds the
 // worker-page-specific derived/UI types.
 
-import type {
-  Inventory,
-  InventoryMovement,
-  Profession,
-  Resource,
-} from "./api.types"
+import type { Inventory, InventoryMovement, Profession, Resource } from "./api.types"
 
 export type { Inventory, InventoryMovement, Profession, Resource }
 

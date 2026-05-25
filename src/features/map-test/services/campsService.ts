@@ -182,7 +182,8 @@ const normalizeCamp = (raw: UnknownRecord): Camp => {
     toNumber(raw.rotation) ?? Math.round(deterministicJitter(`${id}-rotation`, 20) * 10) / 10
 
   const hazardRadius =
-    toNumber(raw.hazardRadius ?? raw.hazard_radius ?? raw.radius) ?? (dangerLevel === "critical" ? 750 : dangerLevel === "high" ? 600 : 420)
+    toNumber(raw.hazardRadius ?? raw.hazard_radius ?? raw.radius) ??
+    (dangerLevel === "critical" ? 750 : dangerLevel === "high" ? 600 : 420)
 
   const thumbnailUrl =
     typeof raw.thumbnailUrl === "string" && raw.thumbnailUrl.trim()
@@ -221,7 +222,8 @@ const normalizeError = (error: unknown, fallbackMessage: string): TacticalMapApi
         ? (axiosError.response.data as Record<string, unknown>).message
         : null
 
-    const message = typeof apiMessage === "string" && apiMessage.trim() ? apiMessage : fallbackMessage
+    const message =
+      typeof apiMessage === "string" && apiMessage.trim() ? apiMessage : fallbackMessage
     return new TacticalMapApiError(message, status, axiosError.response?.data)
   }
 

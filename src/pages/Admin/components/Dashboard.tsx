@@ -2,8 +2,9 @@ import { useEffect, useMemo, useState } from "react"
 import { motion } from "framer-motion"
 import { getDashboardMetrics } from "@/features/dashboard/services/dashboard.service"
 import { getPendingAdmissions } from "@/features/admissions/services/admissions.service"
-import type { CriticalResource, DashboardMetrics } from "@/types/api.types"
+import type { CriticalResource } from "@/types/api.types"
 import { useCamp } from "../context/CampContext"
+import { useQuery } from "@tanstack/react-query"
 import "./Dashboard.css"
 
 const formatTime = () => {
@@ -16,50 +17,35 @@ const formatCriticalResource = (resource: CriticalResource) =>
 
 export default function Dashboard() {
   const { activeCampId, camps } = useCamp()
-  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null)
-  const [pendingAdmissions, setPendingAdmissions] = useState(0)
   const [time, setTime] = useState<string>(formatTime())
-  const [error, setError] = useState<string>("")
-  const [isLoading, setIsLoading] = useState(true)
+
+  const { data, isLoading: queryLoading, error: queryError } = useQuery({
+    queryKey: ["adminDashboard", activeCampId],
+    queryFn: async () => {
+      if (!activeCampId) return null
+      const [metricsResponse, admissions] = await Promise.all([
+        getDashboardMetrics(activeCampId),
+        getPendingAdmissions({ campId: activeCampId, page: 1, limit: 100 }),
+      ])
+      return {
+        metrics: metricsResponse,
+        pendingAdmissions: admissions?.total ?? admissions?.data?.length ?? 0,
+      }
+    },
+    enabled: !!activeCampId,
+    staleTime: 1000 * 60 * 2,
+  })
+
+  const metrics = data?.metrics || null
+  const pendingAdmissions = data?.pendingAdmissions || 0
+  const error = queryError ? "No se pudo cargar el tablero de situación." : ""
 
   useEffect(() => {
     const timer = window.setInterval(() => setTime(formatTime()), 1000)
     return () => window.clearInterval(timer)
   }, [])
 
-  useEffect(() => {
-    if (!activeCampId) return
-    let isMounted = true
-
-    const loadMetrics = async () => {
-      setIsLoading(true)
-      setError("")
-      try {
-        const [metricsResponse, admissions] = await Promise.all([
-          getDashboardMetrics(activeCampId),
-          getPendingAdmissions({ campId: activeCampId, page: 1, limit: 100 }),
-        ])
-
-        if (!isMounted) return
-        setMetrics(metricsResponse)
-        setPendingAdmissions(admissions?.total ?? admissions?.data?.length ?? 0)
-      } catch {
-        if (!isMounted) return
-        setError("No se pudo cargar el tablero de situación.")
-      } finally {
-        if (isMounted) setIsLoading(false)
-      }
-    }
-
-    void loadMetrics()
-
-    return () => {
-      isMounted = false
-    }
-  }, [activeCampId])
-
-  const activeCampName =
-    camps.find((camp) => camp.id === activeCampId)?.name ?? "CAMPAMENTO ACTIVO"
+  const activeCampName = camps.find((camp) => camp.id === activeCampId)?.name ?? "CAMPAMENTO ACTIVO"
 
   const cards = useMemo(() => {
     const peopleGroups = metrics
@@ -131,7 +117,9 @@ export default function Dashboard() {
       },
       {
         title: "CUERPOS EXPLORACIÓN",
-        content: <p>{metrics ? `${metrics.camp.active_explorations} Equipos en zona muerta` : "-"}</p>,
+        content: (
+          <p>{metrics ? `${metrics.camp.active_explorations} Equipos en zona muerta` : "-"}</p>
+        ),
         className: "",
       },
     ]
@@ -150,12 +138,18 @@ export default function Dashboard() {
       </div>
 
       {error ? (
-        <div style={{ fontFamily: "var(--font-mono)", padding: "10px", color: "var(--accent-critical)" }}>
+        <div
+          style={{
+            fontFamily: "var(--font-mono)",
+            padding: "10px",
+            color: "var(--accent-critical)",
+          }}
+        >
           {error}
         </div>
       ) : null}
 
-      {isLoading ? (
+      {queryLoading && !data ? (
         <div style={{ fontFamily: "var(--font-mono)", opacity: 0.7 }}>CARGANDO...</div>
       ) : (
         <div className="cork-grid">

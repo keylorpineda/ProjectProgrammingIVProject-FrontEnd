@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Permanent+Marker&family=Special+Elite&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Permanent+Marker&family=Special+Elite&display=swap");
 
 @theme {
   --font-typewriter: "Special Elite", monospace;
@@ -80,7 +80,9 @@
   box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.85);
   color: var(--ink);
   position: relative;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .paper-card:hover {
@@ -155,10 +157,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    rgba(18, 16, 16, 0) 50%, 
-    rgba(0, 0, 0, 0.25) 50%
-  );
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
   background-size: 100% 4px;
   z-index: 9999;
   pointer-events: none;
@@ -173,7 +172,7 @@
   left: 0;
   bottom: 0;
   right: 0;
-  background: radial-gradient(circle, transparent 40%, rgba(0,0,0,0.6) 100%);
+  background: radial-gradient(circle, transparent 40%, rgba(0, 0, 0, 0.6) 100%);
   pointer-events: none;
   z-index: 10000;
 }
@@ -189,17 +188,39 @@
 
 /* Fluorescent Flicker Animation */
 @keyframes flicker {
-  0% { opacity: 0.98; }
-  10% { opacity: 0.95; }
-  10.1% { opacity: 0.4; }
-  10.2% { opacity: 0.97; }
-  35% { opacity: 0.99; }
-  35.1% { opacity: 0.6; }
-  35.3% { opacity: 0.98; }
-  70% { opacity: 0.95; }
-  70.2% { opacity: 0.5; }
-  70.3% { opacity: 0.99; }
-  100% { opacity: 0.98; }
+  0% {
+    opacity: 0.98;
+  }
+  10% {
+    opacity: 0.95;
+  }
+  10.1% {
+    opacity: 0.4;
+  }
+  10.2% {
+    opacity: 0.97;
+  }
+  35% {
+    opacity: 0.99;
+  }
+  35.1% {
+    opacity: 0.6;
+  }
+  35.3% {
+    opacity: 0.98;
+  }
+  70% {
+    opacity: 0.95;
+  }
+  70.2% {
+    opacity: 0.5;
+  }
+  70.3% {
+    opacity: 0.99;
+  }
+  100% {
+    opacity: 0.98;
+  }
 }
 
 .flicker-effect {

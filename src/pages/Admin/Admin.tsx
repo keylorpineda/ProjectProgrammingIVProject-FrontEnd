@@ -48,14 +48,14 @@ const AdminLayout = () => {
                 {user?.id ?? "USR"} [{user?.role ?? "role"}]
               </div>
               <button className="logout-btn" onClick={handleLogout}>
-                LOGOUT
+                SALIR
               </button>
             </div>
           </header>
         ) : (
           <div className="admin-topbar-map-actions">
             <button className="logout-btn" onClick={handleLogout}>
-              LOGOUT
+              SALIR
             </button>
           </div>
         )}

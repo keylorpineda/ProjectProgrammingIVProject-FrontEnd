@@ -1,16 +1,21 @@
-.inventory-sheet {
-  background: rgba(20, 18, 15, 0.85);
-  padding: 40px;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.8), inset 0 0 10px rgba(255, 255, 255, 0.05);
-  margin-top: 30px;
-  max-width: 800px;
-  position: relative;
-  border: 1px solid var(--ink-soft);
-  border-radius: 4px;
+.resources-page {
+  padding: 32px;
 }
 
-.sheet-tape {
-  display: none;
+.inventory-sheet {
+  background: rgba(16, 14, 11, 0.9);
+  padding: 36px 40px;
+  box-shadow:
+    0 0 24px rgba(0, 0, 0, 0.8),
+    inset 0 0 10px rgba(255, 255, 255, 0.04);
+  margin-top: 8px;
+  position: relative;
+  border: 1px solid var(--ink-soft);
+  border-radius: 3px;
+}
+
+.table-scroll-wrapper {
+  overflow-x: auto;
 }
 
 .sheet-header {
@@ -18,12 +23,13 @@
   justify-content: space-between;
   font-family: var(--font-typewriter);
   font-weight: bold;
-  font-size: 1.2rem;
+  font-size: 1.05rem;
   border-bottom: 2px solid var(--ink-soft);
-  padding-bottom: 15px;
-  margin-bottom: 30px;
+  padding-bottom: 14px;
+  margin-bottom: 28px;
   color: #ab9e8b;
   text-shadow: 0 0 5px rgba(171, 158, 139, 0.3);
+  letter-spacing: 1px;
 }
 
 .inventory-table {
@@ -35,66 +41,130 @@
 .inventory-table th {
   text-align: left;
   border-bottom: 1px solid var(--ink-soft);
-  padding: 12px 10px;
+  padding: 12px 12px;
   font-family: var(--font-typewriter);
   color: #ab9e8b;
-  font-size: 0.9rem;
+  font-size: 0.82rem;
   text-transform: uppercase;
   letter-spacing: 1px;
+  white-space: nowrap;
 }
 
 .inventory-table td {
-  padding: 15px 10px;
-  border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+  padding: 14px 12px;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.07);
   color: #d1c8ba;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  vertical-align: middle;
 }
 
-.inventory-table tr:hover {
-  background: rgba(255, 255, 255, 0.05);
+.inventory-table tr:hover td {
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .inventory-table tr.row-ok td {
-  color: #6eb578;
-  text-shadow: 0 0 5px rgba(110, 181, 120, 0.3);
+  color: #7ec488;
 }
 
 .inventory-table tr.row-warning td {
   color: #ebd363;
-  text-shadow: 0 0 5px rgba(235, 211, 99, 0.3);
 }
 
 .inventory-table tr.row-critical td {
   color: #e65c53;
-  text-shadow: 0 0 5px rgba(230, 92, 83, 0.3);
 }
 
 .status-badge {
   padding: 4px 10px;
   border: 1px solid;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: bold;
   border-radius: 2px;
-  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.3);
   display: inline-block;
-  transform: rotate(-2deg);
+  white-space: nowrap;
 }
 
 .status-badge.ok {
-  background-color: #3b6b41;
+  background-color: #2a4f30;
   border-color: #6eb578;
-  color: #e3eedc;
+  color: #d4eedc;
 }
 
 .status-badge.warning {
-  background-color: #bd9126;
+  background-color: #7a5c18;
   border-color: #ebd363;
   color: #faf5eb;
-  transform: rotate(1deg);
 }
 
 .status-badge.critical {
-  background-color: #a32c24;
+  background-color: #6b1e1a;
   border-color: #e65c53;
   color: #fae1e1;
-  transform: rotate(-1deg);
+}
+
+.table-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+.table-action-btn {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  background: transparent;
+  border: 1px solid var(--bg-paper-shadow);
+  color: var(--bg-paper);
+  padding: 4px 8px;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: border-color 0.15s;
+  white-space: nowrap;
+}
+
+.table-action-btn:hover {
+  border-color: var(--bg-paper);
+}
+
+.movements-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.movement-row {
+  display: grid;
+  grid-template-columns: 110px 1fr 100px 100px;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+  font-family: var(--font-mono);
+  font-size: 0.84rem;
+  line-height: 1.5;
+  align-items: start;
+}
+
+.mv-type {
+  font-family: var(--font-typewriter);
+  font-size: 0.78rem;
+  letter-spacing: 1px;
+  opacity: 0.7;
+}
+
+.mv-quantity {
+  text-align: right;
+  opacity: 0.85;
+}
+
+.mv-date {
+  opacity: 0.5;
+  font-size: 0.78rem;
+  text-align: right;
+}
+
+.mv-desc {
+  grid-column: 1 / -1;
+  opacity: 0.6;
+  font-size: 0.8rem;
+  padding-top: 4px;
 }

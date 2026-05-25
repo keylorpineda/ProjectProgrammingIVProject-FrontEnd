@@ -1,56 +1,56 @@
-﻿// @ts-nocheck
+// @ts-nocheck
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
-import { useAuthStore } from '../store/useAuthStore';
-import { Radio, AlertTriangle, ShieldCheck, Clock, LogOut } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react"
+import { useAuthStore } from "../store/useAuthStore"
+import { Radio, AlertTriangle, ShieldCheck, Clock, LogOut } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 
 interface TopbarProps {
-  survivalScore: number;
+  survivalScore: number
 }
 
 export default function Topbar({ survivalScore }: TopbarProps) {
-  const { user, logout } = useAuthStore();
-  const navigate = useNavigate();
+  const { user, logout } = useAuthStore()
+  const navigate = useNavigate()
 
   const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
+    logout()
+    navigate("/login")
+  }
 
-  const [timeStr, setTimeStr] = useState("2026-05-23 01:59:17");
+  const [timeStr, setTimeStr] = useState("2026-05-23 01:59:17")
 
   // Keep a running Clock synchronized to the user timestamp simulation
   useEffect(() => {
-    let seconds = 17;
-    let minutes = 59;
-    let hours = 1;
+    let seconds = 17
+    let minutes = 59
+    let hours = 1
 
     const interval = setInterval(() => {
-      seconds++;
+      seconds++
       if (seconds >= 60) {
-        seconds = 0;
-        minutes++;
+        seconds = 0
+        minutes++
         if (minutes >= 60) {
-          minutes = 0;
-          hours++;
-          if (hours >= 24) hours = 0;
+          minutes = 0
+          hours++
+          if (hours >= 24) hours = 0
         }
       }
-      
-      const pad = (n: number) => n.toString().padStart(2, '0');
-      setTimeStr(`2026-05-23 ${pad(hours)}:${pad(minutes)}:${pad(seconds)}`);
-    }, 1000);
 
-    return () => clearInterval(interval);
-  }, []);
+      const pad = (n: number) => n.toString().padStart(2, "0")
+      setTimeStr(`2026-05-23 ${pad(hours)}:${pad(minutes)}:${pad(seconds)}`)
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [])
 
   return (
-    <header 
+    <header
       id="system-topbar"
       className="bg-[#161513]/90 border-b border-[#c27c2f]/30 text-[#e5e5e5] flex px-6 py-4 items-center justify-between sticky top-0 z-10 backdrop-blur-md"
     >
@@ -60,7 +60,7 @@ export default function Topbar({ survivalScore }: TopbarProps) {
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
           <span className="relative inline-flex rounded-full h-3 w-3 bg-red-600"></span>
         </div>
-        
+
         <div>
           <h1 className="font-typewriter text-sm md:text-md tracking-wider text-[#fca311] font-bold">
             DOOMSDAY CENTRAL CONTROL PORTAL
@@ -106,14 +106,14 @@ export default function Topbar({ survivalScore }: TopbarProps) {
         </div>
 
         {/* LOGOUT BUTTON */}
-        <button 
+        <button
           onClick={handleLogout}
           className="ml-1 flex items-center gap-2 bg-red-900/20 hover:bg-red-600 text-[#ef4444] hover:text-white border border-[#ef4444] px-3 py-1.5 rounded font-mono text-[10px] font-bold uppercase tracking-widest transition-all duration-200 hover:shadow-[0_0_10px_rgba(239,68,68,0.4)]"
         >
           <LogOut className="w-3 h-3" />
-          <span className="hidden sm:inline">LOGOUT</span>
+          <span className="hidden sm:inline">SALIR</span>
         </button>
       </div>
     </header>
-  );
+  )
 }

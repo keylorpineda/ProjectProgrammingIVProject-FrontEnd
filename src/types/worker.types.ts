@@ -1,11 +1,11 @@
-import type { Profession, Resource } from '@/types/api.types'
+import type { Profession, Resource } from "@/types/api.types"
 
 export interface WorkerProfile {
   id: string
   name: string
   role: string
   camp_id: string
-  status: 'ACTIVE' | 'INACTIVE'
+  status: "ACTIVE" | "INACTIVE"
   laborStatus: string
   profession_id: string | null
   profession: Profession | null
@@ -25,10 +25,10 @@ export interface WorkerInventoryItem {
   resourceId: string
   resource: Resource
   quantity: number
-  status: 'OK' | 'LOW' | 'CRITICAL'
+  status: "OK" | "LOW" | "CRITICAL"
 }
 
-export type WorkerTab = 'profile' | 'professions' | 'resources' | 'transfers'
+export type WorkerTab = "profile" | "professions" | "resources" | "transfers"
 
 export interface WorkerLayoutProps {
   activeTab?: string

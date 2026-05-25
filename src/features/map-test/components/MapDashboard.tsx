@@ -79,7 +79,10 @@ export const MapDashboard = () => {
           className="h-full w-full"
           zoomControl={false}
         >
-          <TileLayer attribution="&copy; Map Data" url="https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png" />
+          <TileLayer
+            attribution="&copy; Map Data"
+            url="https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png"
+          />
 
           <MapController selectedCoords={selectedCamp?.coords || null} />
 
@@ -152,8 +155,8 @@ export const MapDashboard = () => {
               SISTEMA DE CONTROL Z-07
             </h1>
             <p className="text-[10px] font-mono text-[var(--ink-soft)] uppercase flex items-center gap-2">
-              <Activity size={12} className="text-[var(--accent-critical)]" /> ENLACE ESTABLE // SECTOR
-              BRAVO-NINER
+              <Activity size={12} className="text-[var(--accent-critical)]" /> ENLACE ESTABLE //
+              SECTOR BRAVO-NINER
             </p>
           </div>
         </div>
@@ -212,7 +215,9 @@ export const MapDashboard = () => {
                 <section>
                   <div className="flex items-center gap-2 mb-4 border-b-2 border-[var(--ink-soft)] pb-1">
                     <TrendingUp size={16} className="text-[var(--ink)]" />
-                    <h3 className="text-xs font-bold text-[var(--ink)] uppercase">Logistica de Suministros</h3>
+                    <h3 className="text-xs font-bold text-[var(--ink)] uppercase">
+                      Logistica de Suministros
+                    </h3>
                   </div>
                   <div className="space-y-4">
                     {selectedCamp.resources.map((resource) => (
@@ -246,7 +251,9 @@ export const MapDashboard = () => {
                 <section>
                   <div className="flex items-center gap-2 mb-4 border-b-2 border-[var(--ink-soft)] pb-1">
                     <Users size={16} className="text-[var(--ink)]" />
-                    <h3 className="text-xs font-bold text-[var(--ink)] uppercase">Personal Asignado</h3>
+                    <h3 className="text-xs font-bold text-[var(--ink)] uppercase">
+                      Personal Asignado
+                    </h3>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     {selectedCamp.professions.map((profession) => (
@@ -268,7 +275,9 @@ export const MapDashboard = () => {
                 <section>
                   <div className="flex items-center gap-2 mb-4 border-b-2 border-[var(--ink-soft)] pb-1">
                     <Cpu size={16} className="text-[var(--ink)]" />
-                    <h3 className="text-xs font-bold text-[var(--ink)] uppercase">Evaluacion Tactica (IA)</h3>
+                    <h3 className="text-xs font-bold text-[var(--ink)] uppercase">
+                      Evaluacion Tactica (IA)
+                    </h3>
                   </div>
                   <div className="bg-[var(--bg-paper-dark)] border-2 border-dashed border-[var(--ink)] p-4 min-h-[100px] relative">
                     {analyzing ? (

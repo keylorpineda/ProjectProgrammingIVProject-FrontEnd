@@ -1,232 +1,129 @@
-import { Package, TrendingDown, TrendingUp, BarChart3, History } from 'lucide-react'
-import { motion } from 'framer-motion'
-import { useAuth } from '@/pages/Admin/context/AuthContext'
-import { useInventory, useInventoryMovements } from '@/features/worker/hooks/useWorkerAPI'
-import type { InventoryItem } from '@/types/worker.api.types'
+import { motion } from "framer-motion"
+import { useAuth } from "@/pages/Admin/context/AuthContext"
+import { useInventory, useInventoryMovements } from "@/features/worker/hooks/useWorkerAPI"
+import type { InventoryItem } from "@/types/worker.api.types"
+import "./WorkerViews.css"
 
-interface WorkerResourcesProps {
-  activeTab?: string
+const MOVEMENT_LABELS: Record<string, string> = {
+  addition: "ENTRADA",
+  removal: "SALIDA",
+  adjustment: "AJUSTE",
+  transfer: "TRASLADO",
+  consumption: "CONSUMO",
+  production: "PRODUCCION",
 }
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.2,
-    },
-  },
+const getStatus = (item: InventoryItem): "ok" | "warning" | "critical" => {
+  if (item.alert_active) return "critical"
+  if (item.current_quantity < item.minimum_stock_required * 1.25) return "warning"
+  return "ok"
 }
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5 },
-  },
-}
+const STATUS_LABELS = { ok: "OK", warning: "ADVERTENCIA", critical: "CRÍTICO" }
 
-// Get status color and label
-const getResourceStatus = (item: InventoryItem): { status: string; color: string } => {
-  if (item.current_quantity === 0) {
-    return { status: 'CRÍTICO', color: 'status-alert' }
-  }
-  if (item.alert_active) {
-    return { status: 'CRÍTICO', color: 'status-alert' }
-  }
-  if (item.current_quantity < item.minimum_stock_required * 1.5) {
-    return { status: 'ALERTA', color: 'status-warning' }
-  }
-  return { status: 'ESTABLE', color: 'status-ok' }
-}
-
-// Get trending direction
-const getTrendingIcon = (level: number, previous: number) => {
-  if (level > previous) return 'up'
-  if (level < previous) return 'down'
-  return 'stable'
-}
-
-// Get movement type label
-const getMovementTypeLabel = (type: string) => {
-  const typeMap: Record<string, string> = {
-    entrada: 'INGRESO',
-    salida: 'EGRESO',
-    consumo: 'CONSUMO',
-    producción: 'PRODUCCIÓN',
-  }
-  return typeMap[type] || type.toUpperCase()
-}
-
-export default function WorkerResources(_props: WorkerResourcesProps) {
+export default function WorkerResources() {
   const { user } = useAuth()
-
-  // Fetch data hooks
   const { data: inventory } = useInventory(user?.camp_id)
-  const { data: movements } = useInventoryMovements(user?.camp_id)
+  const { data: movements } = useInventoryMovements(user?.camp_id, 20)
+
+  const rows = (inventory ?? []).map((item, i) => ({
+    ...item,
+    rowNum: i + 1,
+    status: getStatus(item),
+  }))
 
   return (
-    <motion.div
-      className="p-8 space-y-8"
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-    >
-      {/* Page Header */}
-      <motion.div variants={itemVariants}>
-        <h2 className="text-4xl uppercase mb-2 font-display">GESTIÓN DE RECURSOS</h2>
-        <p className="terminal-text opacity-90 tracking-widest text-[10px]">
-          Inventario del Campamento // Balance de Producción
-        </p>
-      </motion.div>
+    <div className="wv-page">
+      <div className="wv-page-header">
+        <h2>MANIFIESTO DE ALMACÉN</h2>
+        <span className="wv-breadcrumb">SECTOR {user?.camp_id ?? "?"} // INVENTARIO ACTUAL</span>
+      </div>
 
-      {/* Two Column Layout */}
-      <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* LEFT: Inventory Section */}
-        <div className="paper-card p-8">
-          <div className="flex justify-between items-center border-b border-ink-black pb-4 mb-6">
-            <h3 className="text-xl font-display flex items-center gap-2">
-              <Package className="w-5 h-5 text-accent-orange" />
-              INVENTARIO ACTUAL
-            </h3>
-            {user?.role === 'worker' && (
-              <button className="text-[10px] font-mono bg-ink-black text-paper-base px-3 py-1 font-bold hover:bg-zinc-800 transition-colors shadow-[2px_2px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5">
-                REGISTRAR MOVIMIENTO
-              </button>
-            )}
-          </div>
-
-          <div className="space-y-4">
-            {inventory && inventory.length > 0 ? (
-              inventory.map((item) => {
-                const { status, color } = getResourceStatus(item)
-                const trend = getTrendingIcon(item.current_quantity, item.minimum_stock_required * 2)
-
-                return (
-                  <motion.div
-                    key={item.resource_id}
-                    whileHover={{ translateX: 4 }}
-                    className="flex items-center justify-between p-4 bg-paper-dark/10 border border-ink-black/10 hover:bg-paper-dark/20 transition-colors"
-                  >
-                    <div className="space-y-1 flex-1">
-                      <p className="text-[12px] font-mono text-ink-black/80 font-bold uppercase">{item.resource_id}</p>
-                      <p className="text-sm font-display">{item.resource?.name ?? ""}</p>
-                    </div>
-                    <div className="text-right space-y-1">
-                      <div className="flex items-center gap-2 justify-end">
-                        <p className="text-xl font-mono font-bold">{item.current_quantity} {item.resource?.unit ?? ""}</p>
-                        {trend === 'down' ? (
-                          <TrendingDown className="w-4 h-4 text-accent-orange" />
-                        ) : trend === 'up' ? (
-                          <TrendingUp className="w-4 h-4 text-success-green" />
-                        ) : null}
-                      </div>
-                      <span className={`status-badge text-[9px] px-2 py-0.5 ${color}`}>{status}</span>
-                    </div>
-                  </motion.div>
-                )
-              })
-            ) : (
-              <p className="text-center text-ink-black/70 py-4">No inventory items available</p>
-            )}
-          </div>
+      {rows.some((r) => r.status === "critical") ? (
+        <div className="wv-alert-banner">
+          ⚠ ALERTA — {rows.filter((r) => r.status === "critical").length} RECURSO(S) EN ESTADO
+          CRÍTICO
         </div>
+      ) : null}
 
-        {/* RIGHT: Balance & Historial */}
-        <div className="space-y-8">
-          {/* Balance Section */}
-          <motion.div whileHover={{ scale: 1.01 }} className="paper-card p-6 bg-paper-dark/30">
-            <h4 className="text-[12px] font-mono text-ink-black/80 mb-6 tracking-widest flex items-center gap-2 font-bold uppercase">
-              <BarChart3 className="w-4 h-4" />
-              Balance Producción vs Consumo
-            </h4>
-            <div className="space-y-6">
-              {/* Food Production */}
-              <div className="space-y-2">
-                <div className="flex justify-between text-[11px] font-mono font-bold text-ink-black/85 uppercase">
-                  <span>Alimentos</span>
-                  <span className="text-success-green">+12.4% Superávit</span>
-                </div>
-                <div className="status-line bg-ink-black/20 h-2 border border-ink-black/10">
-                  <div className="h-full bg-success-green transition-all duration-1000" style={{ width: '85%' }} />
-                </div>
-              </div>
-
-              {/* Water */}
-              <div className="space-y-2">
-                <div className="flex justify-between text-[11px] font-mono font-bold text-ink-black/85 uppercase">
-                  <span>Agua</span>
-                  <span className="text-accent-orange">-8.2% Déficit</span>
-                </div>
-                <div className="status-line bg-ink-black/20 h-2 border border-ink-black/10">
-                  <div className="h-full bg-accent-orange transition-all duration-1000" style={{ width: '42%' }} />
-                </div>
-              </div>
-
-              {/* Medical Supplies */}
-              <div className="space-y-2">
-                <div className="flex justify-between text-[11px] font-mono font-bold text-ink-black/85 uppercase">
-                  <span>Suministros Médicos</span>
-                  <span className="text-success-green">100% Stock</span>
-                </div>
-                <div className="status-line bg-ink-black/20 h-2 border border-ink-black/10">
-                  <div className="h-full bg-success-green transition-all duration-1000" style={{ width: '100%' }} />
-                </div>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Historial Section */}
-          <motion.div whileHover={{ scale: 1.01 }} className="paper-card p-6">
-            <h4 className="text-[12px] font-mono text-ink-black/80 mb-6 flex items-center gap-2 font-bold tracking-widest uppercase">
-              <History className="w-4 h-4" />
-              Historial de Movimientos
-            </h4>
-            <div className="space-y-4">
-              {movements && movements.length > 0 ? (
-                movements.slice(0, 3).map((move, i) => {
-                  const movementDate = new Date(move.date)
-                  const isIncoming = move.type === 'entrada'
-
-                  return (
-                    <motion.div
-                      key={i}
-                      whileHover={{ x: 4 }}
-                      className="text-[12px] font-mono flex justify-between items-center border-b border-ink-black/10 pb-2 hover:bg-paper-dark/10 px-2 py-1 rounded transition-colors"
-                    >
-                      <div className="space-y-0.5 flex-1">
-                        <p className="font-bold text-ink-black/90 uppercase">
-                          {movementDate.toLocaleString()}
-                        </p>
-                        <p className="text-ink-black/85 font-medium">
-                          {move.resource?.name ?? ""} ({move.quantity})
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p
-                          className={`font-bold ${
-                            isIncoming ? 'text-success-green' : 'text-accent-orange'
-                          } uppercase`}
-                        >
-                          {getMovementTypeLabel(move.type)}
-                        </p>
-                        <p className="text-ink-black/70 italic font-medium">{move.user?.username ?? ""}</p>
-                      </div>
-                    </motion.div>
-                  )
-                })
-              ) : (
-                <p className="text-center text-ink-black/70 py-4">No movements recorded</p>
-              )}
-            </div>
-            <button className="w-full mt-6 py-2 text-[10px] font-mono text-ink-black/70 hover:text-ink-black underline decoration-1 underline-offset-4 font-bold uppercase transition-all hover:text-accent-orange">
-              Ver últimos 50 movimientos
-            </button>
-          </motion.div>
+      <motion.div
+        className="wv-paper"
+        style={{ padding: 24, marginBottom: 28 }}
+        initial={{ y: 30, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ type: "spring", stiffness: 120 }}
+      >
+        <h3 className="wv-section-title">DEPÓSITO CENTRAL — REGISTRO DE RECURSOS</h3>
+        <div className="wv-table-wrapper">
+          <table className="wv-table">
+            <thead>
+              <tr>
+                <th>REF.</th>
+                <th>DESCRIPCIÓN</th>
+                <th>CANTIDAD</th>
+                <th>MÍN. REQ.</th>
+                <th>ESTADO</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((item) => (
+                <tr key={item.resource_id} className={`wv-row-${item.status}`}>
+                  <td>{String(item.rowNum).padStart(4, "0")}</td>
+                  <td>
+                    <strong>{item.resource?.name ?? `#${item.resource_id}`}</strong>
+                  </td>
+                  <td>
+                    {item.current_quantity} {item.resource?.unit ?? ""}
+                  </td>
+                  <td>
+                    {item.minimum_stock_required} {item.resource?.unit ?? ""}
+                  </td>
+                  <td>
+                    <span className={`wv-badge wv-badge-${item.status}`}>
+                      {STATUS_LABELS[item.status]}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+              {rows.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="wv-empty">
+                    SIN INVENTARIO REGISTRADO
+                  </td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
         </div>
       </motion.div>
-    </motion.div>
+
+      {movements && movements.length > 0 ? (
+        <motion.div
+          className="wv-paper-dark"
+          style={{ padding: 24 }}
+          initial={{ y: 30, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 120, delay: 0.2 }}
+        >
+          <h3 className="wv-section-title">HISTORIAL DE MOVIMIENTOS</h3>
+          <div className="wv-movement-list">
+            {movements.map((m, i) => (
+              <div key={m.id ?? i} className="wv-movement-row">
+                <span className="wv-mv-type">
+                  {MOVEMENT_LABELS[m.type] ?? m.type?.toUpperCase() ?? "MOV"}
+                </span>
+                <span className="wv-mv-resource">
+                  {m.resource?.name ?? `Recurso #${m.resource_id}`}
+                </span>
+                <span className="wv-mv-qty">
+                  {m.quantity} {m.resource?.unit ?? ""}
+                </span>
+                <span className="wv-mv-date">{m.date ? String(m.date).split("T")[0] : "N/D"}</span>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      ) : null}
+    </div>
   )
 }

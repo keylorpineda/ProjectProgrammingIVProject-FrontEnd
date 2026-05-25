@@ -103,12 +103,7 @@ export const fallbackProfessions: ProfessionWithPersons[] = [
   },
 ]
 
-const fallbackResource = (
-  id: string,
-  name: string,
-  unit: string,
-  category: string,
-) => ({
+const fallbackResource = (id: string, name: string, unit: string, category: string) => ({
   id,
   name,
   unit,

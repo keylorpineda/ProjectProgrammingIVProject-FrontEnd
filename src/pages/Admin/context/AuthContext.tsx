@@ -1,6 +1,9 @@
 import { createContext, useCallback, useContext, useMemo } from "react"
 import type { ReactNode } from "react"
-import { login as loginService, logout as logoutService } from "@/features/auth/services/auth.service"
+import {
+  login as loginService,
+  logout as logoutService,
+} from "@/features/auth/services/auth.service"
 import type { LoginBody } from "@/features/auth/services/auth.service"
 import type { AuthUser } from "@/types/api.types"
 import { useAuthStore } from "@/store/useAuthStore"
@@ -17,7 +20,14 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const { token, refreshToken, user, isAuthenticated, setAuth, logout: storeLogout } = useAuthStore()
+  const {
+    token,
+    refreshToken,
+    user,
+    isAuthenticated,
+    setAuth,
+    logout: storeLogout,
+  } = useAuthStore()
 
   const login = useCallback(
     async (body: LoginBody) => {

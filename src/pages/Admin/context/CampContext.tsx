@@ -77,9 +77,7 @@ export const CampProvider = ({ children }: { children: ReactNode }) => {
       throw new Error("Invalid camp id")
     }
     const response = await switchCampService({ camp_id: numericId })
-    useAuthStore
-      .getState()
-      .setAuth(response.access_token, response.user, response.refresh_token)
+    useAuthStore.getState().setAuth(response.access_token, response.user, response.refresh_token)
     if (typeof window !== "undefined") {
       localStorage.setItem("active-camp-id", id)
       window.location.assign("/admin/dashboard")

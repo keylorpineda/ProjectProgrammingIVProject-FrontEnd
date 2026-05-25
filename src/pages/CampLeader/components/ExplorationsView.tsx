@@ -1,45 +1,40 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Exploration, 
-  ExplorationStatus, 
-  Person, 
-  Inventory, 
-  ResourceItem 
-} from '../types';
-import { 
-  Compass, 
-  Plus, 
-  Play, 
-  CheckSquare, 
-  XSquare, 
-  Users, 
-  Package, 
-  Calendar, 
-  Clock, 
-  BookOpen, 
-  Search, 
+import type React from "react";
+import { useState } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import type { Exploration, ExplorationStatus, Person, Inventory, ResourceItem } from "../types"
+import {
+  Compass,
+  Plus,
+  Play,
+  CheckSquare,
+  XSquare,
+  Users,
+  Package,
+  Calendar,
+  Clock,
+  BookOpen,
+  Search,
   ChevronRight,
   TriangleAlert,
   Archive,
-  Star
-} from 'lucide-react';
+  Star,
+} from "lucide-react"
 
 interface ExplorationsViewProps {
-  explorations: Exploration[];
-  activePersons: Person[];
-  inventory: Inventory[];
-  resources: ResourceItem[];
-  onCreateExploration: (data: any) => Promise<void>;
-  onDepartExploration: (id: number) => Promise<void>;
-  onReturnExploration: (id: number, data: any) => Promise<void>;
-  onCancelExploration: (id: number) => Promise<void>;
+  explorations: Exploration[]
+  activePersons: Person[]
+  inventory: Inventory[]
+  resources: ResourceItem[]
+  onCreateExploration: (data: any) => Promise<void>
+  onDepartExploration: (id: number) => Promise<void>
+  onReturnExploration: (id: number, data: any) => Promise<void>
+  onCancelExploration: (id: number) => Promise<void>
 }
 
 export default function ExplorationsView({
@@ -50,83 +45,84 @@ export default function ExplorationsView({
   onCreateExploration,
   onDepartExploration,
   onReturnExploration,
-  onCancelExploration
+  onCancelExploration,
 }: ExplorationsViewProps) {
-  const [filterStatus, setFilterStatus] = useState<ExplorationStatus | 'ALL'>('ALL');
-  const [searchQuery, setSearchQuery] = useState('');
-  
+  const [filterStatus, setFilterStatus] = useState<ExplorationStatus | "ALL">("ALL")
+  const [searchQuery, setSearchQuery] = useState("")
+
   // Modals States
-  const [isNewModalOpen, setIsNewModalOpen] = useState(false);
-  const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
-  const [selectedExplorationId, setSelectedExplorationId] = useState<number | null>(null);
+  const [isNewModalOpen, setIsNewModalOpen] = useState(false)
+  const [isReturnModalOpen, setIsReturnModalOpen] = useState(false)
+  const [selectedExplorationId, setSelectedExplorationId] = useState<number | null>(null)
 
   // Form Fields - New Expedition
-  const [newExpName, setNewExpName] = useState('');
-  const [newExpDest, setNewExpDest] = useState('');
-  const [newExpESTDays, setNewExpESTDays] = useState(3);
-  const [newExpGraceDays, setNewExpGraceDays] = useState(1);
-  const [newExpNotes, setNewExpNotes] = useState('');
-  const [selectedPeople, setSelectedPeople] = useState<number[]>([]);
+  const [newExpName, setNewExpName] = useState("")
+  const [newExpDest, setNewExpDest] = useState("")
+  const [newExpESTDays, setNewExpESTDays] = useState(3)
+  const [newExpGraceDays, setNewExpGraceDays] = useState(1)
+  const [newExpNotes, setNewExpNotes] = useState("")
+  const [selectedPeople, setSelectedPeople] = useState<number[]>([])
   const [provisionStocks, setProvisionStocks] = useState<{ [key: number]: number }>({
     1: 10, // Default 10 Comida
-    2: 10  // Default 10 Agua
-  });
+    2: 10, // Default 10 Agua
+  })
 
   // Form Fields - Return Expedition
-  const [returnNotes, setReturnNotes] = useState('');
+  const [returnNotes, setReturnNotes] = useState("")
   const [salvagedResources, setSalvagedResources] = useState<{ [key: number]: number }>({
     1: 40, // Found Food
     2: 30, // Found Water
-    3: 5,  // Found Medicine
-    4: 2,  // Found Parts
-    5: 100 // Found Ammo
-  });
+    3: 5, // Found Medicine
+    4: 2, // Found Parts
+    5: 100, // Found Ammo
+  })
 
-  const [formError, setFormError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Filter & Search Logic
-  const filteredExplorations = explorations.filter(exp => {
-    const matchStatus = filterStatus === 'ALL' || exp.status === filterStatus;
-    const matchSearch = exp.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                        exp.destination_description.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchStatus && matchSearch;
-  });
+  const filteredExplorations = explorations.filter((exp) => {
+    const matchStatus = filterStatus === "ALL" || exp.status === filterStatus
+    const matchSearch =
+      exp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      exp.destination_description.toLowerCase().includes(searchQuery.toLowerCase())
+    return matchStatus && matchSearch
+  })
 
   // Handle New Expedition Submission
   const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormError(null);
+    e.preventDefault()
+    setFormError(null)
 
     // Validation
     if (!newExpName.trim() || !newExpDest.trim()) {
-      setFormError("COMPLETE TODOS LOS CAMPOS RESALTADOS.");
-      return;
+      setFormError("COMPLETE TODOS LOS CAMPOS RESALTADOS.")
+      return
     }
 
     if (selectedPeople.length === 0) {
-      setFormError("DEBE ASIGNAR AL MENOS UN EXCURSIONISTA.");
-      return;
+      setFormError("DEBE ASIGNAR AL MENOS UN EXCURSIONISTA.")
+      return
     }
 
     // Check inventory stock supplies
-    let stockOk = true;
+    let stockOk = true
     Object.entries(provisionStocks).forEach(([resId, reqQty]) => {
-      const dbInv = inventory.find(i => i.resource_id === Number(resId));
+      const dbInv = inventory.find((i) => i.resource_id === Number(resId))
       if (!dbInv || dbInv.current_quantity < (reqQty as number)) {
-        setFormError(`RECURSOS DISPONIBLES INSUFICIENTES EN ALMACÉN PARA PREPARAR VIAJE.`);
-        stockOk = false;
+        setFormError("RECURSOS DISPONIBLES INSUFICIENTES EN ALMACÉN PARA PREPARAR VIAJE.")
+        stockOk = false
       }
-    });
+    })
 
-    if (!stockOk) return;
+    if (!stockOk) return
 
     try {
-      setIsSubmitting(true);
+      setIsSubmitting(true)
       const resourceConsumptions = Object.entries(provisionStocks).map(([key, value]) => ({
         resource_id: Number(key),
-        quantity: value
-      }));
+        quantity: value,
+      }))
 
       await onCreateExploration({
         camp_id: 1,
@@ -137,75 +133,74 @@ export default function ExplorationsView({
         grace_days: Number(newExpGraceDays),
         notes: newExpNotes,
         personIds: selectedPeople,
-        resourceConsumptions
-      });
+        resourceConsumptions,
+      })
 
       // Clear Form
-      setNewExpName('');
-      setNewExpDest('');
-      setNewExpESTDays(3);
-      setNewExpGraceDays(1);
-      setNewExpNotes('');
-      setSelectedPeople([]);
-      setIsNewModalOpen(false);
+      setNewExpName("")
+      setNewExpDest("")
+      setNewExpESTDays(3)
+      setNewExpGraceDays(1)
+      setNewExpNotes("")
+      setSelectedPeople([])
+      setIsNewModalOpen(false)
     } catch (err: any) {
-      setFormError(err.message || "FALLO EN REGISTRO DE MISIÓN.");
+      setFormError(err.message || "FALLO EN REGISTRO DE MISIÓN.")
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   // Handle Safe Return submit
   const handleReturnSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedExplorationId) return;
+    e.preventDefault()
+    if (!selectedExplorationId) return
 
     try {
-      setIsSubmitting(true);
+      setIsSubmitting(true)
       const foundList = Object.entries(salvagedResources).map(([key, value]) => ({
         resource_id: Number(key),
-        quantity: value
-      }));
+        quantity: value,
+      }))
 
       await onReturnExploration(selectedExplorationId, {
         notes: returnNotes,
-        foundResources: foundList
-      });
+        foundResources: foundList,
+      })
 
-      setReturnNotes('');
-      setIsReturnModalOpen(false);
+      setReturnNotes("")
+      setIsReturnModalOpen(false)
     } catch (err: any) {
-      setFormError(err.message || "FALLO AL REGISTRAR RETORNO.");
+      setFormError(err.message || "FALLO AL REGISTRAR RETORNO.")
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   const togglePersonSelection = (pId: number) => {
     if (selectedPeople.includes(pId)) {
-      setSelectedPeople(selectedPeople.filter(id => id !== pId));
+      setSelectedPeople(selectedPeople.filter((id) => id !== pId))
     } else {
-      setSelectedPeople([...selectedPeople, pId]);
+      setSelectedPeople([...selectedPeople, pId])
     }
-  };
+  }
 
   const handleProvisionChange = (resId: number, qty: number) => {
     setProvisionStocks({
       ...provisionStocks,
-      [resId]: Math.max(0, qty)
-    });
-  };
+      [resId]: Math.max(0, qty),
+    })
+  }
 
   const handleSalvageChange = (resId: number, qty: number) => {
     setSalvagedResources({
       ...salvagedResources,
-      [resId]: Math.max(0, qty)
-    });
-  };
+      [resId]: Math.max(0, qty),
+    })
+  }
 
   return (
     <div className="p-6 space-y-6">
-      
       {/* HEADER SECTION */}
       <div className="border-b border-[#c27c2f]/30 pb-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
@@ -216,11 +211,11 @@ export default function ExplorationsView({
             RECLUTAMIENTO, LANZAMIENTOS DE RUTA Y SEGUIMIENTO DE PATRULLAS EXTERIORES
           </p>
         </div>
-        
+
         <button
           onClick={() => {
-            setFormError(null);
-            setIsNewModalOpen(true);
+            setFormError(null)
+            setIsNewModalOpen(true)
           }}
           className="bg-[#c27c2f] hover:bg-[#d68b38] text-black text-xs font-bold uppercase py-2 px-4 shadow-[2px_2px_0_#000] border border-black hover:translate-x-0.5 hover:translate-y-0.5 active:shadow-none transition-all cursor-pointer rounded-sm flex items-center gap-2"
         >
@@ -233,17 +228,25 @@ export default function ExplorationsView({
       <div className="flex flex-col md:flex-row gap-4 justify-between items-center bg-black/40 p-4 border border-[#3b4d3e] rounded">
         {/* State filters */}
         <div className="flex flex-wrap gap-2">
-          {['ALL', 'scheduled', 'in_progress', 'completed', 'cancelled'].map((status) => (
+          {(
+            [
+              { key: "ALL", label: "VER TODOS" },
+              { key: "scheduled", label: "PROGRAMADA" },
+              { key: "in_progress", label: "EN CURSO" },
+              { key: "completed", label: "COMPLETADA" },
+              { key: "cancelled", label: "CANCELADA" },
+            ] as const
+          ).map(({ key, label }) => (
             <button
-              key={status}
-              onClick={() => setFilterStatus(status as any)}
-              className={`px-3 py-1 font-mono text-[10px] uppercase font-bold tracking-wider rounded border cursor-pointer ${
-                filterStatus === status 
-                  ? 'bg-[#c27c2f] text-black border-black font-semibold' 
-                  : 'bg-[#111] border-[#3b4d3e]/60 text-zinc-400 hover:text-[#fca311]'
+              key={key}
+              onClick={() => setFilterStatus(key as any)}
+              className={`px-3 py-1 font-mono text-xs uppercase font-bold tracking-wider rounded border cursor-pointer ${
+                filterStatus === key
+                  ? "bg-[#c27c2f] text-black border-black font-semibold"
+                  : "bg-[#111] border-[#3b4d3e]/60 text-zinc-400 hover:text-[#fca311]"
               }`}
             >
-              {status === 'ALL' ? 'VER TODOS' : status.replace('_', ' ')}
+              {label}
             </button>
           ))}
         </div>
@@ -269,31 +272,32 @@ export default function ExplorationsView({
             <h4 className="font-typewriter text-sm text-[#ab9e8b] uppercase font-bold">
               SIN REGISTROS DE EXPEDICIÓN EN LA COLA FILTRADA
             </h4>
-            <p className="font-mono text-[10px] text-zinc-500 mt-1">
+            <p className="font-mono text-xs text-zinc-500 mt-1">
               ASEGURESE DE EXPANDIR SUS FILTROS O CREAR NUEVOS CONVOYES DE SALIDA.
             </p>
           </div>
         ) : (
           filteredExplorations.map((exp) => {
-            const isScheduled = exp.status === 'scheduled';
-            const isInProgress = exp.status === 'in_progress';
-            const isCompleted = exp.status === 'completed';
-            const isCancelled = exp.status === 'cancelled';
-            
-            const leaderName = exp.explorationPersons.find(ep => ep.is_leader)?.person.first_name || 'SIN ASIGNAR';
-            const membersList = exp.explorationPersons.map(ep => ep.person.first_name).join(", ");
+            const isScheduled = exp.status === "scheduled"
+            const isInProgress = exp.status === "in_progress"
+            const isCompleted = exp.status === "completed"
+            const isCancelled = exp.status === "cancelled"
+
+            const leaderName =
+              exp.explorationPersons.find((ep) => ep.is_leader)?.person.first_name || "SIN ASIGNAR"
+            const membersList = exp.explorationPersons.map((ep) => ep.person.first_name).join(", ")
 
             return (
-              <div 
-                key={exp.id} 
-                className={`bg-[#9a9080] border border-black relative overflow-hidden text-black transition-transform hover:scale-[1.01] p-5 relative overflow-hidden flex flex-col justify-between ${ isCancelled ? 'opacity-85 filter contrast-75 bg-zinc-400' : '' }`}
+              <div
+                key={exp.id}
+                className={`bg-[#9a9080] border border-black relative overflow-hidden text-black transition-transform hover:scale-[1.01] p-5 relative overflow-hidden flex flex-col justify-between ${isCancelled ? "opacity-85 filter contrast-75 bg-zinc-400" : ""}`}
                 style={{ transform: `rotate(${Math.sin(exp.id) * 0.4}deg)` }}
               >
                 {/* STATUS BADGES AND CORNER DESIGN */}
                 <div className="flex justify-between items-start border-b border-black/10 pb-3 mb-3">
                   <div>
-                    <span className="font-mono text-[10px] font-bold text-zinc-800 uppercase block tracking-wider">
-                      MISIÓN OPERATIVA #{exp.id}
+                    <span className="font-mono text-xs font-bold text-zinc-700 uppercase block tracking-wider">
+                      MISIÓN #{exp.id}
                     </span>
                     <h3 className="font-typewriter text-md font-bold text-black uppercase tracking-tight mt-0.5">
                       {exp.name}
@@ -301,13 +305,18 @@ export default function ExplorationsView({
                   </div>
 
                   {/* Aesthetic stamp labels */}
-                  <span className={`px-2 py-0.5 font-mono text-[9px] font-bold rounded uppercase border ${
-                    isScheduled ? 'bg-amber-300 text-black border-amber-500' :
-                    isInProgress ? 'bg-amber-500 text-black border-black animate-pulse' :
-                    isCompleted ? 'bg-[#3b4d3e] text-white border-black' :
-                    'bg-red-800 text-white border-black'
-                  }`}>
-                    {exp.status === 'in_progress' ? 'â— EN CURSO' : exp.status.replace('_', ' ')}
+                  <span
+                    className={`px-2 py-1 font-mono text-[11px] font-bold rounded uppercase border ${
+                      isScheduled
+                        ? "bg-amber-300 text-black border-amber-500"
+                        : isInProgress
+                          ? "bg-amber-500 text-black border-black animate-pulse"
+                          : isCompleted
+                            ? "bg-[#3b4d3e] text-white border-black"
+                            : "bg-red-800 text-white border-black"
+                    }`}
+                  >
+                    {isScheduled ? "PROGRAMADA" : isInProgress ? "● EN CURSO" : isCompleted ? "COMPLETADA" : "CANCELADA"}
                   </span>
                 </div>
 
@@ -315,16 +324,24 @@ export default function ExplorationsView({
                 <div className="space-y-2 mb-4 text-xs font-mono text-zinc-950">
                   <p className="flex items-start gap-1 pb-1">
                     <span className="font-bold shrink-0">DESTINO:</span>
-                    <span className="text-zinc-900 uppercase font-medium">{exp.destination_description}</span>
+                    <span className="text-zinc-900 uppercase font-medium">
+                      {exp.destination_description}
+                    </span>
                   </p>
 
                   <div className="grid grid-cols-2 gap-2 bg-black/5 p-2 rounded border border-black/10">
                     <div>
-                      <span className="text-[9px] block text-zinc-600 font-bold uppercase">FECHA SALIDA</span>
-                      <span className="font-bold text-zinc-900">{exp.departure_date.split('T')[0]}</span>
+                      <span className="text-[11px] block text-zinc-600 font-bold uppercase">
+                        FECHA SALIDA
+                      </span>
+                      <span className="font-bold text-zinc-900">
+                        {exp.departure_date.split("T")[0]}
+                      </span>
                     </div>
                     <div>
-                      <span className="text-[9px] block text-zinc-600 font-bold uppercase">ALERTA RETORNO</span>
+                      <span className="text-[11px] block text-zinc-600 font-bold uppercase">
+                        ALERTA RETORNO
+                      </span>
                       <span className="font-bold text-zinc-900">
                         {exp.estimated_days} DÍAS (+{exp.grace_days} GRACIA)
                       </span>
@@ -334,18 +351,20 @@ export default function ExplorationsView({
                   {/* MEMBERS & PROVISIONS SUMMARY */}
                   <div className="space-y-1">
                     <p className="flex gap-1">
-                      <span className="font-bold">LÍDER:</span> 
+                      <span className="font-bold">LÍDER:</span>
                       <span className="font-bold text-red-950 uppercase">{leaderName}</span>
                     </p>
                     <p className="flex gap-2">
-                      <span className="font-bold">EQUIPO:</span> 
+                      <span className="font-bold">EQUIPO:</span>
                       <span className="text-zinc-800 uppercase truncate">{membersList}</span>
                     </p>
                     {exp.explorationResources.length > 0 && (
                       <p className="flex gap-1 text-[10px]">
                         <span className="font-bold">EQUIPAMIENTO:</span>
                         <span className="text-zinc-700 italic">
-                          {exp.explorationResources.map(er => `${er.quantity} ${er.resource.unit} ${er.resource.name}`).join(', ')}
+                          {exp.explorationResources
+                            .map((er) => `${er.quantity} ${er.resource.unit} ${er.resource.name}`)
+                            .join(", ")}
                         </span>
                       </p>
                     )}
@@ -354,13 +373,15 @@ export default function ExplorationsView({
                   {/* REAL RETURN DISCHARGE NOTES IF COMPLETED */}
                   {isCompleted && exp.real_return_date && (
                     <div className="bg-[#4c6351]/25 border border-[#3b4d3e] p-2 rounded text-[11px] text-[#2c3d31] font-mono mt-2">
-                      <p className="font-bold">RETORNO EJECUTADO EL: {exp.real_return_date.split('T')[0]}</p>
+                      <p className="font-bold">
+                        RETORNO EJECUTADO EL: {exp.real_return_date.split("T")[0]}
+                      </p>
                       <p className="mt-0.5 italic">NOTAS: "{exp.notes}"</p>
                     </div>
                   )}
 
                   {exp.notes && !isCompleted && (
-                    <p className="text-[10px] text-zinc-700 italic mt-1 font-sans">
+                    <p className="text-xs text-zinc-700 italic mt-1 font-sans">
                       * Notas: "{exp.notes}"
                     </p>
                   )}
@@ -372,17 +393,17 @@ export default function ExplorationsView({
                     <>
                       <button
                         onClick={() => onDepartExploration(exp.id)}
-                        className="flex-1 bg-black text-amber-500 font-typewriter text-xs py-2 px-3 hover:text-white transition-all flex items-center justify-center gap-1 cursor-pointer border-2 border-zinc-900 shadow-[2px_2px_0_#000]"
+                        className="flex-1 bg-black text-amber-500 font-typewriter text-xs py-2.5 px-3 hover:text-white transition-all flex items-center justify-center gap-1.5 cursor-pointer border-2 border-zinc-900 shadow-[2px_2px_0_#000]"
                       >
                         <Play className="w-3.5 h-3.5" />
-                        PARTIR (RUTA)
+                        PARTIR
                       </button>
                       <button
                         onClick={() => onCancelExploration(exp.id)}
-                        className="bg-[#9c2720] hover:bg-red-800 text-white py-1.5 px-3 font-typewriter font-bold text-[10px] uppercase border border-black rounded shadow-[1px_1px_0_#000]"
-                        title="CANCELAR PROGRAMADO"
+                        className="bg-[#9c2720] hover:bg-red-800 text-white py-2.5 px-3 font-typewriter font-bold text-xs uppercase border-2 border-black shadow-[2px_2px_0_#000] flex items-center gap-1.5 cursor-pointer"
                       >
-                        <XSquare className="w-4 h-4" />
+                        <XSquare className="w-3.5 h-3.5" />
+                        CANCELAR
                       </button>
                     </>
                   )}
@@ -390,9 +411,9 @@ export default function ExplorationsView({
                   {isInProgress && (
                     <button
                       onClick={() => {
-                        setSelectedExplorationId(exp.id);
-                        setIsReturnModalOpen(true);
-                        setReturnNotes('');
+                        setSelectedExplorationId(exp.id)
+                        setIsReturnModalOpen(true)
+                        setReturnNotes("")
                       }}
                       className="w-full bg-[#4c6351] text-white hover:bg-[#3b4d3e] font-typewriter text-xs font-bold py-2.5 px-3 transition-colors flex items-center justify-center gap-1.5 cursor-pointer border-2 border-black"
                     >
@@ -402,13 +423,13 @@ export default function ExplorationsView({
                   )}
 
                   {(isCompleted || isCancelled) && (
-                    <div className="w-full text-center py-1 text-zinc-600 font-typewriter text-[10px] uppercase font-bold tracking-wider">
+                    <div className="w-full text-center py-2 text-zinc-600 font-typewriter text-xs uppercase font-bold tracking-wider">
                       â€” EXPERIMENTADO SIN ACTIVIDAD ADICIONAL â€”
                     </div>
                   )}
                 </div>
               </div>
-            );
+            )
           })
         )}
       </div>
@@ -417,7 +438,7 @@ export default function ExplorationsView({
       <AnimatePresence>
         {isNewModalOpen && (
           <div className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 z-50 overflow-y-auto">
-            <motion.div 
+            <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
@@ -428,7 +449,7 @@ export default function ExplorationsView({
                   <Compass className="w-5 h-5" />
                   CREAR HOJA DE MISIÓN EXCURSIONISTA
                 </h3>
-                <button 
+                <button
                   onClick={() => setIsNewModalOpen(false)}
                   className="text-zinc-400 hover:text-white cursor-pointer font-bold text-lg"
                 >
@@ -447,7 +468,9 @@ export default function ExplorationsView({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Name */}
                   <div className="flex flex-col gap-1">
-                    <label className="text-[10px] text-[#ab9e8b] uppercase font-bold">NOMBRE CLAVED DE LA OPERACIÓN</label>
+                    <label className="text-[10px] text-[#ab9e8b] uppercase font-bold">
+                      NOMBRE CLAVED DE LA OPERACIÓN
+                    </label>
                     <input
                       type="text"
                       className="w-full bg-[#111111]/90 border border-[#3b4d3e] text-white text-xs font-mono py-2 px-3 rounded uppercase focus:outline-none focus:border-[#c27c2f] focus:ring-1 focus:ring-[#c27c2f] transition-colors"
@@ -459,7 +482,9 @@ export default function ExplorationsView({
                   </div>
                   {/* Dest */}
                   <div className="flex flex-col gap-1">
-                    <label className="text-[10px] text-[#ab9e8b] uppercase font-bold">DESCRIPCIÓN DEL DESTINO ESTABLECIDO</label>
+                    <label className="text-[10px] text-[#ab9e8b] uppercase font-bold">
+                      DESCRIPCIÓN DEL DESTINO ESTABLECIDO
+                    </label>
                     <input
                       type="text"
                       className="w-full bg-[#111111]/90 border border-[#3b4d3e] text-white text-xs font-mono py-2 px-3 rounded uppercase focus:outline-none focus:border-[#c27c2f] focus:ring-1 focus:ring-[#c27c2f] transition-colors"
@@ -474,7 +499,9 @@ export default function ExplorationsView({
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {/* Est days */}
                   <div className="flex flex-col gap-1">
-                    <label className="text-[10px] text-[#ab9e8b] uppercase font-bold">DÍAS ESTIMA DE VIAJE</label>
+                    <label className="text-[10px] text-[#ab9e8b] uppercase font-bold">
+                      DÍAS ESTIMA DE VIAJE
+                    </label>
                     <input
                       type="number"
                       className="w-full bg-[#111111]/90 border border-[#3b4d3e] text-white text-xs font-mono py-2 px-3 rounded uppercase focus:outline-none focus:border-[#c27c2f] focus:ring-1 focus:ring-[#c27c2f] transition-colors"
@@ -487,7 +514,9 @@ export default function ExplorationsView({
                   </div>
                   {/* Grace days */}
                   <div className="flex flex-col gap-1">
-                    <label className="text-[10px] text-[#ab9e8b] uppercase font-bold">DÍAS DE GRACIA ADICIONAL</label>
+                    <label className="text-[10px] text-[#ab9e8b] uppercase font-bold">
+                      DÍAS DE GRACIA ADICIONAL
+                    </label>
                     <input
                       type="number"
                       className="w-full bg-[#111111]/90 border border-[#3b4d3e] text-white text-xs font-mono py-2 px-3 rounded uppercase focus:outline-none focus:border-[#c27c2f] focus:ring-1 focus:ring-[#c27c2f] transition-colors"
@@ -518,15 +547,15 @@ export default function ExplorationsView({
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-40 overflow-y-auto p-2 bg-black/40 border border-zinc-900 rounded">
                       {activePersons.map((p) => {
-                        const isSelected = selectedPeople.includes(p.id);
+                        const isSelected = selectedPeople.includes(p.id)
                         return (
                           <div
                             key={p.id}
                             onClick={() => togglePersonSelection(p.id)}
                             className={`p-2 rounded border transition-colors cursor-pointer flex justify-between items-center ${
-                              isSelected 
-                                ? 'bg-amber-950/40 border-amber-500 text-white' 
-                                : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:text-zinc-200'
+                              isSelected
+                                ? "bg-amber-950/40 border-amber-500 text-white"
+                                : "bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:text-zinc-200"
                             }`}
                           >
                             <div className="text-left">
@@ -534,7 +563,8 @@ export default function ExplorationsView({
                                 {p.first_name} {p.last_name}
                               </span>
                               <span className="text-[9px] block text-zinc-400 uppercase font-mono tracking-widest">
-                                {p.profession.name} • XP: {p.experience_points} ({p.expeditionsSurvived} EXT)
+                                {p.profession.name} • XP: {p.experience_points} (
+                                {p.expeditionsSurvived} EXT)
                               </span>
                             </div>
                             <input
@@ -544,7 +574,7 @@ export default function ExplorationsView({
                               className="accent-amber-500 pointer-events-none"
                             />
                           </div>
-                        );
+                        )
                       })}
                     </div>
                   )}
@@ -557,7 +587,9 @@ export default function ExplorationsView({
                   </label>
                   <div className="grid grid-cols-2 gap-4 bg-zinc-900/60 p-3 rounded-md border border-zinc-800">
                     <div>
-                      <span className="text-[10px] text-zinc-400 block mb-1">CANTIDAD COMIDA (RACIONES)</span>
+                      <span className="text-[10px] text-zinc-400 block mb-1">
+                        CANTIDAD COMIDA (RACIONES)
+                      </span>
                       <input
                         type="number"
                         min={0}
@@ -567,7 +599,9 @@ export default function ExplorationsView({
                       />
                     </div>
                     <div>
-                      <span className="text-[10px] text-zinc-400 block mb-1">CANTIDAD AGUA (LITROS)</span>
+                      <span className="text-[10px] text-zinc-400 block mb-1">
+                        CANTIDAD AGUA (LITROS)
+                      </span>
                       <input
                         type="number"
                         min={0}
@@ -581,7 +615,9 @@ export default function ExplorationsView({
 
                 {/* Optional description */}
                 <div className="flex flex-col gap-1">
-                  <label className="text-[10px] text-[#ab9e8b] uppercase font-bold">COMENTARIO EXTRA / INTELIGENCIA OPERATIVA ADICIONAL</label>
+                  <label className="text-[10px] text-[#ab9e8b] uppercase font-bold">
+                    COMENTARIO EXTRA / INTELIGENCIA OPERATIVA ADICIONAL
+                  </label>
                   <textarea
                     className="w-full bg-[#111111]/90 border border-[#3b4d3e] text-white text-xs font-mono py-2 px-3 rounded uppercase focus:outline-none focus:border-[#c27c2f] focus:ring-1 focus:ring-[#c27c2f] transition-colors h-14 resize-none"
                     placeholder="E.G., NO DETENERSE EN CASO DE NIEBLA SÉPTICA..."
@@ -596,7 +632,7 @@ export default function ExplorationsView({
                     disabled={isSubmitting}
                     className="flex-1 vintage-btn bg-[#3b4d3e] text-white py-2 font-bold cursor-pointer"
                   >
-                    {isSubmitting ? 'REGISTRANDO HOJA...' : 'REGISTRAR PLAN EN CENTRAL'}
+                    {isSubmitting ? "REGISTRANDO HOJA..." : "REGISTRAR PLAN EN CENTRAL"}
                   </button>
                   <button
                     type="button"
@@ -627,7 +663,7 @@ export default function ExplorationsView({
                   <Archive className="w-5 h-5" />
                   HOJA DE REGISTRO DE RETORNO Y EXCLUSIÓN DE ZONA
                 </h3>
-                <button 
+                <button
                   onClick={() => setIsReturnModalOpen(false)}
                   className="text-zinc-400 hover:text-white cursor-pointer font-bold"
                 >
@@ -637,16 +673,25 @@ export default function ExplorationsView({
 
               <form onSubmit={handleReturnSubmit} className="space-y-4">
                 <p className="text-[11px] text-zinc-400 uppercase leading-4 border-b border-zinc-900 pb-2">
-                  INDIQUE TODOS LOS ELEMENTOS LOGÍSTICOS RECUPERADOS EN LA ZONA MUERTA POR EL EQUIPO DE COMBATE. ESTAS CANTIDADES SE AÑADIRÁN DINÁMICAMENTE A LA DESPENSA EN EL BÚNKER ALFA.
+                  INDIQUE TODOS LOS ELEMENTOS LOGÍSTICOS RECUPERADOS EN LA ZONA MUERTA POR EL EQUIPO
+                  DE COMBATE. ESTAS CANTIDADES SE AÑADIRÁN DINÁMICAMENTE A LA DESPENSA EN EL BÚNKER
+                  ALFA.
                 </p>
 
                 {/* Dynamic fields inputs for quantities found */}
                 <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
                   {resources.map((res) => (
-                    <div key={res.id} className="flex justify-between items-center p-1.5 bg-zinc-900/60 border border-zinc-800 rounded">
+                    <div
+                      key={res.id}
+                      className="flex justify-between items-center p-1.5 bg-zinc-900/60 border border-zinc-800 rounded"
+                    >
                       <div className="text-left pl-1">
-                        <span className="text-xs font-bold uppercase block text-white">{res.name}</span>
-                        <span className="text-[9px] block text-zinc-500 font-mono">UNIDAD DE MEDIDA: {res.unit}</span>
+                        <span className="text-xs font-bold uppercase block text-white">
+                          {res.name}
+                        </span>
+                        <span className="text-[9px] block text-zinc-500 font-mono">
+                          UNIDAD DE MEDIDA: {res.unit}
+                        </span>
                       </div>
                       <div className="w-28 flex items-center gap-1.5">
                         <input
@@ -664,7 +709,9 @@ export default function ExplorationsView({
 
                 {/* Return comments notes input */}
                 <div className="flex flex-col gap-1">
-                  <label className="text-[10px] text-[#ab9e8b] uppercase font-bold">INFORME DEL LÍDER DE OPERACIÓN EN RETORNO</label>
+                  <label className="text-[10px] text-[#ab9e8b] uppercase font-bold">
+                    INFORME DEL LÍDER DE OPERACIÓN EN RETORNO
+                  </label>
                   <textarea
                     className="w-full bg-[#111111]/90 border border-[#3b4d3e] text-white text-xs font-mono py-2 px-3 rounded uppercase focus:outline-none focus:border-[#c27c2f] focus:ring-1 focus:ring-[#c27c2f] transition-colors h-14 resize-none"
                     placeholder="EJ. EXPEDICIÓN ALTAMENTE RENTABLE. ENCONTRAMOS BOTELLAS SELLADAS EN BASE DAWNTECH..."
@@ -679,7 +726,7 @@ export default function ExplorationsView({
                     disabled={isSubmitting}
                     className="flex-1 bg-[#4c6351] hover:bg-[#3b4d3e] text-white py-1.5 px-3 font-typewriter font-bold text-[10px] uppercase border border-black rounded shadow-[1px_1px_0_#000]"
                   >
-                    {isSubmitting ? 'INVENTARIANDO...' : 'REGISTRAR INGRESO EN ALMACÉN'}
+                    {isSubmitting ? "INVENTARIANDO..." : "REGISTRAR INGRESO EN ALMACÉN"}
                   </button>
                   <button
                     type="button"
@@ -694,7 +741,6 @@ export default function ExplorationsView({
           </div>
         )}
       </AnimatePresence>
-
     </div>
-  );
+  )
 }

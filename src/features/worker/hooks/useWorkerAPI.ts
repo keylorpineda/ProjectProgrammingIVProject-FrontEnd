@@ -1,13 +1,14 @@
-import React from 'react'
-import { useQuery, UseQueryResult } from '@tanstack/react-query'
-import { useAuthStore } from '@/store/useAuthStore'
-import workerService, { setAuthToken } from '@/features/worker/services/workerService'
+import React from "react"
+import type { UseQueryResult } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query"
+import { useAuthStore } from "@/store/useAuthStore"
+import workerService, { setAuthToken } from "@/features/worker/services/workerService"
 import {
   fallbackAssignedResources,
   fallbackInventory,
   fallbackMovements,
   fallbackProfessions,
-} from '@/features/worker/workerFallbackData'
+} from "@/features/worker/workerFallbackData"
 import type {
   WorkerAssignedResource,
   ProfessionWithPersons,
@@ -16,29 +17,24 @@ import type {
   InventoryMovement,
   ApiError,
   ResourcesQueryParams,
-} from '@/types/worker.api.types'
+} from "@/types/worker.api.types"
 
 // Query keys factory
 export const workerQueryKeys = {
-  all: ['worker'] as const,
-  assigned: ['worker', 'assigned-resources'] as const,
-  professions: ['worker', 'professions'] as const,
-  resources: ['worker', 'resources'] as const,
-  resourcesWithParams: (params: ResourcesQueryParams) =>
-    ['worker', 'resources', params] as const,
-  inventory: (campId: string | number) => ['worker', 'inventory', campId] as const,
-  movements: (campId: string | number) =>
-    ['worker', 'movements', campId] as const,
+  all: ["worker"] as const,
+  assigned: ["worker", "assigned-resources"] as const,
+  professions: ["worker", "professions"] as const,
+  resources: ["worker", "resources"] as const,
+  resourcesWithParams: (params: ResourcesQueryParams) => ["worker", "resources", params] as const,
+  inventory: (campId: string | number) => ["worker", "inventory", campId] as const,
+  movements: (campId: string | number) => ["worker", "movements", campId] as const,
 }
 
 /**
  * Hook to fetch resources assigned to the current user
  * GET /api/users/me/assigned-resources
  */
-export const useAssignedResources = (): UseQueryResult<
-  WorkerAssignedResource[],
-  ApiError
-> => {
+export const useAssignedResources = (): UseQueryResult<WorkerAssignedResource[], ApiError> => {
   const { token } = useAuthStore()
 
   // Set token for API calls
@@ -84,7 +80,7 @@ export const useProfessions = (): UseQueryResult<ProfessionWithPersons[], ApiErr
  * GET /api/resources?page=1&limit=20&category=...
  */
 export const useResources = (
-  params: ResourcesQueryParams = { page: 1, limit: 20 }
+  params: ResourcesQueryParams = { page: 1, limit: 20 },
 ): UseQueryResult<Resource[], ApiError> => {
   const { token } = useAuthStore()
 
@@ -94,8 +90,7 @@ export const useResources = (
 
   return useQuery({
     queryKey: workerQueryKeys.resourcesWithParams(params),
-    queryFn: () =>
-      workerService.getResources(params.page, params.limit, params.category),
+    queryFn: () => workerService.getResources(params.page, params.limit, params.category),
     enabled: !!token,
     retry: 1,
     staleTime: 15 * 60 * 1000, // 15 minutes
@@ -108,7 +103,7 @@ export const useResources = (
  * GET /api/resources/inventory/:campId
  */
 export const useInventory = (
-  campId: string | number | null | undefined
+  campId: string | number | null | undefined,
 ): UseQueryResult<InventoryItem[], ApiError> => {
   const { token } = useAuthStore()
 
@@ -117,9 +112,9 @@ export const useInventory = (
   }, [token])
 
   return useQuery({
-    queryKey: workerQueryKeys.inventory(campId || ''),
+    queryKey: workerQueryKeys.inventory(campId || ""),
     queryFn: () => {
-      if (!campId) throw new Error('Camp ID is required')
+      if (!campId) throw new Error("Camp ID is required")
       return workerService.getInventory(campId)
     },
     enabled: !!token && !!campId,
@@ -136,7 +131,7 @@ export const useInventory = (
  */
 export const useInventoryMovements = (
   campId: string | number | null | undefined,
-  limit: number = 50
+  limit: number = 50,
 ): UseQueryResult<InventoryMovement[], ApiError> => {
   const { token } = useAuthStore()
 
@@ -145,9 +140,9 @@ export const useInventoryMovements = (
   }, [token])
 
   return useQuery({
-    queryKey: workerQueryKeys.movements(campId || ''),
+    queryKey: workerQueryKeys.movements(campId || ""),
     queryFn: () => {
-      if (!campId) throw new Error('Camp ID is required')
+      if (!campId) throw new Error("Camp ID is required")
       return workerService.getInventoryMovements(campId, limit)
     },
     enabled: !!token && !!campId,
@@ -169,13 +164,13 @@ export const useProfessionMetrics = () => {
 
     return professions.map((prof) => {
       const totalPersons = prof.persons.length
-      const activePersons = prof.persons.filter((p) => p.status === 'activo').length
+      const activePersons = prof.persons.filter((p) => p.status === "activo").length
       const status =
         activePersons >= prof.minimum_active_required
-          ? 'OK'
+          ? "OK"
           : activePersons === 0
-            ? 'CRÍTICO'
-            : 'DÉFICIT'
+            ? "CRÍTICO"
+            : "DÉFICIT"
 
       return {
         id: prof.id,
@@ -212,13 +207,13 @@ export const useInventoryStatus = (campId: string | number | null | undefined) =
     }
 
     const okItems = inventory.filter(
-      (item) => !item.alert_active && item.current_quantity >= item.minimum_stock_required
+      (item) => !item.alert_active && item.current_quantity >= item.minimum_stock_required,
     ).length
     const lowItems = inventory.filter(
       (item) =>
         !item.alert_active &&
         item.current_quantity < item.minimum_stock_required &&
-        item.current_quantity > 0
+        item.current_quantity > 0,
     ).length
     const criticalItems = inventory.filter((item) => item.alert_active).length
 

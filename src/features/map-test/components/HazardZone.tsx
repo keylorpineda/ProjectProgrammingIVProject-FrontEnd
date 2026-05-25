@@ -69,7 +69,8 @@ export const HazardZone = ({ coords, radius, dangerLevel, name }: HazardZoneProp
       <Popup className="paper-panel border-2 border-[var(--ink)] shadow-xl overflow-hidden p-0 min-w-[200px]">
         <div className="bg-[var(--ink)] p-3 border-b border-[var(--ink-soft)]">
           <h4 className="text-[10px] font-black text-white uppercase tracking-widest flex items-center gap-2">
-            <ShieldAlert size={14} className="text-[var(--accent-critical)]" /> REPORTE DE INTELIGENCIA
+            <ShieldAlert size={14} className="text-[var(--accent-critical)]" /> REPORTE DE
+            INTELIGENCIA
           </h4>
         </div>
 
@@ -98,7 +99,9 @@ export const HazardZone = ({ coords, radius, dangerLevel, name }: HazardZoneProp
             </div>
 
             <div>
-              <p className="text-[8px] text-[var(--ink-soft)] uppercase font-bold mb-1">Costo Tact.:</p>
+              <p className="text-[8px] text-[var(--ink-soft)] uppercase font-bold mb-1">
+                Costo Tact.:
+              </p>
               <div className="space-y-1">
                 <div className="flex items-center justify-between text-[9px] text-[var(--ink)]">
                   <Package size={10} /> <span>{costs.ammo}</span>

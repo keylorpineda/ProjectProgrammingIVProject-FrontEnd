@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { useCamp } from "../context/CampContext"
 import {
+  createAdmissionAccount,
   getAdmissionById,
   getPendingAdmissions,
   reviewAdmission,
@@ -32,7 +33,8 @@ type AdmissionDetail = AdmissionSummary & {
 
 // Default role assigned to newly admitted survivors. Matches `worker` role in
 // the seed (role_id=2). See docs/ALIGNMENT_SPEC.md §1.2 / P0-4.
-const DEMO_ADMISSIONS_ENABLED = import.meta.env.VITE_DEMO_ADMISSIONS === "true" || import.meta.env.DEV
+const DEMO_ADMISSIONS_ENABLED =
+  import.meta.env.VITE_DEMO_ADMISSIONS === "true" || import.meta.env.DEV
 
 const DEMO_ADMISSIONS: AdmissionDetail[] = [
   {
@@ -79,12 +81,14 @@ const DEMO_ADMISSIONS: AdmissionDetail[] = [
   },
 ]
 
-const DEMO_SUMMARIES: AdmissionSummary[] = DEMO_ADMISSIONS.map(({ id, applicantName, fileNumber, date }) => ({
-  id,
-  applicantName,
-  fileNumber,
-  date,
-}))
+const DEMO_SUMMARIES: AdmissionSummary[] = DEMO_ADMISSIONS.map(
+  ({ id, applicantName, fileNumber, date }) => ({
+    id,
+    applicantName,
+    fileNumber,
+    date,
+  }),
+)
 
 const DEMO_BY_ID = new Map(DEMO_ADMISSIONS.map((item) => [item.id, item]))
 
@@ -103,13 +107,139 @@ const buildApplicantName = (admission: AiAdmission): string => {
     .trim()
 }
 
-const normalizeRecommendation = (
-  suggested: string | null | undefined,
-): AiRecommendation => {
+const normalizeRecommendation = (suggested: string | null | undefined): AiRecommendation => {
   const value = (suggested ?? "").toUpperCase()
   if (value.includes("ACCEPT")) return "accept"
   if (value.includes("REJECT")) return "reject"
   return "review"
+}
+
+const formatAiAnalysis = (text: string) => {
+  if (!text) return "Sin análisis detallado."
+  let formatted = text
+    .replace(/Score:/gi, "Puntaje:")
+    .replace(/HIGH confidence/gi, "Confianza ALTA")
+    .replace(/MEDIUM confidence/gi, "Confianza MEDIA")
+    .replace(/LOW confidence/gi, "Confianza BAJA")
+    .replace(/Decision:/gi, "Decisión:")
+    .replace(/RECOMMEND_REJECT/gi, "RECHAZO RECOMENDADO")
+    .replace(/RECOMMEND_ACCEPT/gi, "INGRESO RECOMENDADO")
+    .replace(/Evaluation Breakdown:/gi, "Desglose de Evaluación:")
+    .replace(/Profession Need:/gi, "Necesidad de Profesión:")
+    .replace(/Skills:/gi, "Habilidades:")
+    .replace(/Health:/gi, "Salud:")
+    .replace(/Physical:/gi, "Físico:")
+    .replace(/Resource Impact:/gi, "Impacto en Recursos:")
+    .replace(/Family Bonus:/gi, "Bono Familiar:")
+    .replace(/Has generally useful skills/gi, "Posee habilidades genéricas útiles")
+    .replace(/valuable skills identified/gi, "habilidades de valor identificadas")
+    .replace(/valuable skill identified/gi, "habilidad de valor identificada")
+    .replace(/Camp in deficit, non-producer/gi, "Camp. en déficit, civil no productor")
+    .replace(/Camp in surplus, producer/gi, "Camp. con superávit, civil productor")
+    .replace(/No specific critical skills/gi, "Sin habilidades críticas específicas")
+    .replace(/High value profession for camp/gi, "Profesión de altísimo valor para el campamento")
+    .replace(/Medium value profession/gi, "Profesión de valor regular")
+    .replace(/Low value profession/gi, "Profesión de bajo valor")
+    .replace(/No family connections/gi, "Sin conexiones familiares dentro")
+    .replace(/Family member inside/gi, "Familiar refugiado en la estación")
+    .replace(/\bApproved\b/gi, "Aprobado")
+    .replace(/\bRejected\b/gi, "Rechazado")
+    .replace(/\bApprove\b/gi, "Aprobar")
+    .replace(/\bReject\b/gi, "Rechazar")
+    .replace(/\bReview\b/gi, "Revisión")
+    .replace(/\bReviewed\b/gi, "Revisado")
+    .replace(/\bPending\b/gi, "Pendiente")
+    .replace(/\bAccepted\b/gi, "Aceptado")
+    .replace(/Recommendation:/gi, "Recomendación:")
+    .replace(/Analysis:/gi, "Análisis:")
+    .replace(/Summary:/gi, "Resumen:")
+    .replace(/Confidence:/gi, "Confianza:")
+    .replace(/Status:/gi, "Estado:")
+    .replace(/Risk:/gi, "Riesgo:")
+    .replace(/Risk level:/gi, "Nivel de riesgo:")
+    .replace(/High risk/gi, "Riesgo alto")
+    .replace(/Medium risk/gi, "Riesgo medio")
+    .replace(/Low risk/gi, "Riesgo bajo")
+    .replace(/No concerns/gi, "Sin observaciones")
+    .replace(/Security concerns/gi, "Observaciones de seguridad")
+    .replace(/Medical concerns/gi, "Observaciones médicas")
+    .replace(/No medical history/gi, "Sin historial médico")
+    .replace(/Clean background/gi, "Antecedentes limpios")
+    .replace(/Under review/gi, "En revisión")
+    .replace(/Points:/gi, "Puntos:")
+    .replace(/Total score:/gi, "Puntaje total:")
+    .replace(/Occupation:/gi, "Ocupación:")
+    .replace(/Age:/gi, "Edad:")
+    .replace(/Background:/gi, "Antecedentes:")
+    .replace(/\bNote:/gi, "Nota:")
+    .replace(/Warning:/gi, "Advertencia:")
+    .replace(/\bpoints\b/gi, "puntos")
+
+  formatted = formatted.replace(/Decisión:/gi, "\n\nDecisión:")
+  formatted = formatted.replace(/Desglose de Evaluación:/gi, "\n\nDesglose de Evaluación:\n")
+  formatted = formatted.replace(/- \[\d+\/\d+\]/g, (match) => `\n${match}`)
+
+  return formatted.split("\n").map((line, index) => {
+    const trimmed = line.trim()
+    if (!trimmed) return null
+
+    if (trimmed.startsWith("- [")) {
+      const parts = trimmed.split(":")
+      if (parts.length > 1) {
+        const bulletTitle = parts[0]
+        const bulletDesc = parts.slice(1).join(":")
+        return (
+          <span
+            key={index}
+            style={{
+              display: "block",
+              marginBottom: "8px",
+              marginLeft: "10px",
+              paddingLeft: "10px",
+              borderLeft: "2px solid #555",
+            }}
+          >
+            <strong style={{ color: "var(--accent-mil)" }}>{bulletTitle}:</strong>
+            {bulletDesc}
+          </span>
+        )
+      }
+    }
+
+    if (trimmed.startsWith("Desglose")) {
+      return (
+        <strong
+          key={index}
+          style={{
+            display: "block",
+            marginBottom: "10px",
+            marginTop: "15px",
+            borderBottom: "1px dashed #555",
+            paddingBottom: "4px",
+          }}
+        >
+          {trimmed}
+        </strong>
+      )
+    }
+
+    if (trimmed.startsWith("Decisión:") || trimmed.startsWith("Puntaje:")) {
+      return (
+        <span key={index} style={{ display: "block", marginBottom: "6px" }}>
+          <strong>{trimmed.split(":")[0]}:</strong>{" "}
+          <span style={{ color: "var(--accent-critical)" }}>
+            {trimmed.split(":").slice(1).join(":")}
+          </span>
+        </span>
+      )
+    }
+
+    return (
+      <span key={index} style={{ display: "block", marginBottom: "6px" }}>
+        {trimmed}
+      </span>
+    )
+  })
 }
 
 const mapAdmissionSummary = (admission: AiAdmission): AdmissionSummary => ({
@@ -135,10 +265,7 @@ const mapAdmissionDetail = (admission: AiAdmission): AdmissionDetail => {
   const rulesApplied = extractRulesApplied(admission.raw_ai_response)
   const analysis = admission.justification ?? "Evaluación automática registrada."
   const candidate = admission.candidate_data ?? ({} as AiAdmission["candidate_data"])
-  const appearanceNotes = [
-    candidate.medical_conditions?.join(", "),
-    candidate.personal_history,
-  ]
+  const appearanceNotes = [candidate.medical_conditions?.join(", "), candidate.personal_history]
     .filter((part) => typeof part === "string" && part.trim().length > 0)
     .join(" | ")
 
@@ -165,6 +292,8 @@ export default function AdmissionsBook() {
   const [showingProcessed, setShowingProcessed] = useState(false)
   const [turnDirection, setTurnDirection] = useState<"next" | "prev" | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
+  const [isArchiving, setIsArchiving] = useState(false)
+  const [archiveError, setArchiveError] = useState("")
   const [isDemoData, setIsDemoData] = useState(false)
   const [adminNotes, setAdminNotes] = useState("")
 
@@ -313,7 +442,7 @@ export default function AdmissionsBook() {
     }
     try {
       const decisionValue = nextDecision === "ACCEPT" ? "accepted" : "rejected"
-      const notes = adminNotes.trim() || "Reviewed"
+      const notes = adminNotes.trim() || "Revisado"
 
       await reviewAdmission(detailData.id, {
         decision: decisionValue,
@@ -336,6 +465,25 @@ export default function AdmissionsBook() {
 
   const handleArchive = async () => {
     if (!detailData) return
+    setArchiveError("")
+    if (!isDemoData && detailData.contactEmail) {
+      setIsArchiving(true)
+      try {
+        const nameParts = detailData.applicantName.toLowerCase().replace(/\s+/g, ".")
+        const username = nameParts.slice(0, 20) || "survivor"
+        const tempPassword = `Temp${Math.random().toString(36).slice(2, 8)}!`
+        await createAdmissionAccount(detailData.id, {
+          username,
+          email: detailData.contactEmail,
+          password: tempPassword,
+          role_id: 2,
+        })
+      } catch {
+        setArchiveError("No se pudo crear la cuenta. El expediente se archivará de todos modos.")
+      } finally {
+        setIsArchiving(false)
+      }
+    }
     archiveAdmission()
   }
 
@@ -451,7 +599,9 @@ export default function AdmissionsBook() {
                   </div>
                   <div className="form-field">
                     <label>NOTAS:</label>
-                    <span style={{ fontFamily: "var(--font-marker)" }}>{detailData.appearanceNotes}</span>
+                    <span style={{ fontFamily: "var(--font-marker)" }}>
+                      {detailData.appearanceNotes}
+                    </span>
                   </div>
                   <div className="form-field">
                     <label>BIOMETRÍA:</label>
@@ -464,8 +614,10 @@ export default function AdmissionsBook() {
                     <div
                       className="decision-stamp-overlay"
                       style={{
-                        color: decision === "ACCEPT" ? "var(--accent-mil)" : "var(--accent-critical)",
-                        borderColor: decision === "ACCEPT" ? "var(--accent-mil)" : "var(--accent-critical)",
+                        color:
+                          decision === "ACCEPT" ? "var(--accent-mil)" : "var(--accent-critical)",
+                        borderColor:
+                          decision === "ACCEPT" ? "var(--accent-mil)" : "var(--accent-critical)",
                       }}
                     >
                       {decision === "ACCEPT" ? "ACEPTADO" : "RECHAZADO"}
@@ -473,65 +625,113 @@ export default function AdmissionsBook() {
                   ) : null}
                 </div>
 
-                <div className="portfolio-page right-page">
+                <div className="portfolio-page right-page" style={{ padding: "20px 30px" }}>
                   {!showingProcessed ? (
                     <>
-                      <div className="binder-header">REVISIÓN DE IA</div>
-                      <div className="ai-evaluation-section">
-                        <div className="form-field">
-                          <label>SCORE IA:</label>
-                          <span
-                            style={{
-                              color: detailData.aiScore >= 80 ? "var(--accent-mil)" : "var(--accent-warning)",
-                              fontSize: "1.2em",
-                            }}
+                      <div className="binder-header" style={{ marginBottom: "10px" }}>
+                        REVISIÓN DE IA
+                      </div>
+
+                      {/* Contenedor escroleable para que los botones nunca se escondan */}
+                      <div
+                        style={{
+                          flex: 1,
+                          overflowY: "auto",
+                          paddingRight: "10px",
+                          marginBottom: "10px",
+                        }}
+                        className="scrollbar-thin"
+                      >
+                        <div className="ai-evaluation-section">
+                          <div className="form-field">
+                            <label>SCORE IA:</label>
+                            <span
+                              style={{
+                                color:
+                                  detailData.aiScore >= 80
+                                    ? "var(--accent-mil)"
+                                    : "var(--accent-critical)",
+                                fontSize: "1.2em",
+                              }}
+                            >
+                              {detailData.aiScore}/100
+                            </span>
+                          </div>
+                          <div className="form-field">
+                            <label>SUGERENCIA:</label>
+                            <span>
+                              {detailData.suggestedDecision === "ACCEPT" ? "ACEPTAR" : "RECHAZAR"}
+                            </span>
+                          </div>
+                          <div
+                            className="form-field"
+                            style={{ display: "flex", flexDirection: "column" }}
                           >
-                            {detailData.aiScore}/100
-                          </span>
+                            <label style={{ marginBottom: "5px" }}>ANÁLISIS:</label>
+                            <span
+                              style={{
+                                fontFamily: "var(--font-typewriter)",
+                                fontSize: "0.95em",
+                                lineHeight: "1.3",
+                              }}
+                            >
+                              {formatAiAnalysis(detailData.aiAnalysis)}
+                            </span>
+                          </div>
+                          <div className="form-field">
+                            <label>REGLAS:</label>
+                            <ul
+                              style={{
+                                fontSize: "0.9em",
+                                paddingLeft: "20px",
+                                fontFamily: "var(--font-mono)",
+                              }}
+                            >
+                              {detailData.rulesApplied.map((rule) => (
+                                <li key={rule}>
+                                  {rule === "CRITICAL_ROLE_NEEDED"
+                                    ? "ROL_CRÍTICO_REQUERIDO"
+                                    : rule === "HEALTH_SCORE_OK"
+                                      ? "ESTRUCTURA_SALUD_OK"
+                                      : rule}
+                                </li>
+                              ))}
+                              {detailData.rulesApplied.length === 0 ? <li>Ninguna</li> : null}
+                            </ul>
+                          </div>
                         </div>
-                        <div className="form-field">
-                          <label>SUGERENCIA:</label>
-                          <span>{detailData.suggestedDecision === "ACCEPT" ? "ACEPTAR" : "RECHAZAR"}</span>
-                        </div>
-                        <div className="form-field">
-                          <label>ANÁLISIS:</label>
-                          <span style={{ fontFamily: "var(--font-typewriter)" }}>{detailData.aiAnalysis}</span>
-                        </div>
-                        <div className="form-field">
-                          <label>REGLAS:</label>
-                          <ul style={{ fontSize: "0.9em", paddingLeft: "20px", fontFamily: "var(--font-mono)" }}>
-                            {detailData.rulesApplied.map((rule) => (
-                              <li key={rule}>
-                                {rule === "CRITICAL_ROLE_NEEDED"
-                                  ? "ROL_CRÍTICO_REQUERIDO"
-                                  : rule === "HEALTH_SCORE_OK"
-                                    ? "ESTRUCTURA_SALUD_OK"
-                                    : rule}
-                              </li>
-                            ))}
-                            {detailData.rulesApplied.length === 0 ? <li>Ninguna</li> : null}
-                          </ul>
-                        </div>
-                      </div>
 
-                      <div className="binder-header" style={{ marginTop: "12px" }}>
-                        RESOLUCIÓN OFICIAL
-                      </div>
+                        <div className="binder-header" style={{ marginTop: "12px" }}>
+                          RESOLUCIÓN OFICIAL
+                        </div>
 
-                      <div className="form-field comments-field" style={{ marginTop: "10px" }}>
-                        <label style={{ display: "block", marginBottom: "5px" }}>COMENTARIOS (OPCIONAL):</label>
-                        <textarea
-                          className="vintage-input"
-                          value={adminNotes}
-                          onChange={(event) => setAdminNotes(event.target.value)}
-                          placeholder="Escriba observaciones..."
-                          style={{ width: "100%", height: "48px", resize: "none" }}
-                        />
+                        <div className="form-field comments-field" style={{ marginTop: "10px" }}>
+                          <label style={{ display: "block", marginBottom: "5px" }}>
+                            COMENTARIOS (OPCIONAL):
+                          </label>
+                          <textarea
+                            className="vintage-input"
+                            value={adminNotes}
+                            onChange={(event) => setAdminNotes(event.target.value)}
+                            placeholder="Escriba observaciones..."
+                            style={{ width: "100%", height: "48px", resize: "none" }}
+                          />
+                        </div>
                       </div>
 
                       <div className="binder-footer decision-footer">
-                        <StampButton label="RECHAZAR" type="reject" onClick={() => handleDecision("REJECT")} disabled={!!decision || isProcessing} />
-                        <StampButton label="ACEPTAR" type="accept" onClick={() => handleDecision("ACCEPT")} disabled={!!decision || isProcessing} />
+                        <StampButton
+                          label="RECHAZAR"
+                          type="reject"
+                          onClick={() => handleDecision("REJECT")}
+                          disabled={!!decision || isProcessing}
+                        />
+                        <StampButton
+                          label="ACEPTAR"
+                          type="accept"
+                          onClick={() => handleDecision("ACCEPT")}
+                          disabled={!!decision || isProcessing}
+                        />
                       </div>
                     </>
                   ) : (
@@ -574,16 +774,44 @@ export default function AdmissionsBook() {
                         }}
                       >
                         ENVIANDO TRANSMISIÓN AL SOLICITANTE
-                        <br />{"// SE LE HA ENVIADO UN ENLACE DE REGISTRO AL CORREO"}
+                        <br />
+                        {"// SE LE HA ENVIADO UN ENLACE DE REGISTRO AL CORREO"}
                       </div>
 
-                      <div style={{ fontFamily: "var(--font-mono)", marginTop: "30px", textAlign: "center", opacity: 0.7 }}>
+                      <div
+                        style={{
+                          fontFamily: "var(--font-mono)",
+                          marginTop: "30px",
+                          textAlign: "center",
+                          opacity: 0.7,
+                        }}
+                      >
                         EXPEDIENTE #{detailData.fileNumber}
                       </div>
 
-                      <div className="binder-footer" style={{ bottom: "40px", justifyContent: "center" }}>
-                        <button className="archive-btn" onClick={handleArchive}>
-                          ENVIAR CORREO Y ARCHIVAR
+                      {archiveError ? (
+                        <div
+                          style={{
+                            color: "var(--accent-critical)",
+                            fontSize: "10px",
+                            fontFamily: "var(--font-mono)",
+                            textAlign: "center",
+                            padding: "4px",
+                          }}
+                        >
+                          {archiveError}
+                        </div>
+                      ) : null}
+                      <div
+                        className="binder-footer"
+                        style={{ bottom: "40px", justifyContent: "center" }}
+                      >
+                        <button
+                          className="archive-btn"
+                          onClick={() => void handleArchive()}
+                          disabled={isArchiving}
+                        >
+                          {isArchiving ? "PROCESANDO..." : "ENVIAR CORREO Y ARCHIVAR"}
                         </button>
                       </div>
                     </div>
@@ -595,8 +823,21 @@ export default function AdmissionsBook() {
         </div>
       </div>
 
-      <div className="page-controls" style={{ display: "flex", gap: "30px", marginTop: "20px", position: "relative", zIndex: 1000 }}>
-        <button className="arrow-btn" onClick={handlePrevPage} disabled={currentIndex === 0 || !!decision}>
+      <div
+        className="page-controls"
+        style={{
+          display: "flex",
+          gap: "30px",
+          marginTop: "20px",
+          position: "relative",
+          zIndex: 1000,
+        }}
+      >
+        <button
+          className="arrow-btn"
+          onClick={handlePrevPage}
+          disabled={currentIndex === 0 || !!decision}
+        >
           ← PASAR PÁG. ANTERIOR
         </button>
         <button

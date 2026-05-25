@@ -1,241 +1,158 @@
-import React from 'react'
-import { Activity, ShieldCheck, Database, Zap } from 'lucide-react'
-import { motion } from 'framer-motion'
-import { useAuth } from '@/pages/Admin/context/AuthContext'
+import { useEffect, useState } from "react"
+import { motion } from "framer-motion"
+import { useAuth } from "@/pages/Admin/context/AuthContext"
 import {
-  useAssignedResources,
-  useProfessionMetrics,
   useInventoryStatus,
-} from '@/features/worker/hooks/useWorkerAPI'
+  useInventoryMovements,
+  useProfessionMetrics,
+} from "@/features/worker/hooks/useWorkerAPI"
+import "./WorkerViews.css"
 
-interface WorkerDashboardProps {
-  activeTab?: string
+const MOVEMENT_LABELS: Record<string, string> = {
+  addition: "ENTRADA",
+  removal: "SALIDA",
+  adjustment: "AJUSTE",
+  transfer: "TRASLADO",
+  consumption: "CONSUMO",
+  production: "PRODUCCION",
 }
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.2,
-    },
-  },
+const formatTime = () => {
+  const now = new Date()
+  return now.toISOString().split("T")[1].split(".")[0] + "Z"
 }
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5 },
-  },
-}
-
-// Mock command logs for display
-const commandLogs = [
-  { time: '14:02:01', message: 'ARCHIVE ACCESSED BY WORKER SESSION' },
-  { time: '13:45:30', message: 'AUTOMATED RESOURCE SYNC COMPLETED' },
-  { time: '13:12:11', message: 'SECTOR OPERATIONS RUNNING NOMINAL' },
-  { time: '12:50:04', message: 'PERSONNEL STATUS VERIFIED' },
-]
-
-export default function WorkerDashboard(_props: WorkerDashboardProps) {
+export default function WorkerDashboard() {
   const { user } = useAuth()
-
-  // Fetch data hooks
-  const { data: assignedResources } = useAssignedResources()
+  const [time, setTime] = useState(formatTime())
+  const { stats } = useInventoryStatus(user?.camp_id)
   const { metrics } = useProfessionMetrics()
-  const { stats: inventoryStats } = useInventoryStatus(user?.camp_id)
+  const { data: movements } = useInventoryMovements(user?.camp_id, 8)
 
-  // Calculate camp overview metrics
-  const campMetrics = React.useMemo(() => {
-    return [
-      {
-        icon: Activity,
-        label: 'CAMP VITALITY',
-        value: '78%',
-        color: 'text-success-green',
-      },
-      {
-        icon: ShieldCheck,
-        label: 'SECURITY LEVEL',
-        value: 'B-SECURE',
-        color: 'text-accent-orange',
-      },
-      {
-        icon: Database,
-        label: 'DATA INTEGRITY',
-        value: 'VERIFIED',
-        color: 'text-paper-dark',
-      },
-      {
-        icon: Zap,
-        label: 'POWER STATUS',
-        value: 'LOW GEAR',
-        color: 'text-accent-orange',
-      },
-    ]
+  useEffect(() => {
+    const timer = window.setInterval(() => setTime(formatTime()), 1000)
+    return () => window.clearInterval(timer)
   }, [])
 
+  const criticalProfessions = metrics.filter((m) => m.status === "CRÍTICO").length
+  const deficitProfessions = metrics.filter((m) => m.status === "DÉFICIT").length
+
+  const cards = [
+    {
+      title: "RECURSOS OK",
+      value: stats?.okItems ?? 0,
+      label: "Ítems en niveles normales",
+      pinClass: "wv-pin-green",
+      rotate: -2,
+    },
+    {
+      title: "BAJO MÍNIMO",
+      value: stats?.lowItems ?? 0,
+      label: "Ítems por debajo del umbral",
+      pinClass: "wv-pin-amber",
+      rotate: 1,
+    },
+    {
+      title: "RECURSOS CRÍTICOS",
+      value: stats?.criticalItems ?? 0,
+      label: "Requieren atención inmediata",
+      pinClass: "wv-pin-red",
+      rotate: -1,
+    },
+    {
+      title: "PROFESIONES DÉFICIT",
+      value: criticalProfessions + deficitProfessions,
+      label: `${criticalProfessions} críticas · ${deficitProfessions} en déficit`,
+      pinClass: criticalProfessions > 0 ? "wv-pin-red" : "wv-pin-amber",
+      rotate: 2,
+    },
+  ]
+
   return (
-    <motion.div
-      className="p-8 space-y-8"
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-    >
-      {/* Page Header */}
-      <motion.div variants={itemVariants}>
-        <h2 className="text-4xl uppercase mb-2 drop-shadow-[2px_2px_0px_rgba(154,144,128,0.2)]">
-          CAMP OVERVIEW
+    <div className="wv-cork-board">
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: 12,
+          marginBottom: 32,
+          background: "#161513",
+          padding: "14px 22px",
+          border: "1px solid #000",
+        }}
+      >
+        <h2
+          style={{
+            fontFamily: "var(--font-typewriter)",
+            color: "var(--bg-paper)",
+            fontSize: "1.1rem",
+            letterSpacing: 3,
+            textTransform: "uppercase",
+            margin: 0,
+          }}
+        >
+          TABLERO DEL SECTOR — SECTOR {user?.camp_id ?? "?"}
         </h2>
-        <p className="terminal-text opacity-90">Sector {user?.camp_id} // Strategic Dashboard</p>
-      </motion.div>
+        <span
+          style={{
+            fontFamily: "var(--font-mono)",
+            fontSize: "0.82rem",
+            color: "var(--accent-emergency)",
+            letterSpacing: 1,
+          }}
+        >
+          {time}
+        </span>
+      </div>
 
-      {/* Camp Overview Metrics Grid */}
-      <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {campMetrics.map((item, i) => {
-          const Icon = item.icon
+      <div className="wv-cork-grid">
+        {cards.map((card, i) => (
+          <motion.div
+            key={card.title}
+            className="wv-pinned"
+            style={{ transform: `rotate(${card.rotate}deg)` }}
+            initial={{ scale: 0, rotate: -20, opacity: 0 }}
+            animate={{ scale: 1, rotate: card.rotate, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 120, delay: i * 0.12 }}
+            whileHover={{ scale: 1.05, rotate: 0 }}
+          >
+            <div className={`wv-pin ${card.pinClass}`} />
+            <h3 className="wv-card-title">{card.title}</h3>
+            <div className="wv-big-number">{card.value}</div>
+            <div className="wv-small-label">{card.label}</div>
+          </motion.div>
+        ))}
+      </div>
 
-          return (
-            <motion.div
-              key={i}
-              whileHover={{ scale: 1.05, translateY: -4 }}
-              transition={{ type: 'spring', stiffness: 300 }}
-              className="paper-card p-6 flex flex-col items-center gap-4 text-center cursor-pointer"
-            >
-              <Icon className={`w-8 h-8 ${item.color}`} />
-              <div>
-                <p className="text-[10px] font-mono text-ink-black/40 uppercase mb-1">
-                  {item.label}
-                </p>
-                <p className="text-2xl font-display">{item.value}</p>
-              </div>
-            </motion.div>
-          )
-        })}
-      </motion.div>
-
-      {/* Command Logs & System Notices */}
-      <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Latest Command Logs */}
-        <div className="paper-card p-8">
-          <h3 className="text-xl uppercase font-display border-b border-ink-black pb-2 mb-6">
-            LATEST COMMAND LOGS
-          </h3>
-          <div className="space-y-4 font-mono text-xs">
-            {commandLogs.map((log, i) => (
-              <p key={i} className="text-ink-black/60">
-                <span className="text-ink-black font-bold">[{log.time}]</span> {log.message}
-              </p>
-            ))}
-          </div>
-        </div>
-
-        {/* System Notices */}
-        <div className="dashed-accent p-8 bg-paper-base/30 relative overflow-hidden flex flex-col justify-center">
-          <div className="relative z-10">
-            <h3 className="text-2xl uppercase font-display text-ink-black mb-4">SYSTEM NOTICES</h3>
-            <p className="marker-note text-xl">"Remember: Duty and dedication secure survival."</p>
-            <p className="mt-6 text-sm text-ink-black/70 leading-relaxed font-mono italic">
-              All resource movements must be logged in the system. Unauthorized removal of supplies
-              will result in immediate loss of privileges.
-              {inventoryStats?.criticalItems && inventoryStats.criticalItems > 0 && (
-                <span className="block mt-3 text-accent-orange font-bold">
-                  ALERT: {inventoryStats.criticalItems} critical resource(s) detected.
+      {movements && movements.length > 0 ? (
+        <motion.div
+          className="wv-paper"
+          style={{ marginTop: 32, padding: 24 }}
+          initial={{ y: 40, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.5 }}
+        >
+          <h3 className="wv-section-title">ÚLTIMOS MOVIMIENTOS DE ALMACÉN</h3>
+          <div className="wv-movement-list">
+            {movements.slice(0, 8).map((m, i) => (
+              <div key={m.id ?? i} className="wv-movement-row">
+                <span className="wv-mv-type">
+                  {MOVEMENT_LABELS[m.type] ?? m.type?.toUpperCase() ?? "MOV"}
                 </span>
-              )}
-            </p>
-          </div>
-          <div className="absolute -bottom-10 -right-10 opacity-10 rotate-12">
-            <ShieldCheck className="w-64 h-64 text-ink-black" />
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Assigned Resources Section */}
-      {assignedResources && assignedResources.length > 0 && (
-        <motion.div variants={itemVariants} className="paper-card p-8">
-          <h3 className="text-xl uppercase font-display border-b border-ink-black pb-2 mb-6">
-            ASSIGNED RESOURCES
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {assignedResources.map((resource) => (
-              <motion.div
-                key={resource.id}
-                whileHover={{ scale: 1.02 }}
-                className="border border-ink-black/20 p-4 rounded-sm bg-bunker-bg hover:bg-paper-dark/10 transition-colors"
-              >
-                <div className="flex items-start gap-3">
-                  {resource.image_url && (
-                    <img
-                      src={resource.image_url}
-                      alt={resource.name}
-                      className="w-12 h-12 object-cover rounded border border-ink-black/20"
-                    />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="font-display text-sm uppercase font-bold truncate">
-                      {resource.name}
-                    </p>
-                    <p className="text-xs font-mono text-paper-base/70 uppercase">
-                      {resource.category}
-                    </p>
-                    <p className="text-xs text-paper-base/60 mt-1 italic line-clamp-2">
-                      {resource.description}
-                    </p>
-                    <div className="mt-2 pt-2 border-t border-ink-black/10">
-                      <p className="text-xs font-mono text-ink-black/70">
-                        Qty: <span className="font-bold">{resource.current_quantity}</span>{' '}
-                        {resource.unit}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-      )}
-
-      {/* Professions Summary */}
-      {metrics && metrics.length > 0 && (
-        <motion.div variants={itemVariants} className="paper-card p-8">
-          <h3 className="text-xl uppercase font-display border-b border-ink-black pb-2 mb-6">
-            PROFESSION AVAILABILITY
-          </h3>
-          <div className="space-y-4">
-            {metrics.slice(0, 5).map((prof) => (
-              <div key={prof.id} className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <p className="font-display text-sm uppercase">{prof.name}</p>
-                  <span
-                    className={`text-xs font-mono px-2 py-1 rounded ${
-                      prof.status === 'OK'
-                        ? 'status-ok'
-                        : prof.status === 'CRÍTICO'
-                          ? 'status-alert'
-                          : 'status-warning'
-                    }`}
-                  >
-                    {prof.status}
-                  </span>
-                </div>
-                <div className="status-line">
-                  <div
-                    className="h-full bg-accent-orange transition-all"
-                    style={{ width: `${Math.min(prof.percentage, 100)}%` }}
-                  />
-                </div>
-                <p className="text-xs font-mono text-ink-black/60">
-                  {prof.activePersons} / {prof.minimum} required
-                </p>
+                <span className="wv-mv-resource">
+                  {m.resource?.name ?? `Recurso #${m.resource_id}`}
+                </span>
+                <span className="wv-mv-qty">
+                  {m.quantity} {m.resource?.unit ?? ""}
+                </span>
+                <span className="wv-mv-date">{m.date ? String(m.date).split("T")[0] : "N/D"}</span>
               </div>
             ))}
           </div>
         </motion.div>
-      )}
-    </motion.div>
+      ) : null}
+    </div>
   )
 }

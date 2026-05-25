@@ -242,22 +242,22 @@ export default function CampLeaderLayout() {
   }
 
   return (
-    <div className="campleader-view relative min-h-screen bg-[#161513] text-white flex flex-col overflow-hidden select-none">
+    <div className="campleader-view relative min-h-screen bg-[#161513] text-white flex flex-col overflow-x-hidden select-none">
       {/* CRT SCANLINES SCREEN STYLES */}
       <div className="crt-overlay" />
 
       {/* CORE FRAMEWORK GRID STRUCTURE */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1">
         {/* LEFT TAB DIRECTORIES BAR */}
         <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
         {/* RIGHT MAIN CONTAINER */}
-        <div className="flex-1 flex flex-col overflow-y-auto max-h-screen relative bg-[#161513]">
+        <div className="flex-1 min-w-0 flex flex-col overflow-y-auto max-h-screen relative bg-[#161513]">
           {/* HEADER SECTOR CHANNELS */}
           <Topbar survivalScore={statistics.survival_score} />
 
           {/* COMPONENT VIEWS PORTAL */}
-          <main className="flex-1 relative">
+          <main className="relative">
             <AnimatePresence mode="wait">
               {loading ? (
                 <div

@@ -17,18 +17,18 @@ export default function Login() {
   // MotionValues bypass React state — zero re-renders on mouse move
   const mouseX = useMotionValue(0)
   const mouseY = useMotionValue(0)
-  const bgX2 = useTransform(mouseX, v => v * -2)
-  const bgY2 = useTransform(mouseY, v => v * -2)
-  const bgX4 = useTransform(mouseX, v => v * -4)
-  const bgY4 = useTransform(mouseY, v => v * -4)
-  const bgX5 = useTransform(mouseX, v => v * -5)
-  const bgY5 = useTransform(mouseY, v => v * -5)
-  const bgX6 = useTransform(mouseX, v => v * -6)
-  const bgY6 = useTransform(mouseY, v => v * -6)
-  const bgX8 = useTransform(mouseX, v => v * -8)
-  const bgY8 = useTransform(mouseY, v => v * -8)
-  const bgX20 = useTransform(mouseX, v => v * -20)
-  const bgY20 = useTransform(mouseY, v => v * -20)
+  const bgX2 = useTransform(mouseX, (v) => v * -2)
+  const bgY2 = useTransform(mouseY, (v) => v * -2)
+  const bgX4 = useTransform(mouseX, (v) => v * -4)
+  const bgY4 = useTransform(mouseY, (v) => v * -4)
+  const bgX5 = useTransform(mouseX, (v) => v * -5)
+  const bgY5 = useTransform(mouseY, (v) => v * -5)
+  const bgX6 = useTransform(mouseX, (v) => v * -6)
+  const bgY6 = useTransform(mouseY, (v) => v * -6)
+  const bgX8 = useTransform(mouseX, (v) => v * -8)
+  const bgY8 = useTransform(mouseY, (v) => v * -8)
+  const bgX20 = useTransform(mouseX, (v) => v * -20)
+  const bgY20 = useTransform(mouseY, (v) => v * -20)
 
   const finalizeLogin = (role?: string) => {
     const normalizedRole = role?.toLowerCase()
@@ -39,10 +39,13 @@ export default function Login() {
           ? "/worker"
           : normalizedRole === "camp_leader"
             ? "/campleader"
-            : null
+            : normalizedRole === "camp_manager" || normalizedRole === "resource_manager"
+              ? "/camp-manager"
+              : normalizedRole === "travel_manager"
+                ? "/travel-manager"
+                : null
 
-    // Roles without a routed module (e.g. resource_manager, travel_manager) would
-    // bounce off RequireAdmin in an infinite loop, so flag them as denied here.
+    // Roles without a routed module would bounce off, so flag them as denied here.
     if (!destination) {
       useAuthStore.getState().logout()
       setLoginStatus("denied")
@@ -97,8 +100,6 @@ export default function Login() {
     }
   }, [mouseX, mouseY])
 
-
-
   return (
     <div className="industrial-login-page fixed inset-0 overflow-hidden bg-[#020202] font-sans selection:bg-[#4ade80] selection:text-black">
       {/* SVG filters removed — they are very expensive on GPU */}
@@ -132,7 +133,8 @@ export default function Login() {
           style={{
             x: bgX2,
             y: bgY2,
-            backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 1000 200' preserveAspectRatio='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0,200 L0,120 L40,130 L60,90 L90,140 L130,110 L160,150 L200,80 L230,120 L270,100 L310,160 L360,70 L390,130 L450,110 L480,180 L520,130 L560,150 L600,90 L650,160 L700,80 L750,140 L800,100 L870,170 L920,80 L1000,150 L1000,200 Z' fill='%231a1510'/%3E%3C/svg%3E\")",
+            backgroundImage:
+              "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 1000 200' preserveAspectRatio='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0,200 L0,120 L40,130 L60,90 L90,140 L130,110 L160,150 L200,80 L230,120 L270,100 L310,160 L360,70 L390,130 L450,110 L480,180 L520,130 L560,150 L600,90 L650,160 L700,80 L750,140 L800,100 L870,170 L920,80 L1000,150 L1000,200 Z' fill='%231a1510'/%3E%3C/svg%3E\")",
             backgroundSize: "100% 100%",
             backgroundRepeat: "no-repeat",
             willChange: "transform",
@@ -145,7 +147,8 @@ export default function Login() {
           style={{
             x: bgX4,
             y: bgY4,
-            backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 1000 200' preserveAspectRatio='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0,200 L0,150 L50,120 L120,160 L180,90 L200,120 L250,100 L280,140 L320,80 L350,150 L400,160 L440,110 L480,100 L550,150 L620,110 L680,140 L700,180 L740,150 L780,120 L820,140 L850,160 L890,110 L920,80 L960,130 L1000,150 L1000,200 Z' fill='%2305080e'/%3E%3C/svg%3E\")",
+            backgroundImage:
+              "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 1000 200' preserveAspectRatio='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0,200 L0,150 L50,120 L120,160 L180,90 L200,120 L250,100 L280,140 L320,80 L350,150 L400,160 L440,110 L480,100 L550,150 L620,110 L680,140 L700,180 L740,150 L780,120 L820,140 L850,160 L890,110 L920,80 L960,130 L1000,150 L1000,200 Z' fill='%2305080e'/%3E%3C/svg%3E\")",
             backgroundSize: "100% 100%",
             backgroundRepeat: "no-repeat",
             willChange: "transform",
@@ -208,7 +211,8 @@ export default function Login() {
           style={{
             x: bgX8,
             y: bgY8,
-            backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 1000 200' preserveAspectRatio='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0,200 L0,180 Q10,140 20,190 T40,160 T60,200 T80,150 T100,190 T120,140 T140,180 T160,130 T180,170 T200,120 T220,180 T240,140 T260,190 T280,130 T300,180 T320,120 T340,170 T360,110 T380,160 T400,130 T420,180 T440,140 T460,190 T480,150 T500,180 T520,120 T540,170 T560,130 T580,180 T600,140 T620,190 T640,150 T660,200 T680,140 T700,190 T720,150 T740,200 T760,160 T780,190 L1000,190 L1000,200 Z' fill='%23050403'/%3E%3C/svg%3E\")",
+            backgroundImage:
+              "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 1000 200' preserveAspectRatio='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0,200 L0,180 Q10,140 20,190 T40,160 T60,200 T80,150 T100,190 T120,140 T140,180 T160,130 T180,170 T200,120 T220,180 T240,140 T260,190 T280,130 T300,180 T320,120 T340,170 T360,110 T380,160 T400,130 T420,180 T440,140 T460,190 T480,150 T500,180 T520,120 T540,170 T560,130 T580,180 T600,140 T620,190 T640,150 T660,200 T680,140 T700,190 T720,150 T740,200 T760,160 T780,190 L1000,190 L1000,200 Z' fill='%23050403'/%3E%3C/svg%3E\")",
             backgroundSize: "30% 100%",
             backgroundRepeat: "repeat-x",
             willChange: "transform",
@@ -278,7 +282,8 @@ export default function Login() {
             <div
               className="absolute bottom-[20%] w-[80%] h-[50px] opacity-70 mx-10 rotate-[-5deg] z-10"
               style={{
-                backgroundImage: "repeating-linear-gradient(45deg, #111, #111 20px, #b45309 20px, #b45309 40px)",
+                backgroundImage:
+                  "repeating-linear-gradient(45deg, #111, #111 20px, #b45309 20px, #b45309 40px)",
               }}
             />
           </motion.div>
@@ -335,7 +340,8 @@ export default function Login() {
             <div
               className="absolute bottom-[10%] w-[80%] h-[50px] opacity-70 ml-10 rotate-[5deg] z-10"
               style={{
-                backgroundImage: "repeating-linear-gradient(45deg, #111, #111 20px, #b45309 20px, #b45309 40px)",
+                backgroundImage:
+                  "repeating-linear-gradient(45deg, #111, #111 20px, #b45309 20px, #b45309 40px)",
               }}
             />
           </motion.div>
@@ -397,7 +403,10 @@ export default function Login() {
         {/* Cinematic Spotlight — static center, no mouse tracking (perf) */}
         <div
           className="absolute inset-0 z-30 pointer-events-none mix-blend-screen opacity-50"
-          style={{ background: "radial-gradient(circle at 50% 50%, rgba(220,240,255,0.12) 0%, rgba(200,220,255,0.04) 40%, rgba(0,0,0,0) 70%)" }}
+          style={{
+            background:
+              "radial-gradient(circle at 50% 50%, rgba(220,240,255,0.12) 0%, rgba(200,220,255,0.04) 40%, rgba(0,0,0,0) 70%)",
+          }}
         />
       </div>
 

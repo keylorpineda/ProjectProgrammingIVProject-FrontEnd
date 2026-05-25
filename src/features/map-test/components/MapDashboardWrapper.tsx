@@ -27,7 +27,9 @@ const TacticalMapStateGate = () => {
     return (
       <div className="h-full w-full flex items-center justify-center bg-[var(--bg-deep)] px-6">
         <div className="paper-panel p-8 max-w-xl text-center space-y-4">
-          <h2 className="text-xl font-typewriter font-bold uppercase text-[var(--ink)]">FALLO DE ENLACE</h2>
+          <h2 className="text-xl font-typewriter font-bold uppercase text-[var(--ink)]">
+            FALLO DE ENLACE
+          </h2>
           <p className="font-mono text-sm text-[var(--ink-soft)] uppercase">{error}</p>
           <button
             onClick={() => {

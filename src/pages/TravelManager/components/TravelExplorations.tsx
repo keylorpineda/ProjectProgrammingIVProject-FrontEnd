@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useMemo } from "react"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { motion, AnimatePresence } from "framer-motion"
 import {
   Plus,
   Compass,
@@ -21,34 +21,34 @@ import {
   Footprints,
   Loader2,
   ChevronRight,
-} from 'lucide-react'
-import { useAuth } from '@/pages/Admin/context/AuthContext'
+} from "lucide-react"
+import { useAuth } from "@/pages/Admin/context/AuthContext"
 import {
   getExplorations,
   createExploration,
   departExploration,
   returnExploration,
   cancelExploration,
-} from '@/features/explorations/services/explorations.service'
-import { getPersons } from '@/features/persons/services/persons.service'
-import { getInventory } from '@/features/inventory/services/inventory.service'
-import type { Exploration, Person, InventoryItem } from '@/types/api.types'
-import type { ReturnExplorationFormData } from '@/types/travel-comms.types'
+} from "@/features/explorations/services/explorations.service"
+import { getPersons } from "@/features/persons/services/persons.service"
+import { getInventory } from "@/features/inventory/services/inventory.service"
+import type { Exploration, Person, InventoryItem } from "@/types/api.types"
+import type { ReturnExplorationFormData } from "@/types/travel-comms.types"
 
 // ── Status helpers ──────────────────────────────────────────────────────────
 
 function getStatusLabel(status: string): string {
   switch (status) {
-    case 'active':
-    case 'in_progress':
-      return 'En curso'
-    case 'scheduled':
-      return 'Programada'
-    case 'returned':
-    case 'completed':
-      return 'Retornada'
-    case 'cancelled':
-      return 'Cancelada'
+    case "active":
+    case "in_progress":
+      return "En curso"
+    case "scheduled":
+      return "Programada"
+    case "returned":
+    case "completed":
+      return "Retornada"
+    case "cancelled":
+      return "Cancelada"
     default:
       return status
   }
@@ -56,15 +56,15 @@ function getStatusLabel(status: string): string {
 
 function getStatusColorClass(status: string): string {
   switch (status) {
-    case 'active':
-    case 'in_progress':
-      return 'text-accent-approved'
-    case 'scheduled':
-      return 'text-accent-warning'
-    case 'cancelled':
-      return 'text-accent-critical'
+    case "active":
+    case "in_progress":
+      return "text-accent-approved"
+    case "scheduled":
+      return "text-[#c27c2f]"
+    case "cancelled":
+      return "text-accent-critical"
     default:
-      return 'text-paper-dark/40'
+      return "text-paper-dark/40"
   }
 }
 
@@ -72,7 +72,7 @@ function getStatusColorClass(status: string): string {
 
 interface TimelineStep {
   label: string
-  status: 'completed' | 'current' | 'pending'
+  status: "completed" | "current" | "pending"
   Icon: React.FC<{ className?: string }>
 }
 
@@ -81,22 +81,22 @@ interface TimelineStep {
 export default function TravelExplorations() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
-  const baseCampId = user?.camp_id ?? '';
+  const baseCampId = user?.camp_id ?? ""
 
   // ── Local UI state ───────────────────────────────────────────────────────
-  const [search, setSearch] = useState('')
-  const [filterStatus, setFilterStatus] = useState('')
+  const [search, setSearch] = useState("")
+  const [filterStatus, setFilterStatus] = useState("")
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [isDetailOpen, setIsDetailOpen] = useState(false)
   const [isNewModalOpen, setIsNewModalOpen] = useState(false)
   const [isReturnModalOpen, setIsReturnModalOpen] = useState(false)
-  const [formError, setFormError] = useState('')
+  const [formError, setFormError] = useState("")
 
   // New exploration form state
-  const [newName, setNewName] = useState('')
-  const [newDestination, setNewDestination] = useState('')
+  const [newName, setNewName] = useState("")
+  const [newDestination, setNewDestination] = useState("")
   const [newDepartureDate, setNewDepartureDate] = useState(
-    new Date().toISOString().substring(0, 16)
+    new Date().toISOString().substring(0, 16),
   )
   const [newEstimatedDays, setNewEstimatedDays] = useState(3)
   const [newGraceDays, setNewGraceDays] = useState(0)
@@ -109,28 +109,24 @@ export default function TravelExplorations() {
 
   // Return form state
   const [returnDate, setReturnDate] = useState(new Date().toISOString().substring(0, 10))
-  const [returnNotes, setReturnNotes] = useState('')
+  const [returnNotes, setReturnNotes] = useState("")
 
   // ── React Query ──────────────────────────────────────────────────────────
-  const {
-    data: explorations = [],
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ['explorations', baseCampId],
+  const { data: explorations = [], error } = useQuery({
+    queryKey: ["explorations", baseCampId],
     queryFn: () => getExplorations({ campId: baseCampId }),
     enabled: !!baseCampId,
   })
 
   const { data: personsData } = useQuery({
-    queryKey: ['persons', baseCampId],
+    queryKey: ["persons", baseCampId],
     queryFn: () => getPersons({ campId: baseCampId }),
     enabled: !!baseCampId && isNewModalOpen,
   })
   const persons: Person[] = personsData?.data ?? []
 
   const { data: inventory = [] } = useQuery<InventoryItem[]>({
-    queryKey: ['inventory', baseCampId],
+    queryKey: ["inventory", baseCampId],
     queryFn: () => getInventory(baseCampId),
     enabled: !!baseCampId && isNewModalOpen,
   })
@@ -138,40 +134,44 @@ export default function TravelExplorations() {
   const createMutation = useMutation({
     mutationFn: createExploration,
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['explorations', baseCampId] })
+      void queryClient.invalidateQueries({ queryKey: ["explorations", baseCampId] })
       resetNewForm()
       setIsNewModalOpen(false)
     },
-    onError: () => setFormError('Error al crear la expedición. Intente nuevamente.'),
+    onError: () => setFormError("Error al crear la expedición. Intente nuevamente."),
   })
 
   const departMutation = useMutation({
     mutationFn: (id: string) => departExploration(id),
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['explorations', baseCampId] }),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["explorations", baseCampId] }),
   })
 
   const returnMutation = useMutation({
     mutationFn: ({ id, body }: { id: string; body: ReturnExplorationFormData }) =>
       returnExploration(id, { real_return_date: body.real_return_date, notes: body.notes }),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['explorations', baseCampId] })
+      void queryClient.invalidateQueries({ queryKey: ["explorations", baseCampId] })
       setIsReturnModalOpen(false)
     },
   })
 
   const cancelMutation = useMutation({
     mutationFn: (id: string) => cancelExploration(id),
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['explorations', baseCampId] }),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["explorations", baseCampId] }),
   })
 
   // ── Derived state ────────────────────────────────────────────────────────
   const filteredExplorations = useMemo(() => {
     return explorations.filter((exp) => {
-      const q = search.toLowerCase();
+      const q = search.toLowerCase()
       const matchesSearch =
-        exp.name.toLowerCase().includes(q) ||
-        (exp.destination_description || '').toLowerCase().includes(q);
-      const matchesStatus = filterStatus === '' || exp.status === filterStatus
+        String(exp.name || "")
+          .toLowerCase()
+          .includes(q) ||
+        String(exp.destination_description || "")
+          .toLowerCase()
+          .includes(q)
+      const matchesStatus = filterStatus === "" || exp.status === filterStatus
       return matchesSearch && matchesStatus
     })
   }, [explorations, search, filterStatus])
@@ -187,51 +187,51 @@ export default function TravelExplorations() {
   const stats = useMemo(
     () => [
       {
-        id: 'scheduled',
-        label: 'Programadas',
-        count: filteredExplorations.filter((e) => e.status === 'scheduled').length,
+        id: "scheduled",
+        label: "Programadas",
+        count: filteredExplorations.filter((e) => e.status === "scheduled").length,
       },
       {
-        id: 'in_progress',
-        label: 'En Curso',
+        id: "in_progress",
+        label: "En Curso",
         count: filteredExplorations.filter(
-          (e) => e.status === 'active' || e.status === 'in_progress'
+          (e) => e.status === "active" || e.status === "in_progress",
         ).length,
       },
       {
-        id: 'completed',
-        label: 'Historial',
-        count: filteredExplorations.filter((e) => e.status === 'completed').length,
+        id: "completed",
+        label: "Historial",
+        count: filteredExplorations.filter((e) => e.status === "completed").length,
       },
     ],
-    [filteredExplorations]
+    [filteredExplorations],
   )
 
   const timelineSteps = useMemo<TimelineStep[]>(() => {
     if (!selectedExp) return []
     return [
-      { label: 'PLANIFICADA', status: 'completed', Icon: FileText },
+      { label: "PLANIFICADA", status: "completed", Icon: FileText },
       {
-        label: 'SALIDA',
+        label: "SALIDA",
         status:
-          selectedExp.status !== 'scheduled' && selectedExp.status !== 'cancelled'
-            ? 'completed'
-            : 'pending',
+          selectedExp.status !== "scheduled" && selectedExp.status !== "cancelled"
+            ? "completed"
+            : "pending",
         Icon: Zap,
       },
       {
-        label: 'EN CURSO',
+        label: "EN CURSO",
         status:
-          selectedExp.status === 'active' || selectedExp.status === 'in_progress'
-            ? 'current'
-            : selectedExp.status === 'completed'
-              ? 'completed'
-              : 'pending',
+          selectedExp.status === "active" || selectedExp.status === "in_progress"
+            ? "current"
+            : selectedExp.status === "completed"
+              ? "completed"
+              : "pending",
         Icon: Flag,
       },
       {
-        label: 'RETORNO',
-        status: selectedExp.status === 'completed' ? 'completed' : 'pending',
+        label: "RETORNO",
+        status: selectedExp.status === "completed" ? "completed" : "pending",
         Icon: Check,
       },
     ]
@@ -239,33 +239,33 @@ export default function TravelExplorations() {
 
   // ── Handlers ─────────────────────────────────────────────────────────────
   function resetNewForm() {
-    setNewName('')
-    setNewDestination('')
+    setNewName("")
+    setNewDestination("")
     setNewEstimatedDays(3)
     setNewGraceDays(0)
     setNewSelectedPersons([])
     setNewSelectedResources([])
-    setFormError('')
+    setFormError("")
   }
 
   function handleCreateExploration(e: React.FormEvent) {
     e.preventDefault()
-    setFormError('')
+    setFormError("")
 
     if (!newName.trim()) {
-      setFormError('Escriba un nombre para la expedición.')
+      setFormError("Escriba un nombre para la expedición.")
       return
     }
     if (!newDestination.trim()) {
-      setFormError('Describa el destino exterior.')
+      setFormError("Describa el destino exterior.")
       return
     }
     if (newSelectedPersons.length === 0) {
-      setFormError('Incluya al menos un (1) miembro de equipo.')
+      setFormError("Incluya al menos un (1) miembro de equipo.")
       return
     }
     if (!newSelectedPersons.some((p) => p.is_leader)) {
-      setFormError('Asigne un líder a la expedición.')
+      setFormError("Asigne un líder a la expedición.")
       return
     }
 
@@ -277,7 +277,7 @@ export default function TravelExplorations() {
       estimated_days: newEstimatedDays,
       grace_days: newGraceDays,
       persons: newSelectedPersons,
-      resources: newSelectedResources.map(r => ({ ...r, flow: 'out' as const })),
+      resources: newSelectedResources.map((r) => ({ ...r, flow: "out" as const })),
     })
   }
 
@@ -286,7 +286,7 @@ export default function TravelExplorations() {
   }
 
   function handleCancelExploration(id: string) {
-    if (window.confirm('¿Confirmar la cancelación de esta expedición?')) {
+    if (window.confirm("¿Confirmar la cancelación de esta expedición?")) {
       cancelMutation.mutate(id)
     }
   }
@@ -315,7 +315,7 @@ export default function TravelExplorations() {
 
   function handleSetLeader(personId: string) {
     setNewSelectedPersons(
-      newSelectedPersons.map((p) => ({ ...p, is_leader: p.person_id === personId }))
+      newSelectedPersons.map((p) => ({ ...p, is_leader: p.person_id === personId })),
     )
   }
 
@@ -331,73 +331,67 @@ export default function TravelExplorations() {
   function handleResourceQuantityChange(resourceId: string, qty: number) {
     setNewSelectedResources(
       newSelectedResources.map((r) =>
-        r.resource_id === resourceId ? { ...r, quantity: Math.max(1, qty) } : r
-      )
+        r.resource_id === resourceId ? { ...r, quantity: Math.max(1, qty) } : r,
+      ),
     )
   }
 
   // ── Loading / Error guards ────────────────────────────────────────────────
-  if (isLoading) {
-    return (
-      <div className="travelmanager-page-content flex-1 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-accent-warning" />
-        <span className="ml-3 font-mono text-xs uppercase text-paper-dark">
-          Cargando expediciones...
-        </span>
-      </div>
-    )
-  }
+  // El loader bloqueante ha sido desactivado para que la UI cargue inmediatamente
+  // if (isLoading) {
+  //   return (
+  //     <div className="travelmanager-page-content flex-1 flex items-center justify-center">
+  //       <Loader2 className="h-8 w-8 animate-spin text-[#c27c2f]" />
+  //       <span className="ml-3 font-mono text-sm uppercase text-paper-dark">
+  //         Cargando expediciones...
+  //       </span>
+  //     </div>
+  //   )
+  // }
 
-  if (error) {
-    return (
-      <div className="travelmanager-page-content">
-        <div className="warning-card p-4 font-mono text-xs text-accent-critical uppercase">
-          Error al cargar expediciones. Verifique la conexión con el servidor.
-        </div>
-      </div>
-    )
-  }
+  // if (error) {
+  //   return (
+  //     <div className="travelmanager-page-content">
+  //       <div className="warning-card p-4 font-mono text-sm text-accent-critical uppercase">
+  //         Error al cargar expediciones. Verifique la conexión con el servidor.
+  //       </div>
+  //     </div>
+  //   )
+  // }
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="h-full flex flex-col gap-3 overflow-hidden bg-bunker-bg">
       {/* ── Vista Header ── */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-industrial-metal p-4 border-l-4 border-l-accent-warning shrink-0 shadow-lg relative overflow-hidden">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-industrial-metal py-4 pl-4 pr-8 md:pr-16 border-l-4 border-l-accent-warning shrink-0 shadow-lg relative overflow-hidden">
         <div className="flex items-center gap-4 relative z-10">
-          <div className="bg-accent-warning/10 p-2 border border-accent-warning/30">
-            <Compass className="h-6 w-6 text-accent-warning" />
+          <div className="bg-[#c27c2f]/10 p-2 border border-[#c27c2f]/30">
+            <Compass className="h-6 w-6 text-[#c27c2f]" />
           </div>
           <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="px-1.5 py-0.5 bg-bg-paper text-ink-soft text-[7px] font-mono font-black uppercase rotate-1 shadow-sm border border-bg-paper-shadow/30">
-                Nivel_Acceso_01
-              </span>
-              <span className="text-[7px] font-mono text-accent-warning/40 uppercase tracking-widest font-black">
-                SCTR_EXPLORA
-              </span>
-            </div>
-            <h2 className="text-xl font-typewriter font-black text-white uppercase tracking-tight leading-none flex items-center gap-2">
-              <span className="text-accent-warning/40">/</span> OPERACIONES DE CAMPO
+            <h2 className="text-2xl font-typewriter font-black text-white uppercase tracking-tight leading-none">
+              OPERACIONES DE CAMPO
             </h2>
-            <p className="font-mono text-[9px] text-accent-warning font-black uppercase tracking-[0.2em] mt-1 opacity-80">
+            <p className="font-mono text-xs text-[#c27c2f] font-black uppercase tracking-[0.2em] mt-2 opacity-80">
               Protocolo de Archivo: {baseCampId.toUpperCase()}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-6 mt-4 md:mt-0 relative z-10">
-          <div className="flex gap-4 border-r border-white/10 pr-6">
+        <div className="flex flex-wrap items-center gap-4 md:gap-6 mt-4 md:mt-0 relative z-10 w-full md:w-auto">
+          <div className="flex flex-wrap gap-2 md:gap-4 border-r border-white/10 pr-4 md:pr-6">
             {stats.map((s) => (
               <button
                 key={s.id}
-                onClick={() => setFilterStatus(filterStatus === s.id ? '' : s.id)}
-                className={`flex flex-col items-center transition-all px-2 py-1 border border-transparent ${filterStatus === s.id
-                    ? 'bg-accent-warning/10 border-accent-warning/20 shadow-inner'
-                    : 'hover:bg-white/5'
-                  }`}
+                onClick={() => setFilterStatus(filterStatus === s.id ? "" : s.id)}
+                className={`flex flex-col items-center transition-all px-2 md:px-4 py-2 border border-transparent ${
+                  filterStatus === s.id
+                    ? "bg-[#c27c2f]/10 border-[#c27c2f]/20 shadow-inner"
+                    : "hover:bg-[#d4a373]/20"
+                }`}
               >
-                <span className="text-lg font-mono font-black text-accent-warning">{s.count}</span>
-                <span className="text-[8px] font-mono font-bold uppercase tracking-tighter text-white/40">
+                <span className="text-base md:text-lg font-mono font-black text-[#c27c2f]">{s.count}</span>
+                <span className="text-xs md:text-sm font-mono font-bold uppercase tracking-tighter text-white/40">
                   {s.label}
                 </span>
               </button>
@@ -405,12 +399,23 @@ export default function TravelExplorations() {
           </div>
           <button
             onClick={() => setIsNewModalOpen(true)}
-            className="bg-accent-warning text-ink-black px-6 py-2.5 text-[11px] font-mono font-black uppercase hover:bg-white transition-all shadow-lg active:scale-95 flex items-center gap-2 border-b-2 border-r-2 border-black/20"
+            className="text-white px-4 md:px-6 py-2.5 text-xs md:text-sm font-mono font-black uppercase hover:brightness-110 hover:shadow-xl transition-all shadow-lg active:scale-95 flex items-center gap-2 border-b-2 border-r-2 border-black/20 whitespace-nowrap"
+            style={{ backgroundColor: "#c27c2f" }}
           >
             <Plus className="h-3.5 w-3.5" /> NUEVA EXPLORACIÓN
           </button>
         </div>
       </div>
+
+      {error && (
+        <div className="mx-4 mt-2 bg-red-950/40 border border-red-500/50 p-3 font-mono text-sm text-red-400 uppercase flex items-center gap-2 shadow-lg">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>
+            Error de conexión con la central. Modo fuera de línea activo. No se pudieron cargar los
+            datos recientes.
+          </span>
+        </div>
+      )}
 
       <div className="flex-1 flex flex-col gap-3 overflow-hidden px-4 pb-4">
         {/* ── Filtros ── */}
@@ -420,15 +425,15 @@ export default function TravelExplorations() {
             <input
               type="text"
               placeholder="Buscar ruta o destino..."
-              className="vintage-input w-full pl-9 text-[10px]"
+              className="vintage-input w-full pl-9 text-sm"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <div className="flex items-center gap-2 bg-black/40 border border-accent-warning/10 px-3 py-1">
-            <span className="text-[8px] font-mono text-white/30 uppercase font-black">Estado:</span>
+          <div className="flex items-center gap-2 bg-black/40 border border-[#c27c2f]/10 px-4 py-2.5">
+            <span className="text-sm font-mono text-white/30 uppercase font-black">Estado:</span>
             <select
-              className="bg-transparent text-[9px] font-mono text-accent-warning font-black focus:outline-none uppercase"
+              className="bg-transparent text-xs font-mono text-[#c27c2f] font-black focus:outline-none uppercase"
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
             >
@@ -446,8 +451,8 @@ export default function TravelExplorations() {
         <div className="flex-1 flex gap-4 overflow-hidden">
           {/* LEFT: Lista fichero */}
           <div className="w-[280px] flex flex-col gap-2 shrink-0 overflow-hidden bg-industrial-metal p-3 border-l-2 border-l-accent-warning/40">
-            <div className="flex items-center justify-between px-1 mb-1 border-b border-accent-warning/10 pb-2">
-              <span className="text-[9px] font-mono font-black text-accent-warning uppercase tracking-widest">
+            <div className="flex items-center justify-between px-1 mb-1 border-b border-[#c27c2f]/10 pb-2">
+              <span className="text-xs font-mono font-black text-[#c27c2f] uppercase tracking-widest">
                 Fichero Operativo
                 {filteredExplorations.length} REG
               </span>
@@ -460,77 +465,91 @@ export default function TravelExplorations() {
                     key={exp.id}
                     whileHover={{ x: 2 }}
                     onClick={() => setSelectedId(exp.id)}
-                    className={`w-full text-left p-3 relative transition-all border border-accent-warning/10 ${selectedExp?.id === exp.id
-                        ? 'bg-bg-paper shadow-xl scale-[1.02] z-10'
-                        : 'bg-accent-warning/5 hover:bg-accent-warning/10 opacity-70 hover:opacity-100'
-                      }`}
+                    className={`w-full text-left p-3 relative transition-all border border-[#c27c2f]/10 ${
+                      selectedExp?.id === exp.id
+                        ? "bg-bg-paper shadow-xl scale-[1.02] z-10"
+                        : "bg-[#c27c2f]/5 hover:bg-[#c27c2f]/10 opacity-70 hover:opacity-100"
+                    }`}
                   >
                     <div
-                      className={`absolute top-2 right-3 font-mono text-[7px] font-black tracking-tighter ${selectedExp?.id === exp.id ? 'text-ink-soft/50' : 'text-accent-warning/30'
-                        }`}
+                      className={`absolute top-2 right-3 font-mono text-sm font-black tracking-tighter ${
+                        selectedExp?.id === exp.id ? "text-ink-soft/50" : "text-[#c27c2f]/30"
+                      }`}
                     >
                       REF-{exp.id.slice(0, 4).toUpperCase()}
                     </div>
                     <h5
-                      className={`text-[12px] font-typewriter font-black uppercase leading-tight mb-1 ${selectedExp?.id === exp.id ? 'text-ink' : 'text-accent-warning'
-                        }`}
+                      className={`text-[12px] font-typewriter font-black uppercase leading-tight mb-1 ${
+                        selectedExp?.id === exp.id ? "text-ink" : "text-[#c27c2f]"
+                      }`}
                     >
                       {exp.name}
                     </h5>
                     <p
-                      className={`text-[8px] font-mono uppercase tracking-tighter font-bold ${selectedExp?.id === exp.id ? 'text-ink/80' : 'text-white/40'
-                        }`}
+                      className={`text-sm font-mono uppercase tracking-tighter font-bold ${
+                        selectedExp?.id === exp.id ? "text-ink/80" : "text-white/40"
+                      }`}
                     >
                       Destino: {exp.destination_description}
                     </p>
                     <div className="flex justify-between items-center mt-2">
                       <div className="flex -space-x-2">
                         {exp.explorationPersons.slice(0, 3).map((ep, i) => (
-                          <div key={i} className="w-6 h-6 rounded-full border border-[#1a1a1a] bg-[#43523d] flex items-center justify-center shadow-md z-10" title={ep.person?.first_name || 'Explorador'}>
-                            <span className="text-[8px] font-bold text-white uppercase">{(ep.person?.first_name || 'X').substring(0, 2)}</span>
+                          <div
+                            key={i}
+                            className="w-6 h-6 rounded-full border border-[#1a1a1a] bg-[#43523d] flex items-center justify-center shadow-md z-10"
+                            title={ep.person?.first_name || "Explorador"}
+                          >
+                            <span className="text-sm font-bold text-white uppercase">
+                              {(ep.person?.first_name || "X").substring(0, 2)}
+                            </span>
                           </div>
                         ))}
                         {exp.explorationPersons.length > 3 && (
                           <div className="w-6 h-6 rounded-full border border-[#1a1a1a] bg-black/40 flex items-center justify-center shadow-md z-0">
-                            <span className="text-[7px] font-bold text-white uppercase">+{exp.explorationPersons.length - 3}</span>
+                            <span className="text-sm font-bold text-white uppercase">
+                              +{exp.explorationPersons.length - 3}
+                            </span>
                           </div>
                         )}
                       </div>
                       <div className="flex items-center gap-1.5">
                         <div
-                          className={`h-2 w-2 rounded-full border border-black/10 ${exp.status === 'active' || exp.status === 'in_progress'
-                              ? 'bg-accent-approved animate-pulse'
-                              : exp.status === 'scheduled'
-                                ? 'bg-accent-warning'
-                                : exp.status === 'cancelled'
-                                  ? 'bg-accent-critical'
-                                  : 'bg-black/20'
-                            }`}
+                          className={`h-2 w-2 rounded-full border border-black/10 ${
+                            exp.status === "active" || exp.status === "in_progress"
+                              ? "bg-accent-approved animate-pulse"
+                              : exp.status === "scheduled"
+                                ? "bg-[#c27c2f]"
+                                : exp.status === "cancelled"
+                                  ? "bg-accent-critical"
+                                  : "bg-black/20"
+                          }`}
                         />
                         <span
-                          className={`text-[8px] font-mono font-black uppercase tracking-widest ${selectedExp?.id === exp.id
+                          className={`text-sm font-mono font-black uppercase tracking-widest ${
+                            selectedExp?.id === exp.id
                               ? getStatusColorClass(exp.status)
-                              : 'text-white/20'
-                            }`}
+                              : "text-white/20"
+                          }`}
                         >
                           {getStatusLabel(exp.status)}
                         </span>
                       </div>
                     </div>
                     {selectedExp?.id === exp.id && (
-                      <div className="absolute top-0 bottom-0 left-0 w-1 bg-accent-warning" />
+                      <div className="absolute top-0 bottom-0 left-0 w-1 bg-[#c27c2f]" />
                     )}
                   </motion.button>
                 ))
               ) : (
                 <div className="flex flex-col items-center justify-center py-20 text-center">
-                  <Archive className="h-10 w-10 text-accent-warning/10 mb-4" />
-                  <p className="text-[10px] font-mono text-white/30 uppercase leading-relaxed font-black mb-3">
+                  <Archive className="h-10 w-10 text-[#c27c2f]/10 mb-4" />
+                  <p className="text-sm font-mono text-white/30 uppercase leading-relaxed font-black mb-3">
                     Sin expediciones para esta consulta
                   </p>
                   <button
                     onClick={() => setIsNewModalOpen(true)}
-                    className="px-4 py-2 border border-accent-warning/30 text-xs font-mono font-bold text-accent-warning hover:bg-accent-warning/10 transition-colors uppercase"
+                    className="px-4 py-2 border border-[#c27c2f]/30 text-sm font-mono font-bold text-[#c27c2f] hover:bg-[#c27c2f]/10 transition-colors uppercase"
                   >
                     Nueva exploración
                   </button>
@@ -540,17 +559,17 @@ export default function TravelExplorations() {
           </div>
 
           {/* CENTER: Mapa / Detalle */}
-          <div className="flex-1 flex flex-col overflow-hidden bg-industrial-metal border border-accent-warning/10">
+          <div className="flex-1 flex flex-col overflow-hidden bg-industrial-metal border border-[#c27c2f]/10">
             {selectedExp ? (
               <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Panel header */}
-                <div className="p-4 border-b border-accent-warning/10 flex justify-between items-center bg-black/20 shrink-0">
+                <div className="p-4 border-b border-[#c27c2f]/10 flex justify-between items-center bg-black/20 shrink-0">
                   <div className="flex items-center gap-3">
-                    <div className="bg-accent-warning/10 p-2">
-                      <MapPin className="h-4 w-4 text-accent-warning" />
+                    <div className="bg-[#c27c2f]/10 p-2">
+                      <MapPin className="h-4 w-4 text-[#c27c2f]" />
                     </div>
                     <div>
-                      <span className="text-[8px] font-mono font-black text-accent-warning uppercase tracking-[0.3em] block mb-0.5">
+                      <span className="text-sm font-mono font-black text-[#c27c2f] uppercase tracking-[0.3em] block mb-0.5">
                         Bitácora de Coordenadas
                       </span>
                       <h3 className="text-lg font-typewriter font-black text-white uppercase leading-none tracking-tight">
@@ -560,28 +579,30 @@ export default function TravelExplorations() {
                   </div>
                   <div className="flex items-center gap-4">
                     <div
-                      className={`px-2 py-0.5 border inline-flex items-center gap-1.5 ${selectedExp.status === 'active' || selectedExp.status === 'in_progress'
-                          ? 'bg-accent-mil/10 border-accent-mil/20 text-accent-approved'
-                          : selectedExp.status === 'scheduled'
-                            ? 'bg-accent-warning/10 border-accent-warning/20 text-accent-warning'
-                            : 'bg-white/5 border-white/10 text-white/40'
-                        }`}
+                      className={`px-2 py-0.5 border inline-flex items-center gap-1.5 ${
+                        selectedExp.status === "active" || selectedExp.status === "in_progress"
+                          ? "bg-accent-mil/10 border-accent-mil/20 text-accent-approved"
+                          : selectedExp.status === "scheduled"
+                            ? "bg-[#c27c2f]/10 border-[#c27c2f]/20 text-[#c27c2f]"
+                            : "bg-white/5 border-white/10 text-white/40"
+                      }`}
                     >
                       <div
-                        className={`h-1 w-1 rounded-full ${selectedExp.status === 'active' || selectedExp.status === 'in_progress'
-                            ? 'bg-accent-approved animate-pulse'
-                            : selectedExp.status === 'scheduled'
-                              ? 'bg-accent-warning'
-                              : 'bg-white/40'
-                          }`}
+                        className={`h-1 w-1 rounded-full ${
+                          selectedExp.status === "active" || selectedExp.status === "in_progress"
+                            ? "bg-accent-approved animate-pulse"
+                            : selectedExp.status === "scheduled"
+                              ? "bg-[#c27c2f]"
+                              : "bg-white/40"
+                        }`}
                       />
-                      <span className="text-[8px] font-mono font-black uppercase tracking-widest leading-none">
+                      <span className="text-sm font-mono font-black uppercase tracking-widest leading-none">
                         {getStatusLabel(selectedExp.status)}
                       </span>
                     </div>
                     <button
                       onClick={() => setIsDetailOpen(true)}
-                      className="text-[9px] font-mono font-black text-accent-warning border border-accent-warning/30 px-3 py-1 hover:bg-accent-warning hover:text-ink-black transition-all"
+                      className="text-xs font-mono font-black text-[#c27c2f] border border-[#c27c2f]/30 px-4 py-2.5 hover:bg-[#c27c2f] hover:text-ink-black transition-all"
                     >
                       VER EXPEDIENTE
                     </button>
@@ -595,16 +616,16 @@ export default function TravelExplorations() {
                       <div className="flex-1 flex items-center justify-between px-20 relative">
                         <div className="absolute top-1/2 left-0 right-0 h-[2px] border-t-2 border-dashed border-ink/10 -translate-y-1/2 mx-32" />
 
-                        {(selectedExp.status === 'active' ||
-                          selectedExp.status === 'in_progress') && (
-                            <motion.div
-                              animate={{ left: ['20%', '80%'] }}
-                              transition={{ duration: 15, repeat: Infinity, ease: 'linear' }}
-                              className="absolute top-1/2 -translate-y-1/2 z-10"
-                            >
-                              <Footprints className="h-5 w-5 text-ink/30 -rotate-90" />
-                            </motion.div>
-                          )}
+                        {(selectedExp.status === "active" ||
+                          selectedExp.status === "in_progress") && (
+                          <motion.div
+                            animate={{ left: ["20%", "80%"] }}
+                            transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+                            className="absolute top-1/2 -translate-y-1/2 z-10"
+                          >
+                            <Footprints className="h-5 w-5 text-ink/30 -rotate-90" />
+                          </motion.div>
+                        )}
 
                         {/* Origin node */}
                         <div className="flex flex-col items-center gap-4 z-20">
@@ -612,10 +633,10 @@ export default function TravelExplorations() {
                             <Radio className="h-6 w-6 text-accent-mil" />
                           </div>
                           <div className="text-center">
-                            <span className="text-[7px] font-mono font-black text-ink/30 uppercase block mb-1">
+                            <span className="text-sm font-mono font-black text-ink/30 uppercase block mb-1">
                               Origen_Nudo
                             </span>
-                            <span className="text-[10px] font-typewriter font-black text-ink uppercase border-b border-ink/10">
+                            <span className="text-sm font-typewriter font-black text-ink uppercase border-b border-ink/10">
                               {baseCampId}
                             </span>
                           </div>
@@ -627,10 +648,10 @@ export default function TravelExplorations() {
                             <Target className="h-6 w-6 text-ink/60" />
                           </div>
                           <div className="text-center">
-                            <span className="text-[7px] font-mono font-black text-ink/30 uppercase block mb-1">
+                            <span className="text-sm font-mono font-black text-ink/30 uppercase block mb-1">
                               Coordenada_Fin
                             </span>
-                            <span className="text-[10px] font-typewriter font-black text-ink uppercase border-b border-ink/10 max-w-[120px] block truncate">
+                            <span className="text-sm font-typewriter font-black text-ink uppercase border-b border-ink/10 max-w-[120px] block truncate">
                               {selectedExp.destination_description}
                             </span>
                           </div>
@@ -641,24 +662,24 @@ export default function TravelExplorations() {
                       <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end border-t border-ink/15 pt-4">
                         <div className="flex gap-10">
                           <div className="flex flex-col gap-0.5">
-                            <span className="text-[7px] font-mono text-ink/40 font-black uppercase leading-none opacity-60">
+                            <span className="text-sm font-mono text-ink/40 font-black uppercase leading-none opacity-60">
                               Salida_Protocolo
                             </span>
-                            <span className="text-[10px] font-mono font-black text-ink whitespace-nowrap">
+                            <span className="text-sm font-mono font-black text-ink whitespace-nowrap">
                               {new Date(selectedExp.departure_date).toLocaleDateString()}
                             </span>
                           </div>
                           <div className="flex flex-col gap-0.5">
-                            <span className="text-[7px] font-mono text-ink/40 font-black uppercase leading-none opacity-60">
+                            <span className="text-sm font-mono text-ink/40 font-black uppercase leading-none opacity-60">
                               Días Estimados
                             </span>
-                            <span className="text-[10px] font-mono font-black text-ink whitespace-nowrap">
-                              {selectedExp.estimated_days} días{' '}
-                              {selectedExp.grace_days > 0 ? '(+1 Gracia)' : ''}
+                            <span className="text-sm font-mono font-black text-ink whitespace-nowrap">
+                              {selectedExp.estimated_days} días{" "}
+                              {selectedExp.grace_days > 0 ? "(+1 Gracia)" : ""}
                             </span>
                           </div>
                         </div>
-                        <div className="inline-block px-3 py-1 border-2 border-bg-paper-shadow/40 rotate-1 bg-bg-paper text-bg-paper-shadow font-mono font-black text-[9px] uppercase shadow-sm">
+                        <div className="inline-block px-4 py-2.5 border-2 border-bg-paper-shadow/40 rotate-1 bg-bg-paper text-bg-paper-shadow font-mono font-black text-xs uppercase shadow-sm">
                           ARCHIVO_B3_DESPLIEGUE
                         </div>
                       </div>
@@ -667,28 +688,30 @@ export default function TravelExplorations() {
                 </div>
 
                 {/* Timeline */}
-                <div className="h-28 bg-black/40 border-t border-accent-warning/10 p-4 flex flex-col shrink-0 relative overflow-hidden">
+                <div className="h-28 bg-black/40 border-t border-[#c27c2f]/10 p-4 flex flex-col shrink-0 relative overflow-hidden">
                   <div className="flex items-center justify-between px-16 relative flex-1">
-                    <div className="absolute top-1/2 left-0 right-0 h-[1px] bg-accent-warning/10 -translate-y-1/2 mx-20" />
+                    <div className="absolute top-1/2 left-0 right-0 h-[1px] bg-[#c27c2f]/10 -translate-y-1/2 mx-20" />
                     {timelineSteps.map((step, i) => {
                       const StepIcon = step.Icon
                       return (
                         <div key={i} className="relative z-10 flex flex-col items-center">
                           <div
-                            className={`h-8 w-8 rounded-full border-2 flex items-center justify-center transition-all shadow-lg ${step.status === 'completed'
-                                ? 'bg-paper-dark border-white/20 text-white'
-                                : step.status === 'current'
-                                  ? 'bg-accent-mil border-accent-warning text-white animate-pulse'
-                                  : 'bg-black/80 border-accent-warning/10 text-accent-warning/20'
-                              }`}
+                            className={`h-8 w-8 rounded-full border-2 flex items-center justify-center transition-all shadow-lg ${
+                              step.status === "completed"
+                                ? "bg-paper-dark border-white/20 text-white"
+                                : step.status === "current"
+                                  ? "bg-accent-mil border-[#c27c2f] text-white animate-pulse"
+                                  : "bg-black/80 border-[#c27c2f]/10 text-[#c27c2f]/20"
+                            }`}
                           >
                             <StepIcon className="h-3.5 w-3.5" />
                           </div>
                           <span
-                            className={`absolute top-full mt-2 text-[7px] font-mono font-black tracking-widest whitespace-nowrap ${step.status !== 'pending'
-                                ? 'text-accent-warning opacity-80'
-                                : 'text-accent-warning/10'
-                              }`}
+                            className={`absolute top-full mt-2 text-sm font-mono font-black tracking-widest whitespace-nowrap ${
+                              step.status !== "pending"
+                                ? "text-[#c27c2f] opacity-80"
+                                : "text-[#c27c2f]/10"
+                            }`}
                           >
                             {step.label}
                           </span>
@@ -699,13 +722,13 @@ export default function TravelExplorations() {
                 </div>
 
                 {/* Action buttons */}
-                <div className="p-3 border-t border-accent-warning/10 flex gap-2 shrink-0 bg-black/20">
-                  {selectedExp.status === 'scheduled' && (
+                <div className="p-3 border-t border-[#c27c2f]/10 flex gap-2 shrink-0 bg-black/20">
+                  {selectedExp.status === "scheduled" && (
                     <>
                       <button
                         onClick={() => handleMarkDeparture(selectedExp.id)}
                         disabled={departMutation.isPending}
-                        className="flex items-center gap-1.5 px-4 py-2 bg-accent-mil text-white text-[9px] font-mono font-black uppercase hover:bg-accent-approved transition-all disabled:opacity-50"
+                        className="flex items-center gap-1.5 px-4 py-2 bg-accent-mil text-white text-xs font-mono font-black uppercase hover:bg-accent-approved transition-all disabled:opacity-50"
                       >
                         {departMutation.isPending ? (
                           <Loader2 className="h-3 w-3 animate-spin" />
@@ -717,39 +740,37 @@ export default function TravelExplorations() {
                       <button
                         onClick={() => handleCancelExploration(selectedExp.id)}
                         disabled={cancelMutation.isPending}
-                        className="flex items-center gap-1.5 px-4 py-2 bg-accent-critical/10 border border-accent-critical/30 text-accent-critical text-[9px] font-mono font-black uppercase hover:bg-accent-critical hover:text-white transition-all disabled:opacity-50"
+                        className="flex items-center gap-1.5 px-4 py-2 bg-accent-critical/10 border border-accent-critical/30 text-accent-critical text-xs font-mono font-black uppercase hover:bg-accent-critical hover:text-[#fca311] transition-all disabled:opacity-50"
                       >
                         <X className="h-3 w-3" />
                         Cancelar
                       </button>
                     </>
                   )}
-                  {(selectedExp.status === 'active' ||
-                    selectedExp.status === 'in_progress') && (
-                      <button
-                        onClick={() => setIsReturnModalOpen(true)}
-                        className="flex items-center gap-1.5 px-4 py-2 bg-accent-emergency/80 text-ink-black text-[9px] font-mono font-black uppercase hover:bg-accent-emergency transition-all"
-                      >
-                        <CheckCircle2 className="h-3 w-3" />
-                        Registrar Retorno
-                      </button>
-                    )}
-                  {(selectedExp.status === 'completed' ||
-                    selectedExp.status === 'cancelled') && (
-                      <span className="text-[9px] font-mono text-white/30 uppercase tracking-widest flex items-center gap-1.5">
-                        <Shield className="h-3 w-3" />
-                        Expedición archivada
-                      </span>
-                    )}
+                  {(selectedExp.status === "active" || selectedExp.status === "in_progress") && (
+                    <button
+                      onClick={() => setIsReturnModalOpen(true)}
+                      className="flex items-center gap-1.5 px-4 py-2 bg-accent-emergency/80 text-ink-black text-xs font-mono font-black uppercase hover:bg-accent-emergency transition-all"
+                    >
+                      <CheckCircle2 className="h-3 w-3" />
+                      Registrar Retorno
+                    </button>
+                  )}
+                  {(selectedExp.status === "completed" || selectedExp.status === "cancelled") && (
+                    <span className="text-xs font-mono text-white/30 uppercase tracking-widest flex items-center gap-1.5">
+                      <Shield className="h-3 w-3" />
+                      Expedición archivada
+                    </span>
+                  )}
                 </div>
               </div>
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center p-12 text-center">
-                <Compass className="h-20 w-20 mb-6 text-accent-warning opacity-20 animate-spin" />
+                <Compass className="h-20 w-20 mb-6 text-[#c27c2f] opacity-20 animate-spin" />
                 <p className="font-typewriter text-2xl text-white/20 font-black uppercase mb-3">
                   Seleccione una Expedición
                 </p>
-                <p className="font-mono text-[10px] text-white/20 uppercase tracking-widest">
+                <p className="font-mono text-sm text-white/20 uppercase tracking-widest">
                   o cree una nueva para comenzar
                 </p>
               </div>
@@ -759,24 +780,34 @@ export default function TravelExplorations() {
           {/* RIGHT: Team panel */}
           {selectedExp && (
             <div className="w-60 flex flex-col gap-3 shrink-0 overflow-hidden bg-industrial-metal p-3 border-r-2 border-r-accent-warning/20">
-              <div className="border-b border-accent-warning/10 pb-2">
+              <div className="border-b border-[#c27c2f]/10 pb-2">
                 <div className="flex items-center gap-1.5 min-w-[70px]">
                   <Users className="w-3.5 h-3.5 text-[#d4a373]/60" />
-                  <span className="text-[9px] font-mono font-black text-accent-warning uppercase tracking-widest">
+                  <span className="text-xs font-mono font-black text-[#c27c2f] uppercase tracking-widest">
                     Equipo Asignado
                   </span>
-                  <span className="text-[10px] font-mono text-[#d4a373] uppercase ml-auto">{selectedExp.explorationPersons.length}</span>
+                  <span className="text-sm font-mono text-[#d4a373] uppercase ml-auto">
+                    {selectedExp.explorationPersons.length}
+                  </span>
                 </div>
               </div>
               <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2">
                 {selectedExp.explorationPersons.map((ep, i) => (
-                  <div key={i} className="flex items-center gap-3 bg-black/40 p-2 rounded border border-white/5">
+                  <div
+                    key={i}
+                    className="flex items-center gap-3 bg-black/40 p-2 rounded border border-white/5"
+                  >
                     <div className="w-8 h-8 bg-[#2a3026] rounded-full border border-[#43523d] flex items-center justify-center shrink-0">
                       <Users className="w-4 h-4 text-[#43523d]" />
                     </div>
                     <div className="flex flex-col min-w-0 flex-1">
-                      <span className="text-[11px] font-mono font-black text-white uppercase truncate">{ep.person?.first_name || 'Desconocido'} {ep.person?.last_name || ''}</span>
-                      <span className="text-[8px] font-mono text-white/40 uppercase">{ep.person?.profession?.name || 'OPERARIO'} // COD-{String(ep.person_id).substring(0, 4)}</span>
+                      <span className="text-sm font-mono font-black text-white uppercase truncate">
+                        {ep.person?.first_name || "Desconocido"} {ep.person?.last_name || ""}
+                      </span>
+                      <span className="text-sm font-mono text-white/40 uppercase">
+                        {ep.person?.profession?.name || "OPERARIO"} {"//"} COD-
+                        {String(ep.person_id).substring(0, 4)}
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -799,13 +830,13 @@ export default function TravelExplorations() {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-industrial-metal border border-accent-warning/30 w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl"
+              className="bg-industrial-metal border-4 border-double border-[#c27c2f]/50 w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl"
             >
               {/* Modal header */}
-              <div className="flex items-center justify-between p-4 border-b border-accent-warning/20 bg-black/30">
-                <div className="flex items-center gap-3">
-                  <Compass className="h-5 w-5 text-accent-warning" />
-                  <h3 className="font-typewriter font-black text-white uppercase text-lg">
+              <div className="flex items-center justify-between p-6 border-b-2 border-[#c27c2f]/30 bg-black/50">
+                <div className="flex items-center gap-4">
+                  <Compass className="h-8 w-8 text-[#c27c2f] animate-pulse" />
+                  <h3 className="font-typewriter font-black text-white uppercase text-xl md:text-2xl tracking-widest">
                     Nueva Expedición
                   </h3>
                 </div>
@@ -814,19 +845,22 @@ export default function TravelExplorations() {
                     setIsNewModalOpen(false)
                     resetNewForm()
                   }}
-                  className="text-white/40 hover:text-white transition-colors"
+                  className="text-white/40 hover:text-[#fca311] transition-colors"
                 >
                   <X className="h-5 w-5" />
                 </button>
               </div>
 
               {/* Modal body */}
-              <form onSubmit={handleCreateExploration} className="flex-1 overflow-y-auto">
-                <div className="p-6 space-y-6">
+              <form
+                onSubmit={handleCreateExploration}
+                className="flex-1 overflow-y-auto custom-scrollbar"
+              >
+                <div className="p-8 space-y-8">
                   {/* Basic info */}
-                  <div className="grid grid-grid-cols-1 gap-4">
+                  <div className="grid grid-grid-cols-1 gap-6">
                     <div>
-                      <label className="text-[9px] font-mono font-black text-accent-warning uppercase tracking-widest block mb-1">
+                      <label className="text-sm md:text-base font-mono font-black text-[#c27c2f] uppercase tracking-widest block mb-2">
                         Nombre de la Expedición *
                       </label>
                       <input
@@ -834,11 +868,11 @@ export default function TravelExplorations() {
                         value={newName}
                         onChange={(e) => setNewName(e.target.value)}
                         placeholder="Ej: EXPEDICIÓN NORTE-7"
-                        className="vintage-input w-full"
+                        className="vintage-input w-full p-4 text-base md:text-lg"
                       />
                     </div>
                     <div>
-                      <label className="text-[9px] font-mono font-black text-accent-warning uppercase tracking-widest block mb-1">
+                      <label className="text-sm md:text-base font-mono font-black text-[#c27c2f] uppercase tracking-widest block mb-2">
                         Descripción del Destino *
                       </label>
                       <input
@@ -846,26 +880,26 @@ export default function TravelExplorations() {
                         value={newDestination}
                         onChange={(e) => setNewDestination(e.target.value)}
                         placeholder="Ej: Sector norte, cuadrícula B-7"
-                        className="vintage-input w-full"
+                        className="vintage-input w-full p-4 text-base md:text-lg"
                       />
                     </div>
                   </div>
 
                   {/* Dates and duration */}
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
-                      <label className="text-[9px] font-mono font-black text-accent-warning uppercase tracking-widest block mb-1">
+                      <label className="text-sm md:text-base font-mono font-black text-[#c27c2f] uppercase tracking-widest block mb-2">
                         Fecha de Salida *
                       </label>
                       <input
                         type="datetime-local"
                         value={newDepartureDate}
                         onChange={(e) => setNewDepartureDate(e.target.value)}
-                        className="vintage-input w-full text-[11px]"
+                        className="vintage-input w-full text-base p-4"
                       />
                     </div>
                     <div>
-                      <label className="text-[9px] font-mono font-black text-accent-warning uppercase tracking-widest block mb-1">
+                      <label className="text-sm md:text-base font-mono font-black text-[#c27c2f] uppercase tracking-widest block mb-2">
                         Días Estimados *
                       </label>
                       <input
@@ -873,11 +907,11 @@ export default function TravelExplorations() {
                         min={1}
                         value={newEstimatedDays}
                         onChange={(e) => setNewEstimatedDays(Number(e.target.value))}
-                        className="vintage-input w-full"
+                        className="vintage-input w-full text-base p-4"
                       />
                     </div>
                     <div>
-                      <label className="text-[9px] font-mono font-black text-accent-warning uppercase tracking-widest block mb-1">
+                      <label className="text-sm md:text-base font-mono font-black text-[#c27c2f] uppercase tracking-widest block mb-2">
                         Días de Gracia
                       </label>
                       <input
@@ -885,59 +919,57 @@ export default function TravelExplorations() {
                         min={0}
                         value={newGraceDays}
                         onChange={(e) => setNewGraceDays(Number(e.target.value))}
-                        className="vintage-input w-full"
+                        className="vintage-input w-full text-base p-4"
                       />
                     </div>
                   </div>
 
                   {/* Team selection */}
                   <div>
-                    <label className="text-[9px] font-mono font-black text-accent-warning uppercase tracking-widest block mb-2">
+                    <label className="text-xs font-mono font-black text-[#c27c2f] uppercase tracking-widest block mb-2">
                       Seleccionar Equipo * ({newSelectedPersons.length} seleccionado(s))
                     </label>
-                    <div className="max-h-40 overflow-y-auto custom-scrollbar space-y-1 border border-accent-warning/10 p-2 bg-black/20">
+                    <div className="max-h-40 overflow-y-auto custom-scrollbar space-y-1 border border-[#c27c2f]/10 p-2 bg-black/20">
                       {persons.length === 0 ? (
-                        <p className="text-[9px] font-mono text-white/30 uppercase text-center py-4">
+                        <p className="text-xs font-mono text-white/30 uppercase text-center py-4">
                           Cargando personas disponibles...
                         </p>
                       ) : (
                         persons
                           .filter(
                             (p) =>
-                              p.status === 'active' ||
-                              p.status === 'idle' ||
-                              p.status === 'resting'
+                              p.status === "active" ||
+                              p.status === "idle" ||
+                              p.status === "resting",
                           )
                           .map((person) => {
-                            const sel = newSelectedPersons.find(
-                              (s) => s.person_id === person.id
-                            )
+                            const sel = newSelectedPersons.find((s) => s.person_id === person.id)
                             const isSelected = !!sel
                             return (
                               <div
                                 key={person.id}
-                                className={`flex items-center justify-between p-2 border transition-all cursor-pointer ${isSelected
-                                    ? 'bg-accent-warning/10 border-accent-warning/30'
-                                    : 'bg-black/20 border-white/5 hover:border-accent-warning/20'
-                                  }`}
+                                className={`flex items-center justify-between p-2 border transition-all cursor-pointer ${
+                                  isSelected
+                                    ? "bg-[#c27c2f]/10 border-[#c27c2f]/30"
+                                    : "bg-black/20 border-white/5 hover:border-[#c27c2f]/20"
+                                }`}
                                 onClick={() => handleTogglePersonSelect(person.id)}
                               >
                                 <div className="flex items-center gap-2">
                                   <div
-                                    className={`h-3 w-3 border flex items-center justify-center shrink-0 ${isSelected
-                                        ? 'border-accent-warning bg-accent-warning/20'
-                                        : 'border-white/20'
-                                      }`}
+                                    className={`h-3 w-3 border flex items-center justify-center shrink-0 ${
+                                      isSelected
+                                        ? "border-[#c27c2f] bg-[#c27c2f]/20"
+                                        : "border-white/20"
+                                    }`}
                                   >
-                                    {isSelected && (
-                                      <Check className="h-2 w-2 text-accent-warning" />
-                                    )}
+                                    {isSelected && <Check className="h-2 w-2 text-[#c27c2f]" />}
                                   </div>
-                                  <span className="text-[10px] font-mono text-white/80 uppercase">
+                                  <span className="text-sm font-mono text-white/80 uppercase">
                                     {person.first_name} {person.last_name}
                                   </span>
                                   {person.profession && (
-                                    <span className="text-[8px] font-mono text-white/30">
+                                    <span className="text-sm font-mono text-white/30">
                                       [{person.profession.name}]
                                     </span>
                                   )}
@@ -949,12 +981,13 @@ export default function TravelExplorations() {
                                       ev.stopPropagation()
                                       handleSetLeader(person.id)
                                     }}
-                                    className={`text-[8px] font-mono font-black uppercase px-2 py-0.5 border transition-all ${sel?.is_leader
-                                        ? 'bg-accent-warning text-ink-black border-accent-warning'
-                                        : 'border-accent-warning/30 text-accent-warning/60 hover:bg-accent-warning/10'
-                                      }`}
+                                    className={`text-sm font-mono font-black uppercase px-2 py-0.5 border transition-all ${
+                                      sel?.is_leader
+                                        ? "bg-[#c27c2f] text-black hover:bg-[#fca311] border-[#c27c2f]"
+                                        : "border-[#c27c2f]/30 text-[#c27c2f]/60 hover:bg-[#c27c2f]/10"
+                                    }`}
                                   >
-                                    {sel?.is_leader ? 'LÍDER ✓' : 'Líder?'}
+                                    {sel?.is_leader ? "LÍDER ✓" : "Líder?"}
                                   </button>
                                 )}
                               </div>
@@ -967,39 +1000,44 @@ export default function TravelExplorations() {
                   {/* Resource selection */}
                   {inventory.length > 0 && (
                     <div>
-                      <label className="text-[9px] font-mono font-black text-accent-warning uppercase tracking-widest block mb-2">
+                      <label className="text-xs font-mono font-black text-[#c27c2f] uppercase tracking-widest block mb-2">
                         Recursos para la Expedición (opcional)
                       </label>
-                      <div className="max-h-40 overflow-y-auto custom-scrollbar space-y-1 border border-accent-warning/10 p-2 bg-black/20">
+                      <div className="max-h-40 overflow-y-auto custom-scrollbar space-y-1 border border-[#c27c2f]/10 p-2 bg-black/20">
                         {inventory.map((item) => {
                           const sel = newSelectedResources.find(
-                            (r) => r.resource_id === item.resource_id
+                            (r) => r.resource_id === item.resource_id,
                           )
                           const isSelected = !!sel
                           return (
                             <div
                               key={item.resource_id}
-                              className={`flex items-center justify-between p-2 border transition-all ${isSelected
-                                  ? 'bg-accent-warning/10 border-accent-warning/30'
-                                  : 'bg-black/20 border-white/5'
-                                }`}
+                              className={`flex items-center justify-between p-2 border transition-all ${
+                                isSelected
+                                  ? "bg-[#c27c2f]/10 border-[#c27c2f]/30"
+                                  : "bg-black/20 border-white/5"
+                              }`}
                             >
                               <div
                                 className="flex items-center gap-2 cursor-pointer flex-1"
                                 onClick={() => handleToggleResourceSelect(item.resource_id)}
                               >
                                 <div
-                                  className={`h-3 w-3 border flex items-center justify-center shrink-0 ${isSelected
-                                      ? 'border-accent-warning bg-accent-warning/20'
-                                      : 'border-white/20'
-                                    }`}
+                                  className={`h-3 w-3 border flex items-center justify-center shrink-0 ${
+                                    isSelected
+                                      ? "border-[#c27c2f] bg-[#c27c2f]/20"
+                                      : "border-white/20"
+                                  }`}
                                 >
-                                  {isSelected && (
-                                    <Check className="h-2 w-2 text-accent-warning" />
-                                  )}
+                                  {isSelected && <Check className="h-2 w-2 text-[#c27c2f]" />}
                                 </div>
-                                <span className="text-[10px] font-mono font-black text-white/80 uppercase">{item.resource!.name}</span>
-                                <span className="text-[8px] font-mono text-white/40 uppercase">{item.resource!.category} // {item.current_quantity} {item.resource!.unit}</span>
+                                <span className="text-sm font-mono font-black text-white/80 uppercase">
+                                  {item.resource!.name}
+                                </span>
+                                <span className="text-sm font-mono text-white/40 uppercase">
+                                  {item.resource!.category} {"//"} {item.current_quantity}{" "}
+                                  {item.resource!.unit}
+                                </span>
                               </div>
                               {isSelected && (
                                 <input
@@ -1011,10 +1049,10 @@ export default function TravelExplorations() {
                                   onChange={(e) =>
                                     handleResourceQuantityChange(
                                       item.resource_id,
-                                      Number(e.target.value)
+                                      Number(e.target.value),
                                     )
                                   }
-                                  className="vintage-input w-16 text-[10px] ml-2"
+                                  className="vintage-input w-16 text-sm ml-2"
                                 />
                               )}
                             </div>
@@ -1026,7 +1064,7 @@ export default function TravelExplorations() {
 
                   {/* Error display */}
                   {formError && (
-                    <div className="flex items-center gap-2 text-accent-critical text-[10px] font-mono uppercase bg-accent-critical/10 border border-accent-critical/30 p-2">
+                    <div className="flex items-center gap-2 text-accent-critical text-sm font-mono uppercase bg-accent-critical/10 border border-accent-critical/30 p-2">
                       <AlertCircle className="h-3.5 w-3.5 shrink-0" />
                       {formError}
                     </div>
@@ -1034,26 +1072,26 @@ export default function TravelExplorations() {
                 </div>
 
                 {/* Modal footer */}
-                <div className="p-4 border-t border-accent-warning/20 flex justify-end gap-3 bg-black/20">
+                <div className="p-8 border-t-2 border-[#c27c2f]/30 flex justify-end gap-6 bg-black/40">
                   <button
                     type="button"
                     onClick={() => {
                       setIsNewModalOpen(false)
                       resetNewForm()
                     }}
-                    className="px-4 py-2 text-[10px] font-mono font-black text-white/50 uppercase border border-white/10 hover:border-white/30 transition-all"
+                    className="px-6 py-4 text-lg font-mono font-black text-white uppercase border-2 border-white/30 hover:border-white/70 hover:bg-white/10 transition-all shadow-md"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
                     disabled={createMutation.isPending}
-                    className="px-6 py-2 bg-accent-warning text-ink-black text-[10px] font-mono font-black uppercase hover:bg-white transition-all disabled:opacity-50 flex items-center gap-2"
+                    className="px-10 py-4 bg-[#c27c2f] text-white hover:bg-[#fca311] text-lg font-mono font-black uppercase hover:text-black transition-all disabled:opacity-50 flex items-center gap-3 shadow-[0_0_15px_rgba(194,124,47,0.5)]"
                   >
                     {createMutation.isPending ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      <Loader2 className="h-6 w-6 animate-spin" />
                     ) : (
-                      <ChevronRight className="h-3.5 w-3.5" />
+                      <ChevronRight className="h-6 w-6" />
                     )}
                     Crear Expedición
                   </button>
@@ -1077,9 +1115,9 @@ export default function TravelExplorations() {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-industrial-metal border border-accent-warning/30 w-full max-w-md shadow-2xl"
+              className="bg-industrial-metal border border-[#c27c2f]/30 w-full max-w-md shadow-2xl"
             >
-              <div className="flex items-center justify-between p-4 border-b border-accent-warning/20 bg-black/30">
+              <div className="flex items-center justify-between p-4 border-b border-[#c27c2f]/20 bg-black/30">
                 <div className="flex items-center gap-3">
                   <CheckCircle2 className="h-5 w-5 text-accent-approved" />
                   <h3 className="font-typewriter font-black text-white uppercase">
@@ -1088,19 +1126,18 @@ export default function TravelExplorations() {
                 </div>
                 <button
                   onClick={() => setIsReturnModalOpen(false)}
-                  className="text-white/40 hover:text-white transition-colors"
+                  className="text-white/40 hover:text-[#fca311] transition-colors"
                 >
                   <X className="h-5 w-5" />
                 </button>
               </div>
 
               <div className="p-6 space-y-4">
-                <p className="text-[10px] font-mono text-white/50 uppercase">
-                  Expedición:{' '}
-                  <span className="text-accent-warning font-black">{selectedExp.name}</span>
+                <p className="text-sm font-mono text-white/50 uppercase">
+                  Expedición: <span className="text-[#c27c2f] font-black">{selectedExp.name}</span>
                 </p>
                 <div>
-                  <label className="text-[9px] font-mono font-black text-accent-warning uppercase tracking-widest block mb-1">
+                  <label className="text-xs font-mono font-black text-[#c27c2f] uppercase tracking-widest block mb-1">
                     Fecha Real de Retorno *
                   </label>
                   <input
@@ -1111,7 +1148,7 @@ export default function TravelExplorations() {
                   />
                 </div>
                 <div>
-                  <label className="text-[9px] font-mono font-black text-accent-warning uppercase tracking-widest block mb-1">
+                  <label className="text-xs font-mono font-black text-[#c27c2f] uppercase tracking-widest block mb-1">
                     Notas del Retorno
                   </label>
                   <textarea
@@ -1124,17 +1161,17 @@ export default function TravelExplorations() {
                 </div>
               </div>
 
-              <div className="p-4 border-t border-accent-warning/20 flex justify-end gap-3 bg-black/20">
+              <div className="p-4 border-t border-[#c27c2f]/20 flex justify-end gap-3 bg-black/20">
                 <button
                   onClick={() => setIsReturnModalOpen(false)}
-                  className="px-4 py-2 text-[10px] font-mono font-black text-white/50 uppercase border border-white/10 hover:border-white/30 transition-all"
+                  className="px-4 py-2 text-sm font-mono font-black text-white/50 uppercase border border-white/10 hover:border-white/30 transition-all"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleRegisterReturn}
                   disabled={returnMutation.isPending}
-                  className="px-6 py-2 bg-accent-approved text-white text-[10px] font-mono font-black uppercase hover:opacity-90 transition-all disabled:opacity-50 flex items-center gap-2"
+                  className="px-6 py-2 bg-accent-approved text-white text-sm font-mono font-black uppercase hover:opacity-90 transition-all disabled:opacity-50 flex items-center gap-2"
                 >
                   {returnMutation.isPending ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -1169,7 +1206,7 @@ export default function TravelExplorations() {
 
               <div className="flex items-center justify-between p-6 border-b-2 border-dashed border-ink/20">
                 <div>
-                  <p className="text-[7px] font-mono text-ink/40 uppercase tracking-widest mb-1">
+                  <p className="text-sm font-mono text-ink/40 uppercase tracking-widest mb-1">
                     Expediente Clasificado // Acceso Autorizado
                   </p>
                   <h3 className="font-typewriter text-2xl font-black text-ink uppercase">
@@ -1187,7 +1224,7 @@ export default function TravelExplorations() {
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
                 <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <p className="text-[7px] font-mono text-ink/40 uppercase tracking-widest mb-1">
+                    <p className="text-sm font-mono text-ink/40 uppercase tracking-widest mb-1">
                       Destino
                     </p>
                     <p className="font-typewriter text-ink font-black uppercase text-sm">
@@ -1195,15 +1232,17 @@ export default function TravelExplorations() {
                     </p>
                   </div>
                   <div>
-                    <p className="text-[7px] font-mono text-ink/40 uppercase tracking-widest mb-1">
+                    <p className="text-sm font-mono text-ink/40 uppercase tracking-widest mb-1">
                       Estado
                     </p>
-                    <p className={`font-mono font-black uppercase text-sm ${getStatusColorClass(selectedExp.status)}`}>
+                    <p
+                      className={`font-mono font-black uppercase text-sm ${getStatusColorClass(selectedExp.status)}`}
+                    >
                       {getStatusLabel(selectedExp.status)}
                     </p>
                   </div>
                   <div>
-                    <p className="text-[7px] font-mono text-ink/40 uppercase tracking-widest mb-1">
+                    <p className="text-sm font-mono text-ink/40 uppercase tracking-widest mb-1">
                       Salida Programada
                     </p>
                     <p className="font-mono text-ink font-black text-sm">
@@ -1211,7 +1250,7 @@ export default function TravelExplorations() {
                     </p>
                   </div>
                   <div>
-                    <p className="text-[7px] font-mono text-ink/40 uppercase tracking-widest mb-1">
+                    <p className="text-sm font-mono text-ink/40 uppercase tracking-widest mb-1">
                       Duración
                     </p>
                     <p className="font-mono text-ink font-black text-sm">
@@ -1220,7 +1259,7 @@ export default function TravelExplorations() {
                   </div>
                   {selectedExp.real_return_date && (
                     <div>
-                      <p className="text-[7px] font-mono text-ink/40 uppercase tracking-widest mb-1">
+                      <p className="text-sm font-mono text-ink/40 uppercase tracking-widest mb-1">
                         Retorno Real
                       </p>
                       <p className="font-mono text-ink font-black text-sm">
@@ -1230,7 +1269,7 @@ export default function TravelExplorations() {
                   )}
                   {selectedExp.notes && (
                     <div className="col-span-2">
-                      <p className="text-[7px] font-mono text-ink/40 uppercase tracking-widest mb-1">
+                      <p className="text-sm font-mono text-ink/40 uppercase tracking-widest mb-1">
                         Notas
                       </p>
                       <p className="font-mono text-ink/80 text-sm">{selectedExp.notes}</p>
@@ -1241,7 +1280,7 @@ export default function TravelExplorations() {
                 {/* Team list in detail */}
                 {selectedExp.explorationPersons.length > 0 && (
                   <div>
-                    <p className="text-[9px] font-mono text-ink/40 uppercase tracking-widest mb-3 border-t border-dashed border-ink/20 pt-4">
+                    <p className="text-xs font-mono text-ink/40 uppercase tracking-widest mb-3 border-t border-dashed border-ink/20 pt-4">
                       Integrantes del Equipo
                     </p>
                     <div className="space-y-2">
@@ -1251,13 +1290,15 @@ export default function TravelExplorations() {
                           className="flex items-center gap-3 bg-ink/5 px-3 py-2"
                         >
                           <div
-                            className={`h-2 w-2 rounded-full ${ep.is_leader ? 'bg-accent-warning' : 'bg-ink/20'}`}
+                            className={`h-2 w-2 rounded-full ${ep.is_leader ? "bg-[#c27c2f]" : "bg-ink/20"}`}
                           />
                           <span className="font-mono text-ink text-sm font-black uppercase">
-                            {ep.person ? `${ep.person.first_name} ${ep.person.last_name}` : ep.person_id}
+                            {ep.person
+                              ? `${ep.person.first_name} ${ep.person.last_name}`
+                              : ep.person_id}
                           </span>
                           {ep.is_leader && (
-                            <span className="ml-auto text-[8px] font-mono bg-accent-warning text-ink-black px-1.5 font-black uppercase">
+                            <span className="ml-auto text-sm font-mono bg-[#c27c2f] text-black hover:bg-[#fca311] px-1.5 font-black uppercase">
                               LÍDER
                             </span>
                           )}

@@ -51,9 +51,15 @@
     @apply px-1.5 py-0.5 text-[10px] font-mono border border-ink-black uppercase tracking-tighter font-bold;
   }
 
-  .status-ok { @apply bg-success-green text-white; }
-  .status-alert { @apply bg-ink-black text-paper-base; }
-  .status-warning { @apply bg-accent-orange text-ink-black; }
+  .status-ok {
+    @apply bg-success-green text-white;
+  }
+  .status-alert {
+    @apply bg-ink-black text-paper-base;
+  }
+  .status-warning {
+    @apply bg-accent-orange text-ink-black;
+  }
 
   .dashed-accent {
     @apply border-2 border-dashed border-accent-orange;

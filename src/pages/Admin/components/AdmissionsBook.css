@@ -1,6 +1,6 @@
 :root {
-  --bookWidth: 900px;
-  --bookHeight: 550px;
+  --bookWidth: 1000px;
+  --bookHeight: 850px;
 }
 
 .admissions-container {
@@ -20,8 +20,8 @@
   overflow: visible;
   --book-scale: min(
     1,
-    calc((100vw - 360px) / var(--bookWidth)),
-    calc((100vh - 320px) / var(--bookHeight))
+    calc((100vw - 100px) / var(--bookWidth)),
+    calc((100vh - 120px) / var(--bookHeight))
   );
   width: calc(var(--bookWidth) * var(--book-scale));
   height: calc(var(--bookHeight) * var(--book-scale));
@@ -42,7 +42,9 @@
   background-color: #2b221b;
   padding: 15px 25px;
   border-radius: 6px;
-  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.9), 0 20px 40px rgba(0, 0, 0, 0.8),
+  box-shadow:
+    inset 0 0 20px rgba(0, 0, 0, 0.9),
+    0 20px 40px rgba(0, 0, 0, 0.8),
     inset 0 0 0 2px rgba(255, 255, 255, 0.02);
   display: flex;
 }
@@ -60,7 +62,8 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: radial-gradient(ellipse at 80% 20%, rgba(50, 30, 20, 0.4) 0%, transparent 40%),
+  background-image:
+    radial-gradient(ellipse at 80% 20%, rgba(50, 30, 20, 0.4) 0%, transparent 40%),
     radial-gradient(circle at 10% 80%, rgba(20, 20, 20, 0.6) 0%, transparent 50%);
   pointer-events: none;
   z-index: 100;
@@ -74,7 +77,12 @@
   bottom: 0;
   width: 50px;
   transform: translateX(-50%);
-  background: linear-gradient(to right, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.9) 50%, rgba(0, 0, 0, 0.5) 100%);
+  background: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0.5) 0%,
+    rgba(0, 0, 0, 0.9) 50%,
+    rgba(0, 0, 0, 0.5) 100%
+  );
   z-index: 10;
   box-shadow: inset 0 0 15px rgba(0, 0, 0, 1);
   border-left: 2px solid rgba(0, 0, 0, 0.7);
@@ -99,7 +107,7 @@
   height: 100%;
   background-color: var(--bg-paper);
   box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.15);
-  padding: 40px;
+  padding: 30px;
   box-sizing: border-box;
   overflow: hidden;
   position: relative;
@@ -223,8 +231,10 @@
   left: auto;
   right: auto;
   bottom: auto;
-  margin-top: 8px;
-  margin-top: auto;
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px dashed rgba(0, 0, 0, 0.2);
+  flex-shrink: 0;
 }
 
 .right-page .binder-header {

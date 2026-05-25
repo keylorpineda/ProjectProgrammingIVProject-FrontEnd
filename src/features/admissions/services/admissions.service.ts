@@ -40,9 +40,7 @@ export interface CreateAccountBody {
   role_id: number
 }
 
-export const submitAdmission = async (
-  body: SubmitAdmissionBody,
-): Promise<AiAdmission> => {
+export const submitAdmission = async (body: SubmitAdmissionBody): Promise<AiAdmission> => {
   const { data } = await api.post<AiAdmission>("/ai/admissions/submit", body)
   return data
 }
@@ -67,10 +65,9 @@ export const trackAdmission = async (code: string): Promise<TrackedAdmission> =>
 export const getPendingAdmissions = async (
   params?: PendingAdmissionsParams,
 ): Promise<PaginatedResponse<AiAdmission>> => {
-  const { data } = await api.get<PaginatedResponse<AiAdmission>>(
-    "/ai/admissions/pending",
-    { params },
-  )
+  const { data } = await api.get<PaginatedResponse<AiAdmission>>("/ai/admissions/pending", {
+    params,
+  })
   return data
 }
 

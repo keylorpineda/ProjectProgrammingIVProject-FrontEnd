@@ -1,9 +1,10 @@
-import type { ChangeEvent, FormEvent} from "react";
+import type { ChangeEvent, FormEvent } from "react"
 import { useEffect, useRef, useState } from "react"
 import { isAxiosError } from "axios"
 import { motion } from "framer-motion"
 import { ShieldAlert, CheckCircle, Loader2 } from "lucide-react"
 import { submitAdmission, trackAdmission } from "@/features/admissions/services/admissions.service"
+import { uploadPersonImage } from "@/features/upload/services/upload.service"
 import "./AdmissionNew.css"
 
 // Forwards `wheel` events from anywhere inside the scene (the table, the
@@ -200,7 +201,7 @@ export function AdmissionFormTemplate({
             alignItems: "center",
             justifyContent: "flex-start",
             paddingTop: "15vh",
-            background: "transparent"
+            background: "transparent",
           }}
         >
           <motion.div
@@ -214,10 +215,11 @@ export function AdmissionFormTemplate({
               pointerEvents: "none",
               letterSpacing: "0.2em",
               textShadow: "0 0 10px rgba(91,122,74,0.8)",
-              textAlign: "center"
+              textAlign: "center",
             }}
           >
-            [ SISTEMA EN ESPERA ]<br/><br/>
+            [ SISTEMA EN ESPERA ]<br />
+            <br />
             HAGA CLIC EN CUALQUIER LADO PARA ACERCAR Y COMENZAR
           </motion.div>
         </div>
@@ -343,7 +345,9 @@ export function AdmissionFormTemplate({
             <div className="digital-grid" />
             <div className="coffee-stain" />
             <div className="fedra-logo-stamp">
-              <span className="stamp-title" style={{fontSize: "28px"}}>GESTIÓN DEL FIN</span>
+              <span className="stamp-title" style={{ fontSize: "28px" }}>
+                GESTIÓN DEL FIN
+              </span>
               <span className="stamp-subtitle">ZONA SEGURA VERIFICADA</span>
             </div>
 
@@ -825,6 +829,16 @@ export default function AdmissionNew() {
       const { first_name, last_name } = splitName(formData.nombre)
       const ageNumber = Number(formData.edad)
 
+      let photoUrl: string | undefined
+      if (formData.foto) {
+        try {
+          const uploaded = await uploadPersonImage(formData.foto)
+          photoUrl = uploaded.url
+        } catch {
+          photoUrl = undefined
+        }
+      }
+
       const response = await submitAdmission({
         first_name,
         last_name,
@@ -836,6 +850,7 @@ export default function AdmissionNew() {
         camp_id: DEFAULT_CAMP_ID,
         contact_email: formData.correo.trim(),
         personal_history: formatPersonalHistory(formData),
+        photo_url: photoUrl,
       })
 
       let trackedStatus: string = response.status

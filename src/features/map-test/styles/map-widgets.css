@@ -1,0 +1,98 @@
+.map-widget-frame {
+  width: 100%;
+  border: 1px solid #000;
+  overflow: hidden;
+  position: relative;
+}
+
+.coord-picker-map {
+  width: 100%;
+  height: 240px;
+  cursor: crosshair;
+  filter: sepia(0.4) contrast(1.15) brightness(0.85) saturate(0.8);
+}
+
+.coord-picker-readout {
+  background: #161513;
+  padding: 7px 12px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.72rem;
+  letter-spacing: 1px;
+  border-top: 1px solid #000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.coord-set {
+  color: #c27c2f;
+  font-weight: bold;
+}
+
+.coord-hint {
+  color: #635b50;
+  letter-spacing: 2px;
+}
+
+.route-map {
+  width: 100%;
+  height: 180px;
+  filter: sepia(0.4) contrast(1.15) brightness(0.85) saturate(0.8);
+}
+
+.route-map-header {
+  background: #161513;
+  padding: 6px 12px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.7rem;
+  letter-spacing: 2px;
+  color: #635b50;
+  border-bottom: 1px solid #000;
+  text-transform: uppercase;
+}
+
+.route-map-container {
+  margin-top: 20px;
+  border: 1px solid #000;
+  overflow: hidden;
+}
+
+.zone-map {
+  width: 100%;
+  height: 160px;
+  filter: sepia(0.4) contrast(1.15) brightness(0.85) saturate(0.8);
+}
+
+.zone-map-header {
+  background: #161513;
+  padding: 6px 12px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.7rem;
+  letter-spacing: 2px;
+  color: #635b50;
+  border-bottom: 1px solid #000;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.zone-map-container {
+  margin-top: 20px;
+  border: 1px solid #000;
+  overflow: hidden;
+}
+
+@keyframes widget-route-dash {
+  from {
+    stroke-dashoffset: 200;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.widget-marching-ants {
+  stroke-dasharray: 10;
+  animation: widget-route-dash 10s linear infinite;
+}

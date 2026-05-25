@@ -21,15 +21,20 @@
     @apply bg-bunker-bg text-text-light font-sans selection:bg-accent-orange selection:text-ink-black;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-display tracking-tight text-white;
   }
 
-  .paper-card h1, 
-  .paper-card h2, 
-  .paper-card h3, 
-  .paper-card h4, 
-  .paper-card h5, 
+  .paper-card h1,
+  .paper-card h2,
+  .paper-card h3,
+  .paper-card h4,
+  .paper-card h5,
   .paper-card h6 {
     @apply text-ink-black;
   }

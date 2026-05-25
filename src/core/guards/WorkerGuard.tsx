@@ -1,5 +1,5 @@
-import { Navigate } from 'react-router-dom'
-import { useAuth } from '@/pages/Admin/context/AuthContext'
+import { Navigate } from "react-router-dom"
+import { useAuth } from "@/pages/Admin/context/AuthContext"
 
 interface WorkerGuardProps {
   children: React.ReactNode
@@ -15,10 +15,10 @@ export default function WorkerGuard({ children }: WorkerGuardProps) {
 
   // Check role
   const role = user.role?.toLowerCase()
-  const isWorker = role === 'worker'
+  const isWorker = role === "worker"
 
   // If user is admin, redirect to admin dashboard
-  if (!isWorker && role?.includes('admin')) {
+  if (!isWorker && role?.includes("admin")) {
     return <Navigate to="/admin/dashboard" replace />
   }
 

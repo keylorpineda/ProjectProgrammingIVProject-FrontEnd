@@ -1,4 +1,4 @@
-import { create } from 'zustand'
+import { create } from "zustand"
 
 interface TravelCommsState {
   // Camp filter state
@@ -28,33 +28,33 @@ interface TravelCommsState {
 }
 
 export const useTravelCommsStore = create<TravelCommsState>((set) => ({
-  consultedCampId: '',
+  consultedCampId: "",
   setConsultedCampId: (id) => set({ consultedCampId: id }),
 
-  explorationStatusFilter: '',
+  explorationStatusFilter: "",
   setExplorationStatusFilter: (status) => set({ explorationStatusFilter: status }),
-  explorationSearch: '',
+  explorationSearch: "",
   setExplorationSearch: (query) => set({ explorationSearch: query }),
   selectedExplorationId: null,
   setSelectedExplorationId: (id) => set({ selectedExplorationId: id }),
 
-  transferStatusFilter: 'all',
+  transferStatusFilter: "all",
   setTransferStatusFilter: (status) => set({ transferStatusFilter: status }),
-  transferRoleFilter: 'all',
+  transferRoleFilter: "all",
   setTransferRoleFilter: (role) => set({ transferRoleFilter: role }),
-  transferSearch: '',
+  transferSearch: "",
   setTransferSearch: (query) => set({ transferSearch: query }),
   selectedTransferId: null,
   setSelectedTransferId: (id) => set({ selectedTransferId: id }),
 
   resetFilters: () =>
     set({
-      explorationStatusFilter: '',
-      explorationSearch: '',
+      explorationStatusFilter: "",
+      explorationSearch: "",
       selectedExplorationId: null,
-      transferStatusFilter: 'all',
-      transferRoleFilter: 'all',
-      transferSearch: '',
+      transferStatusFilter: "all",
+      transferRoleFilter: "all",
+      transferSearch: "",
       selectedTransferId: null,
     }),
 }))

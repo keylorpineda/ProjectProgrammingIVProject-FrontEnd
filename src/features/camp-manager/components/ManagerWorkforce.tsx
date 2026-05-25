@@ -3,167 +3,192 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useEffect, useState } from 'react';
-import { api } from '../config/api';
-import { Person, ProfessionAlert, PersonStatus } from '../types/api.types';
-import { Users, ShieldAlert, Cpu, Briefcase, RefreshCw } from 'lucide-react';
-import { motion } from 'framer-motion';
+import type React from "react"
+import { useEffect, useState } from "react"
+import { api } from "../config/api"
+import type { Person, ProfessionAlert, PersonStatus } from "../types/api.types"
+import { Users, ShieldAlert, Cpu, Briefcase } from "lucide-react"
+import { motion } from "framer-motion"
+import { useQuery } from "@tanstack/react-query"
 
 interface ManagerWorkforceProps {
-  campId: string;
-  onDataChanged: () => void;
-  refreshTrigger: number;
+  campId: string
+  onDataChanged: () => void
+  refreshTrigger: number
 }
 
-export default function ManagerWorkforce({ campId, onDataChanged, refreshTrigger }: ManagerWorkforceProps) {
-  // Lists
-  const [persons, setPersons] = useState<Person[]>([]);
-  const [alerts, setAlerts] = useState<ProfessionAlert[]>([]);
-  
+export default function ManagerWorkforce({
+  campId,
+  onDataChanged,
+  refreshTrigger,
+}: ManagerWorkforceProps) {
   // Pagination State
-  const [page, setPage] = useState<number>(1);
-  const [limit] = useState<number>(4); // Compact page size
-  const [total, setTotal] = useState<number>(0);
-  
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState<number>(1)
+  const limit = 4 // Compact page size
 
-  // Temporary Assignment Modal State
-  const [assigningPerson, setAssigningPerson] = useState<Person | null>(null);
-  const [selectedProfession, setSelectedProfession] = useState<string>('Farmer');
-  const [submittingAssignment, setSubmittingAssignment] = useState<boolean>(false);
-
-  const fetchData = async () => {
-    setLoading(true);
-    setError(null);
-    try {
+  const { data, isLoading: loading, error: queryError, refetch } = useQuery({
+    queryKey: ["managerWorkforce", campId, page],
+    queryFn: async () => {
       const [personsRes, alertsRes] = await Promise.all([
         api.get(`/users/persons?campId=${campId}&page=${page}&limit=${limit}`),
-        api.get('/users/professions/alerts/needing-workers')
-      ]);
-      setPersons(personsRes.data.data);
-      setTotal(personsRes.data.total);
-      setAlerts(alertsRes.data);
-    } catch (err: any) {
-      setError(err?.message || 'Fallo de enlace biométrico de sobrevivientes.');
-    } finally {
-      setLoading(false);
-    }
-  };
+        api.get("/users/professions/alerts/needing-workers"),
+      ])
+      return {
+        persons: personsRes.data.data as Person[],
+        total: personsRes.data.total as number,
+        alerts: alertsRes.data as ProfessionAlert[],
+      }
+    },
+    staleTime: 1000 * 60 * 2, // 2 minutes
+  })
+
+  const [errorState, setErrorState] = useState<string | null>(null)
+  const error = queryError ? (queryError as any).message || "Fallo de enlace biométrico de sobrevivientes." : errorState
 
   useEffect(() => {
-    fetchData();
-  }, [campId, page, refreshTrigger]);
+    if (refreshTrigger > 0) refetch()
+  }, [refreshTrigger, refetch])
+
+  const [localPersons, setLocalPersons] = useState<Person[]>([])
+
+  useEffect(() => {
+    if (data?.persons) {
+      setLocalPersons(data.persons)
+    }
+  }, [data?.persons])
+
+  const persons = localPersons
+  const total = data?.total || 0
+  const alerts = data?.alerts || []
+
+  // Temporary Assignment Modal State
+  const [assigningPerson, setAssigningPerson] = useState<Person | null>(null)
+  const [selectedProfession, setSelectedProfession] = useState<string>("Farmer")
+  const [submittingAssignment, setSubmittingAssignment] = useState<boolean>(false)
 
   const handleStatusChange = async (personId: string, newStatus: PersonStatus) => {
     // ⚠️ OPTIMISTIC UI: Instantly update local state to reflect change before API returns
-    const previousPersonsState = [...persons];
-    setPersons(prev => 
-      prev.map(p => p.id === personId ? { ...p, status: newStatus } : p)
-    );
+    const previousPersonsState = [...localPersons]
+    setLocalPersons((prev) => prev.map((p) => (p.id === personId ? { ...p, status: newStatus } : p)))
 
     try {
-      await api.put(`/users/persons/${personId}/status`, { status: newStatus });
-      onDataChanged(); // Propagate change to trigger refresh on Overview & Inventory
+      await api.put(`/users/persons/${personId}/status`, { status: newStatus })
+      onDataChanged() // Propagate change to trigger refresh on Overview & Inventory
     } catch (err: any) {
       // Rollback on fail
-      setPersons(previousPersonsState);
-      setError(`No se pudo actualizar el estado de salud del sobreviviente. Código error de red: ${err?.message}`);
+      setLocalPersons(previousPersonsState)
+      setErrorState(
+        `No se pudo actualizar el estado de salud del sobreviviente. Código error de red: ${err?.message}`,
+      )
     }
-  };
-
-  const handleOpenAssignModal = (person: Person) => {
-    setAssigningPerson(person);
-    setSelectedProfession(person.profession);
-  };
-
-  const handleSaveAssignment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!assigningPerson) return;
-
-    setSubmittingAssignment(true);
-    setError(null);
-    try {
-      await api.post('/users/temporary-assignments', {
-        personId: assigningPerson.id,
-        assignment: selectedProfession
-      });
-      setAssigningPerson(null);
-      fetchData();
-      onDataChanged();
-    } catch (err: any) {
-      setError(err?.message || 'Error al asignar la orden temporal de trabajo.');
-    } finally {
-      setSubmittingAssignment(false);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 font-mono text-[#c27c2f]">
-        <RefreshCw className="h-10 w-10 animate-spin mb-4" />
-        <span className="animate-pulse text-sm">LEYENDO BIO-MÉTRICA DE TRABAJADORES...</span>
-      </div>
-    );
   }
 
-  const professionsList = ['Farmer', 'Doctor', 'Engineer', 'Soldier', 'Scavenger'];
+  const handleOpenAssignModal = (person: Person) => {
+    setAssigningPerson(person)
+    setSelectedProfession(person.profession || "Farmer")
+  }
+
+  const handleSaveAssignment = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!assigningPerson) return
+
+    setSubmittingAssignment(true)
+    setErrorState(null)
+    try {
+      await api.post("/users/temporary-assignments", {
+        personId: assigningPerson.id,
+        assignment: selectedProfession,
+      })
+      setAssigningPerson(null)
+      refetch()
+      onDataChanged()
+    } catch (err: any) {
+      setErrorState(err?.message || "Error al asignar la orden temporal de trabajo.")
+    } finally {
+      setSubmittingAssignment(false)
+    }
+  }
+
+  if (loading) {
+    return <div className="min-h-[400px]" />
+  }
+
+  const professionsList = ["Farmer", "Doctor", "Engineer", "Soldier", "Scavenger"]
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 5 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
-      className="grid grid-cols-1 lg:grid-cols-12 gap-4"
+      className="space-y-4"
     >
-      {/* LEFT COLUMN: IA ALERTS / ADVISORY WIDGET (4 COLS) */}
-      <div className="lg:col-span-4 space-y-4">
-        <div className="border-2 border-black bg-[#1a1a1a] p-4 font-mono text-[#e0d8cc] space-y-4">
-          <div className="flex items-center gap-2 text-[#c27c2f] border-b-2 border-black pb-2">
-            <Cpu className="h-4.5 w-4.5 animate-pulse text-[#c27c2f]" />
-            <h4 className="font-bold text-xs uppercase tracking-wider">RECOM_AUTÓMATA_SISTEMA_IA</h4>
+      {/* TOP ROW: IA ALERTS / ADVISORY WIDGET (FULL WIDTH) */}
+      <div className="w-full space-y-4">
+        <div className="border-2 border-black bg-[#1a1a1a] p-6 md:p-10 font-mono text-[#e0d8cc] space-y-6">
+          <div className="flex items-center gap-3 text-[#c27c2f] border-b-2 border-black pb-4">
+            <Cpu className="h-6 w-6 animate-pulse text-[#c27c2f]" />
+            <h4 className="font-black text-lg uppercase tracking-wider">
+              RECOM_AUTÓMATA_SISTEMA_IA
+            </h4>
           </div>
 
-          <p className="text-[10px] text-zinc-400 leading-relaxed uppercase">
-            Sistemas de patrullaje biónico analizan los cuellos de botella de especialización en búnker.
+          <p className="text-base text-zinc-400 leading-relaxed uppercase">
+            Sistemas de patrullaje biónico analizan los cuellos de botella de especialización en
+            búnker.
           </p>
 
-          <div className="space-y-3 pt-1">
-            {alerts.length === 0 ? (
-              <div className="text-[10px] text-emerald-400 bg-[#161513] border-2 border-black px-3 py-2 font-bold uppercase tracking-wide">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
+            {!alerts || alerts.length === 0 ? (
+              <div className="text-base col-span-full text-emerald-400 bg-[#161513] border-2 border-black px-4 py-3 font-bold uppercase tracking-wide">
                 ✔ DISTRIBUCIÓN LABORAL ÓPTIMA. Sin cuellos de botella detectados.
               </div>
             ) : (
-              alerts.map((alert, i) => {
-                const colors = alert.severity === 'high' 
-                  ? 'border-2 border-black bg-[#9c2720]/10 text-[#9c2720] shadow-[inset_0_0_10px_rgba(0,0,0,0.2)]' 
-                  : alert.severity === 'medium'
-                    ? 'border-2 border-black bg-transparent text-[#c27c2f]'
-                    : 'border-2 border-black bg-[#2a2824] text-[#e0d8cc]';
-                
+              (alerts || []).map((alert, i) => {
+                const colors =
+                  alert.severity === "high"
+                    ? "border-2 border-black bg-[#9c2720]/10 text-[#9c2720] shadow-[inset_0_0_10px_rgba(0,0,0,0.2)]"
+                    : alert.severity === "medium"
+                      ? "border-2 border-black bg-transparent text-[#c27c2f]"
+                      : "border-2 border-black bg-[#2a2824] text-[#e0d8cc]"
+
                 return (
-                  <div key={i} className={`p-3 text-xs space-y-1.5 font-mono ${colors}`}>
-                    <div className="flex justify-between font-bold">
-                      <span className="font-black uppercase">REQ: FALTA {alert.neededCount} {alert.profession.toUpperCase()}(S)</span>
-                      <span className="text-[9px] uppercase font-bold tracking-widest px-1 border border-black bg-black text-white">
-                        {alert.severity.toUpperCase()}
+                  <div
+                    key={i}
+                    className={`p-4 md:p-5 text-base flex flex-col justify-center font-mono ${colors} border-2 border-black`}
+                  >
+                    <div className="flex justify-between items-center w-full">
+                      <span className="font-black uppercase tracking-wider">
+                        {alert.severity === "high"
+                          ? "🔴 "
+                          : alert.severity === "medium"
+                            ? "🟡 "
+                            : "⚪ "}
+                        {alert.neededCount}x{" "}
+                        {String(
+                          (alert.profession as any)?.name || alert.profession || "",
+                        ).toUpperCase()}
+                      </span>
+                      <span className="text-xs uppercase font-bold px-2.5 py-1 bg-black text-white">
+                        {String(alert.severity || "").toUpperCase()}
                       </span>
                     </div>
-                    <p className="text-[10px] text-[#e0d8cc]/75 uppercase">
-                      {alert.impactDescription.toUpperCase()}
-                    </p>
+                    {alert.impactDescription && (
+                      <p className="text-sm text-[#e0d8cc]/70 uppercase mt-2">
+                        {String(alert.impactDescription || "").toUpperCase()}
+                      </p>
+                    )}
                   </div>
-                );
+                )
               })
             )}
           </div>
         </div>
       </div>
 
-      {/* RIGHT COLUMN: WORKERS TABLE PAGINATED (8 COLS) */}
-      <div className="lg:col-span-8 space-y-4">
+      {/* BOTTOM SECTION: WORKERS TABLE PAGINATED (FULL WIDTH) */}
+      <div className="w-full space-y-4">
         {error && (
-          <div className="border-2 border-black bg-[#9c2720]/20 text-red-250 font-mono text-xs p-3.5 flex items-start gap-2.5">
+          <div className="border-2 border-black bg-[#9c2720]/20 text-red-250 font-mono text-xs p-3.5 flex items-start gap-4">
             <ShieldAlert className="h-4.5 w-4.5 shrink-0 text-red-500 mt-0.5" />
             <div>
               <span className="font-bold">CONEXIÓN RECHAZADA:</span> {error}
@@ -172,101 +197,164 @@ export default function ManagerWorkforce({ campId, onDataChanged, refreshTrigger
         )}
 
         <div className="border-2 border-black bg-[#161513] overflow-hidden">
-          {/* HEADER BAR */}
-          <div className="bg-black border-b border-black p-3 font-mono flex justify-between items-center text-xs">
-            <div className="flex items-center gap-2">
-              <Users className="h-4.5 w-4.5 text-[#c27c2f]" />
-              <span className="text-xs text-[#c27c2f] font-bold uppercase tracking-wider">CENSO_FUERZA_TRABAJO_ACTIVO</span>
+          {/* HEADER BAR & HEALTH STACKED BAR */}
+          <div className="bg-black border-b border-black p-5 md:p-6 font-mono flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 text-sm md:text-base">
+            <div className="flex items-center gap-3 shrink-0">
+              <Users className="h-6 w-6 text-[#c27c2f]" />
+              <span className="text-base md:text-lg text-[#c27c2f] font-black uppercase tracking-wider">
+                CENSO_FUERZA_TRABAJO_ACTIVO
+              </span>
             </div>
-            <span className="text-[10px] font-mono text-zinc-500 uppercase font-bold">Pág. {page} / {Math.ceil(total / limit) || 1}</span>
+            
+            {/* STACKED HEALTH BAR (CURRENT PAGE) */}
+            <div className="flex-1 w-full lg:max-w-md">
+              <div className="flex justify-between text-xs mb-2 font-bold tracking-widest">
+                <span className="text-emerald-500 uppercase">SANO</span>
+                <span className="text-yellow-600 uppercase">HERIDO</span>
+                <span className="text-[#9c2720] uppercase">ENFERMO</span>
+              </div>
+              <div className="w-full h-4 bg-zinc-900 border-2 border-black flex overflow-hidden shadow-[inset_0_0_5px_rgba(0,0,0,0.8)]">
+                <div className="h-full bg-emerald-500 transition-all duration-500" style={{ width: `${(persons.filter(p => p.status === 'active').length / (persons.length || 1)) * 100}%` }} />
+                <div className="h-full bg-yellow-600 transition-all duration-500" style={{ width: `${(persons.filter(p => p.status === 'injured').length / (persons.length || 1)) * 100}%` }} />
+                <div className="h-full bg-[#9c2720] transition-all duration-500" style={{ width: `${(persons.filter(p => p.status === 'sick').length / (persons.length || 1)) * 100}%` }} />
+              </div>
+            </div>
+
+            <span className="text-base font-mono text-zinc-500 uppercase font-bold whitespace-nowrap shrink-0">
+              Pág. {page} / {Math.ceil(total / limit) || 1}
+            </span>
           </div>
 
           {/* TABLE */}
           <div className="overflow-x-auto">
-            <table className="table-auto w-full border-collapse font-mono text-xs text-[#e0d8cc]">
-              <thead className="bg-[#121110] border-b border-black text-left uppercase text-[#c27c2f] text-[10px] tracking-wider font-bold">
+            <table className="table-auto w-full border-collapse font-mono text-sm md:text-base text-[#e0d8cc]">
+              <thead className="bg-[#121110] border-b border-black text-left uppercase text-[#c27c2f] text-base tracking-wider font-bold">
                 <tr>
-                  <th className="p-2.5 border-r border-black">SOBREVIVIENTE / SKILLS</th>
-                  <th className="p-2.5 border-r border-black">PROFESIÓN_ROL</th>
-                  <th className="p-2.5 border-r border-black text-center">BIOMETRÍA_FÍSICA</th>
-                  <th className="p-2.5 text-center">ACCIONES</th>
+                  <th className="p-6 md:p-8 border-r border-black">SOBREVIVIENTE / SKILLS</th>
+                  <th className="p-6 md:p-8 border-r border-black">PROFESIÓN_ROL</th>
+                  <th className="p-6 md:p-8 border-r border-black text-center">BIOMETRÍA_FÍSICA</th>
+                  <th className="p-6 md:p-8 text-center">ACCIONES</th>
                 </tr>
               </thead>
-              <tbody className="text-[11px]">
-                {persons.map((person) => {
-                  let rowColor = 'border-b border-black hover:bg-[#2a2824]/40';
-                  
-                  if (person.status === 'sick') {
-                    rowColor = 'bg-[#2a1111] hover:bg-[#321515] border-b border-black text-[#e0d8cc]';
-                  } else if (person.status === 'injured') {
-                    rowColor = 'bg-[#2a1e12] hover:bg-[#322315] border-b border-black text-[#e0d8cc]';
+              <tbody className="text-sm">
+                {(persons || []).map((person) => {
+                  let rowColor = "border-b border-black hover:bg-[#2a2824]/40"
+
+                  if (person.status === "sick") {
+                    rowColor =
+                      "bg-[#2a1111] hover:bg-[#321515] border-b border-black text-[#e0d8cc]"
+                  } else if (person.status === "injured") {
+                    rowColor =
+                      "bg-[#2a1e12] hover:bg-[#322315] border-b border-black text-[#e0d8cc]"
                   }
+
+                  const getLatestDiagnosis = (logStr: string) => {
+                    if (!logStr) return ""
+                    const logs = logStr.split("[").filter(Boolean)
+                    const lastLog = logs[logs.length - 1] || logStr
+                    const parts = lastLog.split(": ")
+                    return parts.length > 1 ? parts.slice(1).join(": ").trim() : lastLog.trim()
+                  }
+                  
+                  const cleanAlert = person.injuryDetails ? getLatestDiagnosis(person.injuryDetails) : ""
 
                   return (
                     <tr key={person.id} className={`${rowColor} transition-colors`}>
-                      <td className="p-2.5 border-r border-black">
-                        <div className="font-bold flex items-center gap-1.5 uppercase">
+                      <td className="p-6 md:p-8 border-r border-black">
+                        <div className="text-base md:text-lg font-bold flex items-center gap-3 uppercase">
+                          <span className="text-2xl" title={person.profession || ""}>
+                            {person.profession === "Farmer" && "🌾"}
+                            {person.profession === "Doctor" && "⚕️"}
+                            {person.profession === "Engineer" && "⚙️"}
+                            {person.profession === "Soldier" && "⚔️"}
+                            {person.profession === "Scavenger" && "🎒"}
+                            {!person.profession && "👤"}
+                          </span>
                           {person.name}
                         </div>
-                        <div className="text-[9px] text-zinc-500 font-normal uppercase mt-1">
-                          APTITUDES: {person.skills.join(', ').toUpperCase()}
+                        <div className="text-sm text-zinc-500 font-normal uppercase mt-1">
+                          APTITUDES: {person.skills?.join(", ")?.toUpperCase() || "NINGUNA"}
                         </div>
-                        {person.injuryDetails && (
-                          <div className="text-[8px] text-[#9c2720] font-black uppercase tracking-wider mt-0.5 animate-pulse">
-                            ☣ ALERTA: {person.injuryDetails.toUpperCase()}
+                        {cleanAlert && (
+                          <div
+                            className="text-sm leading-relaxed text-[#9c2720] font-black uppercase tracking-wider mt-3 border-l-4 border-[#9c2720] pl-3 py-2 bg-[#9c2720]/10 rounded-r-sm"
+                            title={person.injuryDetails?.toUpperCase()}
+                          >
+                            <div className="flex items-center gap-2 mb-1 opacity-80 text-xs">
+                              <span className="animate-pulse">☣ DIAGNÓSTICO MÉDICO:</span>
+                            </div>
+                            <div className="text-white">
+                              {cleanAlert.toUpperCase()}
+                            </div>
                           </div>
                         )}
                       </td>
-                      <td className="p-2.5 border-r border-black">
-                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 border border-black bg-black text-[#c27c2f] font-black uppercase text-[10px]">
-                          {person.profession.toUpperCase()}
+                      <td className="p-6 md:p-8 border-r border-black">
+                        <span className="inline-flex items-center gap-2 px-3 py-1 border-2 border-black bg-black text-[#c27c2f] font-black uppercase text-base">
+                          {person.profession?.toUpperCase() || "SIN ASIGNAR"}
                         </span>
                       </td>
-                      <td className="p-2.5 border-r border-black text-center">
+                      <td className="p-6 md:p-8 border-r border-black text-center">
                         <select
                           value={person.status}
-                          onChange={(e) => handleStatusChange(person.id, e.target.value as PersonStatus)}
-                          className="w-full text-[10px] font-black uppercase py-1 px-1.5 text-black bg-[#9a9080] border-2 border-black hover:bg-[#b0a593] transition cursor-pointer outline-none"
+                          onChange={(e) =>
+                            handleStatusChange(person.id, e.target.value as PersonStatus)
+                          }
+                          className="w-full text-sm md:text-base font-black uppercase py-3 px-4 text-[#c27c2f] bg-[#1a1a1a] border-2 border-[#c27c2f]/20 hover:border-[#c27c2f] transition cursor-pointer outline-none shadow-sm"
                         >
-                          <option value="active" className="bg-[#161513] text-[#e0d8cc]">SANO (ACTIVO)</option>
-                          <option value="sick" className="bg-[#161513] text-[#e0d8cc]">ENFERMO (SICK)</option>
-                          <option value="injured" className="bg-[#161513] text-[#e0d8cc]">HERIDO (INJURED)</option>
+                          <option
+                            value="active"
+                            className="bg-[#161513] text-emerald-400 font-bold py-2"
+                          >
+                            SANO (ACTIVO)
+                          </option>
+                          <option value="sick" className="bg-[#161513] text-yellow-400 font-bold py-2">
+                            ENFERMO (SICK)
+                          </option>
+                          <option value="injured" className="bg-[#161513] text-red-400 font-bold py-2">
+                            HERIDO GRAVE
+                          </option>
+                          <option value="dead" className="bg-[#161513] text-zinc-500 font-bold py-2">
+                            FALLECIDO (M.I.A)
+                          </option>
                         </select>
                       </td>
-                      <td className="p-2.5 text-center">
+                      <td className="p-6 md:p-8 text-center">
                         <button
                           type="button"
                           onClick={() => handleOpenAssignModal(person)}
-                          className="underline cursor-pointer hover:text-white text-[10px] font-bold uppercase transition"
+                          className="w-full bg-[#1a1a1a] hover:bg-[#c27c2f] hover:text-black border-2 border-[#c27c2f] text-[#c27c2f] px-6 py-3 text-sm md:text-base font-black uppercase transition shadow-md active:translate-y-0.5"
                         >
-                          [ORDEN_ROL]
+                          ORDEN ROL
                         </button>
                       </td>
                     </tr>
-                  );
+                  )
                 })}
               </tbody>
             </table>
           </div>
 
           {/* PAGINATION CONTROLS */}
-          <div className="bg-[#121110] border-t-2 border-black p-3.5 flex justify-between items-center font-mono">
+          <div className="bg-[#121110] border-t-2 border-black p-6 md:p-10 flex justify-between items-center font-mono">
             <button
               type="button"
               disabled={page === 1}
-              onClick={() => setPage(p => Math.max(1, p - 1))}
-              className="border-2 border-black bg-transparent text-[#e0d8cc] text-[10px] font-bold px-3 py-1.5 uppercase hover:bg-white hover:text-black transition disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-[#e0d8cc]"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              className="flex items-center gap-2 border-2 border-[#c27c2f] bg-[#161513] text-[#c27c2f] hover:bg-[#c27c2f] hover:text-black text-base md:text-lg font-black px-8 py-4 uppercase transition disabled:opacity-30 disabled:border-zinc-700 disabled:text-zinc-500 disabled:hover:bg-[#161513] disabled:hover:text-zinc-500 disabled:cursor-not-allowed shadow-md"
             >
-              [ANTERIOR]
+              « ANTERIOR
             </button>
-            <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">SOBREVIVIENTES ({total} REGISTRADOS)</span>
+            <span className="text-base md:text-lg text-zinc-500 uppercase tracking-widest font-black">
+              SOBREVIVIENTES ({total} REGISTRADOS)
+            </span>
             <button
               type="button"
               disabled={page * limit >= total}
-              onClick={() => setPage(p => p + 1)}
-              className="border-2 border-black bg-transparent text-[#e0d8cc] text-[10px] font-bold px-3 py-1.5 uppercase hover:bg-white hover:text-black transition disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-[#e0d8cc]"
+              onClick={() => setPage((p) => p + 1)}
+              className="flex items-center gap-2 border-2 border-[#c27c2f] bg-[#161513] text-[#c27c2f] hover:bg-[#c27c2f] hover:text-black text-base md:text-lg font-black px-8 py-4 uppercase transition disabled:opacity-30 disabled:border-zinc-700 disabled:text-zinc-500 disabled:hover:bg-[#161513] disabled:hover:text-zinc-500 disabled:cursor-not-allowed shadow-md"
             >
-              [SIGUIENTE]
+              SIGUIENTE »
             </button>
           </div>
         </div>
@@ -275,51 +363,60 @@ export default function ManagerWorkforce({ campId, onDataChanged, refreshTrigger
       {/* TEMPORARY ASSIGNMENT MODAL (POST /users/temporary-assignments) */}
       {assigningPerson && (
         <div className="fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-50">
-          <motion.div 
+          <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="w-full max-w-md bg-[#161513] border-4 border-double border-[#c27c2f] p-6 font-mono text-[#e0d8cc] relative shadow-2xl"
+            className="w-full max-w-2xl bg-[#161513] border-4 border-double border-[#c27c2f] p-8 md:p-10 font-mono text-[#e0d8cc] relative shadow-2xl"
           >
-            <div className="flex items-center gap-2 border-b-2 border-black pb-3 mb-4 text-[#c27c2f]">
-              <Briefcase className="h-5 w-5 animate-pulse text-[#c27c2f]" />
-              <h4 className="font-bold uppercase tracking-widest text-xs">DESPACHAR ORDEN TEMPORAL</h4>
+            <div className="flex items-center gap-3 border-b-2 border-black pb-4 mb-6 text-[#c27c2f]">
+              <Briefcase className="h-8 w-8 animate-pulse text-[#c27c2f]" />
+              <h4 className="font-black uppercase tracking-widest text-lg md:text-xl">
+                DESPACHAR ORDEN TEMPORAL
+              </h4>
             </div>
 
-            <p className="text-xs text-zinc-400 mb-4 leading-relaxed uppercase">
-              Asigna de manera forzosa el rol operacional a <span className="font-bold text-[#e0d8cc]">{assigningPerson.name.toUpperCase()}</span>. 
-              La IA reestructurará su perfil de habilidades de inmediato.
+            <p className="text-sm md:text-base text-zinc-400 mb-6 leading-relaxed uppercase">
+              Asigna de manera forzosa el rol operacional a{" "}
+              <span className="font-black text-white bg-black px-2 py-1">
+                {assigningPerson.name?.toUpperCase()}
+              </span>
+              . La IA reestructurará su perfil de habilidades de inmediato.
             </p>
 
-            <form onSubmit={handleSaveAssignment} className="space-y-4">
-              <div className="space-y-1">
-                <label className="text-[9px] text-zinc-500 uppercase font-bold block">
+            <form onSubmit={handleSaveAssignment} className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-sm text-zinc-500 uppercase font-black block">
                   ASIGNAR ROL / PROFESIÓN:
                 </label>
                 <select
                   value={selectedProfession}
                   onChange={(e) => setSelectedProfession(e.target.value)}
-                  className="w-full bg-[#2a2824] border-2 border-black p-2 bg-transparent text-[#e0d8cc] outline-none text-sm font-bold font-mono transition uppercase font-semibold text-[#e0d8cc]"
+                  className="w-full bg-[#2a2824] border-4 border-black p-4 bg-transparent text-[#e0d8cc] outline-none text-base font-black font-mono transition uppercase shadow-[inset_0_0_10px_rgba(0,0,0,0.8)]"
                 >
-                  {professionsList.map(prof => (
-                    <option key={prof} value={prof} className="bg-[#161513] text-[#e0d8cc]">{prof.toUpperCase()}</option>
+                  {professionsList.map((prof) => (
+                    <option key={prof} value={prof} className="bg-[#161513] text-[#e0d8cc]">
+                      {prof.toUpperCase()}
+                    </option>
                   ))}
                 </select>
               </div>
 
-              <div className="flex gap-2 pt-2">
+              <div className="flex flex-col md:flex-row gap-4 pt-4">
                 <button
                   type="button"
                   onClick={() => setAssigningPerson(null)}
-                  className="flex-1 border-2 border-black bg-transparent text-zinc-400 hover:text-white uppercase text-xs py-2 font-black transition"
+                  className="flex-1 border-2 border-black uppercase text-sm md:text-base py-3 md:py-4 font-black transition"
+                  style={{ backgroundColor: "#9c2720", color: "#ffffff" }}
                 >
                   [CANCELAR]
                 </button>
                 <button
                   type="submit"
                   disabled={submittingAssignment}
-                  className="flex-1 border-2 border-black bg-[#c27c2f] text-[#161513] uppercase text-xs py-2 hover:bg-[#a96821] transition font-black flex items-center justify-center gap-2"
+                  className="flex-1 border-2 border-black uppercase text-sm md:text-base py-3 md:py-4 hover:bg-[#a96821] transition font-black flex items-center justify-center gap-2"
+                  style={{ backgroundColor: "#c27c2f", color: "#161513" }}
                 >
-                  {submittingAssignment ? 'COMUNICANDO...' : 'REASIGNAR HUMANO'}
+                  {submittingAssignment ? "COMUNICANDO..." : "REASIGNAR HUMANO"}
                 </button>
               </div>
             </form>
@@ -327,5 +424,5 @@ export default function ManagerWorkforce({ campId, onDataChanged, refreshTrigger
         </div>
       )}
     </motion.div>
-  );
+  )
 }

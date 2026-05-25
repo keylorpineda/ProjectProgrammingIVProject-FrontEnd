@@ -1,11 +1,17 @@
 // Types extending the real API for the TravelComms role
 // All types that already exist in api.types.ts are imported, not redefined here
 
-import type { Exploration, IntercampRequest } from '@/types/api.types'
+import type { Exploration, IntercampRequest } from "@/types/api.types"
 
-export type TransferPriority = 'low' | 'medium' | 'high' | 'critical'
-export type TransferRole = 'all' | 'sent' | 'received'
-export type ExplorationFilterStatus = '' | 'scheduled' | 'active' | 'in_progress' | 'completed' | 'cancelled'
+export type TransferPriority = "low" | "medium" | "high" | "critical"
+export type TransferRole = "all" | "sent" | "received"
+export type ExplorationFilterStatus =
+  | ""
+  | "scheduled"
+  | "active"
+  | "in_progress"
+  | "completed"
+  | "cancelled"
 
 // DTO for creating explorations (matches existing CreateExplorationBody in explorations.service)
 export interface CreateExplorationFormData {

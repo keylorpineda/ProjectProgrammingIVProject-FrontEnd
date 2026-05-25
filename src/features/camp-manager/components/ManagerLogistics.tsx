@@ -3,160 +3,162 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useEffect, useState } from 'react';
-import { api } from '../config/api';
-import { IntercampRequest } from '../types/api.types';
-import { Truck, ShieldAlert, Plus, RefreshCw, Archive, Mail, Send } from 'lucide-react';
-import { motion } from 'framer-motion';
+import type React from "react"
+import { useEffect, useState } from "react"
+import { api } from "../config/api"
+import type { IntercampRequest } from "../types/api.types"
+import { Truck, ShieldAlert, Plus, Archive, Mail, Send } from "lucide-react"
+import { motion } from "framer-motion"
+import { useQuery } from "@tanstack/react-query"
 
 interface ManagerLogisticsProps {
-  campId: string;
-  onDataChanged: () => void;
-  refreshTrigger: number;
+  campId: string
+  onDataChanged: () => void
+  refreshTrigger: number
 }
 
-export default function ManagerLogistics({ campId, onDataChanged, refreshTrigger }: ManagerLogisticsProps) {
-  const [requests, setRequests] = useState<IntercampRequest[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+export default function ManagerLogistics({
+  campId,
+  onDataChanged,
+  refreshTrigger,
+}: ManagerLogisticsProps) {
+  const { data: requests = [], isLoading: loading, error: queryError, refetch } = useQuery({
+    queryKey: ["managerLogistics", campId],
+    queryFn: async () => {
+      const res = await api.get(`/transfers/requests/camp/${campId}`)
+      return res.data as IntercampRequest[]
+    },
+    staleTime: 1000 * 60 * 2, // 2 minutes
+  })
 
-  // New Request Modal state
-  const [showRequestModal, setShowRequestModal] = useState<boolean>(false);
-  const [selectedResource, setSelectedResource] = useState<string>('Raciones de Emergencia (MRE)');
-  const [requestAmount, setRequestAmount] = useState<number>(50);
-  const [sourceBunker, setSourceBunker] = useState<string>('Bunker-Alpha');
-  const [requestNotes, setRequestNotes] = useState<string>('');
-  const [submittingRequest, setSubmittingRequest] = useState<boolean>(false);
-
-  // Action Loading state
-  const [actionId, setActionId] = useState<string | null>(null);
-
-  const fetchRequests = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await api.get(`/transfers/requests/camp/${campId}`);
-      setRequests(res.data);
-    } catch (err: any) {
-      setError(err?.message || 'Error al descargar bitácora de transferencias.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [errorState, setErrorState] = useState<string | null>(null)
+  const error = queryError ? (queryError as any).message || "Error al descargar bitácora de transferencias." : errorState
 
   useEffect(() => {
-    fetchRequests();
-  }, [campId, refreshTrigger]);
+    if (refreshTrigger > 0) refetch()
+  }, [refreshTrigger, refetch])
+
+  // New Request Modal state
+  const [showRequestModal, setShowRequestModal] = useState<boolean>(false)
+  const [selectedResource, setSelectedResource] = useState<string>("Raciones de Emergencia (MRE)")
+  const [requestAmount, setRequestAmount] = useState<number>(50)
+  const [sourceBunker, setSourceBunker] = useState<string>("2")
+  const [requestNotes, setRequestNotes] = useState<string>("")
+  const [submittingRequest, setSubmittingRequest] = useState<boolean>(false)
+
+  // Action Loading state
+  const [actionId, setActionId] = useState<string | null>(null)
 
   const handleCreateRequest = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
     if (requestAmount <= 0) {
-      setError('Especifique una cantidad de carga superior a cero.');
-      return;
+      setErrorState("Especifique una cantidad de carga superior a cero.")
+      return
     }
 
-    setSubmittingRequest(true);
-    setError(null);
+    setSubmittingRequest(true)
+    setErrorState(null)
     try {
-      await api.post('/transfers/requests', {
+      await api.post("/transfers/requests", {
         resource_type: selectedResource,
         amount: Number(requestAmount),
         camp_source_id: sourceBunker,
         camp_destination_id: campId,
-        notes: requestNotes
-      });
-      setShowRequestModal(false);
-      setRequestNotes('');
-      fetchRequests();
-      onDataChanged();
+        notes: requestNotes,
+      })
+      setShowRequestModal(false)
+      setRequestNotes("")
+      refetch()
+      onDataChanged()
     } catch (err: any) {
-      setError(err?.message || 'Fallo de enlace de solicitud.');
+      setErrorState(err?.message || "Fallo de enlace de solicitud.")
     } finally {
-      setSubmittingRequest(false);
+      setSubmittingRequest(false)
     }
-  };
+  }
 
-  const handleApproval = async (id: string, status: 'approved' | 'denied') => {
-    setActionId(id);
-    setError(null);
+  const handleApproval = async (id: string, status: "approved" | "denied") => {
+    setActionId(id)
+    setErrorState(null)
     try {
-      await api.patch(`/transfers/requests/${id}/approval`, { status });
-      fetchRequests();
-      onDataChanged();
+      await api.patch(`/transfers/requests/${id}/approval`, { status })
+      refetch()
+      onDataChanged()
     } catch (err: any) {
-      setError(err?.message || 'Fallo de respuesta de satélite.');
+      setErrorState(err?.message || "Fallo de respuesta de satélite.")
     } finally {
-      setActionId(null);
+      setActionId(null)
     }
-  };
+  }
 
   const handleArrive = async (id: string) => {
-    setActionId(id);
-    setError(null);
+    setActionId(id)
+    setErrorState(null)
     try {
-      await api.patch(`/transfers/requests/${id}/arrive`);
-      fetchRequests();
-      onDataChanged();
+      await api.patch(`/transfers/requests/${id}/arrive`)
+      refetch()
+      onDataChanged()
     } catch (err: any) {
-      setError(err?.message || 'Error de descarga física del flete.');
+      setErrorState(err?.message || "Error de descarga física del flete.")
     } finally {
-      setActionId(null);
+      setActionId(null)
     }
-  };
+  }
 
   if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 font-mono text-[#c27c2f]">
-        <RefreshCw className="h-10 w-10 animate-spin mb-4" />
-        <span className="animate-pulse text-sm">ENLAZANDO CONVOYES Y CANALES LOGÍSTICOS...</span>
-      </div>
-    );
+    return <div className="min-h-[400px]" />
   }
 
   // Filter requests to show incoming (to us) and outgoing (from us)
-  const incomingRequests = requests.filter(r => r.camp_destination_id === campId);
-  const outgoingRequests = requests.filter(r => r.camp_source_id === campId);
+  const incomingRequests = requests.filter((r) => r.camp_destination_id === campId)
+  const outgoingRequests = requests.filter((r) => r.camp_source_id === campId)
 
   const resourceTypes = [
-    'Raciones de Emergencia (MRE)',
-    'Agua Purificada de Filtro',
-    'Antitoxinas y Antibióticos',
-    'Munición Calibre 5.56mm',
-    'Combustible Diésel (Generador)',
-    'Acero de Refuerzo Bunker'
-  ];
+    "Raciones de Emergencia (MRE)",
+    "Agua Purificada de Filtro",
+    "Antitoxinas y Antibióticos",
+    "Munición Calibre 5.56mm",
+    "Combustible Diésel (Generador)",
+    "Acero de Refuerzo Bunker",
+  ]
 
-  const bunkerList = ['Bunker-Alpha', 'Bunker-Beta', 'Bunker-Delta', 'Bunker-Gamma'];
+  const bunkerList = [
+    { id: "1", name: "Bunker-Alpha" },
+    { id: "2", name: "Bunker-Beta" },
+    { id: "3", name: "Bunker-Delta" },
+    { id: "4", name: "Bunker-Gamma" },
+  ]
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 5 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
       className="space-y-4"
     >
       {/* LOGISTICAL ACTION PANEL */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-[#1a1a1a] border-2 border-black p-4 font-mono">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 bg-[#1a1a1a] border-2 border-black p-6 md:p-10 font-mono">
         <div>
-          <h3 className="text-sm font-bold text-[#c27c2f] uppercase tracking-wider flex items-center gap-2">
-            <Truck className="h-4.5 w-4.5 text-[#c27c2f]" /> PROTOCOLO_LOGÍSTICA_DE_SUMINISTROS
+          <h3 className="text-lg md:text-xl font-black text-[#c27c2f] uppercase tracking-wider flex items-center gap-3">
+            <Truck className="h-6 w-6 text-[#c27c2f]" /> PROTOCOLO_LOGÍSTICA_DE_SUMINISTROS
           </h3>
-          <p className="text-xs text-zinc-400 mt-1 uppercase">
-            Aprueba reabastecimientos entrantes o despacha transportes blindados solicitando refuerzos.
+          <p className="text-base text-zinc-400 mt-3 uppercase leading-relaxed">
+            Aprueba reabastecimientos entrantes o despacha transportes blindados solicitando
+            refuerzos.
           </p>
         </div>
 
         <button
           type="button"
           onClick={() => setShowRequestModal(true)}
-          className="border-2 border-black bg-[#c27c2f] hover:bg-white text-[#161513] font-black uppercase text-xs px-4 py-2 hover:text-black transition-all flex items-center gap-1.5 shrink-0"
+          className="border-2 border-black bg-[#c27c2f] hover:bg-white text-[#161513] font-black uppercase text-sm md:text-base px-6 py-4 hover:text-black transition-all flex items-center gap-2 shrink-0 shadow-lg"
         >
-          <Plus className="h-3.5 w-3.5" /> PEDIR_REFUERZO
+          <Plus className="h-5 w-5" /> PEDIR_REFUERZO
         </button>
       </div>
 
       {error && (
-        <div className="border-2 border-black bg-[#9c2720]/20 text-red-150 font-mono text-xs p-3.5 flex items-start gap-2.5">
+        <div className="border-2 border-black bg-[#9c2720]/20 text-red-150 font-mono text-xs p-3.5 flex items-start gap-4">
           <ShieldAlert className="h-4.5 w-4.5 shrink-0 text-red-500 mt-0.5" />
           <div>
             <span className="font-bold">ORDEN LOGÍSTICA RECHAZADA:</span> {error}
@@ -166,103 +168,123 @@ export default function ManagerLogistics({ campId, onDataChanged, refreshTrigger
 
       {/* TWO SECTIONS: INCOMING INBOX & OUTGOING HISTORY */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        
         {/* SECTION A: INCOMING EXPEDITIONS (CARGOS TO US) */}
         <div className="space-y-3">
-          <div className="flex items-center gap-2 border-b border-black pb-2 text-[#c27c2f] font-mono">
-            <Mail className="h-4 w-4" />
-            <h4 className="font-black text-[10px] uppercase tracking-wider">EXPEDICIONES_Y_CARGAS_ENTRANTES ({incomingRequests.length})</h4>
+          <div className="flex items-center gap-3 border-b-2 border-black pb-4 text-[#c27c2f] font-mono mb-4">
+            <Mail className="h-5 w-5" />
+            <h4 className="font-black text-base md:text-lg uppercase tracking-wider">
+              EXPEDICIONES_Y_CARGAS_ENTRANTES ({incomingRequests.length})
+            </h4>
           </div>
 
           {incomingRequests.length === 0 ? (
-            <div className="font-mono text-xs text-zinc-500 py-8 text-center uppercase border-2 border-black bg-[#161513]">
+            <div className="font-mono text-base md:text-lg text-zinc-500 py-20 px-8 text-center uppercase border-2 border-black bg-[#161513] font-black tracking-widest shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]">
               INBOX_SEGURO: No hay tránsitos pendientes de ingreso.
             </div>
           ) : (
             <div className="space-y-3">
               {incomingRequests.map((req) => {
-                let statusBadge = '';
-                let borderTheme = 'border-2 border-black bg-[#131211]';
-                
-                if (req.status === 'pending') {
-                  statusBadge = 'bg-[#c27c2f]/20 text-[#c27c2f] border border-[#c27c2f]/30';
-                  borderTheme = 'border-2 border-black bg-[#1e1c19]';
-                } else if (req.status === 'approved') {
-                  statusBadge = 'bg-emerald-950/45 text-emerald-400 border border-emerald-500/30';
-                  borderTheme = 'border-2 border-black bg-[#141b17]';
-                } else if (req.status === 'denied') {
-                  statusBadge = 'bg-red-950 text-red-400 border border-red-900/40';
-                  borderTheme = 'border-2 border-black bg-[#1a1212]';
-                } else if (req.status === 'arrived') {
-                  statusBadge = 'bg-zinc-800 text-zinc-400';
-                  borderTheme = 'border-2 border-black bg-zinc-900/30 opacity-70';
+                let statusBadge = ""
+                let borderTheme = "border-2 border-black bg-[#131211]"
+
+                if (req.status === "pending") {
+                  statusBadge = "bg-[#c27c2f]/20 text-[#c27c2f] border border-[#c27c2f]/30"
+                  borderTheme = "border-2 border-black bg-[#1e1c19]"
+                } else if (req.status === "approved") {
+                  statusBadge = "bg-emerald-950/45 text-emerald-400 border border-emerald-500/30"
+                  borderTheme = "border-2 border-black bg-[#141b17]"
+                } else if (req.status === "denied") {
+                  statusBadge = "bg-red-950 text-red-400 border border-red-900/40"
+                  borderTheme = "border-2 border-black bg-[#1a1212]"
+                } else if (req.status === "arrived") {
+                  statusBadge = "bg-zinc-800 text-zinc-400"
+                  borderTheme = "border-2 border-black bg-zinc-900/30 opacity-70"
                 }
 
                 return (
-                  <div key={req.id} className={`p-4 border-2 font-mono transition-shadow ${borderTheme}`}>
-                    <div className="flex justify-between items-start">
+                  <div
+                    key={req.id}
+                    className={`p-8 md:p-10 border-2 font-mono transition-shadow ${borderTheme}`}
+                  >
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                       <div>
-                        <div className="text-[9px] text-zinc-500 uppercase font-black">REMITENTE: {req.camp_source_id.toUpperCase()}</div>
-                        <h5 className="font-bold text-[#e0d8cc] mt-0.5 text-xs text-[#c27c2f]">{req.resource_type.toUpperCase()}</h5>
+                        <div className="text-sm md:text-base text-zinc-500 uppercase font-black tracking-widest mb-2">
+                          REMITENTE: {req.camp_source_id.toUpperCase()}
+                        </div>
+                        <h5 className="font-black text-xl md:text-2xl text-[#c27c2f] uppercase leading-tight">
+                          {req.resource_type.toUpperCase()}
+                        </h5>
                       </div>
-                      <span className={`px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded ${statusBadge}`}>
+                      <span
+                        className={`px-4 py-2 text-sm md:text-base font-black uppercase tracking-widest rounded-sm ${statusBadge}`}
+                      >
                         {req.status}
                       </span>
                     </div>
 
-                    <div className="mt-3 flex justify-between items-end border-t border-black pt-2 text-xs">
+                    <div className="mt-8 flex justify-between items-end border-t-2 border-black pt-6 text-sm md:text-base">
                       <div>
-                        <span className="text-[9px] text-zinc-500 uppercase font-bold block">PESO DE CARGA:</span>
-                        <span className="font-black text-sm text-[#e0d8cc]">{req.amount} uds</span>
+                        <span className="text-sm md:text-base text-zinc-500 uppercase font-black tracking-widest block mb-2">
+                          PESO DE CARGA:
+                        </span>
+                        <span className="font-black text-xl md:text-2xl text-[#e0d8cc]">
+                          {req.amount} uds
+                        </span>
                       </div>
                       <div className="text-right">
-                        <span className="text-[9px] text-zinc-500 uppercase font-bold block">FECHA SATELLITE:</span>
-                        <span className="text-[10px] text-zinc-400">{new Date(req.requested_at).toLocaleDateString()}</span>
+                        <span className="text-sm md:text-base text-zinc-500 uppercase font-black tracking-widest block mb-2">
+                          FECHA SATELLITE:
+                        </span>
+                        <span className="text-base md:text-lg text-zinc-400 font-bold">
+                          {new Date(req.requested_at).toLocaleDateString()}
+                        </span>
                       </div>
                     </div>
 
                     {req.notes && (
-                      <p className="mt-3 text-[10px] italic text-zinc-450 border-l border-[#c27c2f] pl-2 uppercase">
+                      <p className="mt-3 text-sm italic text-zinc-450 border-l border-[#c27c2f] pl-2 uppercase">
                         "{req.notes}"
                       </p>
                     )}
 
                     {/* INTERACTIVE ACTIONS */}
-                    <div className="mt-4 flex gap-2 justify-end">
-                      {req.status === 'pending' && (
+                    <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-end pt-6 border-t border-black/40">
+                      {req.status === "pending" && (
                         <>
                           <button
                             type="button"
                             disabled={actionId !== null}
-                            onClick={() => handleApproval(req.id, 'denied')}
-                            className="border-2 border-black bg-[#4a1210]/20 hover:bg-[#9c2720] text-red-400 hover:text-white px-3 py-1.5 uppercase text-[10px] font-black transition"
+                            onClick={() => handleApproval(req.id, "denied")}
+                            className="border-2 border-black bg-[#4a1210]/20 hover:bg-[#9c2720] text-red-400 hover:text-white px-6 py-4 uppercase text-sm md:text-base font-black transition tracking-widest"
+                            style={{ backgroundColor: "#1e1c19" }}
                           >
                             [RECHAZAR]
                           </button>
                           <button
                             type="button"
                             disabled={actionId !== null}
-                            onClick={() => handleApproval(req.id, 'approved')}
-                            className="border-2 border-black bg-[#c27c2f] text-[#161513] hover:bg-white hover:text-black px-3 py-1.5 uppercase text-[10px] font-black transition"
+                            onClick={() => handleApproval(req.id, "approved")}
+                            className="border-2 border-black uppercase px-6 py-4 text-sm md:text-base font-black transition tracking-widest"
+                            style={{ backgroundColor: "#c27c2f", color: "#161513" }}
                           >
                             [AUTORIZAR]
                           </button>
                         </>
                       )}
 
-                      {req.status === 'approved' && (
+                      {req.status === "approved" && (
                         <button
                           type="button"
                           disabled={actionId !== null}
                           onClick={() => handleArrive(req.id)}
-                          className="w-full border-2 border-black bg-emerald-600 text-[#161513] hover:bg-white hover:text-black py-2.5 uppercase text-xs font-black tracking-widest transition flex items-center justify-center gap-1.5"
+                          className="w-full border-2 border-black bg-emerald-600 text-[#161513] hover:bg-white hover:text-black py-4 uppercase text-sm md:text-base font-black tracking-widest transition flex items-center justify-center gap-3"
                         >
-                          <Archive className="h-4 w-4" /> REGISTRAR LLEGADA FÍSICA Y TRANSBORDO
+                          <Archive className="h-5 w-5" /> REGISTRAR LLEGADA FÍSICA Y TRANSBORDO
                         </button>
                       )}
                     </div>
                   </div>
-                );
+                )
               })}
             </div>
           )}
@@ -270,37 +292,54 @@ export default function ManagerLogistics({ campId, onDataChanged, refreshTrigger
 
         {/* SECTION B: OUTGOING TRANSFERS (CARGOS TO OTHER CAMPS) */}
         <div className="space-y-3">
-          <div className="flex items-center gap-2 border-b border-black pb-2 text-[#c27c2f] font-mono">
-            <Send className="h-4 w-4" />
-            <h4 className="font-black text-[10px] uppercase tracking-wider">HISTORIAL_DESPACHOS_SALIENTES ({outgoingRequests.length})</h4>
+          <div className="flex items-center gap-3 border-b-2 border-black pb-4 text-[#c27c2f] font-mono mb-4">
+            <Send className="h-5 w-5" />
+            <h4 className="font-black text-base md:text-lg uppercase tracking-wider">
+              HISTORIAL_DESPACHOS_SALIENTES ({outgoingRequests.length})
+            </h4>
           </div>
 
           {outgoingRequests.length === 0 ? (
-            <div className="font-mono text-xs text-zinc-500 py-8 text-center uppercase border-2 border-black bg-[#161513]">
+            <div className="font-mono text-base md:text-lg text-zinc-500 py-20 px-8 text-center uppercase border-2 border-black bg-[#161513] font-black tracking-widest shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]">
               NINGÚN DESPACHO REGISTRADO DESDE LA BODEGA ACTIVA.
             </div>
           ) : (
             <div className="space-y-3">
               {outgoingRequests.map((req) => (
-                <div key={req.id} className="p-4 border-2 border-black bg-zinc-950/40 font-mono opacity-80">
-                  <div className="flex justify-between items-start">
+                <div
+                  key={req.id}
+                  className="p-8 md:p-10 border-2 border-black bg-zinc-950/40 font-mono opacity-80"
+                >
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                     <div>
-                      <div className="text-[9px] text-zinc-500 uppercase font-black">COOPERATIVO DESTINO: {req.camp_destination_id.toUpperCase()}</div>
-                      <h5 className="font-black text-[#e0d8cc] mt-0.5 text-xs uppercase">{req.resource_type}</h5>
+                      <div className="text-sm md:text-base text-zinc-500 uppercase font-black tracking-widest mb-2">
+                        COOPERATIVO DESTINO: {req.camp_destination_id.toUpperCase()}
+                      </div>
+                      <h5 className="font-black text-xl md:text-2xl text-[#e0d8cc] uppercase leading-tight">
+                        {req.resource_type}
+                      </h5>
                     </div>
-                    <span className="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded border border-black bg-zinc-800 text-zinc-400">
+                    <span className="px-4 py-2 text-sm md:text-base font-black uppercase tracking-widest rounded-sm border border-black bg-zinc-800 text-zinc-400">
                       STATUS: {req.status.toUpperCase()}
                     </span>
                   </div>
 
-                  <div className="mt-3 flex justify-between items-end border-t border-black pt-2 text-[10px] text-zinc-400">
+                  <div className="mt-8 flex justify-between items-end border-t-2 border-black pt-6 text-sm md:text-base text-zinc-400">
                     <div>
-                      <span>PESO ENVIADO:</span>
-                      <span className="font-black block text-zinc-200 text-sm">{req.amount} uds</span>
+                      <span className="text-sm md:text-base text-zinc-500 uppercase font-black tracking-widest block mb-2">
+                        PESO ENVIADO:
+                      </span>
+                      <span className="font-black block text-zinc-200 text-xl md:text-2xl">
+                        {req.amount} uds
+                      </span>
                     </div>
                     <div className="text-right">
-                      <span>DESPACHO SOLAR:</span>
-                      <span className="block font-black">{new Date(req.requested_at).toLocaleDateString()}</span>
+                      <span className="text-sm md:text-base text-zinc-500 uppercase font-black tracking-widest block mb-2">
+                        DESPACHO SOLAR:
+                      </span>
+                      <span className="block font-black text-base md:text-lg text-zinc-400">
+                        {new Date(req.requested_at).toLocaleDateString()}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -308,55 +347,60 @@ export default function ManagerLogistics({ campId, onDataChanged, refreshTrigger
             </div>
           )}
         </div>
-
       </div>
 
       {/* NEW REQUEST MODAL (POST /transfers/requests) */}
       {showRequestModal && (
         <div className="fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-50">
-          <motion.div 
+          <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="w-full max-w-md bg-[#161513] border-4 border-double border-[#c27c2f] p-6 font-mono text-[#e0d8cc] relative shadow-2xl"
+            className="w-full max-w-2xl bg-[#161513] border-4 border-double border-[#c27c2f] p-8 md:p-10 font-mono text-[#e0d8cc] relative shadow-2xl"
           >
-            <div className="flex items-center gap-2 border-b-2 border-black pb-3 mb-4 text-[#c27c2f]">
-              <Truck className="h-5 w-5 animate-pulse text-[#c27c2f]" />
-              <h4 className="font-bold uppercase tracking-widest text-xs">SOLICITUD DE EXPEDICIÓN EXTRAORDINARIA</h4>
+            <div className="flex items-center gap-3 border-b-2 border-black pb-4 mb-6 text-[#c27c2f]">
+              <Truck className="h-8 w-8 animate-pulse text-[#c27c2f]" />
+              <h4 className="font-black uppercase tracking-widest text-lg md:text-xl">
+                SOLICITUD DE EXPEDICIÓN EXTRAORDINARIA
+              </h4>
             </div>
 
-            <form onSubmit={handleCreateRequest} className="space-y-4">
-              <div className="space-y-1">
-                <label className="text-[9px] text-zinc-500 uppercase font-bold block">
+            <form onSubmit={handleCreateRequest} className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-sm text-zinc-500 uppercase font-black block">
                   BÚNKER_DE_SUMINISTRO_ORIGEN:
                 </label>
                 <select
                   value={sourceBunker}
                   onChange={(e) => setSourceBunker(e.target.value)}
-                  className="w-full bg-[#2a2824] border-2 border-black p-2 bg-transparent text-[#e0d8cc] outline-none text-xs font-bold font-mono transition uppercase text-[#e0d8cc]"
+                  className="w-full bg-[#2a2824] border-4 border-black p-4 bg-transparent text-[#e0d8cc] outline-none text-base font-black font-mono transition uppercase shadow-[inset_0_0_10px_rgba(0,0,0,0.8)]"
                 >
-                  {bunkerList.map(b => (
-                    <option key={b} value={b} className="bg-[#161513] text-[#e0d8cc]">{b.toUpperCase()}</option>
+                  {bunkerList.map((b) => (
+                    <option key={b.id} value={b.id} className="bg-[#161513] text-[#e0d8cc]">
+                      {b.name.toUpperCase()}
+                    </option>
                   ))}
                 </select>
               </div>
 
-              <div className="space-y-1">
-                <label className="text-[9px] text-zinc-500 uppercase font-bold block">
+              <div className="space-y-2">
+                <label className="text-sm text-zinc-500 uppercase font-black block">
                   RECURSO_BODEGA_SOLICITADO:
                 </label>
                 <select
                   value={selectedResource}
                   onChange={(e) => setSelectedResource(e.target.value)}
-                  className="w-full bg-[#2a2824] border-2 border-black p-2 bg-transparent text-[#e0d8cc] outline-none text-xs font-bold font-mono transition uppercase text-[#e0d8cc]"
+                  className="w-full bg-[#2a2824] border-4 border-black p-4 bg-transparent text-[#e0d8cc] outline-none text-base font-black font-mono transition uppercase shadow-[inset_0_0_10px_rgba(0,0,0,0.8)]"
                 >
-                  {resourceTypes.map(r => (
-                    <option key={r} value={r} className="bg-[#161513] text-[#e0d8cc]">{r.toUpperCase()}</option>
+                  {resourceTypes.map((r) => (
+                    <option key={r} value={r} className="bg-[#161513] text-[#e0d8cc]">
+                      {r.toUpperCase()}
+                    </option>
                   ))}
                 </select>
               </div>
 
-              <div className="space-y-1">
-                <label className="text-[9px] text-zinc-500 uppercase font-bold block">
+              <div className="space-y-2">
+                <label className="text-sm text-zinc-500 uppercase font-black block">
                   CANTIDAD_CARGA_PEDIDA:
                 </label>
                 <input
@@ -364,38 +408,40 @@ export default function ManagerLogistics({ campId, onDataChanged, refreshTrigger
                   min="1"
                   value={requestAmount}
                   onChange={(e) => setRequestAmount(Math.max(1, parseInt(e.target.value) || 1))}
-                  className="w-full bg-[#2a2824] border-2 border-black p-2 bg-transparent text-[#e0d8cc] outline-none text-xs font-bold font-mono transition"
+                  className="w-full bg-[#2a2824] border-4 border-black p-4 bg-transparent text-[#e0d8cc] outline-none text-base font-black font-mono transition shadow-[inset_0_0_10px_rgba(0,0,0,0.8)]"
                   required
                 />
               </div>
 
-              <div className="space-y-1">
-                <label className="text-[9px] text-zinc-500 uppercase font-bold block">
+              <div className="space-y-2">
+                <label className="text-sm text-zinc-500 uppercase font-black block">
                   MOTIVACIONES / JUSTIFICANTE LOGÍSTICO:
                 </label>
                 <textarea
                   value={requestNotes}
                   onChange={(e) => setRequestNotes(e.target.value)}
-                  rows={2}
+                  rows={3}
                   placeholder="JUSTIFIQUE EL PROTOCOLO DE TRASLADO MRE..."
-                  className="w-full bg-[#2a2824] border-2 border-black p-2 bg-transparent text-[#e0d8cc] outline-none text-xs font-bold font-mono transition uppercase placeholder-zinc-650"
+                  className="w-full bg-[#2a2824] border-4 border-black p-4 bg-transparent text-[#e0d8cc] outline-none text-base font-black font-mono transition uppercase placeholder-zinc-600 shadow-[inset_0_0_10px_rgba(0,0,0,0.8)]"
                 />
               </div>
 
-              <div className="flex gap-2 pt-2">
+              <div className="flex flex-col md:flex-row gap-4 pt-4">
                 <button
                   type="button"
                   onClick={() => setShowRequestModal(false)}
-                  className="flex-1 border-2 border-black bg-transparent text-zinc-400 hover:text-white uppercase text-xs py-2 font-black transition"
+                  className="flex-1 border-2 border-black uppercase text-sm md:text-base py-3 md:py-4 font-black transition"
+                  style={{ backgroundColor: "#9c2720", color: "#ffffff" }}
                 >
                   [CANCELAR]
                 </button>
                 <button
                   type="submit"
                   disabled={submittingRequest}
-                  className="flex-1 border-2 border-black bg-[#c27c2f] text-[#161513] uppercase text-xs py-2 hover:bg-[#a96821] transition font-black flex items-center justify-center gap-2"
+                  className="flex-1 border-2 border-black uppercase text-sm md:text-base py-3 md:py-4 hover:bg-[#a96821] transition font-black flex items-center justify-center gap-2"
+                  style={{ backgroundColor: "#c27c2f", color: "#161513" }}
                 >
-                  {submittingRequest ? 'EMITIENDO...' : 'FIRMAR ORDEN'}
+                  {submittingRequest ? "EMITIENDO..." : "FIRMAR ORDEN"}
                 </button>
               </div>
             </form>
@@ -403,5 +449,5 @@ export default function ManagerLogistics({ campId, onDataChanged, refreshTrigger
         </div>
       )}
     </motion.div>
-  );
+  )
 }
