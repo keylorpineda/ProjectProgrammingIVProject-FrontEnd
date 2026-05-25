@@ -31,6 +31,7 @@ export interface ReviewAdmissionBody {
   decision: "accepted" | "rejected"
   override_profession_id?: number
   notes?: string
+  assign_to_camp_id?: number
 }
 
 export interface CreateAccountBody {

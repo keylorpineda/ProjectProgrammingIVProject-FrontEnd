@@ -7,6 +7,7 @@ import {
   getPendingAdmissions,
   reviewAdmission,
 } from "@/features/admissions/services/admissions.service"
+import { getCamps } from "@/features/camps/services/camps.service"
 import type { AiAdmission } from "@/types/api.types"
 import StampButton from "./StampButton"
 import "./AdmissionsBook.css"
@@ -297,6 +298,14 @@ export default function AdmissionsBook() {
   const [isDemoData, setIsDemoData] = useState(false)
   const [adminNotes, setAdminNotes] = useState("")
 
+  const [camps, setCamps] = useState<any[]>([])
+  const [showCampModal, setShowCampModal] = useState(false)
+  const [selectedCampId, setSelectedCampId] = useState<number | null>(null)
+
+  useEffect(() => {
+    getCamps().then(setCamps).catch(console.error)
+  }, [])
+
   useEffect(() => {
     if (!activeCampId) {
       if (DEMO_ADMISSIONS_ENABLED) {
@@ -425,7 +434,7 @@ export default function AdmissionsBook() {
     setShowingProcessed(false)
   }
 
-  const handleDecision = async (nextDecision: "ACCEPT" | "REJECT") => {
+  const handleDecision = async (nextDecision: "ACCEPT" | "REJECT", assignToCampId?: number) => {
     if (!detailData) return
     setDecision(nextDecision)
     setIsProcessing(true)
@@ -447,6 +456,7 @@ export default function AdmissionsBook() {
       await reviewAdmission(detailData.id, {
         decision: decisionValue,
         notes,
+        ...(assignToCampId ? { assign_to_camp_id: assignToCampId } : {})
       })
 
       setTimeout(() => {
@@ -729,7 +739,7 @@ export default function AdmissionsBook() {
                         <StampButton
                           label="ACEPTAR"
                           type="accept"
-                          onClick={() => handleDecision("ACCEPT")}
+                          onClick={() => setShowCampModal(true)}
                           disabled={!!decision || isProcessing}
                         />
                       </div>
@@ -848,6 +858,62 @@ export default function AdmissionsBook() {
           PASAR PÁG. SIGUIENTE →
         </button>
       </div>
+
+      {showCampModal && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, right: 0, bottom: 0, 
+          backgroundColor: "rgba(0,0,0,0.8)", zIndex: 9999,
+          display: "flex", justifyContent: "center", alignItems: "center"
+        }}>
+          <div style={{
+            background: "#121110", padding: "30px", border: "2px solid #333",
+            color: "#fff", fontFamily: "var(--font-mono)", width: "450px",
+            boxShadow: "0 0 20px rgba(0,0,0,1)"
+          }}>
+            <h3 style={{marginTop: 0, color: "var(--system-green)", fontSize: "1.2rem"}}>ASIGNAR CAMPAMENTO DESTINO</h3>
+            <p style={{fontSize: "14px", color: "#aaa", marginBottom: "20px"}}>
+              Seleccione el campamento al cual será asignado este sobreviviente. Se recomienda revisar las profesiones faltantes.
+            </p>
+            <select
+              style={{
+                width: "100%", padding: "12px", background: "#000", color: "var(--system-green)", 
+                border: "1px solid var(--system-green)", marginBottom: "30px", fontFamily: "var(--font-mono)",
+                fontSize: "1rem"
+              }}
+              value={selectedCampId || ""}
+              onChange={(e) => setSelectedCampId(Number(e.target.value))}
+            >
+              <option value="" disabled>-- Seleccione un campamento --</option>
+              {camps.map(c => (
+                <option key={c.id} value={c.id}>[{c.id}] {c.name.toUpperCase()}</option>
+              ))}
+            </select>
+            <div style={{display: "flex", gap: "10px", justifyContent: "flex-end"}}>
+              <button 
+                onClick={() => { setShowCampModal(false); setSelectedCampId(null); setDecision(null); setIsProcessing(false); }}
+                style={{padding: "10px 20px", background: "transparent", color: "#fff", border: "1px solid #555", cursor: "pointer"}}
+              >
+                CANCELAR
+              </button>
+              <button 
+                disabled={!selectedCampId || isProcessing}
+                onClick={() => {
+                  setShowCampModal(false);
+                  void handleDecision("ACCEPT", selectedCampId!);
+                }}
+                style={{
+                  padding: "10px 20px", 
+                  background: selectedCampId ? "var(--system-green)" : "#333", 
+                  color: selectedCampId ? "#000" : "#777", 
+                  border: "none", fontWeight: "bold", cursor: selectedCampId ? "pointer" : "not-allowed"
+                }}
+              >
+                CONFIRMAR INGRESO
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -36,7 +36,9 @@ type AdmissionFormData = {
   nombre: string
   edad: string
   salud: string
+  salud_score: number
   condicion_fisica: string
+  condicion_fisica_score: number
   habilidades: string
   cedula: string
   correo: string
@@ -564,7 +566,7 @@ export function AdmissionFormTemplate({
                   className="input-group"
                 >
                   <label htmlFor="salud" className="input-label">
-                    Salud <span className="text-fedra-rust">*</span>
+                    Salud (Detalles) <span className="text-fedra-rust">*</span>
                   </label>
                   <textarea
                     id="salud"
@@ -578,6 +580,28 @@ export function AdmissionFormTemplate({
                     required
                   />
                   {errors.salud ? <p className="field-error">{errors.salud}</p> : null}
+                  
+                  <div style={{ marginTop: "1rem" }}>
+                    <label htmlFor="salud_score" className="input-label">
+                      Puntaje de Salud (1-100)
+                    </label>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <input
+                        type="range"
+                        id="salud_score"
+                        name="salud_score"
+                        min="1"
+                        max="100"
+                        value={formData.salud_score}
+                        onChange={onChange}
+                        disabled={isSubmitting}
+                        style={{ flex: 1, accentColor: "var(--system-green)" }}
+                      />
+                      <span className="typewriter-input" style={{ width: "60px", textAlign: "center", padding: "4px" }}>
+                        {formData.salud_score}
+                      </span>
+                    </div>
+                  </div>
                 </motion.div>
 
                 <motion.div
@@ -593,7 +617,7 @@ export function AdmissionFormTemplate({
                   className="input-group"
                 >
                   <label htmlFor="condicion_fisica" className="input-label">
-                    Condicion fisica <span className="text-fedra-rust">*</span>
+                    Condicion fisica (Detalles) <span className="text-fedra-rust">*</span>
                   </label>
                   <textarea
                     id="condicion_fisica"
@@ -609,6 +633,28 @@ export function AdmissionFormTemplate({
                   {errors.condicion_fisica ? (
                     <p className="field-error">{errors.condicion_fisica}</p>
                   ) : null}
+                  
+                  <div style={{ marginTop: "1rem" }}>
+                    <label htmlFor="condicion_fisica_score" className="input-label">
+                      Puntaje Físico (1-100)
+                    </label>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <input
+                        type="range"
+                        id="condicion_fisica_score"
+                        name="condicion_fisica_score"
+                        min="1"
+                        max="100"
+                        value={formData.condicion_fisica_score}
+                        onChange={onChange}
+                        disabled={isSubmitting}
+                        style={{ flex: 1, accentColor: "var(--system-green)" }}
+                      />
+                      <span className="typewriter-input" style={{ width: "60px", textAlign: "center", padding: "4px" }}>
+                        {formData.condicion_fisica_score}
+                      </span>
+                    </div>
+                  </div>
                 </motion.div>
 
                 <motion.div
@@ -717,7 +763,9 @@ const initialFormData: AdmissionFormData = {
   nombre: "",
   edad: "",
   salud: "",
+  salud_score: 50,
   condicion_fisica: "",
+  condicion_fisica_score: 50,
   habilidades: "",
   cedula: "",
   correo: "",
@@ -734,7 +782,14 @@ export default function AdmissionNew() {
 
   const handleChange = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = event.target
-    const normalizedValue = name === "cedula" ? value.replace(/\D/g, "") : value
+    let normalizedValue: string | number = value
+
+    if (name === "cedula") {
+      normalizedValue = value.replace(/\D/g, "")
+    } else if (name === "salud_score" || name === "condicion_fisica_score") {
+      normalizedValue = Number(value)
+    }
+
     const fieldName = name as keyof AdmissionFormData
 
     setFormData((previous) => ({
@@ -843,8 +898,8 @@ export default function AdmissionNew() {
         first_name,
         last_name,
         age: Number.isFinite(ageNumber) ? ageNumber : 0,
-        health_status: 50,
-        physical_condition: 50,
+        health_status: formData.salud_score,
+        physical_condition: formData.condicion_fisica_score,
         skills: skillsList.length > 0 ? skillsList : [formData.habilidades.trim()],
         criminal_record: false,
         camp_id: DEFAULT_CAMP_ID,
