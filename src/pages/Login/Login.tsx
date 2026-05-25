@@ -9,10 +9,16 @@ type LoginStatus = "waiting" | "processing" | "granted" | "denied"
 
 export default function Login() {
   const navigate = useNavigate()
-  const setAuth = useAuthStore((state) => state.setAuth)
+  const { setAuth, isAuthenticated } = useAuthStore((state) => state)
   const [loginStatus, setLoginStatus] = useState<LoginStatus>("waiting")
   const [isGateOpen, setIsGateOpen] = useState(false)
   const rafRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   // MotionValues bypass React state — zero re-renders on mouse move
   const mouseX = useMotionValue(0)
@@ -36,16 +42,7 @@ export default function Login() {
       setIsGateOpen(true)
       setTimeout(() => {
         const normalizedRole = role?.toLowerCase()
-        const destination =
-          normalizedRole === "admin"
-            ? "/admin/dashboard"
-            : normalizedRole === "worker"
-              ? "/worker"
-              : normalizedRole === "camp_leader"
-                ? "/campleader"
-                : normalizedRole === "resource_manager" || normalizedRole === "travel_manager"
-                  ? "/admin/dashboard"
-                  : "/login"
+        const destination = "/dashboard";
         navigate(destination)
       }, 3500)
     }, 1500)

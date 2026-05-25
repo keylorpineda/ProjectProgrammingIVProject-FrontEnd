@@ -1,16 +1,18 @@
-import { Suspense, lazy } from "react"
+import { Suspense } from "react"
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
 import ProtectedRoute from "./components/layout/ProtectedRoute"
 import MainLayout from "./components/layout/MainLayout"
 import Login from "./pages/Login/Login"
 import AdmissionNew from "./pages/AdmissionNew/AdmissionNew"
 
-// Lazy-loaded components for Code Splitting
-const TravelDashboard = lazy(() => import("./pages/TravelManager/components/TravelDashboard"))
-const TravelTeam = lazy(() => import("./pages/TravelManager/components/TravelTeam"))
-const TravelResources = lazy(() => import("./pages/TravelManager/components/TravelResources"))
-const TravelTransfers = lazy(() => import("./pages/TravelManager/components/TravelTransfers"))
-const TravelExplorations = lazy(() => import("./pages/TravelManager/components/TravelExplorations"))
+// Role-Based Routers for Unified Layout
+import DashboardRouter from "./components/routing/DashboardRouter"
+import PersonnelRouter from "./components/routing/PersonnelRouter"
+import InventoryRouter from "./components/routing/InventoryRouter"
+import TransfersRouter from "./components/routing/TransfersRouter"
+import ExpeditionsRouter from "./components/routing/ExpeditionsRouter"
+
+import RoleSwitcher from "./components/layout/RoleSwitcher"
 
 // Fallback skeleton for Lazy Loading
 const PageSkeleton = () => (
@@ -25,6 +27,7 @@ const PageSkeleton = () => (
 function App() {
   return (
     <Router>
+      <RoleSwitcher />
       <Routes>
         {/* PUBLIC ROUTES */}
         <Route path="/login" element={<Login />} />
@@ -37,42 +40,31 @@ function App() {
         {/* PROTECTED ROUTES (UNIFIED MAIN LAYOUT) */}
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>
-            
-            {/* 
-              Every route inside here is wrapped in Suspense for lazy loading.
-              We use path parameters or exact matches based on the new unified URLs.
-            */}
-            
-            <Route path="/dashboard" element={
+            <Route path="dashboard" element={
               <Suspense fallback={<PageSkeleton />}>
-                <TravelDashboard />
+                <DashboardRouter />
               </Suspense>
             } />
-            
-            <Route path="/personnel" element={
+            <Route path="personnel" element={
               <Suspense fallback={<PageSkeleton />}>
-                <TravelTeam />
+                <PersonnelRouter />
               </Suspense>
             } />
-            
-            <Route path="/inventory" element={
+            <Route path="inventory" element={
               <Suspense fallback={<PageSkeleton />}>
-                <TravelResources />
+                <InventoryRouter />
               </Suspense>
             } />
-            
-            <Route path="/transfers" element={
+            <Route path="transfers" element={
               <Suspense fallback={<PageSkeleton />}>
-                <TravelTransfers />
+                <TransfersRouter />
               </Suspense>
             } />
-            
-            <Route path="/expeditions" element={
+            <Route path="expeditions" element={
               <Suspense fallback={<PageSkeleton />}>
-                <TravelExplorations />
+                <ExpeditionsRouter />
               </Suspense>
             } />
-
             {/* Fallback for authenticated users */}
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Route>
