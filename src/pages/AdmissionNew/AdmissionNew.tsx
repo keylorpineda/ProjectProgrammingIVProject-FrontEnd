@@ -20,7 +20,8 @@ function useWheelToScroll<T extends HTMLElement>() {
     const scene = el.closest(".scene-container") as HTMLElement | null
     if (!scene) return
     const onWheel = (event: WheelEvent) => {
-      if (el.contains(event.target as Node)) return
+      // Hijack ALL scroll events in the scene to scroll this container manually.
+      // This bypasses browser bugs with scrolling 3D-transformed containers on Windows.
       el.scrollTop += event.deltaY
       event.preventDefault()
     }
@@ -145,10 +146,7 @@ export function AdmissionFormTemplate({
   const formScrollRef = useWheelToScroll<HTMLFormElement>()
   const successScrollRef = useWheelToScroll<HTMLDivElement>()
 
-  useEffect(() => {
-    const timer = window.setTimeout(() => setPhase("form"), 3800)
-    return () => window.clearTimeout(timer)
-  }, [])
+  // No auto-zoom, wait for user click
 
   useEffect(() => {
     if (!formData.foto) {
@@ -176,8 +174,54 @@ export function AdmissionFormTemplate({
     return spores
   }
 
+  const handleZoom = () => {
+    if (phase === "intro") {
+      setPhase("form")
+      setTimeout(() => {
+        if (formScrollRef.current) {
+          formScrollRef.current.scrollTo({ top: 0, behavior: "smooth" })
+        }
+      }, 100)
+    }
+  }
+
   return (
     <div className="scene-container">
+      {phase === "intro" && (
+        <div
+          onClick={handleZoom}
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 9999,
+            cursor: "pointer",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "flex-start",
+            paddingTop: "15vh",
+            background: "transparent"
+          }}
+        >
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0.2, 1, 0.2] }}
+            transition={{ repeat: Infinity, duration: 2 }}
+            style={{
+              color: "var(--system-green)",
+              fontFamily: "var(--font-mono)",
+              fontSize: "1.2rem",
+              pointerEvents: "none",
+              letterSpacing: "0.2em",
+              textShadow: "0 0 10px rgba(91,122,74,0.8)",
+              textAlign: "center"
+            }}
+          >
+            [ SISTEMA EN ESPERA ]<br/><br/>
+            HAGA CLIC EN CUALQUIER LADO PARA ACERCAR Y COMENZAR
+          </motion.div>
+        </div>
+      )}
       <div className="noise-overlay" />
       <div className="admission-scanlines" />
       <div className="vignette" />
@@ -266,6 +310,7 @@ export function AdmissionFormTemplate({
           <label
             htmlFor="foto"
             className={`military-map ${photoPreviewUrl ? "has-photo" : "is-empty"} ${errors.foto ? "has-error" : ""}`}
+            style={{ pointerEvents: phase === "intro" ? "none" : "auto" }}
             title={photoPreviewUrl ? "Cambiar foto del candidato" : "Adjuntar foto del candidato"}
           >
             {photoPreviewUrl ? (

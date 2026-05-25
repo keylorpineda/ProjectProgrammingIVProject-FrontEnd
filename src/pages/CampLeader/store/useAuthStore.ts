@@ -1,86 +1,56 @@
-﻿// @ts-nocheck
+// @ts-nocheck
 /**
- * @license
- * SPDX-License-Identifier: Apache-2.0
+ * CampLeader Auth Store — reads the real JWT session from the global app store.
  */
 
-import { useState, useEffect } from 'react';
-import { User } from '../types';
+import { useState, useEffect } from "react"
+
+interface User {
+  id: number
+  username: string
+  role: string
+  campId: number
+}
 
 interface AuthState {
-  user: User | null;
-  isAuthenticated: boolean;
-  logout: () => void;
-  login: (username: string, campId: number) => void;
+  user: User | null
+  isAuthenticated: boolean
 }
 
-// Simple pub-sub store for global authentication state simulation
-class AuthStore {
-  private state: { user: User | null; isAuthenticated: boolean };
-  private listeners: Set<() => void> = new Set();
-
-  constructor() {
-    this.state = {
-      user: {
-        id: 77,
-        username: "COMANDANTE_M_VANCE",
-        role: "camp_leader",
-        campId: 1 // Refugio Alfa (Búnker Central)
-      },
-      isAuthenticated: true
-    };
+function readRealUser(): User | null {
+  try {
+    // Try the shared auth-storage (Zustand persisted store)
+    const raw = localStorage.getItem("auth-storage")
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      const u = parsed?.state?.user
+      if (u) {
+        return {
+          id: Number(u.id ?? u.userId ?? 0),
+          username: u.username ?? u.name ?? "USUARIO",
+          role: u.role ?? "camp_leader",
+          campId: Number(u.camp_id ?? u.campId ?? 1),
+        }
+      }
+    }
+  } catch {
+    // ignore
   }
-
-  getState() {
-    return this.state;
-  }
-
-  subscribe(listener: () => void) {
-    this.listeners.add(listener);
-    return () => { this.listeners.delete(listener); };
-  }
-
-  private notify() {
-    this.listeners.forEach(listener => listener());
-  }
-
-  login(username: string, campId: number) {
-    this.state = {
-      user: {
-        id: Math.floor(Math.random() * 900) + 100,
-        username: username.toUpperCase(),
-        role: "camp_leader",
-        campId: campId
-      },
-      isAuthenticated: true
-    };
-    this.notify();
-  }
-
-  logout() {
-    this.state = {
-      user: null,
-      isAuthenticated: false
-    };
-    this.notify();
-  }
+  return null
 }
-
-const globalAuthStore = new AuthStore();
 
 export function useAuthStore(): AuthState {
-  const [state, setState] = useState(globalAuthStore.getState());
+  const [user, setUser] = useState<User | null>(readRealUser)
 
   useEffect(() => {
-    return globalAuthStore.subscribe(() => {
-      setState({ ...globalAuthStore.getState() });
-    });
-  }, []);
+    // Re-read whenever localStorage changes (e.g. after login/switch-camp)
+    const onStorage = () => setUser(readRealUser())
+    window.addEventListener("storage", onStorage)
+    return () => window.removeEventListener("storage", onStorage)
+  }, [])
 
   return {
-    user: state.user,
-    isAuthenticated: state.isAuthenticated,
-    login: (username: string, campId: number) => globalAuthStore.login(username, campId),
-    logout: () => globalAuthStore.logout()
-  };
+    user,
+    isAuthenticated: user !== null,
+  }
 }
