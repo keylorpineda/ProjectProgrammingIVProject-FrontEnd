@@ -64,13 +64,13 @@ export default function DashboardView({
 
   return (
     <motion.div
-      className="p-6 space-y-8"
+      className="p-10 space-y-10"
       variants={containerVariants}
       initial="hidden"
       animate="show"
     >
       {/* TÍTULO PÁGINA */}
-      <div className="border-b border-[#c27c2f]/30 pb-4 flex flex-col md:flex-row justify-between items-start md:items-center">
+      <div className="border-b border-[#c27c2f]/30 pb-6 flex flex-col md:flex-row justify-between items-start md:items-center">
         <div>
           <h2 className="font-typewriter text-2xl font-bold tracking-wider text-[#fca311] uppercase uppercase">
             ESTACIÓN CENTRAL DE TABLERO DE COMBATE
@@ -83,12 +83,12 @@ export default function DashboardView({
       </div>
 
       {/* METRICS GRID - STICKY NOTES FEEL */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         {/* CARD 1: EXPLORACIONES EN CURSO */}
         <motion.div
           variants={itemVariants}
           onClick={() => onNavigate("explorations")}
-          className="bg-[#9a9080] border border-black p-5 relative overflow-hidden text-black transition-transform hover:scale-[1.01] flex flex-col justify-between group min-h-[160px]"
+          className="bg-[#9a9080] border border-black p-7 relative overflow-hidden text-black transition-transform hover:scale-[1.01] flex flex-col justify-between group min-h-[200px]"
           style={{ transform: "rotate(0.4deg)" }}
         >
           <div className="flex justify-between items-start">
@@ -119,7 +119,7 @@ export default function DashboardView({
         <motion.div
           variants={itemVariants}
           onClick={() => onNavigate("transfers")}
-          className="bg-[#9a9080] border border-black p-5 relative overflow-hidden text-black transition-transform hover:scale-[1.01] flex flex-col justify-between group min-h-[160px] bg-amber-100/90"
+          className="bg-[#9a9080] border border-black p-7 relative overflow-hidden text-black transition-transform hover:scale-[1.01] flex flex-col justify-between group min-h-[200px] bg-amber-100/90"
           style={{ transform: "rotate(0.5deg)" }}
         >
           <div className="flex justify-between items-start">
@@ -150,7 +150,7 @@ export default function DashboardView({
         <motion.div
           variants={itemVariants}
           onClick={() => onNavigate("inventory")}
-          className={`bg-[#9a9080] border border-black p-5 relative overflow-hidden text-black transition-transform hover:scale-[1.01] flex flex-col justify-between group min-h-[160px] ${
+          className={`bg-[#9a9080] border border-black p-7 relative overflow-hidden text-black transition-transform hover:scale-[1.01] flex flex-col justify-between group min-h-[200px] ${
             criticalStocks.length > 0
               ? "warning-card text-[#9c2720]"
               : "bg-emerald-200/95 text-[#2b4c33] border-emerald-900"
@@ -198,7 +198,7 @@ export default function DashboardView({
         <motion.div
           variants={itemVariants}
           onClick={() => onNavigate("profile")}
-          className="bg-[#9a9080] border border-black p-5 relative overflow-hidden text-black transition-transform hover:scale-[1.01] flex flex-col justify-between group min-h-[160px] "
+          className="bg-[#9a9080] border border-black p-7 relative overflow-hidden text-black transition-transform hover:scale-[1.01] flex flex-col justify-between group min-h-[200px]"
           style={{ transform: "rotate(1deg)" }}
         >
           <div className="flex justify-between items-start">
@@ -225,13 +225,13 @@ export default function DashboardView({
       </div>
 
       {/* COLUMNAS INTERMEDIAS: EQUIPOS ACTIVOS & BALANCES */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* COL-LEFT: REPORTE DE EXCURSIONISTAS ACTUALES */}
         <div
           id="active-teams-dashboard"
-          className="bg-black/30 border border-[#3b4d3e] rounded-lg p-6 backdrop-blur-sm shadow-md lg:col-span-8"
+          className="bg-black/30 border border-[#3b4d3e] rounded-lg p-8 backdrop-blur-sm shadow-md lg:col-span-8"
         >
-          <div className="flex items-center gap-3 border-b border-[#c27c2f]/20 pb-3 mb-4">
+          <div className="flex items-center gap-3 border-b border-[#c27c2f]/20 pb-4 mb-6">
             <Compass className="w-5 h-5 text-amber-500" />
             <h3 className="font-typewriter text-2xl font-bold tracking-wider text-[#fca311] uppercase uppercase">
               SITUACIÓN DE EXCURSIONISTAS EN ZONA MUERTA
@@ -302,7 +302,7 @@ export default function DashboardView({
         {/* COL-RIGHT: BALANCE DIARIO */}
         <div
           id="camp-balance-dashboard"
-          className="bg-black/30 border border-[#3b4d3e] rounded-lg p-6 backdrop-blur-sm shadow-md lg:col-span-4"
+          className="bg-black/30 border border-[#3b4d3e] rounded-lg p-8 backdrop-blur-sm shadow-md lg:col-span-4"
         >
           <div className="flex items-center gap-3 border-b border-[#c27c2f]/20 pb-3 mb-4">
             <Scale className="w-5 h-5 text-amber-500" />

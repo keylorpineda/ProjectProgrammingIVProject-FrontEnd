@@ -137,9 +137,9 @@ export default function TransfersView({
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-10 space-y-8">
       {/* PAGE HEADER */}
-      <div className="border-b border-[#c27c2f]/30 pb-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="border-b border-[#c27c2f]/30 pb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h2 className="font-typewriter text-2xl font-bold tracking-wider text-[#fca311] uppercase">
             TRASLADOS INTER-CAMPAMENTOS
@@ -162,7 +162,7 @@ export default function TransfersView({
       </div>
 
       {/* FILTER BUTTONS ROW */}
-      <div className="flex flex-col gap-4 bg-black/40 p-4 border border-[#3b4d3e] rounded">
+      <div className="flex flex-col gap-4 bg-black/40 p-6 border border-[#3b4d3e] rounded">
         {/* Toggle Role */}
         <div className="flex flex-wrap bg-[#111111] p-1 rounded border border-[#3b4d3e]/40 gap-1">
           <button
@@ -218,7 +218,7 @@ export default function TransfersView({
       </div>
 
       {/* TRANSFERS CARDS LIST */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {filteredTransfers.length === 0 ? (
           <div className="col-span-full text-center py-16 border border-dashed border-zinc-800 rounded bg-black/10">
             <Truck className="w-12 h-12 text-zinc-600 mx-auto mb-3 animate-pulse" />
@@ -243,7 +243,7 @@ export default function TransfersView({
             return (
               <div
                 key={t.id}
-                className="bg-[#9a9080] border border-black relative overflow-hidden text-black transition-transform hover:scale-[1.01] p-5 relative overflow-hidden flex flex-col justify-between"
+                className="bg-[#9a9080] border border-black relative overflow-hidden text-black transition-transform hover:scale-[1.01] p-7 flex flex-col justify-between"
                 style={{ transform: `rotate(${Math.cos(t.id) * 0.3}deg)` }}
               >
                 {/* Header info card */}
