@@ -15,6 +15,7 @@ export type Role = 'admin' | 'camp_leader' | 'resource_manager' | 'travel_manage
 export interface NavItem {
   id: string;
   label: string;
+  roleLabels?: Partial<Record<Role, string>>;
   path: string;
   icon: React.ElementType;
   allowedRoles: Role[];
@@ -23,7 +24,13 @@ export interface NavItem {
 export const NAVIGATION_CONFIG: NavItem[] = [
   {
     id: 'dashboard',
-    label: 'COMANDO CENTRAL',
+    label: 'TABLERO',
+    roleLabels: {
+      admin: 'TABLERO',
+      travel_manager: 'TABLERO',
+      camp_leader: 'TABLERO',
+      worker: 'TABLERO'
+    },
     path: '/dashboard',
     icon: LayoutDashboard,
     allowedRoles: ['admin', 'camp_leader', 'resource_manager', 'travel_manager', 'worker'],
@@ -31,20 +38,37 @@ export const NAVIGATION_CONFIG: NavItem[] = [
   {
     id: 'personnel',
     label: 'PERSONAL',
+    roleLabels: {
+      admin: 'PERSONAL',
+      travel_manager: 'PERSONAL',
+      camp_leader: 'PERFIL',
+      worker: 'PERFIL'
+    },
     path: '/personnel',
     icon: Users,
     allowedRoles: ['admin', 'camp_leader', 'resource_manager', 'travel_manager', 'worker'],
   },
   {
     id: 'inventory',
-    label: 'BODEGA Y LOGÍSTICA',
+    label: 'RECURSOS',
+    roleLabels: {
+      admin: 'RECURSOS',
+      travel_manager: 'RECURSOS',
+      camp_leader: 'INVENTARIO',
+      worker: 'INVENTARIO'
+    },
     path: '/inventory',
     icon: Box,
     allowedRoles: ['admin', 'camp_leader', 'resource_manager', 'travel_manager', 'worker'],
   },
   {
     id: 'expeditions',
-    label: 'EXPEDICIONES',
+    label: 'EXPLORACIONES',
+    roleLabels: {
+      admin: 'EXPLORACIONES',
+      travel_manager: 'EXPLORACIONES',
+      camp_leader: 'EXPLORACIONES'
+    },
     path: '/expeditions',
     icon: Map,
     allowedRoles: ['admin', 'camp_leader', 'travel_manager'],
@@ -52,15 +76,23 @@ export const NAVIGATION_CONFIG: NavItem[] = [
   {
     id: 'transfers',
     label: 'TRASLADOS',
+    roleLabels: {
+      admin: 'TRASLADOS',
+      travel_manager: 'TRASLADOS',
+      camp_leader: 'TRASLADOS'
+    },
     path: '/transfers',
     icon: Truck,
     allowedRoles: ['admin', 'camp_leader', 'resource_manager', 'travel_manager'],
   },
   {
     id: 'refugees',
-    label: 'AUDITORÍA IA',
+    label: 'ADMISIONES',
+    roleLabels: {
+      admin: 'ADMISIONES'
+    },
     path: '/refugees',
     icon: ShieldAlert,
-    allowedRoles: ['admin', 'camp_leader', 'resource_manager', 'travel_manager'],
+    allowedRoles: ['admin', 'resource_manager'],
   },
 ];
