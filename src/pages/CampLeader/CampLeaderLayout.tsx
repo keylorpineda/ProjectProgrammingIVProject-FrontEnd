@@ -2,6 +2,7 @@ import { useState, useEffect } from "react"
 import "./campleader.css"
 import { motion, AnimatePresence } from "framer-motion"
 import { useAuthStore } from "@/store/useAuthStore"
+import InactivityGuard from "@/components/ui/InactivityGuard"
 
 import {
   explorationsService,
@@ -33,7 +34,7 @@ import type {
 } from "./types"
 
 export default function CampLeaderLayout() {
-  const { user } = useAuthStore()
+  const { user, logout } = useAuthStore()
   const [activeTab, setActiveTab] = useState("dashboard")
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(false)
@@ -242,6 +243,10 @@ export default function CampLeaderLayout() {
   }
 
   return (
+    <InactivityGuard
+      isAuthenticated={!!user}
+      onLogout={() => { logout(); window.location.href = "/login" }}
+    >
     <div className="campleader-view relative min-h-screen bg-[#161513] text-white flex flex-col overflow-x-hidden select-none">
       {/* CRT SCANLINES SCREEN STYLES */}
       <div className="crt-overlay" />
@@ -310,5 +315,6 @@ export default function CampLeaderLayout() {
         </div>
       </div>
     </div>
+    </InactivityGuard>
   )
 }

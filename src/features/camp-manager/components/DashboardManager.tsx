@@ -12,6 +12,7 @@ import ManagerWorkforce from "./ManagerWorkforce"
 import ManagerLogistics from "./ManagerLogistics"
 import { Terminal, Database, Radio, Users, Truck, LogOut } from "lucide-react"
 import { AnimatePresence } from "framer-motion"
+import InactivityGuard from "@/components/ui/InactivityGuard"
 
 type TabID = "overview" | "inventory" | "workforce" | "logistics"
 
@@ -121,6 +122,10 @@ export default function DashboardManager() {
 
 
   return (
+    <InactivityGuard
+      isAuthenticated={!!user}
+      onLogout={() => { logout(); navigate("/login") }}
+    >
     <div className="h-screen max-h-screen bg-[#0d0c0b] text-[#e0d8cc] relative overflow-hidden font-mono flex flex-col">
       {/* SCANLINE OVERLAY */}
       <div
@@ -387,5 +392,6 @@ export default function DashboardManager() {
         </div>
       </div>
     </div>
+    </InactivityGuard>
   )
 }
