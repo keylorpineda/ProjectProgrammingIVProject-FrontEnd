@@ -41,7 +41,7 @@ const AdminLayout = () => {
       <div className="admin-main-content">
         {!isMapTestRoute ? (
           <header className="admin-topbar">
-            <div className="topbar-title">CONFIDENTIAL // CAMP ARCHIVE</div>
+            <div className="topbar-title">CONFIDENCIAL // ARCHIVO DE CAMPAMENTOS</div>
             <div className="topbar-actions">
               <CampSelector />
               <div className="user-pill">

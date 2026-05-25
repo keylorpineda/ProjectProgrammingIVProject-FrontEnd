@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion"
 import { useAuth } from "@/pages/Admin/context/AuthContext"
-import { useProfessions, useProfessionMetrics } from "@/features/worker/hooks/useWorkerAPI"
+import { useProfessions, useProfessionMetrics, useCamp, useMyProfile } from "@/features/worker/hooks/useWorkerAPI"
 import "./WorkerViews.css"
 
 type ProfessionDetail = {
@@ -41,6 +41,11 @@ export default function WorkerProfessions() {
   const { user } = useAuth()
   const { data: professions } = useProfessions()
   const { metrics } = useProfessionMetrics()
+  const { data: campData } = useCamp(user?.camp_id)
+  const { data: profile } = useMyProfile()
+  const campName = campData?.camp?.name ?? `CAMPAMENTO #${user?.camp_id ?? "?"}`
+  const myProfessionId = profile?.person?.profession_id ?? null
+  const myProfessionName = profile?.person?.profession?.name ?? null
 
   const criticalCount = metrics.filter((m) => m.status === "CRÍTICO").length
 
@@ -48,10 +53,26 @@ export default function WorkerProfessions() {
     <div className="wv-page">
       <div className="wv-page-header">
         <h2>MANDO OCUPACIONAL</h2>
-        <span className="wv-breadcrumb">
-          SECTOR {user?.camp_id ?? "?"} // ASIGNACIÓN ESTRATÉGICA
-        </span>
+        <span className="wv-breadcrumb">{campName}</span>
       </div>
+
+      {/* Worker's own profession banner */}
+      {myProfessionName ? (
+        <motion.div
+          className="wv-my-profession-banner"
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 140 }}
+        >
+          <span className="wv-my-prof-tag">TU PROFESIÓN</span>
+          <span className="wv-my-prof-name">{myProfessionName.toUpperCase()}</span>
+          {profile?.person?.can_work ? (
+            <span className="wv-my-prof-status active">● OPERATIVO</span>
+          ) : (
+            <span className="wv-my-prof-status inactive">○ NO DISPONIBLE</span>
+          )}
+        </motion.div>
+      ) : null}
 
       <AnimatePresence>
         {criticalCount > 0 ? (
@@ -70,16 +91,20 @@ export default function WorkerProfessions() {
         {(professions ?? []).map((profession, i) => {
           const metric = metrics.find((m) => m.id === profession.id)
           const count = profession.persons?.length ?? 0
+          const activeCount = profession.persons?.filter((p) => p.status === "activo").length ?? 0
           const required = profession.minimum_active_required
           const status = metric?.status ?? "OK"
           const pct = required > 0 ? Math.min((count / required) * 100, 100) : 100
           const detail = getProfessionDetail(profession.name)
+          const isMine = myProfessionId != null && String(profession.id) === String(myProfessionId)
           const cornerColor =
             status === "CRÍTICO"
               ? "var(--accent-critical)"
               : status === "DÉFICIT"
                 ? "var(--accent-warning)"
-                : "var(--accent-approved)"
+                : isMine
+                  ? "var(--accent-amber)"
+                  : "var(--accent-approved)"
 
           return (
             <motion.div
@@ -90,13 +115,17 @@ export default function WorkerProfessions() {
                   : status === "DÉFICIT"
                     ? "wv-prof-warning"
                     : ""
-              }`}
+              } ${isMine ? "wv-prof-mine" : ""}`}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05, type: "spring", stiffness: 160 }}
               whileHover={{ translateY: -4 }}
             >
               <div className="wv-prof-corner-badge" style={{ borderRightColor: cornerColor }} />
+
+              {isMine ? (
+                <div className="wv-prof-mine-tag">● TU PROFESIÓN</div>
+              ) : null}
 
               <div className="wv-prof-name">{profession.name}</div>
 
@@ -127,7 +156,7 @@ export default function WorkerProfessions() {
               </div>
 
               <div className="wv-prof-bar-track">
-                <div
+                <motion.div
                   className={`wv-prof-bar-fill ${
                     status === "CRÍTICO"
                       ? "wv-prof-bar-critical"
@@ -135,10 +164,26 @@ export default function WorkerProfessions() {
                         ? "wv-prof-bar-warning"
                         : "wv-prof-bar-ok"
                   }`}
-                  style={{ width: `${pct}%` }}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${pct}%` }}
+                  transition={{ duration: 0.7, ease: "easeOut", delay: i * 0.05 }}
                 />
               </div>
 
+              <div className="wv-prof-detail-row">
+                <span className="wv-prof-detail-key">ACTIVOS</span>
+                <span
+                  className="wv-prof-detail-val"
+                  style={{
+                    color:
+                      activeCount < required
+                        ? "var(--accent-critical)"
+                        : "var(--accent-approved)",
+                  }}
+                >
+                  {activeCount} / {required}
+                </span>
+              </div>
               <div className="wv-prof-detail-row">
                 <span className="wv-prof-detail-key">FUNCIÓN</span>
                 <span className="wv-prof-detail-val">{detail.detailA}</span>

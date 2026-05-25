@@ -17,6 +17,10 @@ import type {
   InventoryMovement,
   ApiError,
   ResourcesQueryParams,
+  UserBadge,
+  DailyBalance,
+  CampWithMetrics,
+  MyProfile,
 } from "@/types/worker.api.types"
 
 // Query keys factory
@@ -28,6 +32,10 @@ export const workerQueryKeys = {
   resourcesWithParams: (params: ResourcesQueryParams) => ["worker", "resources", params] as const,
   inventory: (campId: string | number) => ["worker", "inventory", campId] as const,
   movements: (campId: string | number) => ["worker", "movements", campId] as const,
+  badges: ["worker", "badges"] as const,
+  balance: (campId: string | number) => ["worker", "balance", campId] as const,
+  camp: (campId: string | number) => ["worker", "camp", campId] as const,
+  myProfile: ["worker", "my-profile"] as const,
 }
 
 /**
@@ -226,6 +234,126 @@ export const useInventoryStatus = (campId: string | number | null | undefined) =
   }, [inventory])
 
   return { stats, isLoading, error }
+}
+
+/**
+ * Hook to fetch badges earned by the current user
+ * GET /api/users/me/badges
+ */
+export const useMyBadges = (): UseQueryResult<UserBadge[], ApiError> => {
+  const { token } = useAuthStore()
+
+  React.useEffect(() => {
+    setAuthToken(token)
+  }, [token])
+
+  return useQuery({
+    queryKey: workerQueryKeys.badges,
+    queryFn: () => workerService.getMyBadges(),
+    enabled: !!token,
+    placeholderData: [],
+    retry: 1,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
+  })
+}
+
+/**
+ * Hook to get daily production/consumption balance for the camp
+ * GET /api/users/camp/:campId/balance
+ */
+export const useDailyBalance = (
+  campId: string | number | null | undefined,
+): UseQueryResult<DailyBalance, ApiError> => {
+  const { token } = useAuthStore()
+
+  React.useEffect(() => {
+    setAuthToken(token)
+  }, [token])
+
+  return useQuery({
+    queryKey: workerQueryKeys.balance(campId || ""),
+    queryFn: () => {
+      if (!campId) throw new Error("Camp ID is required")
+      return workerService.getDailyBalance(campId)
+    },
+    enabled: !!token && !!campId,
+    retry: 1,
+    staleTime: 3 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  })
+}
+
+/**
+ * Hook to fetch camp details by ID
+ * GET /camps/:id  — no @Roles restriction, accessible to workers
+ */
+export const useCamp = (
+  campId: string | number | null | undefined,
+): UseQueryResult<CampWithMetrics, ApiError> => {
+  const { token } = useAuthStore()
+
+  React.useEffect(() => {
+    setAuthToken(token)
+  }, [token])
+
+  return useQuery({
+    queryKey: workerQueryKeys.camp(campId || ""),
+    queryFn: () => {
+      if (!campId) throw new Error("Camp ID is required")
+      return workerService.getCampById(campId)
+    },
+    enabled: !!token && !!campId,
+    retry: 1,
+    staleTime: 10 * 60 * 1000, // 10 minutes — camp info rarely changes
+    gcTime: 30 * 60 * 1000,
+  })
+}
+
+/**
+ * Hook to fetch the current user's full profile (person + profession)
+ * GET /users/me/profile
+ */
+export const useMyProfile = (): UseQueryResult<MyProfile, ApiError> => {
+  const { token } = useAuthStore()
+
+  React.useEffect(() => {
+    setAuthToken(token)
+  }, [token])
+
+  return useQuery({
+    queryKey: workerQueryKeys.myProfile,
+    queryFn: () => workerService.getMyProfile(),
+    enabled: !!token,
+    retry: 1,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
+  })
+}
+
+/**
+ * Hook to fetch explorations for the worker's camp (read-only).
+ */
+export const useCampExplorations = (
+  campId: string | number | null | undefined,
+): UseQueryResult<unknown[], ApiError> => {
+  const { token } = useAuthStore()
+
+  React.useEffect(() => {
+    setAuthToken(token)
+  }, [token])
+
+  return useQuery({
+    queryKey: ["worker", "explorations", campId || ""],
+    queryFn: () => {
+      if (!campId) throw new Error("Camp ID is required")
+      return workerService.getCampExplorations(campId)
+    },
+    enabled: !!token && !!campId,
+    retry: 1,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  })
 }
 
 // Re-export service helpers for direct use

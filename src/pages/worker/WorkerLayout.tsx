@@ -1,31 +1,30 @@
 import { useMemo } from "react"
 import { Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom"
 import { useAuth } from "@/pages/Admin/context/AuthContext"
+import { useCamp } from "@/features/worker/hooks/useWorkerAPI"
 import WorkerSidebar from "@/components/ui/WorkerSidebar"
 import WorkerTopBar from "@/components/ui/WorkerTopBar"
+import FirstLoginAchievement from "@/components/ui/FirstLoginAchievement"
 import WorkerDashboard from "./WorkerDashboard"
 import WorkerProfile from "./WorkerProfile"
 import WorkerProfessions from "./WorkerProfessions"
 import WorkerResources from "./WorkerResources"
+import WorkerExpeditions from "./WorkerExpeditions"
 import "./worker.css"
 
-function WorkerTransfersPlaceholder() {
-  return (
-    <div className="worker-section-maintenance">
-      <h2>TRASLADOS EN MANTENIMIENTO</h2>
-      <p>Modulo pendiente de conexion // Terminal worker activa</p>
-    </div>
-  )
-}
 
 export default function WorkerLayout() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
 
+  // Fetch real camp data from API
+  const { data: campData } = useCamp(user?.camp_id)
+  const campName = campData?.camp?.name ?? (user?.camp_id ? `#${user.camp_id}` : undefined)
+
   const activeTab = useMemo(() => {
     const route = location.pathname.split("/").filter(Boolean).pop()
-    return route || "profile"
+    return route || "dashboard"
   }, [location.pathname])
 
   const setActiveTab = (tab: string) => {
@@ -44,13 +43,14 @@ export default function WorkerLayout() {
       <WorkerSidebar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        userName={user?.id}
+        userName={user?.username ?? user?.id}
+        campName={campName}
         onLogout={handleLogout}
       />
 
       {/* Main Content Area */}
       <div className="worker-main-content">
-        <WorkerTopBar campName={user?.camp_id ?? undefined} userName={user?.id} />
+        <WorkerTopBar campName={campName} userName={user?.username ?? user?.id} />
 
         <main className="worker-route-container custom-scrollbar">
           <div className="max-w-7xl mx-auto">
@@ -59,18 +59,23 @@ export default function WorkerLayout() {
               <Route path="profile" element={<WorkerProfile />} />
               <Route path="professions" element={<WorkerProfessions />} />
               <Route path="resources" element={<WorkerResources />} />
-              <Route path="transfers" element={<WorkerTransfersPlaceholder />} />
-              <Route path="*" element={<Navigate to="profile" replace />} />
+              <Route path="expeditions" element={<WorkerExpeditions />} />
+              <Route path="*" element={<Navigate to="dashboard" replace />} />
             </Routes>
           </div>
         </main>
 
+        {/* First-login achievement modal */}
+        {user ? (
+          <FirstLoginAchievement userId={user.id} userName={user.username} />
+        ) : null}
+
         <footer className="worker-footer">
-          <p>SYSTEM CAPACITY: 94% // ACTIVE NODES: 12</p>
+          <p>GESTIÓN DEL FIN — PROTOCOLO DE SUPERVIVENCIA ACTIVO</p>
           <div className="worker-footer-status">
             <span className="worker-link-dot" />
-            <span>Local Link Established</span>
-            <span>Encrypted Transmission Active</span>
+            <span>ENLACE ESTABLECIDO</span>
+            <span>TRANSMISIÓN CIFRADA</span>
           </div>
         </footer>
       </div>

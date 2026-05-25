@@ -7,6 +7,10 @@ import type {
   InventoryItem,
   InventoryMovement,
   ApiError,
+  UserBadge,
+  DailyBalance,
+  CampWithMetrics,
+  MyProfile,
 } from "@/types/worker.api.types"
 
 // The worker module previously had its own axios instance and `setAuthToken`.
@@ -155,6 +159,82 @@ export const workerService = {
   getStockPercentage(item: InventoryItem): number {
     if (item.minimum_stock_required === 0) return 100
     return Math.round((item.current_quantity / (item.minimum_stock_required * 2)) * 100)
+  },
+
+  /**
+   * GET /users/me/badges
+   * Returns badges (UserAssets with relation_type="badge") for the current user.
+   */
+  async getMyBadges(): Promise<UserBadge[]> {
+    try {
+      const response = await api.get<UserBadge[] | { badges: UserBadge[] }>("/users/me/badges")
+      const data = response.data
+      if (Array.isArray(data)) return data
+      return (data as { badges?: UserBadge[] }).badges ?? []
+    } catch (error) {
+      console.error("Error fetching badges:", error)
+      throw handleApiError(error)
+    }
+  },
+
+  /**
+   * GET /users/camp/:campId/balance
+   * Returns daily production/consumption balance for the camp.
+   */
+  async getDailyBalance(campId: string | number): Promise<DailyBalance> {
+    try {
+      const response = await api.get<DailyBalance>(`/users/camp/${campId}/balance`)
+      return response.data
+    } catch (error) {
+      console.error(`Error fetching daily balance for camp ${campId}:`, error)
+      throw handleApiError(error)
+    }
+  },
+
+  /**
+   * GET /users/me/profile
+   * Returns the current user's full profile including person + profession.
+   */
+  async getMyProfile(): Promise<MyProfile> {
+    try {
+      const response = await api.get<MyProfile>("/users/me/profile")
+      return response.data
+    } catch (error) {
+      console.error("Error fetching user profile:", error)
+      throw handleApiError(error)
+    }
+  },
+
+  /**
+   * GET /camps/:id
+   * Returns camp details + metrics. No @Roles restriction — accessible to workers.
+   */
+  async getCampById(campId: string | number): Promise<CampWithMetrics> {
+    try {
+      const response = await api.get<CampWithMetrics>(`/camps/${campId}`)
+      return response.data
+    } catch (error) {
+      console.error(`Error fetching camp ${campId}:`, error)
+      throw handleApiError(error)
+    }
+  },
+
+  /**
+   * GET /explorations?campId=:campId
+   * Returns explorations for the worker's camp (read-only view).
+   */
+  async getCampExplorations(campId: string | number): Promise<unknown[]> {
+    try {
+      const response = await api.get<unknown[]>("/explorations", {
+        params: { campId: Number(campId) },
+      })
+      const data = response.data
+      if (Array.isArray(data)) return data
+      return (data as { data?: unknown[] }).data ?? []
+    } catch (error) {
+      console.error(`Error fetching explorations for camp ${campId}:`, error)
+      throw handleApiError(error)
+    }
   },
 }
 

@@ -5,6 +5,7 @@
 
 
 import { LayoutDashboard, Compass, Truck, Boxes, User as UserIcon, Skull } from "lucide-react"
+import { useAuthStore } from "@/store/useAuthStore"
 
 interface SidebarProps {
   activeTab: string
@@ -12,6 +13,7 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
+  const { user } = useAuthStore()
   const tabs = [
     { id: "dashboard", label: "TABLERO", icon: LayoutDashboard },
     { id: "explorations", label: "EXPLORACIONES", icon: Compass },
@@ -107,16 +109,16 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
           }}
         >
           <p className="text-[10px] font-mono leading-4" style={{ color: "#fca311" }}>
-            SECTOR: <span className="text-white font-bold">COSTA GRIS</span>
+            COMANDANTE: <span className="text-white font-bold uppercase">{user?.username ?? "—"}</span>
           </p>
           <p className="text-[10px] font-mono leading-4 mt-1" style={{ color: "#fca311" }}>
-            ESTACIÓN: <span className="text-white font-bold">ALFA-01</span>
+            CAMPAMENTO: <span className="text-white font-bold">#{user?.camp_id ?? "?"}</span>
           </p>
           <p
             className="text-[10px] font-mono leading-5 mt-1 font-extrabold animate-pulse"
             style={{ color: "#ef4444" }}
           >
-            SITUACIÓN: COMBATE
+            SITUACIÓN: OPERATIVO
           </p>
         </div>
       </div>

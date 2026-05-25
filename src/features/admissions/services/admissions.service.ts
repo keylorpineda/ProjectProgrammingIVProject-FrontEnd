@@ -77,11 +77,16 @@ export const getAdmissionById = async (id: string): Promise<AiAdmission> => {
   return data
 }
 
+export interface ReviewAdmissionResponse {
+  admission: AiAdmission
+  person?: unknown
+}
+
 export const reviewAdmission = async (
   id: string,
   body: ReviewAdmissionBody,
-): Promise<AiAdmission> => {
-  const { data } = await api.post<AiAdmission>(`/ai/admissions/${id}/review`, body)
+): Promise<ReviewAdmissionResponse> => {
+  const { data } = await api.post<ReviewAdmissionResponse>(`/ai/admissions/${id}/review`, body)
   return data
 }
 

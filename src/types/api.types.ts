@@ -247,6 +247,7 @@ export interface AiAdmission {
   admin_notes: string | null
   submission_date: string
   review_date: string | null
+  registration_token?: string | null
 }
 
 export interface CriticalResource {

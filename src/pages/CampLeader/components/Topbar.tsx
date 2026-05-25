@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useEffect } from "react"
-import { useAuthStore } from "../store/useAuthStore"
+import { useAuthStore } from "@/store/useAuthStore"
 import { Radio, AlertTriangle, ShieldCheck, Clock, LogOut } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 
@@ -22,30 +22,16 @@ export default function Topbar({ survivalScore }: TopbarProps) {
     navigate("/login")
   }
 
-  const [timeStr, setTimeStr] = useState("2026-05-23 01:59:17")
+  const formatNow = () => {
+    const now = new Date()
+    const pad = (n: number) => n.toString().padStart(2, "0")
+    return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`
+  }
 
-  // Keep a running Clock synchronized to the user timestamp simulation
+  const [timeStr, setTimeStr] = useState(formatNow)
+
   useEffect(() => {
-    let seconds = 17
-    let minutes = 59
-    let hours = 1
-
-    const interval = setInterval(() => {
-      seconds++
-      if (seconds >= 60) {
-        seconds = 0
-        minutes++
-        if (minutes >= 60) {
-          minutes = 0
-          hours++
-          if (hours >= 24) hours = 0
-        }
-      }
-
-      const pad = (n: number) => n.toString().padStart(2, "0")
-      setTimeStr(`2026-05-23 ${pad(hours)}:${pad(minutes)}:${pad(seconds)}`)
-    }, 1000)
-
+    const interval = setInterval(() => setTimeStr(formatNow()), 1000)
     return () => clearInterval(interval)
   }, [])
 
@@ -97,7 +83,7 @@ export default function Topbar({ survivalScore }: TopbarProps) {
               {user?.username || "DESCONOCIDO"}
             </span>
             <span className="text-[9px] font-mono bg-[#c27c2f] text-black px-1.5 py-0.5 rounded uppercase font-bold">
-              LIDER DE VIAJES
+              LIDER DE CAMPAMENTO
             </span>
           </div>
           <div className="w-9 h-9 border border-[#c27c2f] flex items-center justify-center bg-[#111] rounded">

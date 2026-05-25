@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react"
 import { isAxiosError } from "axios"
 import { motion } from "framer-motion"
 import { ShieldAlert, CheckCircle, Loader2 } from "lucide-react"
-import { submitAdmission, trackAdmission } from "@/features/admissions/services/admissions.service"
+import { submitAdmission } from "@/features/admissions/services/admissions.service"
 import { uploadPersonImage } from "@/features/upload/services/upload.service"
 import "./AdmissionNew.css"
 
@@ -40,6 +40,10 @@ type AdmissionFormData = {
   condicion_fisica: string
   condicion_fisica_score: number
   habilidades: string
+  years_experience: number
+  psychological_evaluation: number
+  criminal_record: boolean
+  previous_profession: string
   cedula: string
   correo: string
   foto: File | null
@@ -71,6 +75,7 @@ export interface AdmissionFormProps {
   onFileChange: (event: ChangeEvent<HTMLInputElement>) => void
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
   isSubmitting: boolean
+  uploadPhase?: "idle" | "compressing" | "uploading" | "registering"
   errors: AdmissionFormErrors
   submitError?: string
   submitMessage?: string
@@ -86,8 +91,25 @@ const formatPersonalHistory = (formData: AdmissionFormData): string => {
     `Cedula: ${formData.cedula.trim()}`,
     `Contacto: ${formData.correo.trim()}`,
   ]
+  if (formData.previous_profession.trim()) {
+    parts.push(`Profesion previa: ${formData.previous_profession.trim()}`)
+  }
   return `${parts.join(". ")}.`
 }
+
+// Referencia de habilidades para que los candidatos sepan qué ingresar por profesión
+const SKILL_REFERENCE: Array<{ role: string; keywords: string }> = [
+  { role: "Explorador",      keywords: "exploración, reconocimiento, supervivencia, navegación" },
+  { role: "Guardia",         keywords: "seguridad, combate, defensa, armas, vigilancia" },
+  { role: "Médico",          keywords: "medicina, primeros auxilios, enfermería, salud" },
+  { role: "Granjero",        keywords: "agricultura, cultivo, cosecha, ganadería" },
+  { role: "Cazador",         keywords: "caza, rastreo, armas, puntería, trampas" },
+  { role: "Rec. Agua",       keywords: "agua, plomería, hidráulica, ingeniería" },
+  { role: "Ingeniero",       keywords: "ingeniería, mecánica, reparación, electricidad" },
+  { role: "Cocinero",        keywords: "cocina, gastronomía, preparación de alimentos" },
+  { role: "Constructor",     keywords: "construcción, carpintería, albañilería, obras" },
+  { role: "Investigador",    keywords: "investigación, ciencia, análisis, laboratorio" },
+]
 
 const splitName = (full: string): { first_name: string; last_name: string } => {
   const cleaned = full.trim().replace(/\s+/g, " ")
@@ -119,19 +141,6 @@ const extractApiErrorMessage = (error: unknown): string => {
   return "No se pudo registrar la admision. Intenta nuevamente."
 }
 
-const getStoredToken = (): string | null => {
-  const authToken = localStorage.getItem("auth-token")
-  if (authToken) return authToken
-
-  try {
-    const authStorageRaw = localStorage.getItem("auth-storage")
-    if (!authStorageRaw) return null
-    const parsedStorage = JSON.parse(authStorageRaw) as { state?: { token?: string } }
-    return parsedStorage.state?.token ?? null
-  } catch {
-    return null
-  }
-}
 
 export function AdmissionFormTemplate({
   formData,
@@ -139,6 +148,7 @@ export function AdmissionFormTemplate({
   onFileChange,
   onSubmit,
   isSubmitting,
+  uploadPhase = "idle",
   errors,
   submitError,
   submitMessage,
@@ -671,6 +681,9 @@ export function AdmissionFormTemplate({
                 >
                   <label htmlFor="habilidades" className="input-label">
                     Habilidades <span className="text-fedra-rust">*</span>
+                    <span style={{ fontWeight: 400, fontSize: "0.7rem", color: "var(--system-green)", marginLeft: 6 }}>
+                      — use términos en inglés separados por comas
+                    </span>
                   </label>
                   <textarea
                     id="habilidades"
@@ -679,11 +692,179 @@ export function AdmissionFormTemplate({
                     onChange={onChange}
                     rows={2}
                     className="typewriter-input textarea-resize"
-                    placeholder="Armas, medicina, sigilo, mecanica..."
+                    placeholder="medicina, seguridad, ingeniería, agricultura, armas..."
                     disabled={isSubmitting}
                     required
                   />
                   {errors.habilidades ? <p className="field-error">{errors.habilidades}</p> : null}
+                  <details style={{ marginTop: "0.5rem" }}>
+                    <summary style={{ cursor: "pointer", fontSize: "0.7rem", color: "var(--fedra-muted)", letterSpacing: "0.08em" }}>
+                      ▶ VER PALABRAS CLAVE POR ROL
+                    </summary>
+                    <div style={{
+                      marginTop: "0.5rem",
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr",
+                      gap: "4px 12px",
+                      fontSize: "0.65rem",
+                      fontFamily: "var(--font-mono)",
+                      color: "var(--fedra-muted)",
+                      border: "1px solid var(--fedra-border)",
+                      padding: "8px",
+                      background: "rgba(0,0,0,0.3)",
+                    }}>
+                      {SKILL_REFERENCE.map(({ role, keywords }) => (
+                        <div key={role}>
+                          <span style={{ color: "var(--system-green)", fontWeight: 600 }}>{role}:</span>{" "}
+                          <span style={{ opacity: 0.8 }}>{keywords}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </details>
+                </motion.div>
+
+                <motion.div
+                  variants={{
+                    hidden: { opacity: 0, y: 10, rotateX: 10 },
+                    visible: {
+                      opacity: 1,
+                      y: 0,
+                      rotateX: 0,
+                      transition: { type: "spring", stiffness: 50 },
+                    },
+                  }}
+                  className="input-group"
+                >
+                  <label htmlFor="previous_profession" className="input-label">
+                    Profesión Anterior
+                  </label>
+                  <input
+                    type="text"
+                    id="previous_profession"
+                    name="previous_profession"
+                    value={formData.previous_profession}
+                    onChange={onChange}
+                    className="typewriter-input"
+                    placeholder="Médico, Ingeniero, Soldado..."
+                    disabled={isSubmitting}
+                  />
+                </motion.div>
+
+                <div style={{ display: "flex", gap: "1rem", width: "100%" }}>
+                  <motion.div
+                    variants={{
+                      hidden: { opacity: 0, y: 10, rotateX: 10 },
+                      visible: {
+                        opacity: 1,
+                        y: 0,
+                        rotateX: 0,
+                        transition: { type: "spring", stiffness: 50 },
+                      },
+                    }}
+                    className="input-group"
+                    style={{ flex: 1 }}
+                  >
+                    <label htmlFor="years_experience" className="input-label">
+                      Años de Experiencia
+                    </label>
+                    <input
+                      type="number"
+                      id="years_experience"
+                      name="years_experience"
+                      value={formData.years_experience}
+                      onChange={onChange}
+                      min={0}
+                      max={50}
+                      step={1}
+                      inputMode="numeric"
+                      className="typewriter-input"
+                      placeholder="0"
+                      disabled={isSubmitting}
+                    />
+                    <p className="field-helper" style={{ fontSize: "0.65rem", opacity: 0.6 }}>
+                      +2 pts por año (máx. 20 pts bonus)
+                    </p>
+                  </motion.div>
+
+                  <motion.div
+                    variants={{
+                      hidden: { opacity: 0, y: 10, rotateX: 10 },
+                      visible: {
+                        opacity: 1,
+                        y: 0,
+                        rotateX: 0,
+                        transition: { type: "spring", stiffness: 50 },
+                      },
+                    }}
+                    className="input-group"
+                    style={{ flex: 1, alignSelf: "flex-start" }}
+                  >
+                    <span className="input-label">Antecedentes</span>
+                    <label
+                      htmlFor="criminal_record"
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                        cursor: "pointer",
+                        marginTop: "8px",
+                        fontFamily: "var(--font-mono)",
+                        fontSize: "0.75rem",
+                        color: formData.criminal_record ? "var(--fedra-rust)" : "var(--fedra-muted)",
+                        letterSpacing: "0.08em",
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        id="criminal_record"
+                        name="criminal_record"
+                        checked={formData.criminal_record}
+                        onChange={onChange}
+                        disabled={isSubmitting}
+                        style={{ accentColor: "var(--fedra-rust)", width: 16, height: 16 }}
+                      />
+                      {formData.criminal_record ? "⚠ ANTECEDENTES PENALES" : "SIN ANTECEDENTES"}
+                    </label>
+                    <p className="field-helper" style={{ fontSize: "0.65rem", opacity: 0.6, marginTop: 4 }}>
+                      Anula puntos de riesgo si aplica
+                    </p>
+                  </motion.div>
+                </div>
+
+                <motion.div
+                  variants={{
+                    hidden: { opacity: 0, y: 10, rotateX: 10 },
+                    visible: {
+                      opacity: 1,
+                      y: 0,
+                      rotateX: 0,
+                      transition: { type: "spring", stiffness: 50 },
+                    },
+                  }}
+                  className="input-group"
+                >
+                  <label htmlFor="psychological_evaluation" className="input-label">
+                    Evaluación Psicológica (0-100)
+                    <span style={{ fontWeight: 400, fontSize: "0.68rem", color: "var(--fedra-muted)", marginLeft: 6 }}>
+                      — estabilidad emocional estimada
+                    </span>
+                  </label>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <input
+                      type="range"
+                      id="psychological_evaluation"
+                      name="psychological_evaluation"
+                      min="0"
+                      max="100"
+                      value={formData.psychological_evaluation}
+                      onChange={onChange}
+                      disabled={isSubmitting}
+                      style={{ flex: 1, accentColor: "var(--system-green)" }}
+                    />
+                    <span className="typewriter-input" style={{ width: "60px", textAlign: "center", padding: "4px" }}>
+                      {formData.psychological_evaluation}
+                    </span>
+                  </div>
                 </motion.div>
 
                 <motion.div
@@ -742,7 +923,12 @@ export function AdmissionFormTemplate({
                       {isSubmitting ? (
                         <>
                           <Loader2 className="spin-icon" />
-                          <span>Procesando...</span>
+                          <span>
+                            {uploadPhase === "compressing" && "Comprimiendo foto..."}
+                            {uploadPhase === "uploading" && "Subiendo foto..."}
+                            {uploadPhase === "registering" && "Registrando solicitud..."}
+                            {uploadPhase === "idle" && "Procesando..."}
+                          </span>
                         </>
                       ) : (
                         <span>Guardar Solicitud</span>
@@ -767,14 +953,49 @@ const initialFormData: AdmissionFormData = {
   condicion_fisica: "",
   condicion_fisica_score: 50,
   habilidades: "",
+  years_experience: 0,
+  psychological_evaluation: 70,
+  criminal_record: false,
+  previous_profession: "",
   cedula: "",
   correo: "",
   foto: null,
 }
 
+// Compresses an image file client-side using a canvas (keeps JPEG quality ~0.75,
+// max dimension 1024 px). Reduces multi-MB photos to ~80-150 KB before upload.
+async function compressImage(file: File, maxDim = 1024, quality = 0.75): Promise<File> {
+  return new Promise((resolve) => {
+    const img = new Image()
+    const blobUrl = URL.createObjectURL(file)
+    img.onload = () => {
+      URL.revokeObjectURL(blobUrl)
+      const { width, height } = img
+      const scale = Math.min(1, maxDim / Math.max(width, height))
+      const canvas = document.createElement("canvas")
+      canvas.width = Math.round(width * scale)
+      canvas.height = Math.round(height * scale)
+      const ctx = canvas.getContext("2d")
+      if (!ctx) { resolve(file); return }
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) { resolve(file); return }
+          resolve(new File([blob], file.name.replace(/\.\w+$/, ".jpg"), { type: "image/jpeg" }))
+        },
+        "image/jpeg",
+        quality,
+      )
+    }
+    img.onerror = () => { URL.revokeObjectURL(blobUrl); resolve(file) }
+    img.src = blobUrl
+  })
+}
+
 export default function AdmissionNew() {
   const [formData, setFormData] = useState<AdmissionFormData>(initialFormData)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [uploadPhase, setUploadPhase] = useState<"idle" | "compressing" | "uploading" | "registering">("idle")
   const [errors, setErrors] = useState<AdmissionFormErrors>({})
   const [submitMessage, setSubmitMessage] = useState("")
   const [submitError, setSubmitError] = useState("")
@@ -782,12 +1003,20 @@ export default function AdmissionNew() {
 
   const handleChange = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = event.target
-    let normalizedValue: string | number = value
+    const target = event.target as HTMLInputElement
+    let normalizedValue: string | number | boolean = value
 
     if (name === "cedula") {
       normalizedValue = value.replace(/\D/g, "")
-    } else if (name === "salud_score" || name === "condicion_fisica_score") {
+    } else if (
+      name === "salud_score" ||
+      name === "condicion_fisica_score" ||
+      name === "years_experience" ||
+      name === "psychological_evaluation"
+    ) {
       normalizedValue = Number(value)
+    } else if (name === "criminal_record") {
+      normalizedValue = target.checked
     }
 
     const fieldName = name as keyof AdmissionFormData
@@ -878,6 +1107,7 @@ export default function AdmissionNew() {
     setErrors({})
     setSubmissionDetails(null)
     setIsSubmitting(true)
+    setUploadPhase("idle")
 
     try {
       const skillsList = parseSkills(formData.habilidades)
@@ -887,12 +1117,16 @@ export default function AdmissionNew() {
       let photoUrl: string | undefined
       if (formData.foto) {
         try {
-          const uploaded = await uploadPersonImage(formData.foto)
+          setUploadPhase("compressing")
+          const compressed = await compressImage(formData.foto)
+          setUploadPhase("uploading")
+          const uploaded = await uploadPersonImage(compressed)
           photoUrl = uploaded.url
         } catch {
           photoUrl = undefined
         }
       }
+      setUploadPhase("registering")
 
       const response = await submitAdmission({
         first_name,
@@ -901,35 +1135,28 @@ export default function AdmissionNew() {
         health_status: formData.salud_score,
         physical_condition: formData.condicion_fisica_score,
         skills: skillsList.length > 0 ? skillsList : [formData.habilidades.trim()],
-        criminal_record: false,
+        criminal_record: formData.criminal_record,
+        years_experience: formData.years_experience > 0 ? formData.years_experience : undefined,
+        psychological_evaluation: formData.psychological_evaluation,
+        previous_profession: formData.previous_profession.trim() || undefined,
         camp_id: DEFAULT_CAMP_ID,
         contact_email: formData.correo.trim(),
         personal_history: formatPersonalHistory(formData),
         photo_url: photoUrl,
       })
 
-      let trackedStatus: string = response.status
-      const token = getStoredToken()
-      if (token) {
-        try {
-          const trackedAdmission = await trackAdmission(response.tracking_code)
-          trackedStatus = trackedAdmission.status
-        } catch {
-          trackedStatus = response.status
-        }
-      }
-
       setSubmissionDetails({
         trackingCode: response.tracking_code,
         recommendation: response.suggested_decision ?? "",
         score: response.score ?? 0,
-        status: trackedStatus,
+        status: response.status,
       })
       setSubmitMessage("EVALUACION REGISTRADA.")
     } catch (error: unknown) {
       setSubmitError(extractApiErrorMessage(error))
     } finally {
       setIsSubmitting(false)
+      setUploadPhase("idle")
     }
   }
 
@@ -940,6 +1167,7 @@ export default function AdmissionNew() {
       onFileChange={handleFileChange}
       onSubmit={handleSubmit}
       isSubmitting={isSubmitting}
+      uploadPhase={uploadPhase}
       errors={errors}
       submitError={submitError}
       submitMessage={submitMessage}

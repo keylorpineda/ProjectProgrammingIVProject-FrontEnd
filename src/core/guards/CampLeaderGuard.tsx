@@ -8,20 +8,20 @@ interface CampLeaderGuardProps {
 export default function CampLeaderGuard({ children }: CampLeaderGuardProps) {
   const { user, isAuthenticated } = useAuthStore()
 
-  // Check authentication
   if (!isAuthenticated || !user) {
     return <Navigate to="/login" replace />
   }
 
-  // Check role
   const role = user.role?.toLowerCase()
   const isCampLeader = role === "camp_leader" || role === "admin"
 
-  // If user has invalid role, redirect to login (or dashboard if they are something else)
-  if (!isCampLeader) {
-    return <Navigate to="/login" replace />
-  }
+  if (isCampLeader) return <>{children}</>
 
-  // User is authenticated and has correct role
-  return <>{children}</>
+  // Known non-camp-leader roles → redirect to their area
+  if (role === "worker")          return <Navigate to="/worker/dashboard" replace />
+  if (role === "camp_manager")    return <Navigate to="/camp-manager" replace />
+  if (role === "resource_manager")return <Navigate to="/camp-manager" replace />
+  if (role === "travel_manager")  return <Navigate to="/travel-manager/dashboard" replace />
+
+  return <Navigate to="/login" replace />
 }

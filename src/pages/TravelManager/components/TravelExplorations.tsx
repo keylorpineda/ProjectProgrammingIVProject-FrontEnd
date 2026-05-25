@@ -22,7 +22,7 @@ import {
   Loader2,
   ChevronRight,
 } from "lucide-react"
-import { useAuth } from "@/pages/Admin/context/AuthContext"
+import { useAuthStore } from "@/store/useAuthStore"
 import {
   getExplorations,
   createExploration,
@@ -32,6 +32,7 @@ import {
 } from "@/features/explorations/services/explorations.service"
 import { getPersons } from "@/features/persons/services/persons.service"
 import { getInventory } from "@/features/inventory/services/inventory.service"
+import { MapCoordPicker } from "@/features/map-test/components/MapCoordPicker"
 import type { Exploration, Person, InventoryItem } from "@/types/api.types"
 import type { ReturnExplorationFormData } from "@/types/travel-comms.types"
 
@@ -79,7 +80,7 @@ interface TimelineStep {
 // ── Main component ──────────────────────────────────────────────────────────
 
 export default function TravelExplorations() {
-  const { user } = useAuth()
+  const { user } = useAuthStore()
   const queryClient = useQueryClient()
   const baseCampId = user?.camp_id ?? ""
 
@@ -106,6 +107,8 @@ export default function TravelExplorations() {
   const [newSelectedResources, setNewSelectedResources] = useState<
     Array<{ resource_id: string; quantity: number }>
   >([])
+  const [destLat, setDestLat] = useState<number | null>(null)
+  const [destLng, setDestLng] = useState<number | null>(null)
 
   // Return form state
   const [returnDate, setReturnDate] = useState(new Date().toISOString().substring(0, 10))
@@ -245,6 +248,8 @@ export default function TravelExplorations() {
     setNewGraceDays(0)
     setNewSelectedPersons([])
     setNewSelectedResources([])
+    setDestLat(null)
+    setDestLng(null)
     setFormError("")
   }
 
@@ -269,10 +274,15 @@ export default function TravelExplorations() {
       return
     }
 
+    const coordSuffix =
+      destLat !== null && destLng !== null
+        ? ` [${destLat.toFixed(5)}, ${destLng.toFixed(5)}]`
+        : ""
+
     createMutation.mutate({
       camp_id: baseCampId,
       name: newName,
-      destination_description: newDestination,
+      destination_description: newDestination + coordSuffix,
       departure_date: newDepartureDate,
       estimated_days: newEstimatedDays,
       grace_days: newGraceDays,
@@ -885,6 +895,37 @@ export default function TravelExplorations() {
                     </div>
                   </div>
 
+                  {/* Map coord picker */}
+                  <div>
+                    <label className="text-sm md:text-base font-mono font-black text-[#c27c2f] uppercase tracking-widest block mb-2 flex items-center gap-2">
+                      <MapPin className="h-4 w-4" />
+                      Zona de Destino en el Mapa
+                      <span className="text-white/30 font-normal normal-case tracking-normal text-xs">
+                        — haz clic para marcar coordenadas
+                      </span>
+                    </label>
+                    <div className="border border-[#c27c2f]/30 overflow-hidden">
+                      <MapCoordPicker
+                        lat={destLat}
+                        lng={destLng}
+                        onChange={(lat, lng) => { setDestLat(lat); setDestLng(lng) }}
+                      />
+                    </div>
+                    {destLat !== null && destLng !== null && (
+                      <p className="mt-1 text-xs font-mono text-[#c27c2f]/70 flex items-center gap-2">
+                        <span className="inline-block w-2 h-2 rounded-full bg-[#c27c2f] animate-pulse" />
+                        COORDENADAS: {destLat.toFixed(5)}, {destLng.toFixed(5)}
+                        <button
+                          type="button"
+                          onClick={() => { setDestLat(null); setDestLng(null) }}
+                          className="text-white/30 hover:text-white/70 ml-2 underline"
+                        >
+                          limpiar
+                        </button>
+                      </p>
+                    )}
+                  </div>
+
                   {/* Dates and duration */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
@@ -939,8 +980,12 @@ export default function TravelExplorations() {
                           .filter(
                             (p) =>
                               p.status === "active" ||
+                              p.status === "activo" ||
                               p.status === "idle" ||
-                              p.status === "resting",
+                              p.status === "inactivo" ||
+                              p.status === "resting" ||
+                              p.status === "available" ||
+                              !p.status,
                           )
                           .map((person) => {
                             const sel = newSelectedPersons.find((s) => s.person_id === person.id)

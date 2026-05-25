@@ -109,3 +109,100 @@ export interface ResourceCategory {
   count: number
   resources: Resource[]
 }
+
+// ============================================================================
+// GAMIFICATION — Badges (UserAsset con relation_type="badge")
+// ============================================================================
+
+export interface UserBadgeAsset {
+  id: number
+  name: string
+  description: string | null
+  asset_type: string
+  category: string | null
+  url: string
+  thumbnail_url: string | null
+  rarity: number | null
+  metadata: Record<string, unknown> | null
+  active: boolean
+}
+
+export interface UserBadge {
+  id: number
+  user_account_id: number
+  asset_id: number
+  relation_type: string
+  acquired_at: string | null
+  is_displayed: boolean
+  context_data: Record<string, unknown> | null
+  asset: UserBadgeAsset
+}
+
+// ============================================================================
+// DAILY BALANCE — GET /users/camp/:campId/balance
+// ============================================================================
+
+export interface DailyBalance {
+  production: { food: number; water: number }
+  consumption: { food: number; water: number }
+  balance: { food: number; water: number }
+  persons: number
+}
+
+// ============================================================================
+// USER PROFILE — GET /users/me/profile
+// Returns UserAccount with person + person.profession relations
+// ============================================================================
+
+export interface MyProfession {
+  id: number
+  name: string
+  can_explore: boolean
+  minimum_active_required: number
+}
+
+export interface MyPerson {
+  id: number
+  first_name: string
+  last_name: string
+  status: "activo" | "inactivo" | "enfermo" | "herido"
+  experience_level: number
+  can_work: boolean
+  profession_id: number | null
+  profession: MyProfession | null
+}
+
+export interface MyProfile {
+  id: number | string
+  username: string
+  email: string
+  camp_id: number | string | null
+  person: MyPerson | null
+}
+
+// ============================================================================
+// CAMP — GET /camps/:id  (no @Roles restriction — worker-accessible)
+// ============================================================================
+
+export interface Camp {
+  id: number
+  name: string
+  location_description: string | null
+  latitude: number | null
+  longitude: number | null
+  max_capacity: number | null
+  active: boolean
+  foundation_date: string | null
+  logo_url: string | null
+}
+
+export interface CampMetrics {
+  totalResources: number
+  resourcesWithAlerts: number
+  inventorySummary: Record<string, unknown>[]
+}
+
+export interface CampWithMetrics {
+  camp: Camp
+  metrics: CampMetrics
+}

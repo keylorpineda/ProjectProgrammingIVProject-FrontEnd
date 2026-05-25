@@ -8,6 +8,7 @@ import type React from "react";
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import type { Exploration, ExplorationStatus, Person, Inventory, ResourceItem } from "../types"
+import { MapCoordPicker } from "@/features/map-test/components/MapCoordPicker"
 import {
   Compass,
   Plus,
@@ -16,11 +17,8 @@ import {
   XSquare,
   Users,
   Package,
-  Calendar,
-  Clock,
-  BookOpen,
+  MapPin,
   Search,
-  ChevronRight,
   TriangleAlert,
   Archive,
   Star,
@@ -62,6 +60,8 @@ export default function ExplorationsView({
   const [newExpGraceDays, setNewExpGraceDays] = useState(1)
   const [newExpNotes, setNewExpNotes] = useState("")
   const [selectedPeople, setSelectedPeople] = useState<number[]>([])
+  const [destLat, setDestLat] = useState<number | null>(null)
+  const [destLng, setDestLng] = useState<number | null>(null)
   const [provisionStocks, setProvisionStocks] = useState<{ [key: number]: number }>({
     1: 10, // Default 10 Comida
     2: 10, // Default 10 Agua
@@ -124,10 +124,16 @@ export default function ExplorationsView({
         quantity: value,
       }))
 
+      // Embed coordinates in description if picked on map
+      const coordSuffix =
+        destLat != null && destLng != null
+          ? ` [${destLat.toFixed(5)}, ${destLng.toFixed(5)}]`
+          : ""
+
       await onCreateExploration({
         camp_id: 1,
         name: newExpName,
-        destination_description: newExpDest,
+        destination_description: newExpDest + coordSuffix,
         departure_date: new Date().toISOString(),
         estimated_days: Number(newExpESTDays),
         grace_days: Number(newExpGraceDays),
@@ -143,6 +149,8 @@ export default function ExplorationsView({
       setNewExpGraceDays(1)
       setNewExpNotes("")
       setSelectedPeople([])
+      setDestLat(null)
+      setDestLng(null)
       setIsNewModalOpen(false)
     } catch (err: any) {
       setFormError(err.message || "FALLO EN REGISTRO DE MISIÓN.")
@@ -348,6 +356,20 @@ export default function ExplorationsView({
                     </div>
                   </div>
 
+                  {/* Show map pin if coordinates embedded in description */}
+                  {/\[-?\d+\.\d+,\s*-?\d+\.\d+\]/.test(exp.destination_description) && (() => {
+                    const match = exp.destination_description.match(/\[(-?\d+\.\d+),\s*(-?\d+\.\d+)\]/)
+                    if (!match) return null
+                    const lat = parseFloat(match[1])
+                    const lng = parseFloat(match[2])
+                    return (
+                      <div className="flex items-center gap-1.5 text-[10px] font-mono text-amber-700 bg-amber-950/20 border border-amber-900/30 rounded px-2 py-1">
+                        <MapPin className="w-3 h-3 text-amber-600" />
+                        ZONA: {lat.toFixed(4)}, {lng.toFixed(4)}
+                      </div>
+                    )
+                  })()}
+
                   {/* MEMBERS & PROVISIONS SUMMARY */}
                   <div className="space-y-1">
                     <p className="flex gap-1">
@@ -494,6 +516,42 @@ export default function ExplorationsView({
                       required
                     />
                   </div>
+                </div>
+
+                {/* MAPA: ZONA OBJETIVO */}
+                <div>
+                  <label className="text-[10px] text-[#ab9e8b] uppercase font-bold block mb-2 flex items-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-amber-500" />
+                    MARCAR ZONA EN EL MAPA (OPCIONAL)
+                  </label>
+                  <div style={{ height: 260, border: "1px solid rgba(194,124,47,0.35)", overflow: "hidden" }}>
+                    <MapCoordPicker
+                      lat={destLat}
+                      lng={destLng}
+                      onChange={(lat, lng) => {
+                        setDestLat(lat)
+                        setDestLng(lng)
+                      }}
+                    />
+                  </div>
+                  {destLat != null && destLng != null ? (
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="text-[10px] text-amber-500 font-mono">
+                        ◉ COORDENADAS: {destLat.toFixed(5)}, {destLng.toFixed(5)}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => { setDestLat(null); setDestLng(null) }}
+                        className="text-[9px] text-zinc-500 hover:text-red-400 font-mono cursor-pointer"
+                      >
+                        [LIMPIAR]
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="text-[9px] text-zinc-600 font-mono mt-1">
+                      Haz clic en el mapa para marcar la zona de exploración
+                    </p>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">

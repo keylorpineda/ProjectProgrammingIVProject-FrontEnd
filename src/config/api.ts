@@ -27,12 +27,20 @@ api.interceptors.request.use((config) => {
   return config
 })
 
+// Páginas que NO deben redirigir al login aunque reciban un 401
+const PUBLIC_PATHS = ["/login", "/admissions", "/register"]
+
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.clear()
-      window.location.href = "/login"
+      const isPublicPage = PUBLIC_PATHS.some((p) =>
+        window.location.pathname.startsWith(p),
+      )
+      if (!isPublicPage) {
+        localStorage.clear()
+        window.location.href = "/login"
+      }
     }
     return Promise.reject(error)
   },

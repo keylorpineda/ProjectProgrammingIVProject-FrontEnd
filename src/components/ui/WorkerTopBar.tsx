@@ -1,38 +1,126 @@
+import { useState, useEffect } from "react"
+
 interface WorkerTopBarProps {
-  campName?: string
-  sectorId?: string
-  userName?: string
+  campName?: string | number
+  userName?: string | number
 }
 
-export default function WorkerTopBar({
-  sectorId = "04-GAMMA",
-  userName = "WORKER",
-}: WorkerTopBarProps) {
+function LiveClock() {
+  const [time, setTime] = useState(new Date())
+  useEffect(() => {
+    const t = setInterval(() => setTime(new Date()), 1000)
+    return () => clearInterval(t)
+  }, [])
+  const pad = (n: number) => n.toString().padStart(2, "0")
   return (
-    <header className="sticky top-0 h-[70px] bg-bunker-bg border-b-2 border-ink-black flex items-center justify-between px-10 z-40">
-      <div className="flex items-center gap-6 flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <p className="typewriter text-text-light text-sm tracking-[0.2em] whitespace-nowrap">
-            <span className="opacity-70">CONFIDENTIAL //</span> CAMP ARCHIVE
-          </p>
-        </div>
+    <>
+      {pad(time.getHours())}:{pad(time.getMinutes())}:{pad(time.getSeconds())}
+    </>
+  )
+}
 
-        <div className="h-4 w-px bg-paper-dark/40" />
+export default function WorkerTopBar({ campName, userName }: WorkerTopBarProps) {
+  return (
+    <header
+      style={{
+        height: 56,
+        minHeight: 56,
+        background: "#0f0e0c",
+        borderBottom: "1px solid #1a1917",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "0 28px",
+        position: "sticky",
+        top: 0,
+        zIndex: 40,
+        flexShrink: 0,
+      }}
+    >
+      {/* LEFT — wordmark + sector */}
+      <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+        <span
+          style={{
+            fontFamily: "'Special Elite', monospace",
+            fontSize: "0.82rem",
+            color: "rgba(200,168,75,0.7)",
+            letterSpacing: 3,
+            textTransform: "uppercase",
+          }}
+        >
+          GESTIÓN DEL FIN
+        </span>
 
-        <div className="flex items-center gap-3 min-w-0">
-          <span className="text-[11px] font-mono text-paper-base uppercase whitespace-nowrap">
-            SECTOR: {sectorId} | STATUS: OPERATIONAL
+        <div style={{ width: 1, height: 16, background: "rgba(255,255,255,0.06)" }} />
+
+        <span
+          style={{
+            fontFamily: "'JetBrains Mono', monospace",
+            fontSize: "0.6rem",
+            color: "rgba(154,144,128,0.35)",
+            letterSpacing: 2,
+            textTransform: "uppercase",
+          }}
+        >
+          CAMPAMENTO{" "}
+          <span style={{ color: "rgba(200,168,75,0.75)" }}>
+            {campName ?? "—"}
           </span>
-        </div>
+        </span>
       </div>
 
-      <div className="bg-ink-black border border-paper-dark px-4 py-2 flex items-center gap-4 shadow-[2px_2px_0px_rgba(0,0,0,1)]">
-        <p className="text-[10px] font-mono text-white tracking-[0.1em] uppercase font-bold whitespace-nowrap">
-          USR{" "}
-          <span className="text-accent-orange drop-shadow-[0_0_8px_rgba(194,124,47,0.3)]">
-            [{userName}]
+      {/* RIGHT — clock + user chip */}
+      <div style={{ display: "flex", alignItems: "center", gap: 22 }}>
+        {/* Clock */}
+        <span
+          style={{
+            fontFamily: "'JetBrains Mono', monospace",
+            fontSize: "0.65rem",
+            color: "rgba(179,133,54,0.35)",
+            letterSpacing: 1,
+            fontVariantNumeric: "tabular-nums",
+          }}
+        >
+          <LiveClock /> UTC
+        </span>
+
+        <div style={{ width: 1, height: 14, background: "rgba(255,255,255,0.05)" }} />
+
+        {/* User chip */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 9,
+            padding: "5px 13px",
+            background: "rgba(0,0,0,0.4)",
+            border: "1px solid rgba(179,133,54,0.15)",
+          }}
+        >
+          {/* Small active dot */}
+          <span
+            style={{
+              width: 5,
+              height: 5,
+              borderRadius: "50%",
+              background: "#4c6351",
+              display: "inline-block",
+              boxShadow: "0 0 6px #4c6351",
+              flexShrink: 0,
+            }}
+          />
+          <span
+            style={{
+              fontFamily: "'Special Elite', monospace",
+              fontSize: "0.75rem",
+              color: "rgba(200,168,75,0.85)",
+              textTransform: "uppercase",
+              letterSpacing: 1,
+            }}
+          >
+            {String(userName ?? "—").toUpperCase()}
           </span>
-        </p>
+        </div>
       </div>
     </header>
   )

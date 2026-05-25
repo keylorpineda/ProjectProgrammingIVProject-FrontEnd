@@ -78,9 +78,19 @@
 }
 
 .zone-map-container {
-  margin-top: 20px;
+  margin-top: 0;
   border: 1px solid #000;
   overflow: hidden;
+}
+
+/* Worker expeditions minimap — override heights */
+.wv-exp-minimap .zone-map-container {
+  margin-top: 0;
+  height: 150px;
+}
+
+.wv-exp-minimap .zone-map {
+  height: 120px;
 }
 
 @keyframes widget-route-dash {

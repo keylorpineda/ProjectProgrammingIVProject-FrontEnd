@@ -15,9 +15,12 @@ export default function TravelManagerGuard({ children }: TravelManagerGuardProps
   const role = user.role?.toLowerCase()
   const isAllowed = role === "admin" || role === "travel_manager"
 
-  if (!isAllowed) {
-    return <Navigate to="/login" replace />
-  }
+  if (isAllowed) return <>{children}</>
 
-  return <>{children}</>
+  if (role === "worker")          return <Navigate to="/worker/dashboard" replace />
+  if (role === "camp_leader")     return <Navigate to="/campleader/dashboard" replace />
+  if (role === "camp_manager")    return <Navigate to="/camp-manager" replace />
+  if (role === "resource_manager")return <Navigate to="/camp-manager" replace />
+
+  return <Navigate to="/login" replace />
 }
