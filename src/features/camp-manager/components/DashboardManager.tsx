@@ -154,7 +154,7 @@ export default function DashboardManager() {
             {/* ==========================================
                 2. RETRO NAVIGATION MENU
                 ========================================== */}
-            <nav className="flex flex-row md:flex-col gap-2 overflow-x-auto md:overflow-x-visible pb-2 md:pb-0 scrollbar-none shrink-0 font-mono">
+            <nav className="flex flex-row md:flex-col overflow-x-auto md:overflow-x-visible pb-2 md:pb-0 scrollbar-none shrink-0 font-mono">
               {tabList.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -165,20 +165,33 @@ export default function DashboardManager() {
                     id={`nav-tab-${tab.id}`}
                     type="button"
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-3 w-full shrink-0 min-w-[170px] md:min-w-0 py-3 px-4 font-mono text-[11px] md:text-sm font-black uppercase text-left tracking-wider transition-all border-2 border-black rounded-lg relative overflow-hidden outline-none cursor-pointer shadow-[3px_3px_0px_rgba(0,0,0,1)] hover:translate-y-[-1px] hover:shadow-[4px_4px_0px_rgba(0,0,0,1)] ${
-                      isActive
-                        ? 'bg-[#c27c2f] text-black font-black'
-                        : 'text-black hover:brightness-105'
-                    }`}
-                    style={!isActive ? { 
-                      backgroundImage: 'repeating-linear-gradient(0deg, #968e80, #968e80 2px, #857e71 2px, #857e71 4px)' 
-                    } : undefined}
+                    className="w-full text-left relative flex items-center justify-center md:justify-start gap-3 md:gap-4 py-4 px-4 md:px-5 rounded-xl transition-all duration-150 group border cursor-pointer shrink-0 hover:translate-x-1 active:translate-y-0.5 min-w-[140px] md:min-w-0 mx-1 md:mx-0"
+                    style={{
+                      backgroundColor: isActive ? '#c27c2f' : '#9a9080',
+                      borderColor: '#000000',
+                      borderWidth: '2px',
+                      color: '#000000',
+                      boxShadow: '3px 3px 0px #000000',
+                      height: '52px',
+                      minHeight: '52px',
+                      marginBottom: '16px', // Espacio para Desktop
+                    }}
                   >
-                    <Icon className={`h-4.5 w-4.5 shrink-0 ${isActive ? 'text-black' : 'text-zinc-800'}`} />
-                    <span className="flex-grow">{tab.label.toUpperCase()}</span>
+                    <Icon className="w-5 h-5 shrink-0 text-black font-extrabold" />
+                    
+                    <span className="font-mono text-[11px] md:text-xs lg:text-sm tracking-wider uppercase text-black font-extrabold select-none truncate">
+                      {tab.label.toUpperCase()}
+                    </span>
 
                     {tab.id === 'inventory' && (
-                      <span className="bg-[#9c2720] text-[#e0d8cc] text-[8px] font-black px-1.5 py-0.5 rounded ml-1 animate-pulse border-2 border-black shadow-[1px_1px_0px_rgba(0,0,0,1)]">
+                      <span 
+                        className="absolute right-2 md:right-3 top-1/2 -translate-y-1/2 text-[8px] md:text-[9px] font-mono px-1.5 md:px-2 py-0.5 rounded animate-pulse uppercase font-extrabold"
+                        style={{
+                          backgroundColor: '#9c2720',
+                          color: '#ffffff',
+                          border: '1px solid #000000'
+                        }}
+                      >
                         ALERTA
                       </span>
                     )}
