@@ -1,10 +1,34 @@
 import type { ChangeEvent, FormEvent} from "react";
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { isAxiosError } from "axios"
 import { motion } from "framer-motion"
 import { ShieldAlert, CheckCircle, Loader2 } from "lucide-react"
 import { submitAdmission, trackAdmission } from "@/features/admissions/services/admissions.service"
 import "./AdmissionNew.css"
+
+// Forwards `wheel` events from anywhere inside the scene (the table, the
+// surrounding paper, the lamp area) to the scrollable element returned by this
+// hook, so the user can scroll the form with the mouse wheel regardless of
+// whether the cursor is exactly over the scroll container. Wheel events that
+// originate inside the scrollable already get native scrolling, so we ignore
+// those. Touch scrolling continues to work natively via `touch-action: pan-y`.
+function useWheelToScroll<T extends HTMLElement>() {
+  const ref = useRef<T>(null)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const scene = el.closest(".scene-container") as HTMLElement | null
+    if (!scene) return
+    const onWheel = (event: WheelEvent) => {
+      if (el.contains(event.target as Node)) return
+      el.scrollTop += event.deltaY
+      event.preventDefault()
+    }
+    scene.addEventListener("wheel", onWheel, { passive: false })
+    return () => scene.removeEventListener("wheel", onWheel)
+  }, [])
+  return ref
+}
 
 type AdmissionFormData = {
   nombre: string
@@ -117,11 +141,24 @@ export function AdmissionFormTemplate({
   submissionDetails,
 }: AdmissionFormProps) {
   const [phase, setPhase] = useState<"intro" | "form">("intro")
+  const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null)
+  const formScrollRef = useWheelToScroll<HTMLFormElement>()
+  const successScrollRef = useWheelToScroll<HTMLDivElement>()
 
   useEffect(() => {
     const timer = window.setTimeout(() => setPhase("form"), 3800)
     return () => window.clearTimeout(timer)
   }, [])
+
+  useEffect(() => {
+    if (!formData.foto) {
+      setPhotoPreviewUrl(null)
+      return
+    }
+    const url = URL.createObjectURL(formData.foto)
+    setPhotoPreviewUrl(url)
+    return () => URL.revokeObjectURL(url)
+  }, [formData.foto])
 
   const renderCordycepsSpores = () => {
     const spores = []
@@ -226,7 +263,25 @@ export function AdmissionFormTemplate({
         style={{ transformOrigin: "center center" }}
       >
         <div className="table-surface">
-          <div className="military-map" />
+          <label
+            htmlFor="foto"
+            className={`military-map ${photoPreviewUrl ? "has-photo" : "is-empty"} ${errors.foto ? "has-error" : ""}`}
+            title={photoPreviewUrl ? "Cambiar foto del candidato" : "Adjuntar foto del candidato"}
+          >
+            {photoPreviewUrl ? (
+              <img src={photoPreviewUrl} alt="Foto del candidato" className="military-map-image" />
+            ) : (
+              <div className="military-map-placeholder">
+                <span className="military-map-plus">+</span>
+                <span className="military-map-hint">
+                  ADJUNTAR
+                  <br />
+                  FOTO
+                </span>
+              </div>
+            )}
+            <span className="military-map-caption">FOTO-ID</span>
+          </label>
           <div
             className="bullet"
             style={{ top: "150px", left: "120px", transform: "rotate(45deg)" }}
@@ -253,7 +308,7 @@ export function AdmissionFormTemplate({
             </div>
 
             {submitMessage ? (
-              <div className="success-container">
+              <div className="success-container" ref={successScrollRef}>
                 <div className="success-header">
                   <CheckCircle className="success-icon" />
                   <h2 className="success-title glitch-text">{submitMessage}</h2>
@@ -291,6 +346,7 @@ export function AdmissionFormTemplate({
               </div>
             ) : (
               <motion.form
+                ref={formScrollRef}
                 onSubmit={onSubmit}
                 className="form-content"
                 initial="hidden"
@@ -545,27 +601,26 @@ export function AdmissionFormTemplate({
                       transition: { type: "spring", stiffness: 50 },
                     },
                   }}
-                  className="input-group"
+                  className="input-group photo-input-group"
                 >
-                  <label htmlFor="foto" className="input-label">
+                  <span className="input-label">
                     Foto Adjunta <span className="text-fedra-rust">*</span>
-                  </label>
+                  </span>
+                  <p className="field-helper">
+                    {formData.foto
+                      ? `Archivo cargado: ${formData.foto.name}`
+                      : "Haz clic en el papel inclinado ↗ junto al formulario para adjuntar tu foto."}
+                  </p>
                   <input
                     type="file"
                     id="foto"
                     name="foto"
                     onChange={onFileChange}
                     accept="image/*"
-                    className="typewriter-input"
-                    style={{ paddingTop: "8px" }}
+                    className="visually-hidden-input"
                     disabled={isSubmitting}
                     required
                   />
-                  {formData.foto ? (
-                    <p className="field-helper">Archivo seleccionado: {formData.foto.name}</p>
-                  ) : (
-                    <p className="field-helper">Selecciona un archivo de imagen.</p>
-                  )}
                   {errors.foto ? <p className="field-error">{errors.foto}</p> : null}
                 </motion.div>
 
