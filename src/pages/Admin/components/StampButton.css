@@ -1,0 +1,41 @@
+.stamp-button {
+  font-family: var(--font-typewriter);
+  font-size: 1.5rem;
+  font-weight: bold;
+  padding: 10px 20px;
+  border: 4px solid;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  text-transform: uppercase;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.1s;
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.2),
+    0 0 5px rgba(0, 0, 0, 0.3);
+}
+
+.stamp-button.accept {
+  color: var(--accent-mil);
+  border-color: var(--accent-mil);
+  transform: rotate(-3deg);
+}
+
+.stamp-button.reject {
+  color: var(--accent-critical);
+  border-color: var(--accent-critical);
+  transform: rotate(2deg);
+}
+
+.stamp-button::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url("data:image/svg+xml;utf8,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.5' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.3'/%3E%3C/svg%3E");
+  pointer-events: none;
+  mix-blend-mode: color-burn;
+}

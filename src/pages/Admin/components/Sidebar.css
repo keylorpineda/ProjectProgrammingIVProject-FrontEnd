@@ -1,0 +1,53 @@
+.sidebar-container {
+  width: 250px;
+  background-color: var(--bg-deep);
+  border-right: 1px solid var(--ink);
+  display: flex;
+  flex-direction: column;
+  padding-top: 20px;
+  position: relative;
+  z-index: 5;
+}
+
+.sidebar-tab {
+  background-color: var(--bg-paper-dark);
+  color: #000;
+  font-family: var(--font-typewriter);
+  padding: 15px 20px;
+  margin: 5px 0 5px -10px;
+  border-radius: 0 10px 10px 0;
+  border: 1px solid #000;
+  border-left: none;
+  cursor: pointer;
+  text-decoration: none;
+  font-weight: bold;
+  position: relative;
+  box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.5);
+  transition: all 0.2s ease;
+  display: block;
+}
+
+.sidebar-tab:hover {
+  background-color: var(--bg-paper);
+  transform: translateX(5px);
+}
+
+.sidebar-tab.active {
+  background-color: var(--bg-paper);
+  z-index: 2;
+  box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.6);
+  border-right: 2px dashed var(--accent-warning);
+}
+
+.sidebar-tab::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url("data:image/svg+xml;utf8,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.1'/%3E%3C/svg%3E");
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  border-radius: 0 10px 10px 0;
+}

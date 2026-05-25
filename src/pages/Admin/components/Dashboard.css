@@ -1,0 +1,133 @@
+.dashboard-board {
+  background: var(--bg-paper-dark);
+  padding: 32px;
+  min-height: 100%;
+  position: relative;
+  box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.8);
+  background-image:
+    radial-gradient(var(--bg-paper-shadow) 15%, transparent 16%),
+    radial-gradient(var(--bg-paper-shadow) 15%, transparent 16%);
+  background-size: 8px 8px;
+  background-position:
+    0 0,
+    4px 4px;
+}
+
+.board-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 36px;
+  background: var(--bg-deep);
+  padding: 14px 22px;
+  border: 1px solid var(--ink);
+}
+
+.board-header h2 {
+  font-family: var(--font-typewriter);
+  margin: 0;
+  color: var(--bg-paper);
+  font-size: 1.15rem;
+  letter-spacing: 2px;
+}
+
+.server-time {
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+  color: var(--accent-emergency);
+  text-shadow: 0 0 5px var(--accent-emergency);
+  letter-spacing: 1px;
+}
+
+.cork-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 28px;
+}
+
+.pinned-card {
+  background: var(--bg-paper);
+  padding: 28px 22px 22px;
+  position: relative;
+  box-shadow: 2px 5px 12px rgba(0, 0, 0, 0.6);
+  transform: rotate(-1deg);
+  transition: transform 0.2s;
+  border-left: 3px solid rgba(0, 0, 0, 0.08);
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  color: #000;
+}
+
+.pinned-card:nth-child(even) {
+  transform: rotate(2deg);
+}
+
+.pin {
+  width: 12px;
+  height: 12px;
+  background: silver;
+  border-radius: 50%;
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  box-shadow:
+    1px 2px 3px rgba(0, 0, 0, 0.5),
+    inset -2px -2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.red-pin {
+  background: var(--accent-warning);
+}
+
+.pinned-card h3 {
+  font-family: var(--font-typewriter);
+  margin: 0 0 14px 0;
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+  border-bottom: 1px dashed var(--ink-soft);
+  padding-bottom: 8px;
+}
+
+.pinned-card ul {
+  padding-left: 18px;
+  font-family: var(--font-mono);
+  font-size: 0.83rem;
+  line-height: 1.7;
+  margin: 0;
+}
+
+.pinned-card ul li {
+  margin-bottom: 4px;
+}
+
+.pinned-card li strong {
+  font-family: var(--font-mono);
+}
+
+.big-number {
+  font-family: var(--font-marker);
+  font-size: 3rem;
+  color: var(--accent-warning-deep);
+  text-align: center;
+  line-height: 1;
+}
+
+.warning-card {
+  background: #cfa896;
+}
+
+.flex-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  justify-content: center;
+}
+
+.small-text {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  max-width: 80px;
+  line-height: 1.4;
+}

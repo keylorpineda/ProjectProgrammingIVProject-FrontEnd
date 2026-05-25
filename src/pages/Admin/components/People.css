@@ -1,0 +1,68 @@
+.people-container {
+  padding: 32px;
+}
+
+.dossier-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 24px;
+  margin-top: 8px;
+}
+
+.dossier-card {
+  background: var(--bg-paper);
+  border: 1px solid var(--ink);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.4);
+  position: relative;
+  color: #000;
+  cursor: pointer;
+}
+
+.dossier-photo-placeholder {
+  height: 130px;
+  background: var(--bg-paper-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--ink);
+}
+
+.dossier-photo-placeholder svg {
+  width: 56px;
+  height: 56px;
+  opacity: 0.45;
+}
+
+.dossier-info {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  line-height: 1.6;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.d-name {
+  font-weight: bold;
+  font-size: 0.95rem;
+  font-family: var(--font-typewriter);
+  margin-bottom: 2px;
+}
+
+.d-prof {
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.d-status {
+  color: var(--accent-warning-deep);
+}
+
+.d-camp {
+  opacity: 0.6;
+  font-size: 0.78rem;
+}
