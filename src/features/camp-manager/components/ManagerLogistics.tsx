@@ -55,16 +55,25 @@ export default function ManagerLogistics({
       setErrorState("Especifique una cantidad de carga superior a cero.")
       return
     }
+    if (!selectedResource) {
+      setErrorState("Seleccione un recurso.")
+      return
+    }
 
     setSubmittingRequest(true)
     setErrorState(null)
     try {
       await api.post("/transfers/requests", {
-        resource_type: selectedResource,
-        amount: Number(requestAmount),
-        camp_source_id: sourceBunker,
-        camp_destination_id: campId,
+        camp_origin_id: Number(sourceBunker),
+        camp_destination_id: Number(campId),
+        type: "resources",
         notes: requestNotes,
+        resource_details: [
+          {
+            resource_id: Number(selectedResource),
+            requested_quantity: Number(requestAmount)
+          }
+        ]
       })
       setShowRequestModal(false)
       setRequestNotes("")
@@ -113,18 +122,23 @@ export default function ManagerLogistics({
   const incomingRequests = requests.filter((r) => r.camp_destination_id === campId)
   const outgoingRequests = requests.filter((r) => r.camp_source_id === campId)
 
-  const resourceTypes = [
-    "Raciones de Emergencia (MRE)",
-    "Agua Purificada de Filtro",
-    "Antitoxinas y Antibióticos",
-    "Munición Calibre 5.56mm",
-    "Combustible Diésel (Generador)",
-    "Acero de Refuerzo Bunker",
-  ]
+  // Fetch resources for the dropdown
+  const { data: resourceTypes = [] } = useQuery({
+    queryKey: ["allResources"],
+    queryFn: async () => {
+      const res = await api.get("/resources")
+      const items = res.data?.items || res.data || []
+      // Auto-select first item
+      if (items.length > 0 && selectedResource === "Raciones de Emergencia (MRE)") {
+        setSelectedResource(String(items[0].id))
+      }
+      return items
+    }
+  })
 
   const bunkerList = [
-    { id: "1", name: "Bunker-Alpha" },
-    { id: "2", name: "Bunker-Beta" },
+    { id: "1", name: "Bunker-Alfa" },
+    { id: "2", name: "Camp-Beta" },
     { id: "3", name: "Bunker-Delta" },
     { id: "4", name: "Bunker-Gamma" },
   ]
@@ -209,10 +223,12 @@ export default function ManagerLogistics({
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                       <div>
                         <div className="text-sm md:text-base text-zinc-500 uppercase font-black tracking-widest mb-2">
-                          REMITENTE: {req.camp_source_id.toUpperCase()}
+                          REMITENTE: BÚNKER {req.camp_origin_id}
                         </div>
                         <h5 className="font-black text-xl md:text-2xl text-[#c27c2f] uppercase leading-tight">
-                          {req.resource_type.toUpperCase()}
+                          {req.resourceDetails && req.resourceDetails.length > 0
+                            ? req.resourceDetails[0]?.resource?.name || `Recurso #${req.resourceDetails[0]?.resource_id}`
+                            : req.type}
                         </h5>
                       </div>
                       <span
@@ -228,7 +244,7 @@ export default function ManagerLogistics({
                           PESO DE CARGA:
                         </span>
                         <span className="font-black text-xl md:text-2xl text-[#e0d8cc]">
-                          {req.amount} uds
+                          {req.resourceDetails && req.resourceDetails.length > 0 ? req.resourceDetails[0].requested_quantity : "-"} uds
                         </span>
                       </div>
                       <div className="text-right">
@@ -313,10 +329,12 @@ export default function ManagerLogistics({
                   <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                     <div>
                       <div className="text-sm md:text-base text-zinc-500 uppercase font-black tracking-widest mb-2">
-                        COOPERATIVO DESTINO: {req.camp_destination_id.toUpperCase()}
+                        COOPERATIVO DESTINO: BÚNKER {req.camp_destination_id}
                       </div>
                       <h5 className="font-black text-xl md:text-2xl text-[#e0d8cc] uppercase leading-tight">
-                        {req.resource_type}
+                        {req.resourceDetails && req.resourceDetails.length > 0
+                            ? req.resourceDetails[0]?.resource?.name || `Recurso #${req.resourceDetails[0]?.resource_id}`
+                            : req.type}
                       </h5>
                     </div>
                     <span className="px-4 py-2 text-sm md:text-base font-black uppercase tracking-widest rounded-sm border border-black bg-zinc-800 text-zinc-400">
@@ -330,7 +348,7 @@ export default function ManagerLogistics({
                         PESO ENVIADO:
                       </span>
                       <span className="font-black block text-zinc-200 text-xl md:text-2xl">
-                        {req.amount} uds
+                        {req.resourceDetails && req.resourceDetails.length > 0 ? req.resourceDetails[0].requested_quantity : "-"} uds
                       </span>
                     </div>
                     <div className="text-right">
@@ -391,9 +409,9 @@ export default function ManagerLogistics({
                   onChange={(e) => setSelectedResource(e.target.value)}
                   className="w-full bg-[#2a2824] border-4 border-black p-4 bg-transparent text-[#e0d8cc] outline-none text-base font-black font-mono transition uppercase shadow-[inset_0_0_10px_rgba(0,0,0,0.8)]"
                 >
-                  {resourceTypes.map((r) => (
-                    <option key={r} value={r} className="bg-[#161513] text-[#e0d8cc]">
-                      {r.toUpperCase()}
+                  {resourceTypes.map((r: any) => (
+                    <option key={r.id} value={r.id} className="bg-[#161513] text-[#e0d8cc]">
+                      {r.name?.toUpperCase()}
                     </option>
                   ))}
                 </select>

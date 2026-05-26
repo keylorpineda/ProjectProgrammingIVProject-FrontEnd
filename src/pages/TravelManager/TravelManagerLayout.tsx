@@ -37,9 +37,12 @@ export default function TravelManagerLayout() {
 
   return (
     <InactivityGuard isAuthenticated={!!user} onLogout={handleLogout}>
-    <div className="flex h-screen bg-[#0a0a0a] text-white overflow-hidden">
+    <div 
+      className="w-full h-screen bg-[#0a0a0a] text-white overflow-hidden grid"
+      style={{ gridTemplateColumns: '360px 1fr' }}
+    >
       {/* SIDEBAR */}
-      <aside className="w-[340px] md:w-96 bg-ink-black border-r border-accent-orange/20 flex flex-col h-full z-20 shrink-0 relative overflow-hidden shadow-[4px_0_24px_rgba(0,0,0,0.6)]">
+      <aside className="w-full bg-ink-black border-r border-accent-orange/20 flex flex-col h-full z-20 relative overflow-hidden shadow-[4px_0_24px_rgba(0,0,0,0.6)]">
         <div className="absolute inset-0 bg-paper-texture opacity-30 mix-blend-overlay pointer-events-none" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-accent-orange/5 to-transparent pointer-events-none" />
 
@@ -122,7 +125,7 @@ export default function TravelManagerLayout() {
       </aside>
 
       {/* MAIN CONTENT AREA */}
-      <main className="flex-1 overflow-hidden relative flex flex-col">
+      <main className="w-full h-full flex flex-col overflow-hidden relative z-10 bg-bunker-bg">
         <Outlet />
       </main>
     </div>
