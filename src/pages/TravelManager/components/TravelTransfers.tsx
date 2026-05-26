@@ -246,21 +246,21 @@ export default function TravelTransfers() {
     }
 
     createMutation.mutate({
-      camp_origin_id: campId,
-      camp_destination_id: destCampId,
+      camp_origin_id: Number(campId),
+      camp_destination_id: Number(destCampId),
       type: transferType,
       notes: notes || undefined,
       travel_days: travelDays,
       resource_details:
         transferType !== "people"
           ? selectedResources.map((r) => ({
-              resource_id: r.resource_id,
-              requested_quantity: r.requested_quantity,
+              resource_id: Number(r.resource_id),
+              requested_quantity: Number(r.requested_quantity),
             }))
           : undefined,
       person_details:
         transferType !== "resources"
-          ? selectedPersons.map((p) => ({ person_id: p.person_id }))
+          ? selectedPersons.map((p) => ({ person_id: Number(p.person_id) }))
           : undefined,
     })
   }
@@ -332,7 +332,7 @@ export default function TravelTransfers() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="h-full flex flex-col gap-3 overflow-hidden bg-bunker-bg">
+    <div className="w-full flex-1 h-full flex flex-col gap-3 overflow-hidden bg-bunker-bg min-w-0">
       {/* ── Vista Header ── */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-industrial-metal py-4 pl-4 pr-8 md:pr-16 border-l-4 border-l-accent-approved shrink-0 shadow-lg">
         <div className="flex items-center gap-4">
@@ -429,7 +429,7 @@ export default function TravelTransfers() {
         {/* ── Main layout ── */}
         <div className="flex-1 flex gap-4 overflow-hidden">
           {/* LEFT: Transfer list */}
-          <div className="w-[300px] flex flex-col gap-2 shrink-0 overflow-hidden bg-industrial-metal p-3 border-l-2 border-l-accent-approved/40">
+          <div className="w-[320px] flex flex-col gap-2 shrink-0 overflow-hidden bg-industrial-metal p-3 border-l-2 border-l-accent-approved/40">
             <div className="flex items-center justify-between px-1 mb-1 border-b border-accent-approved/10 pb-2">
               <span className="text-xs font-mono font-black text-accent-approved uppercase tracking-widest">
                 Registro de Traslados
@@ -448,15 +448,15 @@ export default function TravelTransfers() {
                       key={transfer.id}
                       whileHover={{ x: 2 }}
                       onClick={() => setSelectedId(transfer.id)}
-                      className={`w-full text-left p-3 relative transition-all border border-accent-approved/10 ${
+                      className={`w-full text-left p-3 relative transition-all flex flex-col gap-1 border border-accent-approved/10 ${
                         selectedTransfer?.id === transfer.id
-                          ? "bg-bg-paper shadow-xl scale-[1.02] z-10"
+                          ? "bg-accent-approved/20 shadow-xl scale-[1.02] z-10 border-accent-approved/50"
                           : "bg-accent-approved/5 hover:bg-accent-approved/10 opacity-70 hover:opacity-100"
                       }`}
                     >
-                      <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center justify-between mb-1 w-full gap-2">
                         <span
-                          className={`text-sm font-mono font-black uppercase px-1.5 py-0.5 ${
+                          className={`text-xs font-mono font-black uppercase px-1.5 py-0.5 shrink-0 ${
                             isOrigin
                               ? "bg-[#c27c2f]/20 text-[#c27c2f]"
                               : "bg-accent-approved/20 text-accent-approved"
@@ -465,10 +465,10 @@ export default function TravelTransfers() {
                           {isOrigin ? "↑ ENVIADO" : "↓ RECIBIDO"}
                         </span>
                         <span
-                          className={`text-sm font-mono font-black uppercase ${
+                          className={`text-xs font-mono font-black uppercase truncate ${
                             selectedTransfer?.id === transfer.id
-                              ? "text-ink-soft/50"
-                              : "text-white/30"
+                              ? "text-white/90"
+                              : "text-white/40"
                           }`}
                         >
                           {getTransferTypeBadge(transfer.type)}
@@ -476,8 +476,8 @@ export default function TravelTransfers() {
                       </div>
 
                       <div
-                        className={`text-sm font-typewriter font-black uppercase leading-tight mb-1 ${
-                          selectedTransfer?.id === transfer.id ? "text-ink" : "text-accent-approved"
+                        className={`text-sm font-typewriter font-black uppercase leading-tight mb-1 truncate ${
+                          selectedTransfer?.id === transfer.id ? "text-white" : "text-accent-approved"
                         }`}
                       >
                         {isOrigin
@@ -486,8 +486,8 @@ export default function TravelTransfers() {
                       </div>
 
                       <p
-                        className={`text-sm font-mono uppercase truncate ${
-                          selectedTransfer?.id === transfer.id ? "text-ink/60" : "text-white/30"
+                        className={`text-xs font-mono uppercase truncate ${
+                          selectedTransfer?.id === transfer.id ? "text-white/70" : "text-white/30"
                         }`}
                       >
                         REF: {transfer.id.slice(0, 8).toUpperCase()}
@@ -517,7 +517,7 @@ export default function TravelTransfers() {
                       </div>
 
                       {selectedTransfer?.id === transfer.id && (
-                        <div className="absolute top-0 bottom-0 left-0 w-1 bg-accent-approved" />
+                        <div className="absolute top-0 bottom-0 left-0 w-1 bg-accent-approved shadow-[0_0_10px_#c27c2f]" />
                       )}
                     </motion.button>
                   )
@@ -546,16 +546,16 @@ export default function TravelTransfers() {
                 {/* Detail header */}
                 <div className="p-4 border-b border-accent-approved/10 flex justify-between items-start bg-black/20 shrink-0">
                   <div>
-                    <span className="text-sm font-mono font-black text-accent-approved uppercase tracking-[0.3em] block mb-0.5">
+                    <span className="text-sm font-mono font-black text-accent-approved uppercase tracking-[0.3em] block mb-2">
                       Orden de Traslado #{selectedTransfer.id.slice(0, 8).toUpperCase()}
                     </span>
-                    <div className="flex items-center gap-3 mt-1">
-                      <span className="font-typewriter text-white font-black uppercase text-lg">
-                        {selectedTransfer.camp_origin_id}
+                    <div className="flex items-center gap-4 bg-black/40 py-2 px-4 border border-accent-approved/20 rounded-sm">
+                      <span className="font-typewriter text-white font-black uppercase text-xl">
+                        BÚNKER {selectedTransfer.camp_origin_id}
                       </span>
-                      <ArrowLeftRight className="h-5 w-5 text-accent-approved" />
-                      <span className="font-typewriter text-white font-black uppercase text-lg">
-                        {selectedTransfer.camp_destination_id}
+                      <ArrowLeftRight className="h-6 w-6 text-accent-approved" />
+                      <span className="font-typewriter text-white font-black uppercase text-xl">
+                        BÚNKER {selectedTransfer.camp_destination_id}
                       </span>
                     </div>
                   </div>
@@ -670,12 +670,12 @@ export default function TravelTransfers() {
                       <button
                         onClick={() => handleCancelTransfer(selectedTransfer.id)}
                         disabled={cancelMutation.isPending}
-                        className="flex items-center gap-1.5 px-4 py-2 bg-accent-critical/10 border border-accent-critical/30 text-accent-critical text-xs font-mono font-black uppercase hover:bg-accent-critical hover:text-[#fca311] transition-all disabled:opacity-50"
+                        className="flex items-center gap-2 px-6 py-3 bg-[#9c2720]/20 border border-[#9c2720] text-[#ff4a4a] text-sm font-mono font-black uppercase hover:bg-[#9c2720] hover:text-white transition-all disabled:opacity-50 shadow-lg"
                       >
                         {cancelMutation.isPending ? (
-                          <Loader2 className="h-3 w-3 animate-spin" />
+                          <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
-                          <X className="h-3 w-3" />
+                          <X className="h-4 w-4" />
                         )}
                         Cancelar Traslado
                       </button>
@@ -877,11 +877,11 @@ export default function TravelTransfers() {
                                       </div>
                                       <div className="flex flex-col">
                                         <span className="text-sm font-mono font-black text-white/80 uppercase">
-                                          {item.resource!.name}
+                                          {item.resource?.name || "Desconocido"}
                                         </span>
                                         <span className="text-sm font-mono text-white/40 uppercase">
-                                          {item.resource!.category} {"//"} {item.current_quantity}{" "}
-                                          {item.resource!.unit}
+                                          {item.resource?.category || "N/A"} {"//"} {item.current_quantity}{" "}
+                                          {item.resource?.unit || "U"}
                                         </span>
                                       </div>
                                     </div>
