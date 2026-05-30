@@ -239,6 +239,15 @@
   box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.6);
 }
 
+/* Respect user motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .flicker-effect,
+  .animate-pulse {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+}
+
 /* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 8px;

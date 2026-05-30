@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react"
+import { useQuery } from "@tanstack/react-query"
+import { motion, AnimatePresence } from "framer-motion"
 import {
   Package,
   Droplets,
@@ -19,11 +20,11 @@ import {
   ClipboardList,
   AlertCircle,
 } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
-import { useQuery } from "@tanstack/react-query"
-import { useAuth } from "@/pages/Admin/context/AuthContext"
+import { useState, useMemo } from "react"
+
 import { getCamps } from "@/features/camps/services/camps.service"
 import { getInventory } from "@/features/inventory/services/inventory.service"
+import { useAuth } from "@/pages/Admin/context/AuthContext"
 
 export interface Resource {
   id: string
@@ -62,38 +63,48 @@ export default function TravelResources() {
 
   const hasError = campsError || inventoryError
 
-  const camps = campsData.map((c: any) => ({
+  const camps = campsData.map((c: { id: string | number; name: string }) => ({
     id: String(c.id),
     name: c.name,
   }))
 
   // Mapear los datos reales del backend al formato que espera la plantilla
   const resources: Resource[] = useMemo(() => {
-    return inventoryData.map((item: any) => {
-      let status: Resource["status"] = "sufficient"
-      if (item.current_quantity === 0) {
-        status = "none"
-      } else if (item.current_quantity <= (item.minimum_stock_required || 0) * 0.5) {
-        status = "critical"
-      } else if (item.is_below_minimum) {
-        status = "insufficient"
-      } else if (item.current_quantity <= (item.minimum_stock_required || 0) * 1.5) {
-        status = "low"
-      }
+    return inventoryData.map(
+      (item: {
+        id: string | number
+        current_quantity: number
+        minimum_stock_required?: number
+        is_below_minimum?: boolean
+        camp_id?: string
+        notes?: string
+        resource?: { name: string; category: string; unit: string; description: string }
+      }) => {
+        let status: Resource["status"] = "sufficient"
+        if (item.current_quantity === 0) {
+          status = "none"
+        } else if (item.current_quantity <= (item.minimum_stock_required || 0) * 0.5) {
+          status = "critical"
+        } else if (item.is_below_minimum) {
+          status = "insufficient"
+        } else if (item.current_quantity <= (item.minimum_stock_required || 0) * 1.5) {
+          status = "low"
+        }
 
-      return {
-        id: String(item.id),
-        name: item.resource?.name || "Recurso Desconocido",
-        category: item.resource?.category || "general",
-        unit: item.resource?.unit || "UNID",
-        campId: String(item.camp_id || baseCampId),
-        quantity: item.current_quantity || 0,
-        status: status,
-        minThreshold: item.minimum_stock_required || 0,
-        description: item.resource?.description || "",
-        usageNotes: item.notes || "",
-      }
-    })
+        return {
+          id: String(item.id),
+          name: item.resource?.name || "Recurso Desconocido",
+          category: item.resource?.category || "general",
+          unit: item.resource?.unit || "UNID",
+          campId: String(item.camp_id || baseCampId),
+          quantity: item.current_quantity || 0,
+          status: status,
+          minThreshold: item.minimum_stock_required || 0,
+          description: item.resource?.description || "",
+          usageNotes: item.notes || "",
+        }
+      },
+    )
   }, [inventoryData, baseCampId])
 
   const baseCamp = camps.find((c) => c.id === baseCampId)
@@ -121,8 +132,7 @@ export default function TravelResources() {
     {
       id: "sufficient",
       label: "Suficientes",
-      count: resources.filter((r) => r.campId === baseCampId && r.status === "sufficient")
-        .length,
+      count: resources.filter((r) => r.campId === baseCampId && r.status === "sufficient").length,
       color: "text-accent-approved",
     },
     {
@@ -134,15 +144,13 @@ export default function TravelResources() {
     {
       id: "insufficient",
       label: "Insuficientes",
-      count: resources.filter((r) => r.campId === baseCampId && r.status === "insufficient")
-        .length,
+      count: resources.filter((r) => r.campId === baseCampId && r.status === "insufficient").length,
       color: "text-accent-critical",
     },
     {
       id: "critical",
       label: "Críticos",
-      count: resources.filter((r) => r.campId === baseCampId && r.status === "critical")
-        .length,
+      count: resources.filter((r) => r.campId === baseCampId && r.status === "critical").length,
       color: "text-red-800",
     },
   ]
@@ -226,7 +234,7 @@ export default function TravelResources() {
   return (
     <div className="h-full flex flex-col gap-3 overflow-hidden bg-[#0a0a0a] p-4">
       {/* 1. Header de la vista */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-[#12110f] p-4 rounded-lg border-l-4 border-l-[#d4a373] shrink-0 shadow-lg relative overflow-hidden">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-[#12110f] p-4 rounded-lg border border-[#d4a373]/20 border-t-2 border-t-[#d4a373]/60 shrink-0 shadow-lg relative overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-32 bg-[#d4a373]/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl pointer-events-none" />
         <div className="flex items-center gap-4 relative z-10">
           <div className="bg-[#d4a373]/10 p-2 border border-[#d4a373]/30 rounded">
@@ -241,10 +249,10 @@ export default function TravelResources() {
                 INV_OPERATIONAL
               </span>
             </div>
-            <h2 className="text-xl font-typewriter font-black text-white uppercase tracking-tight leading-none">
+            <h2 className="text-lg font-typewriter font-bold text-white uppercase tracking-tight leading-none">
               RECURSOS DE VIAJE
             </h2>
-            <p className="font-mono text-xs text-[#d4a373] font-black uppercase tracking-[0.2em] mt-1 opacity-80">
+            <p className="font-mono text-xs text-[#d4a373]/80 uppercase tracking-widest mt-1">
               Inventario operativo: {baseCamp?.name.toUpperCase()}
             </p>
           </div>
@@ -256,14 +264,17 @@ export default function TravelResources() {
               <button
                 key={s.id}
                 onClick={() => setActiveStatus(s.id as ResourceStatus)}
-                className={`flex flex-col items-center transition-all px-4 py-2.5 rounded border border-transparent ${
+                aria-pressed={activeStatus === s.id}
+                className={`flex flex-col items-center transition-all duration-150 px-3 py-2 rounded border ${
                   activeStatus === s.id
-                    ? "bg-[#d4a373]/10 border-[#d4a373]/20 shadow-inner scale-105"
-                    : "hover:bg-[#d4a373]/20"
+                    ? "bg-[#d4a373]/10 border-[#d4a373]/30"
+                    : "border-transparent hover:bg-[#d4a373]/10 hover:border-[#d4a373]/15"
                 }`}
               >
-                <span className={`text-lg font-mono font-black ${s.color}`}>{s.count}</span>
-                <span className="text-sm font-mono text-white/40 uppercase font-black tracking-tighter">
+                <span className={`text-base font-mono font-bold tabular-nums ${s.color}`}>
+                  {s.count}
+                </span>
+                <span className="text-[10px] font-mono text-white/40 uppercase tracking-wide mt-0.5">
                   {s.label}
                 </span>
               </button>
@@ -284,34 +295,35 @@ export default function TravelResources() {
 
       {/* 2. Barra de filtros compacta */}
       <div className="bg-[#12110f] p-2 px-4 rounded-lg flex items-center gap-4 shrink-0 border border-white/5">
-        <div className="flex-1 flex items-center gap-3 bg-black/40 px-4 py-2.5.5 rounded border border-white/10 focus-within:border-[#d4a373]/40 transition-all">
-          <Search className="h-3.5 w-3.5 text-white/20" />
+        <div className="flex-1 flex items-center gap-3 bg-black/40 px-3 py-2 rounded border border-white/10 focus-within:border-[#d4a373]/40 transition-all">
+          <Search className="h-3.5 w-3.5 text-white/20 shrink-0" />
           <input
             type="text"
-            placeholder="BUSCAR RECURSO POR NOMBRE..."
+            placeholder="Buscar recurso..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="bg-transparent border-none focus:outline-none text-sm font-mono text-white/80 uppercase w-full placeholder:text-white/10"
+            className="bg-transparent border-none focus:outline-none text-xs font-mono text-white/70 w-full placeholder:text-white/20"
           />
         </div>
 
-        <div className="flex items-center gap-2 text-xs font-mono font-black uppercase text-white/40 px-4 border-l border-white/10">
-          <span className="text-[#d4a373]/40">Panel Local:</span>
-          <span className="text-[#d4a373]">
+        <div className="flex items-center gap-2 text-[10px] font-mono uppercase text-white/40 px-4 border-l border-white/10">
+          <span className="text-[#d4a373]/50">Base:</span>
+          <span className="text-[#d4a373] font-semibold">
             {baseCamp?.name?.toUpperCase() ?? baseCampId}
           </span>
         </div>
 
         <div className="flex items-center gap-2 pl-4 border-l border-white/10">
-          <Filter className="h-3 w-3 text-white/20" />
+          <Filter className="h-3 w-3 text-white/20 shrink-0" />
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="bg-transparent border-none text-xs font-mono font-black text-white/40 uppercase focus:outline-none cursor-pointer hover:text-[#fca311] transition-all"
+            aria-label="Filtrar por categoría"
+            className="bg-transparent border-none text-[10px] font-mono text-white/40 uppercase focus:outline-none cursor-pointer hover:text-[#fca311] transition-all"
           >
             {categories.map((c) => (
               <option key={c} value={c} className="bg-[#12110f]">
-                {c === "all" ? "TODAS LAS CATEGORÍAS" : c.toUpperCase()}
+                {c === "all" ? "TODAS" : c.toUpperCase()}
               </option>
             ))}
           </select>
@@ -320,16 +332,16 @@ export default function TravelResources() {
 
       <div className="flex-1 flex gap-4 overflow-hidden">
         {/* PANEL IZQUIERDO: INVENTARIO DE VIAJE */}
-        <div className="w-[320px] flex flex-col gap-2 shrink-0 overflow-hidden bg-[#12110f] p-3 rounded-lg border-l-2 border-l-[#d4a373]/40 shadow-2xl relative">
+        <div className="w-72 flex flex-col gap-2 shrink-0 overflow-hidden bg-[#12110f] p-3 rounded-lg border border-[#d4a373]/15 shadow-2xl relative">
           <div className="absolute top-0 right-0 w-16 h-16 bg-[#d4a373]/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl pointer-events-none" />
 
           <div className="flex flex-col px-1 mb-1 border-b border-[#d4a373]/10 pb-2 relative z-10">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-mono font-black text-[#d4a373] uppercase tracking-widest leading-none">
+              <span className="text-[10px] font-mono font-semibold text-[#d4a373] uppercase tracking-widest">
                 Inventario de Viaje
               </span>
-              <span className="text-sm font-mono font-black text-white/20 uppercase bg-white/5 px-1.5 py-0.5 rounded">
-                {filteredResources.length} REGISTROS
+              <span className="text-[10px] font-mono text-white/30 uppercase bg-white/5 px-1.5 py-0.5 rounded tabular-nums">
+                {filteredResources.length}
               </span>
             </div>
           </div>
@@ -359,7 +371,7 @@ export default function TravelResources() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <h5
-                          className={`text-[12px] font-typewriter font-black uppercase truncate ${
+                          className={`text-xs font-typewriter font-bold uppercase truncate ${
                             selectedId === resource.id ? "text-ink" : "text-[#d4a373]"
                           }`}
                         >
@@ -367,12 +379,12 @@ export default function TravelResources() {
                         </h5>
                         <div className="flex justify-between items-center mt-1">
                           <span
-                            className={`text-sm font-mono font-black uppercase tracking-widest ${selectedId === resource.id ? "text-ink/40" : "text-[#d4a373]/30"}`}
+                            className={`text-[10px] font-mono uppercase tracking-wide ${selectedId === resource.id ? "text-ink/40" : "text-[#d4a373]/40"}`}
                           >
                             {resource.category}
                           </span>
                           <span
-                            className={`text-sm font-mono font-black ${selectedId === resource.id ? "text-ink" : "text-white/60"}`}
+                            className={`text-xs font-mono font-semibold tabular-nums ${selectedId === resource.id ? "text-ink" : "text-white/60"}`}
                           >
                             {resource.quantity} {resource.unit.toUpperCase()}
                           </span>
@@ -389,7 +401,7 @@ export default function TravelResources() {
                             />
                           </div>
                           <span
-                            className={`text-sm font-mono font-black uppercase ${getStatusColor(resource.status)}`}
+                            className={`text-[10px] font-mono font-semibold uppercase ${getStatusColor(resource.status)}`}
                           >
                             {getStatusLabel(resource.status)}
                           </span>
@@ -398,7 +410,7 @@ export default function TravelResources() {
                     </div>
 
                     {selectedId === resource.id && (
-                      <div className="absolute top-0 bottom-0 left-0 w-1 bg-[#d4a373]" />
+                      <div className="absolute top-0 left-0 right-0 h-0.5 bg-[#d4a373]" />
                     )}
                   </motion.button>
                 )
@@ -467,26 +479,26 @@ export default function TravelResources() {
                       <div className="grid grid-cols-2 gap-x-12 gap-y-8">
                         <div className="space-y-4">
                           <div>
-                            <span className="text-sm font-mono text-ink/40 font-black uppercase">
+                            <span className="text-xs font-mono text-ink/40 uppercase tracking-wider">
                               Clasificación
                             </span>
-                            <p className="text-[14px] font-typewriter font-black text-ink uppercase mt-1">
+                            <p className="text-sm font-typewriter font-bold text-ink uppercase mt-1">
                               {selectedResource.category}
                             </p>
                           </div>
                           <div>
-                            <span className="text-sm font-mono text-ink/40 font-black uppercase">
-                              Unidad_Medida
+                            <span className="text-xs font-mono text-ink/40 uppercase tracking-wider">
+                              Unidad de Medida
                             </span>
-                            <p className="text-[14px] font-mono font-black text-ink uppercase mt-1">
+                            <p className="text-sm font-mono font-semibold text-ink uppercase mt-1">
                               {selectedResource.unit}
                             </p>
                           </div>
                           <div>
-                            <span className="text-sm font-mono text-ink/40 font-black uppercase">
-                              Asignado_A
+                            <span className="text-xs font-mono text-ink/40 uppercase tracking-wider">
+                              Asignado a
                             </span>
-                            <p className="text-[14px] font-mono font-black text-ink uppercase mt-1">
+                            <p className="text-sm font-mono font-semibold text-ink uppercase mt-1">
                               {getCampName(selectedResource.campId)}
                             </p>
                           </div>
@@ -494,17 +506,17 @@ export default function TravelResources() {
 
                         <div className="bg-ink/5 p-6 rounded-sm border border-ink/10 flex flex-col items-center justify-center relative overflow-hidden">
                           <div className="absolute top-0 left-0 w-full h-1 bg-ink/10" />
-                          <span className="text-sm font-mono text-ink/40 font-black uppercase mb-4">
+                          <span className="text-xs font-mono text-ink/40 uppercase tracking-wider mb-4">
                             Stock Vital
                           </span>
-                          <div className="text-5xl font-typewriter font-black text-ink leading-none mb-2">
+                          <div className="text-5xl font-typewriter font-bold text-ink leading-none mb-1 tabular-nums">
                             {selectedResource.quantity}
                           </div>
-                          <span className="text-sm font-mono text-ink font-black uppercase tracking-widest">
+                          <span className="text-xs font-mono text-ink/60 uppercase tracking-widest">
                             {selectedResource.unit}
                           </span>
                           <div
-                            className={`mt-4 px-4 py-2.5 border-2 font-mono font-black text-sm uppercase rotate-[-3deg] ${getStatusColor(selectedResource.status).replace("text-", "border-").replace("text-", "text-")}`}
+                            className={`mt-4 px-3 py-1.5 border font-mono font-semibold text-xs uppercase rotate-[-2deg] ${getStatusColor(selectedResource.status).replace("text-", "border-")}`}
                           >
                             {getStatusLabel(selectedResource.status)}
                           </div>
@@ -582,59 +594,131 @@ export default function TravelResources() {
         </div>
 
         {/* PANEL DERECHO: PREPARACIÓN DE VIAJE */}
-        <div className="w-[300px] flex flex-col gap-3 shrink-0 overflow-hidden">
+        <div className="w-64 flex flex-col gap-3 shrink-0 overflow-hidden">
           <div className="bg-[#12110f] p-4 rounded-lg flex flex-col h-full border border-white/5 shadow-2xl overflow-hidden relative">
-            <h3 className="text-sm font-mono font-black text-[#d4a373] uppercase tracking-[0.2em] mb-4 flex items-center gap-2 shrink-0 border-b border-[#d4a373]/10 pb-3">
+            <h3 className="text-xs font-mono font-semibold text-[#d4a373] uppercase tracking-widest mb-4 flex items-center gap-2 shrink-0 border-b border-[#d4a373]/10 pb-3">
               <Navigation className="h-3.5 w-3.5" /> Preparación de Viaje
             </h3>
 
             <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar space-y-5">
               <div className="space-y-4">
-                <div
-                  className={`p-4 rounded-sm border-2 border-dashed relative shadow-inner flex flex-col items-center text-center ${
+                <motion.div
+                  animate={isTripReady ? { scale: [1, 1.02, 1] } : { scale: 1 }}
+                  transition={{ duration: 0.6, ease: "easeOut" }}
+                  className={`p-4 rounded-sm border border-dashed relative flex flex-col items-center text-center ${
                     isTripReady
-                      ? "bg-accent-approved/10 border-accent-approved/20"
+                      ? "bg-accent-approved/10 border-accent-approved/30 shadow-[0_0_20px_rgba(76,99,81,0.2)]"
                       : "bg-red-900/10 border-red-900/20"
                   }`}
                 >
-                  <span className="text-sm font-mono text-white/30 font-black uppercase block mb-2 tracking-widest">
+                  <span className="text-[10px] font-mono text-white/30 font-semibold uppercase block mb-2 tracking-wider">
                     Estado de Preparación
                   </span>
                   {isTripReady ? (
                     <>
-                      <CheckCircle2 className="h-8 w-8 text-accent-approved mb-2" />
-                      <span className="text-[14px] font-typewriter font-black uppercase text-accent-approved">
+                      <motion.div
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ type: "spring", stiffness: 260, damping: 20 }}
+                      >
+                        <CheckCircle2 className="h-8 w-8 text-accent-approved mb-2" />
+                      </motion.div>
+                      <span className="text-sm font-typewriter font-bold uppercase text-accent-approved">
                         LISTO PARA VIAJE
                       </span>
                     </>
                   ) : (
                     <>
                       <XCircle className="h-8 w-8 text-accent-critical mb-2" />
-                      <span className="text-[14px] font-typewriter font-black uppercase text-accent-critical">
+                      <span className="text-sm font-typewriter font-bold uppercase text-accent-critical">
                         REQUIERE REVISIÓN
                       </span>
                     </>
                   )}
-                </div>
+                </motion.div>
 
-                <div className="bg-black/20 border border-white/5 p-4 rounded-sm space-y-3">
-                  <h4 className="text-xs font-mono font-black text-white/40 uppercase tracking-widest">
+                <div className="bg-black/20 border border-white/5 p-3 rounded-sm space-y-2">
+                  <h4 className="text-[10px] font-mono font-semibold text-white/40 uppercase tracking-widest mb-1">
                     SITUACIÓN DE INSUMOS
                   </h4>
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center text-sm font-mono">
-                      <span className="text-white/60 uppercase">Agua</span>
-                      <span className="text-accent-approved font-black">ÓPTIMA</span>
+                  {[
+                    {
+                      label: "Agua",
+                      status:
+                        resources.filter(
+                          (r) =>
+                            r.campId === baseCampId &&
+                            r.category === "water" &&
+                            r.status !== "sufficient" &&
+                            r.status !== "low",
+                        ).length === 0
+                          ? "ÓPTIMA"
+                          : "BAJA",
+                      color:
+                        resources.filter(
+                          (r) =>
+                            r.campId === baseCampId &&
+                            r.category === "water" &&
+                            r.status !== "sufficient" &&
+                            r.status !== "low",
+                        ).length === 0
+                          ? "text-accent-approved"
+                          : "text-accent-critical",
+                    },
+                    {
+                      label: "Víveres",
+                      status:
+                        resources.filter(
+                          (r) =>
+                            r.campId === baseCampId &&
+                            r.category === "food" &&
+                            (r.status === "critical" || r.status === "insufficient"),
+                        ).length === 0
+                          ? "SUFICIENTE"
+                          : "LIMITADA",
+                      color:
+                        resources.filter(
+                          (r) =>
+                            r.campId === baseCampId &&
+                            r.category === "food" &&
+                            (r.status === "critical" || r.status === "insufficient"),
+                        ).length === 0
+                          ? "text-accent-approved"
+                          : "text-[#c27c2f]",
+                    },
+                    {
+                      label: "Medicina",
+                      status:
+                        resources.filter(
+                          (r) =>
+                            r.campId === baseCampId &&
+                            r.category === "medicine" &&
+                            (r.status === "critical" || r.status === "insufficient"),
+                        ).length === 0
+                          ? "SUFICIENTE"
+                          : "CRÍTICA",
+                      color:
+                        resources.filter(
+                          (r) =>
+                            r.campId === baseCampId &&
+                            r.category === "medicine" &&
+                            (r.status === "critical" || r.status === "insufficient"),
+                        ).length === 0
+                          ? "text-accent-approved"
+                          : "text-accent-critical",
+                    },
+                  ].map((item) => (
+                    <div key={item.label} className="flex justify-between items-center">
+                      <span className="text-xs font-mono text-white/50 uppercase">
+                        {item.label}
+                      </span>
+                      <span
+                        className={`text-[10px] font-mono font-semibold uppercase tabular-nums ${item.color}`}
+                      >
+                        {item.status}
+                      </span>
                     </div>
-                    <div className="flex justify-between items-center text-sm font-mono">
-                      <span className="text-white/60 uppercase">Víveres</span>
-                      <span className="text-[#c27c2f] font-black">LIMITADA</span>
-                    </div>
-                    <div className="flex justify-between items-center text-sm font-mono">
-                      <span className="text-white/60 uppercase">Sumin. Médicos</span>
-                      <span className="text-accent-critical font-black">CRÍTICA</span>
-                    </div>
-                  </div>
+                  ))}
                 </div>
 
                 {!isTripReady && criticalShortages.length > 0 && (
@@ -666,32 +750,32 @@ export default function TravelResources() {
                 )}
               </div>
 
-              <div className="space-y-2 mt-6">
+              <div className="space-y-2 mt-4">
                 <button
                   disabled={!isTripReady}
-                  className={`w-full py-2.5 font-mono font-black text-sm uppercase rounded shadow-lg border-b-2 border-r-2 border-black/20 transition-all active:scale-95 flex items-center justify-center gap-2 ${
+                  className={`w-full py-2 font-mono font-semibold text-xs uppercase rounded transition-all duration-150 active:scale-95 flex items-center justify-center gap-2 ${
                     isTripReady
-                      ? "bg-accent-approved text-black hover:bg-white"
-                      : "bg-white/5 text-white/10 cursor-not-allowed grayscale"
+                      ? "bg-accent-approved text-black hover:bg-white shadow-md"
+                      : "bg-white/5 text-white/20 cursor-not-allowed"
                   }`}
                 >
                   Preparar Exploración
                 </button>
                 {!isTripReady && (
-                  <button className="w-full py-2.5 bg-[#c27c2f] text-black font-mono font-black text-sm uppercase rounded shadow-lg border-b-2 border-r-2 border-black/20 hover:bg-white transition-all active:scale-95 flex items-center justify-center gap-2">
-                    Nueva Solicitud de Suministros
+                  <button className="w-full py-2 bg-[#c27c2f]/80 text-black font-mono font-semibold text-xs uppercase rounded shadow-md hover:bg-[#fca311] transition-all duration-150 active:scale-95">
+                    Solicitar Suministros
                   </button>
                 )}
               </div>
             </div>
 
-            <div className="mt-auto pt-4 border-t border-white/5 shrink-0">
-              <div className="p-3 bg-black/40 rounded-sm border-l-2 border-[#d4a373]">
-                <p className="italic font-mono text-sm text-[#d4a373] uppercase leading-relaxed font-bold">
-                  Nota_Operativa: <br />
-                  <span className="text-sm font-medium opacity-60">
-                    No autorizar salidas sin al menos 48h de raciones de emergencia.
-                  </span>
+            <div className="mt-auto pt-3 border-t border-white/5 shrink-0">
+              <div className="p-3 bg-black/40 rounded-sm border border-[#d4a373]/20">
+                <p className="font-typewriter text-[10px] text-[#d4a373]/80 uppercase tracking-wide leading-relaxed">
+                  Nota Operativa
+                </p>
+                <p className="font-mono text-[10px] text-white/40 leading-relaxed mt-1">
+                  No autorizar salidas sin al menos 48h de raciones de emergencia.
                 </p>
               </div>
             </div>

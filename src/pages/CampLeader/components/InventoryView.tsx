@@ -1,13 +1,12 @@
-﻿// @ts-nocheck
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from "react"
-import { motion } from "framer-motion"
+import { Boxes, Flame, Droplet, HeartPulse, Wrench, Sword, AlertTriangle } from "lucide-react"
+import { useState } from "react"
+
 import type { Inventory, ResourceCategory } from "../types"
-import { Boxes, Flame, Droplet, HeartPulse, Wrench, Sword, AlertTriangle, Grid } from "lucide-react"
 
 interface InventoryViewProps {
   inventory: Inventory[]
@@ -39,7 +38,7 @@ export default function InventoryView({ inventory }: InventoryViewProps) {
   }
 
   return (
-    <div className="p-10 space-y-8">
+    <div className="p-6 lg:p-8 space-y-6">
       {/* PAGE HEADER */}
       <div className="border-b border-[#c27c2f]/30 pb-6 flex flex-col md:flex-row justify-between items-start md:items-center">
         <div>
@@ -54,7 +53,7 @@ export default function InventoryView({ inventory }: InventoryViewProps) {
       </div>
 
       {/* FILTER BUTTONS ROW */}
-      <div className="flex flex-wrap gap-3 bg-black/40 p-5 border border-[#3b4d3e] rounded">
+      <div className="flex flex-wrap gap-2 bg-black/40 p-4 border border-[#3b4d3e] rounded">
         <button
           onClick={() => setFilterCategory("ALL")}
           className={`px-4 py-2 font-mono text-xs uppercase font-bold tracking-wider rounded border cursor-pointer ${
@@ -94,7 +93,7 @@ export default function InventoryView({ inventory }: InventoryViewProps) {
       </div>
 
       {/* WAREHOUSE GRID ITEMS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {filteredInventory.map((inv) => {
           const ratio = Math.min(
             100,
@@ -104,15 +103,15 @@ export default function InventoryView({ inventory }: InventoryViewProps) {
           return (
             <div
               key={inv.resource_id}
-              className={`bg-[#9a9080] border border-black relative overflow-hidden text-black transition-transform hover:scale-[1.01] p-7 flex flex-col justify-between ${inv.alert_active ? "warning-card border-l-[12px]" : ""}`}
+              className={`bg-[#9a9080] border border-black relative overflow-hidden text-black transition-transform hover:scale-[1.01] p-6 flex flex-col justify-between ${inv.alert_active ? "warning-card" : ""}`}
               style={{ transform: `rotate(${Math.sin(inv.resource_id) * 0.4}deg)` }}
             >
-              {/* Alert Active Pulsing design bar on background of cards */}
+              {/* Alert top bar indicator */}
               {inv.alert_active && (
-                <div className="absolute top-0 right-0 left-0 h-1 bg-red-600 animate-pulse" />
+                <div className="absolute top-0 right-0 left-0 h-[3px] bg-[#9c2720]" />
               )}
 
-              <div className="flex justify-between items-start mb-6">
+              <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center gap-4">
                   <div className="w-14 h-14 border-2 border-black flex items-center justify-center bg-black/5 rounded shrink-0">
                     {getCategoryIcon(inv.resource.category)}

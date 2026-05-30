@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
 import { LayoutDashboard, Compass, Truck, Boxes, User as UserIcon, Shield } from "lucide-react"
+
 import { useAuthStore } from "@/store/useAuthStore"
 
 interface SidebarProps {
@@ -66,34 +66,46 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className="w-full text-left relative flex items-center gap-4 rounded-xl transition-all duration-150 group border cursor-pointer shrink-0 hover:translate-x-1 active:translate-y-0.5"
+              aria-label={tab.label}
+              aria-pressed={isActive}
+              className="w-full text-left relative flex items-center gap-3 rounded transition-all duration-150 group border cursor-pointer shrink-0 hover:translate-x-0.5 active:translate-y-px"
               style={{
-                backgroundColor: isActive ? "#c27c2f" : "#9a9080",
-                borderColor: "#000000",
+                backgroundColor: isActive
+                  ? "rgba(194, 124, 47, 0.15)"
+                  : "rgba(154, 144, 128, 0.08)",
+                borderColor: isActive ? "rgba(194, 124, 47, 0.5)" : "rgba(0, 0, 0, 0.6)",
                 borderWidth: "2px",
-                color: "#000000",
-                boxShadow: "3px 3px 0px #000000",
-                padding: "14px 20px",
-                minHeight: "60px",
+                color: isActive ? "#fca311" : "rgba(154, 144, 128, 0.7)",
+                boxShadow: isActive ? "2px 2px 0px rgba(0,0,0,0.8)" : "2px 2px 0px rgba(0,0,0,0.6)",
+                padding: "12px 16px",
+                minHeight: "52px",
               }}
             >
-              <Icon className="w-6 h-6 shrink-0 text-black font-extrabold" />
+              <Icon
+                className="w-5 h-5 shrink-0"
+                style={{ color: isActive ? "#fca311" : "rgba(154,144,128,0.6)" }}
+              />
 
-              <span className="hidden md:inline font-typewriter text-sm tracking-wider uppercase text-black font-extrabold select-none">
+              <span className="hidden md:inline font-typewriter text-sm tracking-wider uppercase font-bold select-none">
                 {tab.label}
               </span>
 
+              {/* Active pulse indicator */}
+              {isActive && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-[#fca311] animate-pulse shadow-[0_0_6px_rgba(252,163,17,0.6)]" />
+              )}
+
               {/* Distintivo de Alerta de Suministro */}
-              {tab.id === "explorations" && (
+              {tab.id === "explorations" && !isActive && (
                 <span
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-mono px-2 py-0.5 rounded hidden md:inline animate-pulse uppercase font-extrabold"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-mono px-1.5 py-0.5 rounded hidden md:inline uppercase font-bold"
                   style={{
                     backgroundColor: "#9c2720",
                     color: "#ffffff",
-                    border: "1px solid #000000",
+                    border: "1px solid rgba(0,0,0,0.4)",
                   }}
                 >
-                  ALERTA
+                  ALT
                 </span>
               )}
             </button>
@@ -111,7 +123,8 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
           }}
         >
           <p className="text-[10px] font-mono leading-4" style={{ color: "#fca311" }}>
-            COMANDANTE: <span className="text-white font-bold uppercase">{user?.username ?? "—"}</span>
+            COMANDANTE:{" "}
+            <span className="text-white font-bold uppercase">{user?.username ?? "—"}</span>
           </p>
           <p className="text-[10px] font-mono leading-4 mt-1" style={{ color: "#fca311" }}>
             CAMPAMENTO: <span className="text-white font-bold">#{user?.camp_id ?? "?"}</span>

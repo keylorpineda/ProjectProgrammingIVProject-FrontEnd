@@ -39,6 +39,7 @@
   "devDependencies": {
     "@commitlint/cli": "^21.0.2",
     "@commitlint/config-conventional": "^21.0.2",
+    "@cspell/dict-es-es": "^3.0.8",
     "@playwright/test": "^1.45.0",
     "@tailwindcss/vite": "^4.2.3",
     "@types/leaflet": "^1.9.21",

@@ -1,16 +1,14 @@
-// @ts-nocheck
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useEffect, useState } from "react"
-import { Radio, Heart, Cpu } from "lucide-react"
+import { Radio, Cpu } from "lucide-react"
+import { useEffect, useState } from "react"
 
 export default function Footer() {
   const [signal, setSignal] = useState(94.2)
 
-  // Fluctuating radio signal simulation
   useEffect(() => {
     const timer = setInterval(() => {
       setSignal((prev) => {
@@ -27,23 +25,23 @@ export default function Footer() {
       className="bg-[#111111] border-t border-[#3b4d3e] text-[#ab9e8b] font-mono text-[10px] py-3 px-6 flex flex-col md:flex-row items-center justify-between gap-2 z-10"
     >
       <div className="flex items-center gap-4">
-        <span className="text-[#c27c2f] font-bold">DOOMSDAY-SYS v2.48</span>
+        <span className="text-[#c27c2f] font-semibold">DOOMSDAY-SYS v2.48</span>
         <span className="hidden md:inline text-zinc-700">|</span>
         <span className="hidden md:inline">
-          LATENCIA API: <span className="text-[#3b4d3e] font-bold">22MS OK</span>
+          LATENCIA API: <span className="text-[#3b4d3e] font-semibold">22ms OK</span>
         </span>
       </div>
 
-      <div className="flex items-center gap-2 animate-pulse text-[#c27c2f]">
-        <Radio className="w-3.5 h-3.5" />
-        <span className="uppercase text-[9px] tracking-widest">
-          FRECUENCIA DE EMERGENCIA B�NKER: {signal} MHZ
+      <div className="flex items-center gap-2 text-[#c27c2f]">
+        <Radio className="w-3.5 h-3.5 animate-pulse" />
+        <span className="uppercase text-[9px] tracking-widest tabular-nums">
+          Freq. emergencia: {signal} MHz
         </span>
       </div>
 
-      <div className="flex items-center gap-2 text-zinc-500">
-        <Cpu className="w-3.5 h-3.5 text-zinc-600" />
-        <span>SECURE BUNK-LOG CONSOLE ACTIVE</span>
+      <div className="flex items-center gap-2 text-zinc-600">
+        <Cpu className="w-3.5 h-3.5" />
+        <span>Bunk-Log Console Active</span>
       </div>
     </footer>
   )
