@@ -2,37 +2,50 @@ import { create } from "zustand"
 import { persist } from "zustand/middleware"
 import type { AuthUser } from "@/types/api.types"
 
-interface AuthState {
+// In-memory store — access_token never touches localStorage
+interface TokenState {
   token: string | null
-  refreshToken: string | null
+  setToken: (token: string | null) => void
+  getToken: () => string | null
+}
+
+export const useTokenStore = create<TokenState>()((set, get) => ({
+  token: null,
+  setToken: (token) => set({ token }),
+  getToken: () => get().token,
+}))
+
+// Persisted store — only non-sensitive user data
+interface AuthState {
   user: AuthUser | null
   isAuthenticated: boolean
-  setAuth: (token: string, user: AuthUser, refreshToken?: string | null) => void
-  setRefreshToken: (refreshToken: string | null) => void
+  setAuth: (token: string, user: AuthUser, _refreshToken?: string | null) => void
+  setRefreshToken: (_refreshToken: string | null) => void
   logout: () => void
   isTokenExpired: () => boolean
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set, get) => ({
-      token: null,
-      refreshToken: null,
+    (set) => ({
       user: null,
       isAuthenticated: false,
 
-      setAuth: (token, user, refreshToken = null) =>
-        set({ token, refreshToken, user, isAuthenticated: true }),
+      setAuth: (token, user) => {
+        useTokenStore.getState().setToken(token)
+        set({ user, isAuthenticated: true })
+      },
 
-      setRefreshToken: (refreshToken) => set({ refreshToken }),
+      // Kept for call-site compatibility; refresh token no longer stored client-side
+      setRefreshToken: (_refreshToken) => {},
 
       logout: () => {
-        localStorage.clear()
-        set({ token: null, refreshToken: null, user: null, isAuthenticated: false })
+        useTokenStore.getState().setToken(null)
+        set({ user: null, isAuthenticated: false })
       },
 
       isTokenExpired: () => {
-        const { token } = get()
+        const token = useTokenStore.getState().token
         if (!token) return true
         try {
           const payload = JSON.parse(atob(token.split(".")[1])) as { exp: number }
@@ -43,7 +56,8 @@ export const useAuthStore = create<AuthState>()(
       },
     }),
     {
-      name: "auth-storage",
+      name: "auth-user-storage",
+      partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated }),
     },
   ),
 )

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import "./campleader.css"
 import { motion, AnimatePresence } from "framer-motion"
-import { useAuthStore } from "@/store/useAuthStore"
+import { useAuthStore, useTokenStore } from "@/store/useAuthStore"
 import InactivityGuard from "@/components/ui/InactivityGuard"
 
 import {
@@ -78,7 +78,8 @@ export default function CampLeaderLayout() {
           usersService.getCampStatistics(campId),
           // Load camps list from backend
           fetch(`${import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1"}/camps`, {
-            headers: { Authorization: `Bearer ${localStorage.getItem("auth-token") ?? ""}` },
+            credentials: "include",
+            headers: { Authorization: `Bearer ${useTokenStore.getState().getToken() ?? ""}` },
           })
             .then((r) => (r.ok ? r.json() : []))
             .catch(() => []),

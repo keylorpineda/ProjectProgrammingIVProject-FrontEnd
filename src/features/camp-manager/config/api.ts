@@ -1,9 +1,11 @@
 import axios from "axios"
+import { useTokenStore } from "@/store/useAuthStore"
 
 // Creamos la instancia real apuntando a la URL del backend
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1",
   timeout: 30000,
+  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },
@@ -11,17 +13,7 @@ export const api = axios.create({
 
 // INTERCEPTOR DE PETICIÓN (Request) - Añadir token JWT
 api.interceptors.request.use((config) => {
-  const token =
-    localStorage.getItem("auth-token") ??
-    (() => {
-      try {
-        const raw = localStorage.getItem("auth-storage")
-        if (!raw) return null
-        return JSON.parse(raw)?.state?.token ?? null
-      } catch {
-        return null
-      }
-    })()
+  const token = useTokenStore.getState().getToken()
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`

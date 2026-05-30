@@ -6,7 +6,7 @@ import {
 } from "@/features/auth/services/auth.service"
 import type { LoginBody } from "@/features/auth/services/auth.service"
 import type { AuthUser } from "@/types/api.types"
-import { useAuthStore } from "@/store/useAuthStore"
+import { useAuthStore, useTokenStore } from "@/store/useAuthStore"
 
 interface AuthContextType {
   user: AuthUser | null
@@ -20,44 +20,34 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const {
-    token,
-    refreshToken,
-    user,
-    isAuthenticated,
-    setAuth,
-    logout: storeLogout,
-  } = useAuthStore()
+  const token = useTokenStore((s) => s.token)
+  const { user, isAuthenticated, setAuth, logout: storeLogout } = useAuthStore()
 
   const login = useCallback(
     async (body: LoginBody) => {
       const response = await loginService(body)
-      setAuth(response.access_token, response.user, response.refresh_token)
+      setAuth(response.access_token, response.user)
     },
     [setAuth],
   )
 
   const logout = useCallback(async () => {
-    const tokenToClose = refreshToken
     storeLogout()
-
-    if (tokenToClose) {
-      void logoutService(tokenToClose).catch((error) => {
-        console.warn("Remote logout failed after local session cleanup", error)
-      })
-    }
-  }, [refreshToken, storeLogout])
+    void logoutService().catch((error) => {
+      console.warn("Remote logout failed after local session cleanup", error)
+    })
+  }, [storeLogout])
 
   const value = useMemo(
     () => ({
       user,
       token,
-      refreshToken,
+      refreshToken: null,
       isAuthenticated,
       login,
       logout,
     }),
-    [user, token, refreshToken, isAuthenticated, login, logout],
+    [user, token, isAuthenticated, login, logout],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
