@@ -40,3 +40,6 @@ coverage/
 # TypeScript
 *.tsbuildinfo
 .claude
+.impeccable
+PRODUCT.md
+DESIGN.md
