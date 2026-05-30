@@ -14,7 +14,7 @@
     "prepare": "husky"
   },
   "lint-staged": {
-    "*.{ts,tsx}": [
+    "*.{ts,tsx,js,cjs}": [
       "eslint --fix",
       "prettier --write",
       "cspell --no-must-find-files --config cspell.json"
