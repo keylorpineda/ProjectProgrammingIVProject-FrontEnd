@@ -1,4 +1,5 @@
 import axios from "axios"
+
 import { useTokenStore, useAuthStore } from "@/store/useAuthStore"
 
 const api = axios.create({
@@ -41,9 +42,7 @@ api.interceptors.response.use(
       } catch {
         useTokenStore.getState().setToken(null)
         useAuthStore.getState().logout()
-        const isPublicPage = PUBLIC_PATHS.some((p) =>
-          window.location.pathname.startsWith(p),
-        )
+        const isPublicPage = PUBLIC_PATHS.some((p) => window.location.pathname.startsWith(p))
         if (!isPublicPage) {
           window.location.href = "/login"
         }
