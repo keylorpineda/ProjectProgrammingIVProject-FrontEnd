@@ -37,7 +37,7 @@ const itemVariants: Variants = {
   visible: {
     y: 0,
     opacity: 1,
-    transition: { type: "spring", stiffness: 100 },
+    transition: { type: "spring" as const, stiffness: 100 },
   },
 }
 
@@ -117,7 +117,7 @@ export default function TravelDashboard() {
         <div className="flex justify-between items-center mb-1 border-b border-[#d4a373]/10 pb-1">
           <div className="flex items-center gap-4">
             <span className="archive-header italic text-xs text-white/40 uppercase">
-              Base de Viajes // Panel de Coordinación
+              Base de Viajes — Panel de Coordinación
             </span>
             <div className="h-3 w-px bg-white/10" />
             <div className="flex items-center gap-2">
@@ -261,9 +261,9 @@ export default function TravelDashboard() {
                   </div>
                   <button
                     onClick={() => navigate("/travel-manager/expeditions")}
-                    className="text-xs font-mono font-black text-ink/40 border border-ink/10 px-2.5 py-1 rounded-sm hover:bg-black/5 transition-all shrink-0 uppercase"
+                    className="text-xs font-mono font-semibold text-ink/40 border border-ink/10 px-2.5 py-1 rounded-sm hover:bg-black/5 transition-all shrink-0 uppercase"
                   >
-                    Ficha
+                    Ver
                   </button>
                 </div>
               ))}

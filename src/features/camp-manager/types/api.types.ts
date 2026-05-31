@@ -45,15 +45,32 @@ export interface TransferStatistics {
   totalFuelCostUsed: number
 }
 
+export interface RequestResourceDetail {
+  request_id?: string
+  resource_id: string
+  requested_quantity: number
+  approved_quantity?: number | null
+  received_quantity?: number | null
+  resource?: { id: string; name: string; category: string; unit: string }
+}
+
 export interface IntercampRequest {
   id: string
-  resource_type: string
-  amount: number
-  camp_source_id: string
+  camp_origin_id: string
+  camp_source_id?: string // legacy alias for camp_origin_id
   camp_destination_id: string
-  status: "pending" | "approved" | "denied" | "arrived"
-  requested_at: string
-  notes?: string
+  type: string
+  status: string
+  request_date?: string
+  notes?: string | null
+  travel_days?: number | null
+  departure_date?: string | null
+  arrival_date?: string | null
+  requested_at: string // primary date field from API
+  resourceDetails?: RequestResourceDetail[]
+  personDetails?: unknown[]
+  created_at?: string
+  updated_at?: string
 }
 
 export interface ProfessionAlert {

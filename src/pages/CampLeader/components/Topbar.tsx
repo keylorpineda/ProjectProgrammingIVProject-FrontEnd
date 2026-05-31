@@ -52,7 +52,7 @@ export default function Topbar({ survivalScore }: TopbarProps) {
             DOOMSDAY CENTRAL CONTROL
           </h1>
           <p className="font-mono text-[10px] text-[#fca311]/50 uppercase tracking-widest">
-            Campamento #{user?.campId || 1}
+            Campamento #{user?.camp_id || 1}
           </p>
         </div>
       </div>

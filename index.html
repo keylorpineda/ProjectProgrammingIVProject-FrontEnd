@@ -3,17 +3,34 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
-    <!-- Google Fonts for typography -->
+    <!-- Font preconnect for faster loading -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!--
+      Load all project fonts from HTML so they aren't render-blocked by CSS @import.
+      Critical weights only; additional weights are loaded on swap.
+      - Inter: UI body text
+      - JetBrains Mono: data/labels (mono)
+      - Special Elite: typewriter display
+      - VT323: terminal display
+      - Space Grotesk: sans alternative
+    -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Special+Elite&family=VT323&family=Space+Grotesk:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
+    <!-- Non-critical decorative fonts load after paint -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Courier+Prime:wght@400;700&display=swap"
+      rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
+    />
 
-    <title>Gestión del Fin - Panel de Control</title>
+    <title>Gestión del Fin — Panel de Control</title>
   </head>
   <body>
     <div id="root"></div>

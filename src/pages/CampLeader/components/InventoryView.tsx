@@ -52,44 +52,50 @@ export default function InventoryView({ inventory }: InventoryViewProps) {
         <div className="vintage-tape mt-2 md:mt-0">LOGÍSTICA CONFIDENCIAL</div>
       </div>
 
-      {/* FILTER BUTTONS ROW */}
-      <div className="flex flex-wrap gap-2 bg-black/40 p-4 border border-[#3b4d3e] rounded">
-        <button
-          onClick={() => setFilterCategory("ALL")}
-          className={`px-4 py-2 font-mono text-xs uppercase font-bold tracking-wider rounded border cursor-pointer ${
-            filterCategory === "ALL"
-              ? "bg-[#c27c2f] text-black border-black font-semibold"
-              : "bg-[#111] border-[#3b4d3e]/60 text-zinc-400 hover:text-[#fca311]"
-          }`}
+      {/* FILTER BUTTONS ROW — horizontally scrollable on mobile */}
+      <div className="bg-black/40 p-3 border border-[#3b4d3e] rounded">
+        <div
+          className="flex gap-2 overflow-x-auto pb-1 md:pb-0 md:flex-wrap"
+          style={{ scrollbarWidth: "none" }}
         >
-          VER TODO EL STOCK
-        </button>
+          <button
+            onClick={() => setFilterCategory("ALL")}
+            className={`px-3 py-2 font-mono text-xs uppercase font-semibold tracking-wide rounded border cursor-pointer shrink-0 min-h-[44px] ${
+              filterCategory === "ALL"
+                ? "bg-[#c27c2f] text-black border-black"
+                : "bg-[#111] border-[#3b4d3e]/60 text-zinc-400 hover:text-[#fca311]"
+            }`}
+          >
+            Todo
+          </button>
 
-        {[
-          { id: "food", label: "Raciones Comida", icon: Flame },
-          { id: "water", label: "Agua Filtrada", icon: Droplet },
-          { id: "medicine", label: "Medicos e Inmunes", icon: HeartPulse },
-          { id: "tools", label: "Repuestos Chatarra", icon: Wrench },
-          { id: "weapons", label: "Municion Balistica", icon: Sword },
-        ].map((cat) => {
-          const IconComp = cat.icon
-          const isActive = filterCategory === cat.id
+          {[
+            { id: "food", label: "Comida", icon: Flame },
+            { id: "water", label: "Agua", icon: Droplet },
+            { id: "medicine", label: "Medicina", icon: HeartPulse },
+            { id: "tools", label: "Herramientas", icon: Wrench },
+            { id: "weapons", label: "Armamento", icon: Sword },
+          ].map((cat) => {
+            const IconComp = cat.icon
+            const isActive = filterCategory === cat.id
 
-          return (
-            <button
-              key={cat.id}
-              onClick={() => setFilterCategory(cat.id as ResourceCategory)}
-              className={`px-4 py-2 font-mono text-xs uppercase font-bold tracking-wider rounded border flex items-center gap-2 cursor-pointer ${
-                isActive
-                  ? "bg-[#9a9080] text-black border-black font-semibold"
-                  : "bg-[#111] border-[#3b4d3e]/60 text-zinc-400 hover:text-[#fca311]"
-              }`}
-            >
-              <IconComp className="w-3.5 h-3.5" />
-              {cat.label}
-            </button>
-          )
-        })}
+            return (
+              <button
+                key={cat.id}
+                onClick={() => setFilterCategory(cat.id as ResourceCategory)}
+                aria-pressed={isActive}
+                className={`px-3 py-2 font-mono text-xs uppercase font-semibold tracking-wide rounded border flex items-center gap-2 cursor-pointer shrink-0 min-h-[44px] ${
+                  isActive
+                    ? "bg-[#9a9080] text-black border-black"
+                    : "bg-[#111] border-[#3b4d3e]/60 text-zinc-400 hover:text-[#fca311]"
+                }`}
+              >
+                <IconComp className="w-3.5 h-3.5" />
+                {cat.label}
+              </button>
+            )
+          })}
+        </div>
       </div>
 
       {/* WAREHOUSE GRID ITEMS */}

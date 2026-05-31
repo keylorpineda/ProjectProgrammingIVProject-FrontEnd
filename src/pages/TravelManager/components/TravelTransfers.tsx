@@ -1,5 +1,3 @@
-import { useState, useMemo, useEffect } from "react"
-import { io } from "socket.io-client"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { motion, AnimatePresence } from "framer-motion"
 import {
@@ -17,16 +15,20 @@ import {
   Archive,
   Package,
 } from "lucide-react"
-import { useAuth } from "@/pages/Admin/context/AuthContext"
+import { useState, useMemo, useEffect } from "react"
+import { io } from "socket.io-client"
+
+import type { IntercampRequest, Person, InventoryItem } from "@/types/api.types"
+
+import { getInventory } from "@/features/inventory/services/inventory.service"
+import { getPersons } from "@/features/persons/services/persons.service"
 import {
   getCampTransfers,
   createTransferRequest,
   cancelTransfer,
   confirmTransferArrival,
 } from "@/features/transfers/services/transfers.service"
-import { getPersons } from "@/features/persons/services/persons.service"
-import { getInventory } from "@/features/inventory/services/inventory.service"
-import type { IntercampRequest, Person, InventoryItem } from "@/types/api.types"
+import { useAuth } from "@/pages/Admin/context/AuthContext"
 
 // ── Status helpers ──────────────────────────────────────────────────────────
 
@@ -246,21 +248,21 @@ export default function TravelTransfers() {
     }
 
     createMutation.mutate({
-      camp_origin_id: Number(campId),
-      camp_destination_id: Number(destCampId),
+      camp_origin_id: String(campId),
+      camp_destination_id: String(destCampId),
       type: transferType,
       notes: notes || undefined,
       travel_days: travelDays,
       resource_details:
         transferType !== "people"
           ? selectedResources.map((r) => ({
-              resource_id: Number(r.resource_id),
+              resource_id: String(r.resource_id),
               requested_quantity: Number(r.requested_quantity),
             }))
           : undefined,
       person_details:
         transferType !== "resources"
-          ? selectedPersons.map((p) => ({ person_id: Number(p.person_id) }))
+          ? selectedPersons.map((p) => ({ person_id: String(p.person_id) }))
           : undefined,
     })
   }
@@ -356,7 +358,9 @@ export default function TravelTransfers() {
               { label: "Recibidos", count: stats.received, color: "text-paper-dark" },
             ].map((s) => (
               <div key={s.label} className="flex flex-col items-center px-2">
-                <span className={`text-base md:text-lg font-mono font-black ${s.color}`}>{s.count}</span>
+                <span className={`text-base md:text-lg font-mono font-black ${s.color}`}>
+                  {s.count}
+                </span>
                 <span className="text-xs md:text-sm font-mono font-bold uppercase tracking-tighter text-white/40">
                   {s.label}
                 </span>
@@ -466,9 +470,7 @@ export default function TravelTransfers() {
                         </span>
                         <span
                           className={`text-xs font-mono font-black uppercase truncate ${
-                            selectedTransfer?.id === transfer.id
-                              ? "text-white/90"
-                              : "text-white/40"
+                            selectedTransfer?.id === transfer.id ? "text-white/90" : "text-white/40"
                           }`}
                         >
                           {getTransferTypeBadge(transfer.type)}
@@ -477,7 +479,9 @@ export default function TravelTransfers() {
 
                       <div
                         className={`text-sm font-typewriter font-black uppercase leading-tight mb-1 truncate ${
-                          selectedTransfer?.id === transfer.id ? "text-white" : "text-accent-approved"
+                          selectedTransfer?.id === transfer.id
+                            ? "text-white"
+                            : "text-accent-approved"
                         }`}
                       >
                         {isOrigin
@@ -772,10 +776,14 @@ export default function TravelTransfers() {
                   </div>
 
                   <div>
-                    <label className="text-sm md:text-base font-mono font-black text-accent-approved uppercase tracking-widest block mb-2">
+                    <label
+                      htmlFor="destCampId"
+                      className="text-sm md:text-base font-mono font-black text-accent-approved uppercase tracking-widest block mb-2"
+                    >
                       ID Campamento Destino *
                     </label>
                     <input
+                      id="destCampId"
                       type="text"
                       value={destCampId}
                       onChange={(e) => setDestCampId(e.target.value)}
@@ -786,10 +794,14 @@ export default function TravelTransfers() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="text-sm md:text-base font-mono font-black text-accent-approved uppercase tracking-widest block mb-2">
+                      <label
+                        htmlFor="transferType"
+                        className="text-sm md:text-base font-mono font-black text-accent-approved uppercase tracking-widest block mb-2"
+                      >
                         Tipo de Traslado *
                       </label>
                       <select
+                        id="transferType"
                         value={transferType}
                         onChange={(e) =>
                           setTransferType(e.target.value as "resources" | "people" | "both")
@@ -802,10 +814,14 @@ export default function TravelTransfers() {
                       </select>
                     </div>
                     <div>
-                      <label className="text-sm md:text-base font-mono font-black text-accent-approved uppercase tracking-widest block mb-2">
+                      <label
+                        htmlFor="travelDays"
+                        className="text-sm md:text-base font-mono font-black text-accent-approved uppercase tracking-widest block mb-2"
+                      >
                         Días de Viaje
                       </label>
                       <input
+                        id="travelDays"
                         type="number"
                         min={1}
                         value={travelDays}
@@ -816,10 +832,14 @@ export default function TravelTransfers() {
                   </div>
 
                   <div>
-                    <label className="text-sm md:text-base font-mono font-black text-accent-approved uppercase tracking-widest block mb-2">
+                    <label
+                      htmlFor="notes"
+                      className="text-sm md:text-base font-mono font-black text-accent-approved uppercase tracking-widest block mb-2"
+                    >
                       Notas / Motivo
                     </label>
                     <textarea
+                      id="notes"
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
                       placeholder="Razón del traslado, instrucciones especiales..."
@@ -856,8 +876,9 @@ export default function TravelTransfers() {
                                       : "bg-black/20 border-white/5"
                                   }`}
                                 >
-                                  <div
-                                    className="flex items-center gap-2 cursor-pointer flex-1"
+                                  <button
+                                    type="button"
+                                    className="flex items-center gap-2 cursor-pointer flex-1 bg-transparent border-none text-left p-0 outline-none focus:outline-none"
                                     onClick={() => handleToggleResource(item.resource_id)}
                                   >
                                     <div
@@ -880,12 +901,12 @@ export default function TravelTransfers() {
                                           {item.resource?.name || "Desconocido"}
                                         </span>
                                         <span className="text-sm font-mono text-white/40 uppercase">
-                                          {item.resource?.category || "N/A"} {"//"} {item.current_quantity}{" "}
-                                          {item.resource?.unit || "U"}
+                                          {item.resource?.category || "N/A"} {"//"}{" "}
+                                          {item.current_quantity} {item.resource?.unit || "U"}
                                         </span>
                                       </div>
                                     </div>
-                                  </div>
+                                  </button>
                                   {isSelected && (
                                     <input
                                       type="number"
@@ -934,10 +955,11 @@ export default function TravelTransfers() {
                                 (p) => p.person_id === person.id,
                               )
                               return (
-                                <div
+                                <button
+                                  type="button"
                                   key={person.id}
                                   onClick={() => handleTogglePerson(person.id)}
-                                  className={`flex items-center gap-2 p-2 border cursor-pointer transition-all ${
+                                  className={`flex items-center gap-2 p-2 border cursor-pointer transition-all text-left w-full bg-transparent outline-none focus:outline-none ${
                                     isSelected
                                       ? "bg-accent-approved/10 border-accent-approved/30"
                                       : "bg-black/20 border-white/5 hover:border-accent-approved/20"
@@ -962,7 +984,7 @@ export default function TravelTransfers() {
                                       [{person.profession.name}]
                                     </span>
                                   )}
-                                </div>
+                                </button>
                               )
                             })
                         )}

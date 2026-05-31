@@ -70,41 +70,31 @@ export default function TravelResources() {
 
   // Mapear los datos reales del backend al formato que espera la plantilla
   const resources: Resource[] = useMemo(() => {
-    return inventoryData.map(
-      (item: {
-        id: string | number
-        current_quantity: number
-        minimum_stock_required?: number
-        is_below_minimum?: boolean
-        camp_id?: string
-        notes?: string
-        resource?: { name: string; category: string; unit: string; description: string }
-      }) => {
-        let status: Resource["status"] = "sufficient"
-        if (item.current_quantity === 0) {
-          status = "none"
-        } else if (item.current_quantity <= (item.minimum_stock_required || 0) * 0.5) {
-          status = "critical"
-        } else if (item.is_below_minimum) {
-          status = "insufficient"
-        } else if (item.current_quantity <= (item.minimum_stock_required || 0) * 1.5) {
-          status = "low"
-        }
+    return inventoryData.map((item) => {
+      let status: Resource["status"] = "sufficient"
+      if (item.current_quantity === 0) {
+        status = "none"
+      } else if (item.current_quantity <= (item.minimum_stock_required || 0) * 0.5) {
+        status = "critical"
+      } else if (item.alert_active) {
+        status = "insufficient"
+      } else if (item.current_quantity <= (item.minimum_stock_required || 0) * 1.5) {
+        status = "low"
+      }
 
-        return {
-          id: String(item.id),
-          name: item.resource?.name || "Recurso Desconocido",
-          category: item.resource?.category || "general",
-          unit: item.resource?.unit || "UNID",
-          campId: String(item.camp_id || baseCampId),
-          quantity: item.current_quantity || 0,
-          status: status,
-          minThreshold: item.minimum_stock_required || 0,
-          description: item.resource?.description || "",
-          usageNotes: item.notes || "",
-        }
-      },
-    )
+      return {
+        id: String(item.resource_id),
+        name: item.resource?.name || "Recurso Desconocido",
+        category: item.resource?.category || "general",
+        unit: item.resource?.unit || "UNID",
+        campId: String(item.camp_id || baseCampId),
+        quantity: item.current_quantity || 0,
+        status: status,
+        minThreshold: item.minimum_stock_required || 0,
+        description: item.resource?.description || "",
+        usageNotes: "",
+      }
+    })
   }, [inventoryData, baseCampId])
 
   const baseCamp = camps.find((c) => c.id === baseCampId)
@@ -128,32 +118,35 @@ export default function TravelResources() {
     [resources, selectedId],
   )
 
-  const stats = [
-    {
-      id: "sufficient",
-      label: "Suficientes",
-      count: resources.filter((r) => r.campId === baseCampId && r.status === "sufficient").length,
-      color: "text-accent-approved",
-    },
-    {
-      id: "low",
-      label: "Bajos",
-      count: resources.filter((r) => r.campId === baseCampId && r.status === "low").length,
-      color: "text-[#c27c2f]",
-    },
-    {
-      id: "insufficient",
-      label: "Insuficientes",
-      count: resources.filter((r) => r.campId === baseCampId && r.status === "insufficient").length,
-      color: "text-accent-critical",
-    },
-    {
-      id: "critical",
-      label: "Críticos",
-      count: resources.filter((r) => r.campId === baseCampId && r.status === "critical").length,
-      color: "text-red-800",
-    },
-  ]
+  const stats = useMemo(() => {
+    const campRes = resources.filter((r) => r.campId === baseCampId)
+    return [
+      {
+        id: "sufficient",
+        label: "Suficientes",
+        count: campRes.filter((r) => r.status === "sufficient").length,
+        color: "text-accent-approved",
+      },
+      {
+        id: "low",
+        label: "Bajos",
+        count: campRes.filter((r) => r.status === "low").length,
+        color: "text-[#c27c2f]",
+      },
+      {
+        id: "insufficient",
+        label: "Insuficientes",
+        count: campRes.filter((r) => r.status === "insufficient").length,
+        color: "text-accent-critical",
+      },
+      {
+        id: "critical",
+        label: "Críticos",
+        count: campRes.filter((r) => r.status === "critical").length,
+        color: "text-red-800",
+      },
+    ]
+  }, [resources, baseCampId])
 
   const categories = ["all", ...Array.from(new Set(resources.map((r) => r.category)))]
 
@@ -225,9 +218,10 @@ export default function TravelResources() {
     }
   }
 
-  // Evaluation for prep panel
-  const criticalShortages = filteredResources.filter(
-    (r) => r.status === "critical" || r.status === "insufficient",
+  // Evaluation for prep panel — memoized to avoid recomputing on unrelated re-renders
+  const criticalShortages = useMemo(
+    () => filteredResources.filter((r) => r.status === "critical" || r.status === "insufficient"),
+    [filteredResources],
   )
   const isTripReady = criticalShortages.length === 0 && filteredResources.length > 0
 
@@ -330,9 +324,12 @@ export default function TravelResources() {
         </div>
       </div>
 
-      <div className="flex-1 flex gap-4 overflow-hidden">
+      <div className="flex-1 flex flex-col md:flex-row gap-4 overflow-hidden">
         {/* PANEL IZQUIERDO: INVENTARIO DE VIAJE */}
-        <div className="w-72 flex flex-col gap-2 shrink-0 overflow-hidden bg-[#12110f] p-3 rounded-lg border border-[#d4a373]/15 shadow-2xl relative">
+        <div
+          className="md:w-72 w-full flex flex-col gap-2 md:shrink-0 overflow-hidden bg-[#12110f] p-3 rounded-lg border border-[#d4a373]/15 shadow-2xl relative"
+          style={{ maxHeight: selectedId ? undefined : undefined }}
+        >
           <div className="absolute top-0 right-0 w-16 h-16 bg-[#d4a373]/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl pointer-events-none" />
 
           <div className="flex flex-col px-1 mb-1 border-b border-[#d4a373]/10 pb-2 relative z-10">
@@ -427,7 +424,9 @@ export default function TravelResources() {
         </div>
 
         {/* PANEL CENTRAL: FICHA DEL RECURSO SELECCIONADO */}
-        <div className="flex-1 flex flex-col bg-[#12110f] rounded-lg overflow-hidden border border-white/5 shadow-2xl relative">
+        <div
+          className={`flex-1 flex flex-col bg-[#12110f] rounded-lg overflow-hidden border border-white/5 shadow-2xl relative ${!selectedId ? "hidden md:flex" : "flex"}`}
+        >
           <AnimatePresence mode="wait">
             {selectedResource ? (
               <motion.div
@@ -439,16 +438,23 @@ export default function TravelResources() {
               >
                 {/* Header Manifest */}
                 <div className="p-4 border-b border-white/5 flex justify-between items-center bg-black/20 shrink-0">
+                  <button
+                    onClick={() => setSelectedId(null)}
+                    className="md:hidden text-[#d4a373]/60 hover:text-[#d4a373] font-mono text-xs uppercase tracking-wide flex items-center gap-1 mr-3 transition-colors"
+                    aria-label="Volver a la lista"
+                  >
+                    ← Volver
+                  </button>
                   <div className="flex items-center gap-4">
                     <div className="bg-[#b69e7e]/10 p-2 rounded border border-[#b69e7e]/20">
                       <ClipboardList className="h-5 w-5 text-[#d4a373]" />
                     </div>
                     <div>
-                      <h3 className="text-sm font-typewriter font-black text-white uppercase tracking-wider">
-                        Hoja de Suministro Operativo
+                      <h3 className="text-sm font-typewriter font-bold text-white uppercase tracking-wider">
+                        Detalle del Recurso
                       </h3>
-                      <p className="text-xs font-mono text-[#d4a373]/60 uppercase tracking-widest font-black">
-                        IDENTIFICADO_COMO: {selectedResource.id.toUpperCase()} {"//"} SECTOR_Z
+                      <p className="text-[10px] font-mono text-[#d4a373]/50 uppercase tracking-wide">
+                        Ficha #{selectedResource.id}
                       </p>
                     </div>
                   </div>
@@ -467,11 +473,11 @@ export default function TravelResources() {
                     </div>
 
                     <div className="flex-1 flex flex-col relative z-10">
-                      <div className="mb-10 pb-6 border-b-4 border-double border-ink/20">
-                        <span className="text-sm font-mono text-ink/40 font-black uppercase tracking-tighter">
-                          NOMBRE_DEL_RECURSO
-                        </span>
-                        <h2 className="text-3xl font-typewriter font-black text-ink uppercase leading-none mt-1">
+                      <div className="mb-8 pb-5 border-b-4 border-double border-ink/20">
+                        <h2
+                          className="text-3xl font-typewriter font-bold text-ink uppercase leading-none"
+                          style={{ textWrap: "balance" }}
+                        >
                           {selectedResource.name}
                         </h2>
                       </div>
@@ -567,12 +573,9 @@ export default function TravelResources() {
                         </div>
                       </div>
 
-                      <div className="mt-auto pt-8 flex justify-between items-center text-sm font-mono text-ink/30 font-black uppercase">
-                        <span>SINC_DATA: 2026-05-16 {"//"} RADIO_REF_ALFA</span>
-                        <div className="flex gap-4">
-                          <span>VERIFICADO: LOG-01</span>
-                          <span className="text-ink/60">FOLIO_INV_{selectedResource.id}</span>
-                        </div>
+                      <div className="mt-auto pt-6 flex justify-between items-center text-[10px] font-mono text-ink/30 uppercase">
+                        <span>Actualizado: {new Date().toLocaleDateString("es-CR")}</span>
+                        <span className="text-ink/50">Ref. {selectedResource.id}</span>
                       </div>
                     </div>
                   </div>
@@ -581,12 +584,11 @@ export default function TravelResources() {
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center p-12 text-center">
                 <Database className="h-16 w-16 mb-6 text-[#d4a373] opacity-20" />
-                <h3 className="text-lg font-typewriter font-black text-white/40 uppercase mb-2">
-                  Sin recurso seleccionado
+                <h3 className="text-base font-typewriter font-bold text-white/40 uppercase mb-2">
+                  Selecciona un recurso
                 </h3>
-                <p className="text-sm font-mono text-white/20 uppercase max-w-xs">
-                  Seleccione una ficha del inventario de viaje para desplegar el manifiesto
-                  detallado.
+                <p className="text-xs font-mono text-white/25 max-w-xs leading-relaxed">
+                  Elige un item de la lista para ver su ficha completa con stock, umbral y estado.
                 </p>
               </div>
             )}
@@ -594,7 +596,7 @@ export default function TravelResources() {
         </div>
 
         {/* PANEL DERECHO: PREPARACIÓN DE VIAJE */}
-        <div className="w-64 flex flex-col gap-3 shrink-0 overflow-hidden">
+        <div className="hidden lg:flex w-64 flex-col gap-3 shrink-0 overflow-hidden">
           <div className="bg-[#12110f] p-4 rounded-lg flex flex-col h-full border border-white/5 shadow-2xl overflow-hidden relative">
             <h3 className="text-xs font-mono font-semibold text-[#d4a373] uppercase tracking-widest mb-4 flex items-center gap-2 shrink-0 border-b border-[#d4a373]/10 pb-3">
               <Navigation className="h-3.5 w-3.5" /> Preparación de Viaje
