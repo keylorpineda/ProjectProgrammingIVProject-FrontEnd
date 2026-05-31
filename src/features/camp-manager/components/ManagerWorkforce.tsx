@@ -2,14 +2,17 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
-import type React from "react"
-import { useEffect, useState } from "react"
-import { api } from "../config/api"
-import type { Person, ProfessionAlert, PersonStatus } from "../types/api.types"
-import { Users, ShieldAlert, Cpu, Briefcase } from "lucide-react"
-import { motion } from "framer-motion"
 import { useQuery } from "@tanstack/react-query"
+import { motion } from "framer-motion"
+import { Users, ShieldAlert, Cpu, Briefcase } from "lucide-react"
+import { useEffect, useState } from "react"
+import { type FormEvent } from "react"
+
+import { api } from "../config/api"
+
+import type { Person, ProfessionAlert, PersonStatus } from "../types/api.types"
 
 interface ManagerWorkforceProps {
   campId: string
@@ -26,7 +29,12 @@ export default function ManagerWorkforce({
   const [page, setPage] = useState<number>(1)
   const limit = 4 // Compact page size
 
-  const { data, isLoading: loading, error: queryError, refetch } = useQuery({
+  const {
+    data,
+    isLoading: loading,
+    error: queryError,
+    refetch,
+  } = useQuery({
     queryKey: ["managerWorkforce", campId, page],
     queryFn: async () => {
       const [personsRes, alertsRes] = await Promise.all([
@@ -43,7 +51,9 @@ export default function ManagerWorkforce({
   })
 
   const [errorState, setErrorState] = useState<string | null>(null)
-  const error = queryError ? (queryError as any).message || "Fallo de enlace biométrico de sobrevivientes." : errorState
+  const error = queryError
+    ? (queryError as any).message || "Fallo de enlace biométrico de sobrevivientes."
+    : errorState
 
   useEffect(() => {
     if (refreshTrigger > 0) refetch()
@@ -69,7 +79,9 @@ export default function ManagerWorkforce({
   const handleStatusChange = async (personId: string, newStatus: PersonStatus) => {
     // ⚠️ OPTIMISTIC UI: Instantly update local state to reflect change before API returns
     const previousPersonsState = [...localPersons]
-    setLocalPersons((prev) => prev.map((p) => (p.id === personId ? { ...p, status: newStatus } : p)))
+    setLocalPersons((prev) =>
+      prev.map((p) => (p.id === personId ? { ...p, status: newStatus } : p)),
+    )
 
     try {
       await api.put(`/users/persons/${personId}/status`, { status: newStatus })
@@ -88,7 +100,7 @@ export default function ManagerWorkforce({
     setSelectedProfession(person.profession || "Farmer")
   }
 
-  const handleSaveAssignment = async (e: React.FormEvent) => {
+  const handleSaveAssignment = async (e: FormEvent) => {
     e.preventDefault()
     if (!assigningPerson) return
 
@@ -205,7 +217,7 @@ export default function ManagerWorkforce({
                 CENSO_FUERZA_TRABAJO_ACTIVO
               </span>
             </div>
-            
+
             {/* STACKED HEALTH BAR (CURRENT PAGE) */}
             <div className="flex-1 w-full lg:max-w-md">
               <div className="flex justify-between text-xs mb-2 font-bold tracking-widest">
@@ -214,9 +226,24 @@ export default function ManagerWorkforce({
                 <span className="text-[#9c2720] uppercase">ENFERMO</span>
               </div>
               <div className="w-full h-4 bg-zinc-900 border-2 border-black flex overflow-hidden shadow-[inset_0_0_5px_rgba(0,0,0,0.8)]">
-                <div className="h-full bg-emerald-500 transition-all duration-500" style={{ width: `${(persons.filter(p => p.status === 'active').length / (persons.length || 1)) * 100}%` }} />
-                <div className="h-full bg-yellow-600 transition-all duration-500" style={{ width: `${(persons.filter(p => p.status === 'injured').length / (persons.length || 1)) * 100}%` }} />
-                <div className="h-full bg-[#9c2720] transition-all duration-500" style={{ width: `${(persons.filter(p => p.status === 'sick').length / (persons.length || 1)) * 100}%` }} />
+                <div
+                  className="h-full bg-emerald-500 transition-all duration-500"
+                  style={{
+                    width: `${(persons.filter((p) => p.status === "active").length / (persons.length || 1)) * 100}%`,
+                  }}
+                />
+                <div
+                  className="h-full bg-yellow-600 transition-all duration-500"
+                  style={{
+                    width: `${(persons.filter((p) => p.status === "injured").length / (persons.length || 1)) * 100}%`,
+                  }}
+                />
+                <div
+                  className="h-full bg-[#9c2720] transition-all duration-500"
+                  style={{
+                    width: `${(persons.filter((p) => p.status === "sick").length / (persons.length || 1)) * 100}%`,
+                  }}
+                />
               </div>
             </div>
 
@@ -255,8 +282,10 @@ export default function ManagerWorkforce({
                     const parts = lastLog.split(": ")
                     return parts.length > 1 ? parts.slice(1).join(": ").trim() : lastLog.trim()
                   }
-                  
-                  const cleanAlert = person.injuryDetails ? getLatestDiagnosis(person.injuryDetails) : ""
+
+                  const cleanAlert = person.injuryDetails
+                    ? getLatestDiagnosis(person.injuryDetails)
+                    : ""
 
                   return (
                     <tr key={person.id} className={`${rowColor} transition-colors`}>
@@ -283,9 +312,7 @@ export default function ManagerWorkforce({
                             <div className="flex items-center gap-2 mb-1 opacity-80 text-xs">
                               <span className="animate-pulse">☣ DIAGNÓSTICO MÉDICO:</span>
                             </div>
-                            <div className="text-white">
-                              {cleanAlert.toUpperCase()}
-                            </div>
+                            <div className="text-white">{cleanAlert.toUpperCase()}</div>
                           </div>
                         )}
                       </td>
@@ -308,13 +335,22 @@ export default function ManagerWorkforce({
                           >
                             SANO (ACTIVO)
                           </option>
-                          <option value="sick" className="bg-[#161513] text-yellow-400 font-bold py-2">
+                          <option
+                            value="sick"
+                            className="bg-[#161513] text-yellow-400 font-bold py-2"
+                          >
                             ENFERMO (SICK)
                           </option>
-                          <option value="injured" className="bg-[#161513] text-red-400 font-bold py-2">
+                          <option
+                            value="injured"
+                            className="bg-[#161513] text-red-400 font-bold py-2"
+                          >
                             HERIDO GRAVE
                           </option>
-                          <option value="dead" className="bg-[#161513] text-zinc-500 font-bold py-2">
+                          <option
+                            value="dead"
+                            className="bg-[#161513] text-zinc-500 font-bold py-2"
+                          >
                             FALLECIDO (M.I.A)
                           </option>
                         </select>
@@ -385,10 +421,14 @@ export default function ManagerWorkforce({
 
             <form onSubmit={handleSaveAssignment} className="space-y-6">
               <div className="space-y-2">
-                <label className="text-sm text-zinc-500 uppercase font-black block">
+                <label
+                  htmlFor="field-391"
+                  className="text-sm text-zinc-500 uppercase font-black block"
+                >
                   ASIGNAR ROL / PROFESIÓN:
                 </label>
                 <select
+                  id="field-391"
                   value={selectedProfession}
                   onChange={(e) => setSelectedProfession(e.target.value)}
                   className="w-full bg-[#2a2824] border-4 border-black p-4 bg-transparent text-[#e0d8cc] outline-none text-base font-black font-mono transition uppercase shadow-[inset_0_0_10px_rgba(0,0,0,0.8)]"

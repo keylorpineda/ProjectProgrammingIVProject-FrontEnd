@@ -1,5 +1,6 @@
-import api from "@/config/api"
 import type { IntercampRequest } from "@/types/api.types"
+
+import api from "@/config/api"
 
 export interface TransferResourceDetail {
   resource_id: string

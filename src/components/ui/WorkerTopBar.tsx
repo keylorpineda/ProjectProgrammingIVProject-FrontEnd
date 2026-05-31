@@ -62,10 +62,7 @@ export default function WorkerTopBar({ campName, userName }: WorkerTopBarProps) 
             textTransform: "uppercase",
           }}
         >
-          CAMPAMENTO{" "}
-          <span style={{ color: "rgba(200,168,75,0.75)" }}>
-            {campName ?? "—"}
-          </span>
+          CAMPAMENTO <span style={{ color: "rgba(200,168,75,0.75)" }}>{campName ?? "—"}</span>
         </span>
       </div>
 

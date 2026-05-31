@@ -1,6 +1,8 @@
 import axios, { type AxiosError, type AxiosResponse } from "axios"
-import api from "@/config/api"
+
 import type { Camp, HazardArea, ProfessionStat, Resource, TransferLine } from "../types/camp"
+
+import api from "@/config/api"
 
 type Primitive = string | number | boolean | null | undefined
 

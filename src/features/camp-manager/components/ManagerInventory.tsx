@@ -2,14 +2,17 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
-import type React from "react"
-import { useEffect, useState } from "react"
-import { api } from "../config/api"
-import type { InventoryItem } from "../types/api.types"
-import { Sliders, ShieldAlert, RefreshCw, Layers } from "lucide-react"
-import { motion } from "framer-motion"
 import { useQuery } from "@tanstack/react-query"
+import { motion } from "framer-motion"
+import { Sliders, ShieldAlert, RefreshCw, Layers } from "lucide-react"
+import { useEffect, useState } from "react"
+import { type FormEvent } from "react"
+
+import { api } from "../config/api"
+
+import type { InventoryItem } from "../types/api.types"
 
 interface ManagerInventoryProps {
   campId: string
@@ -22,7 +25,12 @@ export default function ManagerInventory({
   onDataChanged,
   refreshTrigger,
 }: ManagerInventoryProps) {
-  const { data: inventory = [], isLoading: loading, error: queryError, refetch } = useQuery({
+  const {
+    data: inventory = [],
+    isLoading: loading,
+    error: queryError,
+    refetch,
+  } = useQuery({
     queryKey: ["managerInventory", campId],
     queryFn: async () => {
       const res = await api.get(`/resources/inventory/${campId}`)
@@ -32,7 +40,9 @@ export default function ManagerInventory({
   })
 
   const [errorState, setErrorState] = useState<string | null>(null)
-  const error = queryError ? (queryError as any).message || "Error al conectar con los sensores de la bodega." : errorState
+  const error = queryError
+    ? (queryError as any).message || "Error al conectar con los sensores de la bodega."
+    : errorState
 
   useEffect(() => {
     if (refreshTrigger > 0) refetch()
@@ -53,7 +63,7 @@ export default function ManagerInventory({
     setNewMinStock(item.minimum_stock_required)
   }
 
-  const handleSaveMinStock = async (e: React.FormEvent) => {
+  const handleSaveMinStock = async (e: FormEvent) => {
     e.preventDefault()
     if (!editingItem) return
     if (newMinStock < 0) {
@@ -136,7 +146,9 @@ export default function ManagerInventory({
               <th className="p-6 md:p-8 border-r border-black font-black text-sm md:text-base">
                 RECURSO / CATEGORÍA
               </th>
-              <th className="p-6 md:p-8 border-r border-black font-black text-sm md:text-base">INVENTARIO_ACTUAL</th>
+              <th className="p-6 md:p-8 border-r border-black font-black text-sm md:text-base">
+                INVENTARIO_ACTUAL
+              </th>
               <th className="p-6 md:p-8 border-r border-black font-black text-sm md:text-base">
                 STOCK_CRÍTICO_MÍNIMO
               </th>
@@ -174,10 +186,18 @@ export default function ManagerInventory({
                   </td>
                   <td className="p-6 md:p-8 border-r border-black text-center uppercase font-mono font-bold text-base md:text-lg">
                     {(() => {
-                      const maxCapacity = Math.max(item.current_stock, item.minimum_stock_required * 3) || 1
-                      const fillPercentage = Math.min(100, Math.max(0, (item.current_stock / maxCapacity) * 100))
-                      const barColor = item.is_below_minimum ? "bg-[#9c2720]" : (fillPercentage < 50 ? "bg-[#df8120]" : "bg-emerald-500")
-                      
+                      const maxCapacity =
+                        Math.max(item.current_stock, item.minimum_stock_required * 3) || 1
+                      const fillPercentage = Math.min(
+                        100,
+                        Math.max(0, (item.current_stock / maxCapacity) * 100),
+                      )
+                      const barColor = item.is_below_minimum
+                        ? "bg-[#9c2720]"
+                        : fillPercentage < 50
+                          ? "bg-[#df8120]"
+                          : "bg-emerald-500"
+
                       return (
                         <div className="flex flex-col items-center justify-center gap-2 w-full max-w-[200px] mx-auto">
                           {item.is_below_minimum ? (
@@ -188,16 +208,18 @@ export default function ManagerInventory({
                             <span className="text-emerald-500 tracking-wider">SEGURO</span>
                           )}
                           <div className="w-full bg-[#121110] border-2 border-black h-4 overflow-hidden relative shadow-[inset_0_0_5px_rgba(0,0,0,0.8)]">
-                            <motion.div 
+                            <motion.div
                               initial={{ width: 0 }}
                               animate={{ width: `${fillPercentage}%` }}
                               transition={{ duration: 1, ease: "easeOut" }}
-                              className={`h-full ${barColor} ${item.is_below_minimum ? 'animate-pulse' : ''}`} 
+                              className={`h-full ${barColor} ${item.is_below_minimum ? "animate-pulse" : ""}`}
                             />
                             {/* Marker for minimum stock */}
-                            <div 
+                            <div
                               className="absolute top-0 bottom-0 w-0.5 bg-white z-10 opacity-70"
-                              style={{ left: `${(item.minimum_stock_required / maxCapacity) * 100}%` }}
+                              style={{
+                                left: `${(item.minimum_stock_required / maxCapacity) * 100}%`,
+                              }}
                               title="Stock Mínimo Crítico"
                             />
                           </div>

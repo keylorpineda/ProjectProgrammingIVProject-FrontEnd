@@ -1,13 +1,13 @@
-// @ts-nocheck
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from "react"
-import { useAuthStore } from "@/store/useAuthStore"
-import { Radio, AlertTriangle, ShieldCheck, Clock, LogOut } from "lucide-react"
+import { Clock, LogOut } from "lucide-react"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
+
+import { useAuthStore } from "@/store/useAuthStore"
 
 interface TopbarProps {
   survivalScore: number
@@ -48,11 +48,11 @@ export default function Topbar({ survivalScore }: TopbarProps) {
         </div>
 
         <div>
-          <h1 className="font-typewriter text-sm md:text-md tracking-wider text-[#fca311] font-bold">
-            DOOMSDAY CENTRAL CONTROL PORTAL
+          <h1 className="font-typewriter text-sm tracking-wider text-[#fca311] font-bold">
+            DOOMSDAY CENTRAL CONTROL
           </h1>
-          <p className="font-mono text-[10px] text-[#fca311]/60 uppercase tracking-widest">
-            SALA DE MANDOS CAMPAMENTO ALFA [ID: #{user?.campId || 1}]
+          <p className="font-mono text-[10px] text-[#fca311]/50 uppercase tracking-widest">
+            Campamento #{user?.camp_id || 1}
           </p>
         </div>
       </div>
@@ -60,11 +60,11 @@ export default function Topbar({ survivalScore }: TopbarProps) {
       <div className="flex items-center gap-4 lg:gap-8">
         {/* Survival Index Metric */}
         <div className="text-right hidden sm:block border-l border-[#c27c2f]/30 pl-4">
-          <span className="text-[9px] font-mono tracking-widest text-[#fca311]/60 uppercase block">
-            SCORE DE SUPERVIVENCIA
+          <span className="text-[9px] font-mono tracking-wider text-[#fca311]/50 uppercase block">
+            Supervivencia
           </span>
-          <span className="font-typewriter text-lg text-[#fca311] font-bold glow-text">
-            {survivalScore} PTS
+          <span className="font-typewriter text-base text-[#fca311] font-bold glow-text tabular-nums">
+            {survivalScore} pts
           </span>
         </div>
 

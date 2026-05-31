@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Permanent+Marker&family=Special+Elite&display=swap");
+/* Fonts loaded via <link> in index.html */
 
 @theme {
   --font-typewriter: "Special Elite", monospace;
@@ -237,6 +237,15 @@
   background: rgba(156, 39, 32, 0.12);
   border: 2px solid var(--accent-critical);
   box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.6);
+}
+
+/* Respect user motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .flicker-effect,
+  .animate-pulse {
+    animation: none !important;
+    opacity: 1 !important;
+  }
 }
 
 /* Scrollbar styling */

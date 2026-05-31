@@ -1,9 +1,8 @@
-// @ts-nocheck
 /**
  * CampLeader Auth Store — reads the real JWT session from the global app store.
  */
 
-import { useState, useEffect } from "react"
+import { useAuthStore as useGlobalAuthStore } from "@/store/useAuthStore"
 
 interface User {
   id: number
@@ -17,40 +16,18 @@ interface AuthState {
   isAuthenticated: boolean
 }
 
-function readRealUser(): User | null {
-  try {
-    // Try the shared auth-storage (Zustand persisted store)
-    const raw = localStorage.getItem("auth-storage")
-    if (raw) {
-      const parsed = JSON.parse(raw)
-      const u = parsed?.state?.user
-      if (u) {
-        return {
-          id: Number(u.id ?? u.userId ?? 0),
-          username: u.username ?? u.name ?? "USUARIO",
-          role: u.role ?? "camp_leader",
-          campId: Number(u.camp_id ?? u.campId ?? 1),
-        }
-      }
-    }
-  } catch {
-    // ignore
-  }
-  return null
-}
-
 export function useAuthStore(): AuthState {
-  const [user, setUser] = useState<User | null>(readRealUser)
+  const globalUser = useGlobalAuthStore((s) => s.user)
+  const isAuthenticated = useGlobalAuthStore((s) => s.isAuthenticated)
 
-  useEffect(() => {
-    // Re-read whenever localStorage changes (e.g. after login/switch-camp)
-    const onStorage = () => setUser(readRealUser())
-    window.addEventListener("storage", onStorage)
-    return () => window.removeEventListener("storage", onStorage)
-  }, [])
+  const user = globalUser
+    ? {
+        id: Number(globalUser.id ?? 0),
+        username: globalUser.username ?? "USUARIO",
+        role: globalUser.role ?? "camp_leader",
+        campId: Number(globalUser.camp_id ?? 1),
+      }
+    : null
 
-  return {
-    user,
-    isAuthenticated: user !== null,
-  }
+  return { user, isAuthenticated }
 }

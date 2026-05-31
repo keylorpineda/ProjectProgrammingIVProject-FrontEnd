@@ -1,4 +1,5 @@
 import { Navigate } from "react-router-dom"
+
 import { useAuthStore } from "@/store/useAuthStore"
 
 interface TravelManagerGuardProps {
@@ -17,10 +18,10 @@ export default function TravelManagerGuard({ children }: TravelManagerGuardProps
 
   if (isAllowed) return <>{children}</>
 
-  if (role === "worker")          return <Navigate to="/worker/dashboard" replace />
-  if (role === "camp_leader")     return <Navigate to="/campleader/dashboard" replace />
-  if (role === "camp_manager")    return <Navigate to="/camp-manager" replace />
-  if (role === "resource_manager")return <Navigate to="/camp-manager" replace />
+  if (role === "worker") return <Navigate to="/worker/dashboard" replace />
+  if (role === "camp_leader") return <Navigate to="/campleader/dashboard" replace />
+  if (role === "camp_manager") return <Navigate to="/camp-manager" replace />
+  if (role === "resource_manager") return <Navigate to="/camp-manager" replace />
 
   return <Navigate to="/login" replace />
 }

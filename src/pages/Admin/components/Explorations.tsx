@@ -1,6 +1,16 @@
-import { useEffect, useMemo, useState } from "react"
-import { AnimatePresence, motion } from "framer-motion"
 import { useQuery } from "@tanstack/react-query"
+import { AnimatePresence, motion } from "framer-motion"
+import { useEffect, useMemo, useState } from "react"
+
+import { useCamp } from "../context/CampContext"
+
+import type {
+  CreateExplorationBody,
+  ExplorationResourceBody,
+  ReturnExplorationBody,
+} from "@/features/explorations/services/explorations.service"
+import type { Person, Resource } from "@/types/api.types"
+
 import {
   cancelExploration,
   createExploration,
@@ -8,16 +18,9 @@ import {
   getExplorations,
   returnExploration,
 } from "@/features/explorations/services/explorations.service"
-import type {
-  CreateExplorationBody,
-  ExplorationResourceBody,
-  ReturnExplorationBody,
-} from "@/features/explorations/services/explorations.service"
-import { getPersons } from "@/features/persons/services/persons.service"
 import { getResources } from "@/features/inventory/services/inventory.service"
-import type { Person, Resource } from "@/types/api.types"
-import { useCamp } from "../context/CampContext"
 import { ExplorationZoneMap } from "@/features/map-test/components/ExplorationZoneMap"
+import { getPersons } from "@/features/persons/services/persons.service"
 import "./Explorations.css"
 
 const STATUS_LABELS: Record<string, string> = {
@@ -69,7 +72,7 @@ type ModalType = "detail" | "create" | "return" | "cancel-confirm" | null
 
 export default function Explorations() {
   const { activeCampId, camps } = useCamp()
-  
+
   const [availablePersons, setAvailablePersons] = useState<Person[]>([])
   const [availableResources, setAvailableResources] = useState<Resource[]>([])
   const [selectedLog, setSelectedLog] = useState<ExplorationLog | null>(null)
@@ -91,7 +94,12 @@ export default function Explorations() {
   const [formReturnNotes, setFormReturnNotes] = useState("")
   const [formFoundResources, setFormFoundResources] = useState<ResourceRow[]>([])
 
-  const { data: explorations = [], isLoading: queryLoading, error: queryError, refetch } = useQuery({
+  const {
+    data: explorations = [],
+    isLoading: queryLoading,
+    error: queryError,
+    refetch,
+  } = useQuery({
     queryKey: ["adminExplorations", activeCampId],
     queryFn: async () => {
       if (!activeCampId) return []
@@ -427,7 +435,7 @@ export default function Explorations() {
               <div className="modal-body">
                 <div className="form-grid">
                   <div className="form-group form-full">
-                    <label className="form-label">NOMBRE DE LA EXPEDICIÓN *</label>
+                    <div className="form-label">NOMBRE DE LA EXPEDICIÓN *</div>
                     <input
                       className="vintage-input full-width"
                       value={formName}
@@ -436,7 +444,7 @@ export default function Explorations() {
                     />
                   </div>
                   <div className="form-group form-full">
-                    <label className="form-label">DESTINO / ZONA</label>
+                    <div className="form-label">DESTINO / ZONA</div>
                     <input
                       className="vintage-input full-width"
                       value={formDestination}
@@ -445,7 +453,7 @@ export default function Explorations() {
                     />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">FECHA DE SALIDA *</label>
+                    <div className="form-label">FECHA DE SALIDA *</div>
                     <input
                       type="date"
                       className="vintage-input full-width"
@@ -454,7 +462,7 @@ export default function Explorations() {
                     />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">DÍAS ESTIMADOS *</label>
+                    <div className="form-label">DÍAS ESTIMADOS *</div>
                     <input
                       type="number"
                       min="1"
@@ -465,7 +473,7 @@ export default function Explorations() {
                     />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">DÍAS DE GRACIA</label>
+                    <div className="form-label">DÍAS DE GRACIA</div>
                     <input
                       type="number"
                       min="0"
@@ -476,11 +484,14 @@ export default function Explorations() {
                     />
                   </div>
                   <div className="form-group form-full">
-                    <label className="form-label">EQUIPO DE CAMPO *</label>
+                    <label htmlFor="field-equipo-de-campo-482" className="form-label">
+                      EQUIPO DE CAMPO *
+                    </label>
                     <div className="resource-rows">
                       {formPersonRows.map((row, index) => (
                         <div key={index} className="resource-row">
                           <select
+                            id="field-equipo-de-campo-482"
                             className="vintage-input"
                             value={row.person_id}
                             onChange={(e) => updatePersonRow(index, "person_id", e.target.value)}
@@ -520,12 +531,15 @@ export default function Explorations() {
                   </div>
 
                   <div className="form-group form-full">
-                    <label className="form-label">RECURSOS QUE LLEVAN (opcional)</label>
+                    <label htmlFor="field-526" className="form-label">
+                      RECURSOS QUE LLEVAN (opcional)
+                    </label>
                     {formOutResources.length > 0 ? (
                       <div className="resource-rows">
                         {formOutResources.map((row, index) => (
                           <div key={index} className="resource-row">
                             <select
+                              id="field-526"
                               className="vintage-input"
                               value={row.resource_id}
                               onChange={(e) =>
@@ -717,7 +731,7 @@ export default function Explorations() {
                   <div className="modal-body">
                     <div className="form-grid">
                       <div className="form-group form-full">
-                        <label className="form-label">FECHA DE REGRESO *</label>
+                        <div className="form-label">FECHA DE REGRESO *</div>
                         <input
                           type="date"
                           className="vintage-input full-width"
@@ -726,8 +740,11 @@ export default function Explorations() {
                         />
                       </div>
                       <div className="form-group form-full">
-                        <label className="form-label">NOTAS DEL REGRESO</label>
+                        <label htmlFor="field-notas-del-regreso-732" className="form-label">
+                          NOTAS DEL REGRESO
+                        </label>
                         <textarea
+                          id="field-notas-del-regreso-732"
                           className="vintage-input full-width"
                           rows={3}
                           value={formReturnNotes}
@@ -736,12 +753,15 @@ export default function Explorations() {
                         />
                       </div>
                       <div className="form-group form-full">
-                        <label className="form-label">RECURSOS ENCONTRADOS (opcional)</label>
+                        <label htmlFor="field-742" className="form-label">
+                          RECURSOS ENCONTRADOS (opcional)
+                        </label>
                         {formFoundResources.length > 0 ? (
                           <div className="resource-rows">
                             {formFoundResources.map((row, index) => (
                               <div key={index} className="resource-row">
                                 <select
+                                  id="field-742"
                                   className="vintage-input"
                                   value={row.resource_id}
                                   onChange={(e) =>

@@ -1,36 +1,35 @@
-﻿// @ts-nocheck
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type React from "react";
-import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import type { Exploration, ExplorationStatus, Person, Inventory, ResourceItem } from "../types"
-import { MapCoordPicker } from "@/features/map-test/components/MapCoordPicker"
 import {
-  Compass,
-  Plus,
-  Play,
+  Archive,
   CheckSquare,
-  XSquare,
-  Users,
-  Package,
+  Compass,
   MapPin,
+  Play,
+  Plus,
   Search,
   TriangleAlert,
-  Archive,
-  Star,
+  XSquare,
 } from "lucide-react"
+import { type FormEvent, useState } from "react"
+
+import type { Exploration, ExplorationStatus, Inventory, Person, ResourceItem } from "../types"
+
+import { MapCoordPicker } from "@/features/map-test/components/MapCoordPicker"
 
 interface ExplorationsViewProps {
   explorations: Exploration[]
   activePersons: Person[]
   inventory: Inventory[]
   resources: ResourceItem[]
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onCreateExploration: (data: any) => Promise<void>
   onDepartExploration: (id: number) => Promise<void>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onReturnExploration: (id: number, data: any) => Promise<void>
   onCancelExploration: (id: number) => Promise<void>
 }
@@ -90,7 +89,7 @@ export default function ExplorationsView({
   })
 
   // Handle New Expedition Submission
-  const handleCreate = async (e: React.FormEvent) => {
+  const handleCreate = async (e: FormEvent) => {
     e.preventDefault()
     setFormError(null)
 
@@ -126,9 +125,7 @@ export default function ExplorationsView({
 
       // Embed coordinates in description if picked on map
       const coordSuffix =
-        destLat != null && destLng != null
-          ? ` [${destLat.toFixed(5)}, ${destLng.toFixed(5)}]`
-          : ""
+        destLat != null && destLng != null ? ` [${destLat.toFixed(5)}, ${destLng.toFixed(5)}]` : ""
 
       await onCreateExploration({
         camp_id: 1,
@@ -152,15 +149,15 @@ export default function ExplorationsView({
       setDestLat(null)
       setDestLng(null)
       setIsNewModalOpen(false)
-    } catch (err: any) {
-      setFormError(err.message || "FALLO EN REGISTRO DE MISIÓN.")
+    } catch (err: unknown) {
+      setFormError(err instanceof Error ? err.message : "FALLO EN REGISTRO DE MISIÓN.")
     } finally {
       setIsSubmitting(false)
     }
   }
 
   // Handle Safe Return submit
-  const handleReturnSubmit = async (e: React.FormEvent) => {
+  const handleReturnSubmit = async (e: FormEvent) => {
     e.preventDefault()
     if (!selectedExplorationId) return
 
@@ -178,8 +175,8 @@ export default function ExplorationsView({
 
       setReturnNotes("")
       setIsReturnModalOpen(false)
-    } catch (err: any) {
-      setFormError(err.message || "FALLO AL REGISTRAR RETORNO.")
+    } catch (err: unknown) {
+      setFormError(err instanceof Error ? err.message : "FALLO AL REGISTRAR RETORNO.")
     } finally {
       setIsSubmitting(false)
     }
@@ -247,7 +244,7 @@ export default function ExplorationsView({
           ).map(({ key, label }) => (
             <button
               key={key}
-              onClick={() => setFilterStatus(key as any)}
+              onClick={() => setFilterStatus(key as ExplorationStatus | "ALL")}
               className={`px-3 py-1 font-mono text-xs uppercase font-bold tracking-wider rounded border cursor-pointer ${
                 filterStatus === key
                   ? "bg-[#c27c2f] text-black border-black font-semibold"
@@ -324,7 +321,13 @@ export default function ExplorationsView({
                             : "bg-red-800 text-white border-black"
                     }`}
                   >
-                    {isScheduled ? "PROGRAMADA" : isInProgress ? "● EN CURSO" : isCompleted ? "COMPLETADA" : "CANCELADA"}
+                    {isScheduled
+                      ? "PROGRAMADA"
+                      : isInProgress
+                        ? "● EN CURSO"
+                        : isCompleted
+                          ? "COMPLETADA"
+                          : "CANCELADA"}
                   </span>
                 </div>
 
@@ -357,18 +360,21 @@ export default function ExplorationsView({
                   </div>
 
                   {/* Show map pin if coordinates embedded in description */}
-                  {/\[-?\d+\.\d+,\s*-?\d+\.\d+\]/.test(exp.destination_description) && (() => {
-                    const match = exp.destination_description.match(/\[(-?\d+\.\d+),\s*(-?\d+\.\d+)\]/)
-                    if (!match) return null
-                    const lat = parseFloat(match[1])
-                    const lng = parseFloat(match[2])
-                    return (
-                      <div className="flex items-center gap-1.5 text-[10px] font-mono text-amber-700 bg-amber-950/20 border border-amber-900/30 rounded px-2 py-1">
-                        <MapPin className="w-3 h-3 text-amber-600" />
-                        ZONA: {lat.toFixed(4)}, {lng.toFixed(4)}
-                      </div>
-                    )
-                  })()}
+                  {/\[-?\d+\.\d+,\s*-?\d+\.\d+\]/.test(exp.destination_description) &&
+                    (() => {
+                      const match = exp.destination_description.match(
+                        /\[(-?\d+\.\d+),\s*(-?\d+\.\d+)\]/,
+                      )
+                      if (!match) return null
+                      const lat = parseFloat(match[1])
+                      const lng = parseFloat(match[2])
+                      return (
+                        <div className="flex items-center gap-1.5 text-[10px] font-mono text-amber-700 bg-amber-950/20 border border-amber-900/30 rounded px-2 py-1">
+                          <MapPin className="w-3 h-3 text-amber-600" />
+                          ZONA: {lat.toFixed(4)}, {lng.toFixed(4)}
+                        </div>
+                      )
+                    })()}
 
                   {/* MEMBERS & PROVISIONS SUMMARY */}
                   <div className="space-y-1">
@@ -398,13 +404,13 @@ export default function ExplorationsView({
                       <p className="font-bold">
                         RETORNO EJECUTADO EL: {exp.real_return_date.split("T")[0]}
                       </p>
-                      <p className="mt-0.5 italic">NOTAS: "{exp.notes}"</p>
+                      <p className="mt-0.5 italic">NOTAS: {exp.notes}</p>
                     </div>
                   )}
 
                   {exp.notes && !isCompleted && (
                     <p className="text-xs text-zinc-700 italic mt-1 font-sans">
-                      * Notas: "{exp.notes}"
+                      * Notas: {exp.notes}
                     </p>
                   )}
                 </div>
@@ -490,7 +496,10 @@ export default function ExplorationsView({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Name */}
                   <div className="flex flex-col gap-1">
-                    <label className="text-[10px] text-[#ab9e8b] uppercase font-bold">
+                    <label
+                      htmlFor="exp-name"
+                      className="text-[10px] text-[#ab9e8b] uppercase font-bold"
+                    >
                       NOMBRE CLAVED DE LA OPERACIÓN
                     </label>
                     <input
@@ -504,7 +513,10 @@ export default function ExplorationsView({
                   </div>
                   {/* Dest */}
                   <div className="flex flex-col gap-1">
-                    <label className="text-[10px] text-[#ab9e8b] uppercase font-bold">
+                    <label
+                      htmlFor="exp-dest"
+                      className="text-[10px] text-[#ab9e8b] uppercase font-bold"
+                    >
                       DESCRIPCIÓN DEL DESTINO ESTABLECIDO
                     </label>
                     <input
@@ -520,11 +532,17 @@ export default function ExplorationsView({
 
                 {/* MAPA: ZONA OBJETIVO */}
                 <div>
-                  <label className="text-[10px] text-[#ab9e8b] uppercase font-bold block mb-2 flex items-center gap-1.5">
+                  <div className="text-[10px] text-[#ab9e8b] uppercase font-bold block mb-2 flex items-center gap-1.5">
                     <MapPin className="w-3.5 h-3.5 text-amber-500" />
                     MARCAR ZONA EN EL MAPA (OPCIONAL)
-                  </label>
-                  <div style={{ height: 260, border: "1px solid rgba(194,124,47,0.35)", overflow: "hidden" }}>
+                  </div>
+                  <div
+                    style={{
+                      height: 260,
+                      border: "1px solid rgba(194,124,47,0.35)",
+                      overflow: "hidden",
+                    }}
+                  >
                     <MapCoordPicker
                       lat={destLat}
                       lng={destLng}
@@ -541,7 +559,10 @@ export default function ExplorationsView({
                       </span>
                       <button
                         type="button"
-                        onClick={() => { setDestLat(null); setDestLng(null) }}
+                        onClick={() => {
+                          setDestLat(null)
+                          setDestLng(null)
+                        }}
                         className="text-[9px] text-zinc-500 hover:text-red-400 font-mono cursor-pointer"
                       >
                         [LIMPIAR]
@@ -557,7 +578,10 @@ export default function ExplorationsView({
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {/* Est days */}
                   <div className="flex flex-col gap-1">
-                    <label className="text-[10px] text-[#ab9e8b] uppercase font-bold">
+                    <label
+                      htmlFor="exp-days"
+                      className="text-[10px] text-[#ab9e8b] uppercase font-bold"
+                    >
                       DÍAS ESTIMA DE VIAJE
                     </label>
                     <input
@@ -572,7 +596,10 @@ export default function ExplorationsView({
                   </div>
                   {/* Grace days */}
                   <div className="flex flex-col gap-1">
-                    <label className="text-[10px] text-[#ab9e8b] uppercase font-bold">
+                    <label
+                      htmlFor="exp-grace-days"
+                      className="text-[10px] text-[#ab9e8b] uppercase font-bold"
+                    >
                       DÍAS DE GRACIA ADICIONAL
                     </label>
                     <input
@@ -595,9 +622,9 @@ export default function ExplorationsView({
 
                 {/* SELECTOR PERSONAS INTEGRANTES */}
                 <div>
-                  <label className="text-[10px] text-[#ab9e8b] uppercase font-bold block mb-2">
+                  <div className="text-[10px] text-[#ab9e8b] uppercase font-bold block mb-2">
                     SELECCIÓN DE CONTRINGENTES DISPONIBLES (PRIMERO SERÁ EL LÍDER)
-                  </label>
+                  </div>
                   {activePersons.length === 0 ? (
                     <div className="p-3 bg-zinc-900 text-zinc-500 text-center text-xs uppercase border border-dashed border-zinc-800 rounded">
                       — NO HAY DISPONIBILIDAD DE TRABAJADORES SANO EN ESTE MOMENTO —
@@ -609,7 +636,10 @@ export default function ExplorationsView({
                         return (
                           <div
                             key={p.id}
+                            role="button"
+                            tabIndex={0}
                             onClick={() => togglePersonSelection(p.id)}
+                            onKeyDown={(e) => e.key === "Enter" && togglePersonSelection(p.id)}
                             className={`p-2 rounded border transition-colors cursor-pointer flex justify-between items-center ${
                               isSelected
                                 ? "bg-amber-950/40 border-amber-500 text-white"
@@ -640,9 +670,9 @@ export default function ExplorationsView({
 
                 {/* EQUIPAMIENTOS REQUERIDOS (PROVISIONES DESDE EL REFUGIO) */}
                 <div>
-                  <label className="text-[10px] text-[#ab9e8b] uppercase font-bold block mb-2">
+                  <div className="text-[10px] text-[#ab9e8b] uppercase font-bold block mb-2">
                     SUMINISTROS DE EXPEDICIÓN (CONTRADUCIDOS DE BODEGA)
-                  </label>
+                  </div>
                   <div className="grid grid-cols-2 gap-4 bg-zinc-900/60 p-3 rounded-md border border-zinc-800">
                     <div>
                       <span className="text-[10px] text-zinc-400 block mb-1">
@@ -673,10 +703,14 @@ export default function ExplorationsView({
 
                 {/* Optional description */}
                 <div className="flex flex-col gap-1">
-                  <label className="text-[10px] text-[#ab9e8b] uppercase font-bold">
+                  <label
+                    htmlFor="exp-notes"
+                    className="text-[10px] text-[#ab9e8b] uppercase font-bold"
+                  >
                     COMENTARIO EXTRA / INTELIGENCIA OPERATIVA ADICIONAL
                   </label>
                   <textarea
+                    id="exp-notes"
                     className="w-full bg-[#111111]/90 border border-[#3b4d3e] text-white text-xs font-mono py-2 px-3 rounded uppercase focus:outline-none focus:border-[#c27c2f] focus:ring-1 focus:ring-[#c27c2f] transition-colors h-14 resize-none"
                     placeholder="E.G., NO DETENERSE EN CASO DE NIEBLA SÉPTICA..."
                     value={newExpNotes}
@@ -767,10 +801,14 @@ export default function ExplorationsView({
 
                 {/* Return comments notes input */}
                 <div className="flex flex-col gap-1">
-                  <label className="text-[10px] text-[#ab9e8b] uppercase font-bold">
+                  <label
+                    htmlFor="exp-return-notes"
+                    className="text-[10px] text-[#ab9e8b] uppercase font-bold"
+                  >
                     INFORME DEL LÍDER DE OPERACIÓN EN RETORNO
                   </label>
                   <textarea
+                    id="exp-return-notes"
                     className="w-full bg-[#111111]/90 border border-[#3b4d3e] text-white text-xs font-mono py-2 px-3 rounded uppercase focus:outline-none focus:border-[#c27c2f] focus:ring-1 focus:ring-[#c27c2f] transition-colors h-14 resize-none"
                     placeholder="EJ. EXPEDICIÓN ALTAMENTE RENTABLE. ENCONTRAMOS BOTELLAS SELLADAS EN BASE DAWNTECH..."
                     value={returnNotes}

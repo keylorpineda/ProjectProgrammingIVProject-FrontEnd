@@ -1,26 +1,13 @@
-﻿// @ts-nocheck
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type React from "react";
-import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import type { Transfer, TransferStatus, Camp, ResourceItem, Inventory } from "../types"
-import {
-  Truck,
-  Plus,
-  Check,
-  X,
-  ArrowRight,
-  Play,
-  MapPin,
-  Package,
-  FileText,
-  AlertTriangle,
-  RotateCcw,
-} from "lucide-react"
+import { AlertTriangle, ArrowRight, Check, Plus, Truck, X } from "lucide-react"
+import { useState } from "react"
+
+import type { Camp, Inventory, ResourceItem, Transfer, TransferStatus } from "../types"
 
 interface TransfersViewProps {
   transfers: Transfer[]
@@ -28,6 +15,7 @@ interface TransfersViewProps {
   resources: ResourceItem[]
   inventory: Inventory[]
   myCampId: number
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onCreateTransferRequest: (data: any) => Promise<void>
   onApproveTransferRequest: (id: number, approved: boolean) => Promise<void>
   onCancelTransferRequest: (id: number) => Promise<void>
@@ -129,8 +117,8 @@ export default function TransfersView({
       setRequestQty(50)
       setNotes("")
       setIsNewModalOpen(false)
-    } catch (err: any) {
-      setFormError(err.message || "FALLO EN EL REGISTRO DE TRASLADO.")
+    } catch (err: unknown) {
+      setFormError(err instanceof Error ? err.message : "FALLO EN EL REGISTRO DE TRASLADO.")
     } finally {
       setIsSubmitting(false)
     }
@@ -203,7 +191,7 @@ export default function TransfersView({
             (st) => (
               <button
                 key={st}
-                onClick={() => setFilterStatus(st as any)}
+                onClick={() => setFilterStatus(st as TransferStatus | "ALL")}
                 className={`px-2.5 py-1 font-mono text-xs uppercase rounded border cursor-pointer ${
                   filterStatus === st
                     ? "bg-[#c27c2f] text-black border-black font-semibold"
@@ -306,7 +294,7 @@ export default function TransfersView({
 
                   {t.notes && (
                     <p className="text-[10px] text-zinc-700 italic border-t border-black/5 pt-1.5 font-sans">
-                      * Notas: "{t.notes}"
+                      * Notas: {t.notes}
                     </p>
                   )}
                 </div>
@@ -420,10 +408,14 @@ export default function TransfersView({
               <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Target Camp Selector */}
                 <div className="flex flex-col gap-1">
-                  <label className="text-[10px] text-[#ab9e8b] uppercase font-bold">
+                  <label
+                    htmlFor="tr-camp"
+                    className="text-[10px] text-[#ab9e8b] uppercase font-bold"
+                  >
                     VÍNCULO COOPERANTE CAMPAMENTAL
                   </label>
                   <select
+                    id="tr-camp"
                     className="w-full bg-[#111111]/90 border border-[#3b4d3e] text-white text-xs font-mono py-2 px-3 rounded uppercase focus:outline-none focus:border-[#c27c2f] focus:ring-1 focus:ring-[#c27c2f] transition-colors"
                     value={targetCampId}
                     onChange={(e) => setTargetCampId(Number(e.target.value))}
@@ -444,9 +436,9 @@ export default function TransfersView({
 
                 {/* Import Direction or Export Selection */}
                 <div className="flex flex-col gap-1">
-                  <label className="text-[10px] text-[#ab9e8b] uppercase font-bold">
+                  <div className="text-[10px] text-[#ab9e8b] uppercase font-bold">
                     TIPO DE OPERACIÓN SOLICITADA
-                  </label>
+                  </div>
                   <div className="grid grid-cols-2 gap-2 mt-1">
                     <button
                       type="button"
@@ -481,10 +473,14 @@ export default function TransfersView({
                 {/* Resource Item Selector */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1">
-                    <label className="text-[10px] text-[#ab9e8b] uppercase font-bold">
+                    <label
+                      htmlFor="tr-resource"
+                      className="text-[10px] text-[#ab9e8b] uppercase font-bold"
+                    >
                       RECURSO
                     </label>
                     <select
+                      id="tr-resource"
                       className="w-full bg-[#111111]/90 border border-[#3b4d3e] text-white text-xs font-mono py-2 px-3 rounded uppercase focus:outline-none focus:border-[#c27c2f] focus:ring-1 focus:ring-[#c27c2f] transition-colors"
                       value={selectedResourceId}
                       onChange={(e) => setSelectedResourceId(Number(e.target.value))}
@@ -502,7 +498,10 @@ export default function TransfersView({
                   </div>
 
                   <div className="flex flex-col gap-1">
-                    <label className="text-[10px] text-[#ab9e8b] uppercase font-bold">
+                    <label
+                      htmlFor="tr-qty"
+                      className="text-[10px] text-[#ab9e8b] uppercase font-bold"
+                    >
                       CANTIDAD DISPUESTA
                     </label>
                     <input
@@ -528,10 +527,14 @@ export default function TransfersView({
 
                 {/* Notes */}
                 <div className="flex flex-col gap-1">
-                  <label className="text-[10px] text-[#ab9e8b] uppercase font-bold">
+                  <label
+                    htmlFor="tr-notes"
+                    className="text-[10px] text-[#ab9e8b] uppercase font-bold"
+                  >
                     MENSAJE DEL CANAL / NOTAS ADICIONALES
                   </label>
                   <textarea
+                    id="tr-notes"
                     className="w-full bg-[#111111]/90 border border-[#3b4d3e] text-white text-xs font-mono py-2 px-3 rounded uppercase focus:outline-none focus:border-[#c27c2f] focus:ring-1 focus:ring-[#c27c2f] transition-colors h-14 resize-none"
                     placeholder="MOTIVOS DE SUMINISTRO O DESTRUCCIÓN..."
                     value={notes}

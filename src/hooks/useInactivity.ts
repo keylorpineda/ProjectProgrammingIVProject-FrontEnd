@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 
-const MAX_IDLE_MS  = 20 * 60 * 1000   // 20 minutos
-const WARNING_MS   = 60 * 1000         // aviso al último minuto
+const MAX_IDLE_MS = 20 * 60 * 1000 // 20 minutos
+const WARNING_MS = 60 * 1000 // aviso al último minuto
 
 interface UseInactivityOptions {
   isAuthenticated: boolean
@@ -29,7 +29,7 @@ export function useInactivity({ isAuthenticated, onLogout }: UseInactivityOption
     if (!isAuthenticated) return
 
     const interval = window.setInterval(() => {
-      const idleMs   = Date.now() - lastActivityRef.current
+      const idleMs = Date.now() - lastActivityRef.current
       const remaining = Math.max(0, Math.floor((MAX_IDLE_MS - idleMs) / 1000))
       setSecondsLeft(remaining)
       if (remaining === 0) onLogout()

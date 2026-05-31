@@ -1,5 +1,6 @@
-import api from "@/config/api"
 import type { Exploration } from "@/types/api.types"
+
+import api from "@/config/api"
 
 export interface ExplorationPersonBody {
   person_id: string

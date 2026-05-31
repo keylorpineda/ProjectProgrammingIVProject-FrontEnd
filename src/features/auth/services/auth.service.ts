@@ -1,5 +1,6 @@
-import api from "@/config/api"
 import type { AuthTokens, AuthUser } from "@/types/api.types"
+
+import api from "@/config/api"
 
 export interface LoginBody {
   username: string
@@ -26,12 +27,12 @@ export const login = async (body: LoginBody): Promise<LoginResponse> => {
   return data
 }
 
-export const logout = async (refresh_token?: string): Promise<void> => {
-  await api.post<void>("/auth/logout", { refresh_token })
+export const logout = async (): Promise<void> => {
+  await api.post<void>("/auth/logout")
 }
 
-export const refreshAccessToken = async (refresh_token: string): Promise<RefreshResponse> => {
-  const { data } = await api.post<RefreshResponse>("/auth/refresh", { refresh_token })
+export const refreshAccessToken = async (): Promise<RefreshResponse> => {
+  const { data } = await api.post<RefreshResponse>("/auth/refresh")
   return data
 }
 

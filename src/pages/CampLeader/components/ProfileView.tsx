@@ -1,8 +1,4 @@
-import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import type { Person, CampStatistics } from "../types"
-import type { AuthUser } from "@/types/api.types"
-import Badge, { ACHIEVEMENTS_DICT } from "./Badge"
 import {
   User,
   Users,
@@ -14,6 +10,12 @@ import {
   X,
   FileText,
 } from "lucide-react"
+import { useState } from "react"
+
+import Badge, { ACHIEVEMENTS_DICT } from "./Badge"
+
+import type { Person, CampStatistics } from "../types"
+import type { AuthUser } from "@/types/api.types"
 
 interface ProfileViewProps {
   user: AuthUser | null
@@ -241,7 +243,10 @@ export default function ProfileView({ user, statistics, residents }: ProfileView
             return (
               <div
                 key={p.id}
+                role="button"
+                tabIndex={0}
                 onClick={() => setSelectedPerson(p)}
+                onKeyDown={(e) => e.key === "Enter" && setSelectedPerson(p)}
                 className="bg-black/30 border border-[#3b4d3e]/30 p-6 rounded-lg flex flex-col sm:flex-row gap-5 relative hover:border-[#c27c2f]/50 hover:bg-black/50 transition-all duration-150 cursor-pointer group select-none"
               >
                 {/* ID Tag top corner */}

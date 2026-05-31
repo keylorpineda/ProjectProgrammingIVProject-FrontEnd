@@ -1,10 +1,13 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
-import type { ReactNode } from "react"
-import type { Camp } from "@/types/api.types"
-import { getCamps } from "@/features/camps/services/camps.service"
-import { switchCamp as switchCampService } from "@/features/auth/services/auth.service"
-import { useAuthStore } from "@/store/useAuthStore"
+
 import { useAuth } from "./AuthContext"
+
+import type { Camp } from "@/types/api.types"
+import type { ReactNode } from "react"
+
+import { switchCamp as switchCampService } from "@/features/auth/services/auth.service"
+import { getCamps } from "@/features/camps/services/camps.service"
+import { useAuthStore } from "@/store/useAuthStore"
 
 interface CampContextType {
   activeCampId: string
@@ -98,6 +101,7 @@ export const CampProvider = ({ children }: { children: ReactNode }) => {
   return <CampContext.Provider value={value}>{children}</CampContext.Provider>
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useCamp = () => {
   const context = useContext(CampContext)
   if (!context) {

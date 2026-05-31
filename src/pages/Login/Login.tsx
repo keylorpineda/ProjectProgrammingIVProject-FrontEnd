@@ -1,7 +1,9 @@
-import { useState, useEffect, useRef } from "react"
-import { BadgeLogin } from "../../components/BadgeLogin"
 import { motion, useMotionValue, useTransform } from "framer-motion"
+import { useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
+
+import { BadgeLogin } from "../../components/BadgeLogin"
+
 import { login } from "@/features/auth/services/auth.service"
 import { useAuthStore } from "@/store/useAuthStore"
 

@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import { useState, useEffect } from "react"
 
 interface BadgeRegisterProps {
   onRegister: (u: string, p: string) => void
@@ -125,6 +125,7 @@ export function BadgeRegister({ onRegister, isProcessing, registerStatus }: Badg
     <motion.div
       className={`absolute top-0 z-30 origin-top flex flex-col items-center ${!isHanging ? "cursor-pointer" : ""} w-[90vw] sm:w-[420px] max-w-[420px]`}
       style={{ left: "50%", perspective: "1200px", transformStyle: "preserve-3d" }}
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       variants={badgeVariants as any}
       initial="initialDistortion"
       animate={currentVariant}
@@ -284,10 +285,14 @@ export function BadgeRegister({ onRegister, isProcessing, registerStatus }: Badg
                         : {}
                     }
                   >
-                    <label className="text-[12px] font-black font-sans text-[#1a1a1a] tracking-[0.2em] uppercase flex items-center gap-2">
+                    <label
+                      htmlFor="br-username"
+                      className="text-[12px] font-black font-sans text-[#1a1a1a] tracking-[0.2em] uppercase flex items-center gap-2"
+                    >
                       NOMBRE EN CÓDIGO
                     </label>
                     <input
+                      id="br-username"
                       type="text"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
@@ -306,11 +311,15 @@ export function BadgeRegister({ onRegister, isProcessing, registerStatus }: Badg
                         : {}
                     }
                   >
-                    <label className="text-[12px] font-black font-sans text-[#1a1a1a] tracking-[0.2em] uppercase flex items-center gap-2">
+                    <label
+                      htmlFor="br-password"
+                      className="text-[12px] font-black font-sans text-[#1a1a1a] tracking-[0.2em] uppercase flex items-center gap-2"
+                    >
                       NUEVA CLAVE
                     </label>
                     <div className="relative w-full">
                       <input
+                        id="br-password"
                         type={showPassword ? "text" : "password"}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
@@ -375,13 +384,13 @@ export function BadgeRegister({ onRegister, isProcessing, registerStatus }: Badg
                   }}
                   disabled={!isHanging || isProcessing}
                   onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#001f3f"
+                    ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = "#001f3f"
                     ;(e.currentTarget as HTMLButtonElement).style.boxShadow =
                       "inset 0 0 0 2px #3b82f6, 0 4px 0 #0a0a0a, 0 0 20px rgba(59,130,246,0.4), 0 5px 5px rgba(0,0,0,0.5)"
                     ;(e.currentTarget as HTMLButtonElement).style.color = "#3b82f6"
                   }}
                   onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#1a1a1a"
+                    ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = "#1a1a1a"
                     ;(e.currentTarget as HTMLButtonElement).style.boxShadow =
                       "inset 0 0 0 2px #333, 0 4px 0 #0a0a0a, 0 5px 5px rgba(0,0,0,0.5)"
                     ;(e.currentTarget as HTMLButtonElement).style.color = "#cccccc"

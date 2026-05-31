@@ -1,6 +1,18 @@
-import { useEffect, useMemo, useState } from "react"
-import { AnimatePresence, motion } from "framer-motion"
 import { useQuery } from "@tanstack/react-query"
+import { AnimatePresence, motion } from "framer-motion"
+import { useEffect, useMemo, useState } from "react"
+
+import { useCamp } from "../context/CampContext"
+
+import type {
+  ApprovalBody,
+  CreateTransferBody,
+} from "@/features/transfers/services/transfers.service"
+import type { IntercampRequest, Person, Resource } from "@/types/api.types"
+
+import { getResources } from "@/features/inventory/services/inventory.service"
+import { TransferRouteMap } from "@/features/map-test/components/TransferRouteMap"
+import { getPersons } from "@/features/persons/services/persons.service"
 import {
   approveOrRejectTransfer,
   cancelTransfer,
@@ -8,15 +20,6 @@ import {
   createTransferRequest,
   getCampTransfers,
 } from "@/features/transfers/services/transfers.service"
-import type {
-  ApprovalBody,
-  CreateTransferBody,
-} from "@/features/transfers/services/transfers.service"
-import { getPersons } from "@/features/persons/services/persons.service"
-import { getResources } from "@/features/inventory/services/inventory.service"
-import type { IntercampRequest, Person, Resource } from "@/types/api.types"
-import { useCamp } from "../context/CampContext"
-import { TransferRouteMap } from "@/features/map-test/components/TransferRouteMap"
 import "./Transfers.css"
 
 type TransferView = {
@@ -78,7 +81,7 @@ interface PersonRow {
 
 export default function Transfers() {
   const { activeCampId, camps } = useCamp()
-  
+
   const [availableResources, setAvailableResources] = useState<Resource[]>([])
   const [availablePersons, setAvailablePersons] = useState<Person[]>([])
   const [filterStatus, setFilterStatus] = useState("")
@@ -101,7 +104,12 @@ export default function Transfers() {
 
   const campById = useMemo(() => new Map(camps.map((c) => [c.id, c.name])), [camps])
 
-  const { data: transfers = [], isLoading: queryLoading, error: queryError, refetch } = useQuery({
+  const {
+    data: transfers = [],
+    isLoading: queryLoading,
+    error: queryError,
+    refetch,
+  } = useQuery({
     queryKey: ["adminTransfers", activeCampId],
     queryFn: async () => {
       if (!activeCampId) return []
@@ -454,8 +462,11 @@ export default function Transfers() {
               <div className="modal-body">
                 <div className="form-grid">
                   <div className="form-group form-full">
-                    <label className="form-label">CAMPAMENTO DESTINO *</label>
+                    <label htmlFor="field-campamento-destino-461" className="form-label">
+                      CAMPAMENTO DESTINO *
+                    </label>
                     <select
+                      id="field-campamento-destino-461"
                       className="vintage-input full-width"
                       value={formDestId}
                       onChange={(e) => setFormDestId(e.target.value)}
@@ -469,7 +480,7 @@ export default function Transfers() {
                     </select>
                   </div>
                   <div className="form-group form-full">
-                    <label className="form-label">TIPO DE TRASLADO</label>
+                    <div className="form-label">TIPO DE TRASLADO</div>
                     <div className="radio-group">
                       {(["resources", "people", "both"] as const).map((t) => (
                         <label key={t} className="radio-label">
@@ -485,7 +496,7 @@ export default function Transfers() {
                     </div>
                   </div>
                   <div className="form-group">
-                    <label className="form-label">DÍAS DE VIAJE</label>
+                    <div className="form-label">DÍAS DE VIAJE</div>
                     <input
                       type="number"
                       min="1"
@@ -496,7 +507,7 @@ export default function Transfers() {
                     />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">NOTAS</label>
+                    <div className="form-label">NOTAS</div>
                     <input
                       className="vintage-input full-width"
                       value={formNotes}
@@ -507,11 +518,14 @@ export default function Transfers() {
 
                   {(formType === "resources" || formType === "both") && (
                     <div className="form-group form-full">
-                      <label className="form-label">RECURSOS A TRANSFERIR</label>
+                      <label htmlFor="field-recursos-a-transferir-514" className="form-label">
+                        RECURSOS A TRANSFERIR
+                      </label>
                       <div className="resource-rows">
                         {formResourceRows.map((row, index) => (
                           <div key={index} className="resource-row">
                             <select
+                              id="field-recursos-a-transferir-514"
                               className="vintage-input"
                               value={row.resource_id}
                               onChange={(e) =>
@@ -555,11 +569,14 @@ export default function Transfers() {
 
                   {(formType === "people" || formType === "both") && (
                     <div className="form-group form-full">
-                      <label className="form-label">PERSONAS A TRASLADAR</label>
+                      <label htmlFor="field-personas-a-trasladar-562" className="form-label">
+                        PERSONAS A TRASLADAR
+                      </label>
                       <div className="resource-rows">
                         {formPersonRows.map((row, index) => (
                           <div key={index} className="resource-row">
                             <select
+                              id="field-personas-a-trasladar-562"
                               className="vintage-input"
                               value={row.person_id}
                               onChange={(e) => updatePersonRow(index, "person_id", e.target.value)}
@@ -792,8 +809,11 @@ export default function Transfers() {
                   <div className="modal-body">
                     <div className="form-grid">
                       <div className="form-group form-full">
-                        <label className="form-label">NOTAS DE APROBACIÓN (opcional)</label>
+                        <label htmlFor="field-799" className="form-label">
+                          NOTAS DE APROBACIÓN (opcional)
+                        </label>
                         <textarea
+                          id="field-799"
                           className="vintage-input full-width"
                           rows={3}
                           value={formApprovalNotes}
@@ -833,8 +853,11 @@ export default function Transfers() {
                   <div className="modal-body">
                     <div className="form-grid">
                       <div className="form-group form-full">
-                        <label className="form-label">MOTIVO DE RECHAZO (opcional)</label>
+                        <label htmlFor="field-840" className="form-label">
+                          MOTIVO DE RECHAZO (opcional)
+                        </label>
                         <textarea
+                          id="field-840"
                           className="vintage-input full-width"
                           rows={3}
                           value={formApprovalNotes}

@@ -1,4 +1,3 @@
-import { useState, useMemo } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { motion, AnimatePresence } from "framer-motion"
 import {
@@ -22,7 +21,11 @@ import {
   Loader2,
   ChevronRight,
 } from "lucide-react"
-import { useAuthStore } from "@/store/useAuthStore"
+import { useState, useMemo } from "react"
+
+import type { Exploration, Person, InventoryItem } from "@/types/api.types"
+import type { ReturnExplorationFormData } from "@/types/travel-comms.types"
+
 import {
   getExplorations,
   createExploration,
@@ -30,11 +33,10 @@ import {
   returnExploration,
   cancelExploration,
 } from "@/features/explorations/services/explorations.service"
-import { getPersons } from "@/features/persons/services/persons.service"
 import { getInventory } from "@/features/inventory/services/inventory.service"
 import { MapCoordPicker } from "@/features/map-test/components/MapCoordPicker"
-import type { Exploration, Person, InventoryItem } from "@/types/api.types"
-import type { ReturnExplorationFormData } from "@/types/travel-comms.types"
+import { getPersons } from "@/features/persons/services/persons.service"
+import { useAuthStore } from "@/store/useAuthStore"
 
 // ── Status helpers ──────────────────────────────────────────────────────────
 
@@ -275,9 +277,7 @@ export default function TravelExplorations() {
     }
 
     const coordSuffix =
-      destLat !== null && destLng !== null
-        ? ` [${destLat.toFixed(5)}, ${destLng.toFixed(5)}]`
-        : ""
+      destLat !== null && destLng !== null ? ` [${destLat.toFixed(5)}, ${destLng.toFixed(5)}]` : ""
 
     createMutation.mutate({
       camp_id: baseCampId,
@@ -400,7 +400,9 @@ export default function TravelExplorations() {
                     : "hover:bg-[#d4a373]/20"
                 }`}
               >
-                <span className="text-base md:text-lg font-mono font-black text-[#c27c2f]">{s.count}</span>
+                <span className="text-base md:text-lg font-mono font-black text-[#c27c2f]">
+                  {s.count}
+                </span>
                 <span className="text-xs md:text-sm font-mono font-bold uppercase tracking-tighter text-white/40">
                   {s.label}
                 </span>
@@ -870,7 +872,10 @@ export default function TravelExplorations() {
                   {/* Basic info */}
                   <div className="grid grid-grid-cols-1 gap-6">
                     <div>
-                      <label className="text-sm md:text-base font-mono font-black text-[#c27c2f] uppercase tracking-widest block mb-2">
+                      <label
+                        htmlFor="te-name"
+                        className="text-sm md:text-base font-mono font-black text-[#c27c2f] uppercase tracking-widest block mb-2"
+                      >
                         Nombre de la Expedición *
                       </label>
                       <input
@@ -882,7 +887,10 @@ export default function TravelExplorations() {
                       />
                     </div>
                     <div>
-                      <label className="text-sm md:text-base font-mono font-black text-[#c27c2f] uppercase tracking-widest block mb-2">
+                      <label
+                        htmlFor="te-dest"
+                        className="text-sm md:text-base font-mono font-black text-[#c27c2f] uppercase tracking-widest block mb-2"
+                      >
                         Descripción del Destino *
                       </label>
                       <input
@@ -897,18 +905,21 @@ export default function TravelExplorations() {
 
                   {/* Map coord picker */}
                   <div>
-                    <label className="text-sm md:text-base font-mono font-black text-[#c27c2f] uppercase tracking-widest block mb-2 flex items-center gap-2">
+                    <div className="text-sm md:text-base font-mono font-black text-[#c27c2f] uppercase tracking-widest block mb-2 flex items-center gap-2">
                       <MapPin className="h-4 w-4" />
                       Zona de Destino en el Mapa
                       <span className="text-white/30 font-normal normal-case tracking-normal text-xs">
                         — haz clic para marcar coordenadas
                       </span>
-                    </label>
+                    </div>
                     <div className="border border-[#c27c2f]/30 overflow-hidden">
                       <MapCoordPicker
                         lat={destLat}
                         lng={destLng}
-                        onChange={(lat, lng) => { setDestLat(lat); setDestLng(lng) }}
+                        onChange={(lat, lng) => {
+                          setDestLat(lat)
+                          setDestLng(lng)
+                        }}
                       />
                     </div>
                     {destLat !== null && destLng !== null && (
@@ -917,7 +928,10 @@ export default function TravelExplorations() {
                         COORDENADAS: {destLat.toFixed(5)}, {destLng.toFixed(5)}
                         <button
                           type="button"
-                          onClick={() => { setDestLat(null); setDestLng(null) }}
+                          onClick={() => {
+                            setDestLat(null)
+                            setDestLng(null)
+                          }}
                           className="text-white/30 hover:text-white/70 ml-2 underline"
                         >
                           limpiar
@@ -929,7 +943,10 @@ export default function TravelExplorations() {
                   {/* Dates and duration */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
-                      <label className="text-sm md:text-base font-mono font-black text-[#c27c2f] uppercase tracking-widest block mb-2">
+                      <label
+                        htmlFor="te-departure"
+                        className="text-sm md:text-base font-mono font-black text-[#c27c2f] uppercase tracking-widest block mb-2"
+                      >
                         Fecha de Salida *
                       </label>
                       <input
@@ -940,7 +957,10 @@ export default function TravelExplorations() {
                       />
                     </div>
                     <div>
-                      <label className="text-sm md:text-base font-mono font-black text-[#c27c2f] uppercase tracking-widest block mb-2">
+                      <label
+                        htmlFor="te-days"
+                        className="text-sm md:text-base font-mono font-black text-[#c27c2f] uppercase tracking-widest block mb-2"
+                      >
                         Días Estimados *
                       </label>
                       <input
@@ -952,7 +972,10 @@ export default function TravelExplorations() {
                       />
                     </div>
                     <div>
-                      <label className="text-sm md:text-base font-mono font-black text-[#c27c2f] uppercase tracking-widest block mb-2">
+                      <label
+                        htmlFor="te-grace"
+                        className="text-sm md:text-base font-mono font-black text-[#c27c2f] uppercase tracking-widest block mb-2"
+                      >
                         Días de Gracia
                       </label>
                       <input
@@ -967,9 +990,9 @@ export default function TravelExplorations() {
 
                   {/* Team selection */}
                   <div>
-                    <label className="text-xs font-mono font-black text-[#c27c2f] uppercase tracking-widest block mb-2">
+                    <div className="text-xs font-mono font-black text-[#c27c2f] uppercase tracking-widest block mb-2">
                       Seleccionar Equipo * ({newSelectedPersons.length} seleccionado(s))
-                    </label>
+                    </div>
                     <div className="max-h-40 overflow-y-auto custom-scrollbar space-y-1 border border-[#c27c2f]/10 p-2 bg-black/20">
                       {persons.length === 0 ? (
                         <p className="text-xs font-mono text-white/30 uppercase text-center py-4">
@@ -993,12 +1016,17 @@ export default function TravelExplorations() {
                             return (
                               <div
                                 key={person.id}
+                                role="button"
+                                tabIndex={0}
                                 className={`flex items-center justify-between p-2 border transition-all cursor-pointer ${
                                   isSelected
                                     ? "bg-[#c27c2f]/10 border-[#c27c2f]/30"
                                     : "bg-black/20 border-white/5 hover:border-[#c27c2f]/20"
                                 }`}
                                 onClick={() => handleTogglePersonSelect(person.id)}
+                                onKeyDown={(e) =>
+                                  e.key === "Enter" && handleTogglePersonSelect(person.id)
+                                }
                               >
                                 <div className="flex items-center gap-2">
                                   <div
@@ -1045,9 +1073,9 @@ export default function TravelExplorations() {
                   {/* Resource selection */}
                   {inventory.length > 0 && (
                     <div>
-                      <label className="text-xs font-mono font-black text-[#c27c2f] uppercase tracking-widest block mb-2">
+                      <div className="text-xs font-mono font-black text-[#c27c2f] uppercase tracking-widest block mb-2">
                         Recursos para la Expedición (opcional)
-                      </label>
+                      </div>
                       <div className="max-h-40 overflow-y-auto custom-scrollbar space-y-1 border border-[#c27c2f]/10 p-2 bg-black/20">
                         {inventory.map((item) => {
                           const sel = newSelectedResources.find(
@@ -1064,8 +1092,13 @@ export default function TravelExplorations() {
                               }`}
                             >
                               <div
+                                role="button"
+                                tabIndex={0}
                                 className="flex items-center gap-2 cursor-pointer flex-1"
                                 onClick={() => handleToggleResourceSelect(item.resource_id)}
+                                onKeyDown={(e) =>
+                                  e.key === "Enter" && handleToggleResourceSelect(item.resource_id)
+                                }
                               >
                                 <div
                                   className={`h-3 w-3 border flex items-center justify-center shrink-0 ${
@@ -1182,7 +1215,10 @@ export default function TravelExplorations() {
                   Expedición: <span className="text-[#c27c2f] font-black">{selectedExp.name}</span>
                 </p>
                 <div>
-                  <label className="text-xs font-mono font-black text-[#c27c2f] uppercase tracking-widest block mb-1">
+                  <label
+                    htmlFor="te-return-date"
+                    className="text-xs font-mono font-black text-[#c27c2f] uppercase tracking-widest block mb-1"
+                  >
                     Fecha Real de Retorno *
                   </label>
                   <input
@@ -1193,10 +1229,14 @@ export default function TravelExplorations() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-mono font-black text-[#c27c2f] uppercase tracking-widest block mb-1">
+                  <label
+                    htmlFor="te-return-notes"
+                    className="text-xs font-mono font-black text-[#c27c2f] uppercase tracking-widest block mb-1"
+                  >
                     Notas del Retorno
                   </label>
                   <textarea
+                    id="te-return-notes"
                     value={returnNotes}
                     onChange={(e) => setReturnNotes(e.target.value)}
                     placeholder="Condiciones del retorno, hallazgos, incidentes..."

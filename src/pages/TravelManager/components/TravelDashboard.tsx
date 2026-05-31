@@ -1,4 +1,5 @@
-
+import { useQuery } from "@tanstack/react-query"
+import { motion } from "framer-motion"
 import {
   Compass,
   AlertTriangle,
@@ -11,15 +12,15 @@ import {
   Users,
   AlertCircle,
 } from "lucide-react"
-import type { Variants } from "framer-motion"
-import { motion } from "framer-motion"
 import { useNavigate } from "react-router-dom"
-import { useQuery } from "@tanstack/react-query"
-import { useAuthStore } from "@/store/useAuthStore"
-import { getExplorations } from "@/features/explorations/services/explorations.service"
-import { getCampTransfers } from "@/features/transfers/services/transfers.service"
+
+import type { Variants } from "framer-motion"
+
 import { getCamps } from "@/features/camps/services/camps.service"
+import { getExplorations } from "@/features/explorations/services/explorations.service"
 import { getInventory } from "@/features/inventory/services/inventory.service"
+import { getCampTransfers } from "@/features/transfers/services/transfers.service"
+import { useAuthStore } from "@/store/useAuthStore"
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -36,7 +37,7 @@ const itemVariants: Variants = {
   visible: {
     y: 0,
     opacity: 1,
-    transition: { type: "spring", stiffness: 100 },
+    transition: { type: "spring" as const, stiffness: 100 },
   },
 }
 
@@ -106,7 +107,7 @@ export default function TravelDashboard() {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="h-full flex-1 flex flex-col gap-3 w-full overflow-y-auto bg-[#0a0a0a] p-4 custom-scrollbar"
+      className="h-full flex-1 flex flex-col gap-3 w-full overflow-y-auto bg-[#0a0a0a] p-3 custom-scrollbar"
     >
       {/* 1. MASTER HUD - CONTROL DE EXPEDICIONES */}
       <motion.div
@@ -116,7 +117,7 @@ export default function TravelDashboard() {
         <div className="flex justify-between items-center mb-1 border-b border-[#d4a373]/10 pb-1">
           <div className="flex items-center gap-4">
             <span className="archive-header italic text-xs text-white/40 uppercase">
-              Base de Viajes // Panel de Coordinación
+              Base de Viajes — Panel de Coordinación
             </span>
             <div className="h-3 w-px bg-white/10" />
             <div className="flex items-center gap-2">
@@ -260,9 +261,9 @@ export default function TravelDashboard() {
                   </div>
                   <button
                     onClick={() => navigate("/travel-manager/expeditions")}
-                    className="text-xs font-mono font-black text-ink/40 border border-ink/10 px-2.5 py-1 rounded-sm hover:bg-black/5 transition-all shrink-0 uppercase"
+                    className="text-xs font-mono font-semibold text-ink/40 border border-ink/10 px-2.5 py-1 rounded-sm hover:bg-black/5 transition-all shrink-0 uppercase"
                   >
-                    Ficha
+                    Ver
                   </button>
                 </div>
               ))}
@@ -342,7 +343,10 @@ export default function TravelDashboard() {
                     >
                       LLEGADA
                     </button>
-                    <button className="text-[#d4a373]/40 hover:text-[#d4a373] transition-colors">
+                    <button
+                      aria-label="Contactar por radio"
+                      className="text-[#d4a373]/40 hover:text-[#d4a373] transition-colors p-1"
+                    >
                       <Radio className="h-3.5 w-3.5" />
                     </button>
                   </div>

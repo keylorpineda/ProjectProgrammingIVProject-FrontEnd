@@ -1,6 +1,12 @@
 import { motion, AnimatePresence } from "framer-motion"
+
+import {
+  useProfessions,
+  useProfessionMetrics,
+  useCamp,
+  useMyProfile,
+} from "@/features/worker/hooks/useWorkerAPI"
 import { useAuth } from "@/pages/Admin/context/AuthContext"
-import { useProfessions, useProfessionMetrics, useCamp, useMyProfile } from "@/features/worker/hooks/useWorkerAPI"
 import "./WorkerViews.css"
 
 type ProfessionDetail = {
@@ -123,9 +129,7 @@ export default function WorkerProfessions() {
             >
               <div className="wv-prof-corner-badge" style={{ borderRightColor: cornerColor }} />
 
-              {isMine ? (
-                <div className="wv-prof-mine-tag">● TU PROFESIÓN</div>
-              ) : null}
+              {isMine ? <div className="wv-prof-mine-tag">● TU PROFESIÓN</div> : null}
 
               <div className="wv-prof-name">{profession.name}</div>
 
@@ -176,9 +180,7 @@ export default function WorkerProfessions() {
                   className="wv-prof-detail-val"
                   style={{
                     color:
-                      activeCount < required
-                        ? "var(--accent-critical)"
-                        : "var(--accent-approved)",
+                      activeCount < required ? "var(--accent-critical)" : "var(--accent-approved)",
                   }}
                 >
                   {activeCount} / {required}

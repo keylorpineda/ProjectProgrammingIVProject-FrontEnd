@@ -24,7 +24,7 @@ export interface AuthUser {
 
 export interface AuthTokens {
   access_token: string
-  refresh_token: string
+  refresh_token?: string
 }
 
 export interface Camp {
@@ -63,6 +63,7 @@ export interface UserAccountSummary {
 
 export interface Person {
   id: string
+  camp_id?: string | null
   profession_id: string | null
   first_name: string
   last_name: string
@@ -74,6 +75,7 @@ export interface Person {
   can_work: boolean
   experience_level: number
   experience_points: number
+  expeditionsSurvived?: number
   photo_url: string | null
   id_card_url: string | null
   previous_skills: string | null

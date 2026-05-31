@@ -1,5 +1,3 @@
-import { useEffect, useState } from "react"
-import { Circle, MapContainer, Polyline, TileLayer, useMap } from "react-leaflet"
 import { AnimatePresence, motion } from "framer-motion"
 import {
   Activity,
@@ -16,11 +14,15 @@ import {
   X,
   Zap,
 } from "lucide-react"
-import { useCamps } from "../context/CampContext"
-import { aiEvaluationService } from "../services/aiEvaluationService"
-import type { Camp } from "../types/camp"
+import { useEffect, useState } from "react"
+import { Circle, MapContainer, Polyline, TileLayer, useMap } from "react-leaflet"
+
 import { AnimatedMarker } from "./AnimatedMarker"
 import { HazardZone } from "./HazardZone"
+import { useCamps } from "../context/CampContext"
+import { aiEvaluationService } from "../services/aiEvaluationService"
+
+import type { Camp } from "../types/camp"
 import "leaflet/dist/leaflet.css"
 import "../styles/map-effects.css"
 
@@ -291,7 +293,7 @@ export const MapDashboard = () => {
                         animate={{ opacity: 1 }}
                         className="text-[11px] text-[var(--ink)] leading-relaxed uppercase italic font-bold"
                       >
-                        "{aiAnalysis}"
+                        {aiAnalysis}
                       </motion.p>
                     ) : (
                       <p className="text-[10px] text-[var(--ink-soft)] italic text-center py-6">

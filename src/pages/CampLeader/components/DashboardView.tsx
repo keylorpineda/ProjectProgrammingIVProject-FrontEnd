@@ -1,22 +1,12 @@
-﻿// @ts-nocheck
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from "react"
 import { motion } from "framer-motion"
+import { Compass, AlertOctagon, Scale, History, User, ArrowRight } from "lucide-react"
+
 import type { Exploration, Transfer, Inventory, InventoryMovement, CampBalance } from "../types"
-import {
-  Compass,
-  Truck,
-  AlertOctagon,
-  Scale,
-  History,
-  User,
-  ShieldAlert,
-  ArrowRight,
-} from "lucide-react"
 
 interface DashboardViewProps {
   explorations: Exploration[]
@@ -51,7 +41,7 @@ export default function DashboardView({
       opacity: 1,
       transition: {
         staggerChildren: 0.08,
-        type: "spring",
+        type: "spring" as const,
         stiffness: 100,
       },
     },
@@ -59,7 +49,7 @@ export default function DashboardView({
 
   const itemVariants = {
     hidden: { y: 20, opacity: 0 },
-    show: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 120 } },
+    show: { y: 0, opacity: 1, transition: { type: "spring" as const, stiffness: 120 } },
   }
 
   return (
@@ -72,11 +62,11 @@ export default function DashboardView({
       {/* TÍTULO PÁGINA */}
       <div className="border-b border-[#c27c2f]/30 pb-6 flex flex-col md:flex-row justify-between items-start md:items-center">
         <div>
-          <h2 className="font-typewriter text-2xl font-bold tracking-wider text-[#fca311] uppercase uppercase">
-            ESTACIÓN CENTRAL DE TABLERO DE COMBATE
+          <h2 className="font-typewriter text-2xl font-bold tracking-wider text-[#fca311] uppercase">
+            Tablero de Mando
           </h2>
           <p className="font-mono text-xs text-[#fca311]/60 uppercase tracking-widest">
-            SINOPSIS METADATA • REPORTES OPERATIVOS ACTOS DEL SECTOR GRIS
+            Resumen operativo del campamento
           </p>
         </div>
         <div className="vintage-tape mt-2 md:mt-0">CONTROL MILITAR ACTIVO</div>
@@ -243,12 +233,12 @@ export default function DashboardView({
               <span className="font-mono text-xs opacity-50 block uppercase text-[#ab9e8b]">
                 [NINGÚN EQUIPO DE COMBATE EN RAD-OUT EXTERIOR]
               </span>
-              <p
-                className="font-mono text-xs text-amber-500 mt-1 cursor-pointer hover:underline"
+              <button
+                className="font-mono text-xs text-amber-500 mt-1 cursor-pointer hover:underline bg-transparent border-none p-0 inline-block"
                 onClick={() => onNavigate("explorations")}
               >
                 ORGANIZAR NUEVA BÚSQUEDA DE RECURSOS &gt;&gt;
-              </p>
+              </button>
             </div>
           ) : (
             <div className="space-y-4">
