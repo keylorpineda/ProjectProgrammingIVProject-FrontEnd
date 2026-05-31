@@ -1,5 +1,6 @@
-import api from "@/config/api"
 import type { InventoryItem, InventoryMovement, Resource } from "@/types/api.types"
+
+import api from "@/config/api"
 
 export interface UpdateInventoryBody {
   minimum_stock_required?: number

@@ -2,13 +2,16 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { useEffect } from "react"
-import { api } from "../config/api"
-import type { CampBalance, TransferStatistics } from "../types/api.types"
-import { ShieldAlert, Activity, Truck, Database } from "lucide-react"
-import { motion } from "framer-motion"
 import { useQuery } from "@tanstack/react-query"
+import { motion } from "framer-motion"
+import { ShieldAlert, Activity, Truck, Database } from "lucide-react"
+import { useEffect } from "react"
+
+import { api } from "../config/api"
+
+import type { CampBalance, TransferStatistics } from "../types/api.types"
 
 interface ManagerOverviewProps {
   campId: string
@@ -16,7 +19,12 @@ interface ManagerOverviewProps {
 }
 
 export default function ManagerOverview({ campId, refreshTrigger }: ManagerOverviewProps) {
-  const { data, isLoading: loading, error: queryError, refetch } = useQuery({
+  const {
+    data,
+    isLoading: loading,
+    error: queryError,
+    refetch,
+  } = useQuery({
     queryKey: ["managerOverview", campId],
     queryFn: async () => {
       const [balanceRes, statsRes] = await Promise.all([
@@ -34,7 +42,9 @@ export default function ManagerOverview({ campId, refreshTrigger }: ManagerOverv
 
   const balance = data?.balance
   const stats = data?.stats
-  const error = queryError ? (queryError as any).message || "Error en telemetría de satélite de enlace." : null
+  const error = queryError
+    ? (queryError as any).message || "Error en telemetría de satélite de enlace."
+    : null
 
   if (loading && !data) {
     return <div className="min-h-[400px]" />
@@ -116,7 +126,9 @@ export default function ManagerOverview({ campId, refreshTrigger }: ManagerOverv
                   <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_5px,rgba(0,0,0,0.7)_5px,rgba(0,0,0,0.7)_10px)] z-10" />
                   <motion.div
                     initial={{ width: 0 }}
-                    animate={{ width: `${Math.min(100, (balance.foodProduction / (balance.foodConsumption || 1)) * 100)}%` }}
+                    animate={{
+                      width: `${Math.min(100, (balance.foodProduction / (balance.foodConsumption || 1)) * 100)}%`,
+                    }}
                     transition={{ duration: 1.5, ease: "easeOut" }}
                     className={`h-full relative z-0 ${isFoodDeficit ? "bg-[#9c2720]" : "bg-emerald-500"}`}
                   />
@@ -157,7 +169,9 @@ export default function ManagerOverview({ campId, refreshTrigger }: ManagerOverv
                   <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_5px,rgba(0,0,0,0.7)_5px,rgba(0,0,0,0.7)_10px)] z-10" />
                   <motion.div
                     initial={{ width: 0 }}
-                    animate={{ width: `${Math.min(100, (balance.waterProduction / (balance.waterConsumption || 1)) * 100)}%` }}
+                    animate={{
+                      width: `${Math.min(100, (balance.waterProduction / (balance.waterConsumption || 1)) * 100)}%`,
+                    }}
                     transition={{ duration: 1.5, delay: 0.2, ease: "easeOut" }}
                     className={`h-full relative z-0 ${isFoodDeficit ? "bg-zinc-400" : "bg-cyan-500"}`}
                   />
@@ -223,17 +237,23 @@ export default function ManagerOverview({ campId, refreshTrigger }: ManagerOverv
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(194,124,47,0.15)_0,transparent_70%)]" />
               {/* Grid Lines */}
               <div className="absolute inset-0 bg-[linear-gradient(rgba(194,124,47,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(194,124,47,0.1)_1px,transparent_1px)] bg-[size:10px_10px]" />
-              
+
               <div className="w-14 h-14 border border-[#c27c2f]/40 rounded-full flex items-center justify-center relative">
                 <div className="w-6 h-6 border border-[#c27c2f]/60 rounded-full" />
                 <div className="w-1 h-1 bg-[#df8120] rounded-full absolute top-2 left-2 animate-ping" />
-                <div className="w-1 h-1 bg-[#df8120] rounded-full absolute bottom-3 right-1 animate-ping" style={{ animationDelay: "1s" }} />
-                
-                <motion.div 
-                  animate={{ rotate: 360 }} 
+                <div
+                  className="w-1 h-1 bg-[#df8120] rounded-full absolute bottom-3 right-1 animate-ping"
+                  style={{ animationDelay: "1s" }}
+                />
+
+                <motion.div
+                  animate={{ rotate: 360 }}
                   transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
                   className="absolute inset-0 rounded-full"
-                  style={{ background: "conic-gradient(from 0deg, transparent 70%, rgba(194,124,47,0.6) 100%)" }}
+                  style={{
+                    background:
+                      "conic-gradient(from 0deg, transparent 70%, rgba(194,124,47,0.6) 100%)",
+                  }}
                 />
               </div>
               <div className="absolute left-3 bottom-2 text-[10px] text-[#c27c2f] font-black uppercase tracking-widest flex flex-col">

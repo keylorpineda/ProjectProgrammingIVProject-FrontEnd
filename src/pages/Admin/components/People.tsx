@@ -1,7 +1,16 @@
-import { useMemo, useState } from "react"
-import { AnimatePresence, motion } from "framer-motion"
-import type { Variants } from "framer-motion"
 import { useQuery } from "@tanstack/react-query"
+import { AnimatePresence, motion } from "framer-motion"
+import { useMemo, useState } from "react"
+
+import { useCamp } from "../context/CampContext"
+
+import type {
+  CreatePersonBody,
+  UpdatePersonStatusBody,
+} from "@/features/persons/services/persons.service"
+import type { Profession } from "@/types/api.types"
+import type { Variants } from "framer-motion"
+
 import {
   createPerson,
   deletePerson,
@@ -10,15 +19,10 @@ import {
   updatePerson,
   updatePersonStatus,
 } from "@/features/persons/services/persons.service"
-import type {
-  CreatePersonBody,
-  UpdatePersonStatusBody,
-} from "@/features/persons/services/persons.service"
-import { PersonStatus } from "@/types/api.types"
-import type { Profession } from "@/types/api.types"
-import { useCamp } from "../context/CampContext"
 import { ImageUploader } from "@/features/upload/components/ImageUploader"
 import { uploadPersonImage } from "@/features/upload/services/upload.service"
+import { PersonStatus } from "@/types/api.types"
+
 import "./People.css"
 
 type PersonView = {
@@ -111,7 +115,7 @@ function PersonForm({
   return (
     <div className="form-grid">
       <div className="form-group">
-        <label className="form-label">NOMBRE *</label>
+        <div className="form-label">NOMBRE *</div>
         <input
           className="vintage-input full-width"
           value={firstName}
@@ -120,7 +124,7 @@ function PersonForm({
         />
       </div>
       <div className="form-group">
-        <label className="form-label">APELLIDO 1 *</label>
+        <div className="form-label">APELLIDO 1 *</div>
         <input
           className="vintage-input full-width"
           value={lastName}
@@ -129,7 +133,7 @@ function PersonForm({
         />
       </div>
       <div className="form-group">
-        <label className="form-label">APELLIDO 2</label>
+        <div className="form-label">APELLIDO 2</div>
         <input
           className="vintage-input full-width"
           value={lastName2}
@@ -138,7 +142,7 @@ function PersonForm({
         />
       </div>
       <div className="form-group">
-        <label className="form-label">FECHA DE NACIMIENTO</label>
+        <div className="form-label">FECHA DE NACIMIENTO</div>
         <input
           type="date"
           className="vintage-input full-width"
@@ -147,8 +151,11 @@ function PersonForm({
         />
       </div>
       <div className="form-group form-full">
-        <label className="form-label">PROFESIÓN</label>
+        <label htmlFor="field-profesi-n-156" className="form-label">
+          PROFESIÓN
+        </label>
         <select
+          id="field-profesi-n-156"
           className="vintage-input full-width"
           value={professionId}
           onChange={(e) => setProfessionId(e.target.value)}
@@ -162,7 +169,7 @@ function PersonForm({
         </select>
       </div>
       <div className="form-group form-full">
-        <label className="form-label">HABILIDADES PREVIAS</label>
+        <div className="form-label">HABILIDADES PREVIAS</div>
         <input
           className="vintage-input full-width"
           value={skills}
@@ -171,8 +178,11 @@ function PersonForm({
         />
       </div>
       <div className="form-group form-full">
-        <label className="form-label">NOTAS</label>
+        <label htmlFor="field-notas-180" className="form-label">
+          NOTAS
+        </label>
         <textarea
+          id="field-notas-180"
           className="vintage-input full-width"
           rows={3}
           value={notes}
@@ -198,7 +208,7 @@ function PersonForm({
 
 export default function People() {
   const { activeCampId, camps } = useCamp()
-  
+
   const [page, setPage] = useState(1)
   const [filterStatus, setFilterStatus] = useState("")
   const [filterText, setFilterText] = useState("")
@@ -220,7 +230,12 @@ export default function People() {
   const [formStatusNotes, setFormStatusNotes] = useState("")
 
   const campById = useMemo(() => new Map(camps.map((c) => [c.id, c.name])), [camps])
-  const { data: peopleData, isLoading: queryLoading, error: queryError, refetch } = useQuery({
+  const {
+    data: peopleData,
+    isLoading: queryLoading,
+    error: queryError,
+    refetch,
+  } = useQuery({
     queryKey: ["adminPeople", activeCampId, page],
     queryFn: async () => {
       if (!activeCampId) return { data: [], total: 0 }
@@ -236,7 +251,7 @@ export default function People() {
     staleTime: 1000 * 60 * 60, // 1 hour
   })
 
-  const people = peopleData?.data || []
+  const people = useMemo(() => peopleData?.data || [], [peopleData])
   const professions = professionsData || []
   const isLoading = queryLoading && people.length === 0
   const error = queryError ? "No se pudo cargar el listado de personas." : ""
@@ -757,8 +772,11 @@ export default function People() {
                   <div className="modal-body">
                     <div className="form-grid">
                       <div className="form-group form-full">
-                        <label className="form-label">NUEVO ESTADO</label>
+                        <label htmlFor="field-nuevo-estado-766" className="form-label">
+                          NUEVO ESTADO
+                        </label>
                         <select
+                          id="field-nuevo-estado-766"
                           className="vintage-input full-width"
                           value={formStatus}
                           onChange={(e) => setFormStatus(e.target.value as PersonStatus)}
@@ -771,8 +789,11 @@ export default function People() {
                         </select>
                       </div>
                       <div className="form-group form-full">
-                        <label className="form-label">NOTAS (opcional)</label>
+                        <label htmlFor="field-780" className="form-label">
+                          NOTAS (opcional)
+                        </label>
                         <textarea
+                          id="field-780"
                           className="vintage-input full-width"
                           rows={3}
                           value={formStatusNotes}

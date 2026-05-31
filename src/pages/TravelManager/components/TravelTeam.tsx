@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react"
+import { useQuery } from "@tanstack/react-query"
+import { motion, AnimatePresence } from "framer-motion"
 import {
   Users,
   Search,
@@ -13,13 +14,14 @@ import {
   FileText,
   AlertCircle,
 } from "lucide-react"
-import type { Variants } from "framer-motion"
-import { motion, AnimatePresence } from "framer-motion"
-import { useQuery } from "@tanstack/react-query"
-import { useAuth } from "@/pages/Admin/context/AuthContext"
-import { getPersons } from "@/features/persons/services/persons.service"
-import { getCamps } from "@/features/camps/services/camps.service"
+import { useState, useMemo } from "react"
+
 import type { Person } from "@/types/api.types"
+import type { Variants } from "framer-motion"
+
+import { getCamps } from "@/features/camps/services/camps.service"
+import { getPersons } from "@/features/persons/services/persons.service"
+import { useAuth } from "@/pages/Admin/context/AuthContext"
 import { PersonStatus } from "@/types/api.types"
 
 type ActiveStatusFilter = PersonStatus | "all"
@@ -49,7 +51,7 @@ export default function TravelTeam() {
     queryKey: ["persons"],
     queryFn: () => getPersons({}),
   })
-  const persons: Person[] = (personsResponse as any)?.data ?? personsResponse ?? []
+  const persons: Person[] = useMemo(() => personsResponse?.data ?? [], [personsResponse])
 
   const { data: camps = [], isError: campsError } = useQuery({
     queryKey: ["camps"],
@@ -77,7 +79,7 @@ export default function TravelTeam() {
   // ── Derived State ──────────────────────────────────────────────────────────
   const filteredTeam = useMemo(() => {
     return persons.filter((p) => {
-      if (baseCampId && String((p as any).camp_id) !== String(baseCampId)) return false
+      if (baseCampId && String(p.camp_id ?? "") !== String(baseCampId)) return false
       if (activeStatus !== "all" && p.status !== activeStatus) return false
 
       const pProfession = p.profession?.name || "Desconocido"
@@ -104,16 +106,14 @@ export default function TravelTeam() {
 
   const activeCount = persons.filter(
     (p) =>
-      String((p as any).camp_id) === String(baseCampId) &&
+      String(p.camp_id ?? "") === String(baseCampId) &&
       (p.status === PersonStatus.Active || p.status === PersonStatus.Idle),
   ).length
   const inFieldCount = persons.filter(
-    (p) =>
-      String((p as any).camp_id) === String(baseCampId) && p.status === PersonStatus.Exploring,
+    (p) => String(p.camp_id ?? "") === String(baseCampId) && p.status === PersonStatus.Exploring,
   ).length
   const injuredCount = persons.filter(
-    (p) =>
-      String((p as any).camp_id) === String(baseCampId) && p.status === PersonStatus.Injured,
+    (p) => String(p.camp_id ?? "") === String(baseCampId) && p.status === PersonStatus.Injured,
   ).length
 
   const getStatusLabel = (status: PersonStatus) => {
@@ -440,7 +440,7 @@ export default function TravelTeam() {
                         </span>
                         <span className="text-sm font-mono font-black text-white uppercase flex items-center gap-1">
                           <Navigation className="h-3 w-3 text-[#d4a373]" />{" "}
-                          {getCampName((selectedPerson as any).camp_id)}
+                          {getCampName(selectedPerson.camp_id ?? "")}
                         </span>
                       </div>
                       <div className="flex justify-between items-center">

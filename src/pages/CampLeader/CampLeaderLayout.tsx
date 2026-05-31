@@ -1,37 +1,37 @@
-import { useState, useEffect } from "react"
-import "./campleader.css"
 import { motion, AnimatePresence } from "framer-motion"
-import { useAuthStore, useTokenStore } from "@/store/useAuthStore"
-import InactivityGuard from "@/components/ui/InactivityGuard"
-
-import {
-  explorationsService,
-  transfersService,
-  resourcesService,
-  usersService,
-} from "./lib/services"
-
-import Sidebar from "./components/Sidebar"
-import Topbar from "./components/Topbar"
-import Footer from "./components/Footer"
+import { useCallback, useEffect, useState } from "react"
 
 import DashboardView from "./components/DashboardView"
 import ExplorationsView from "./components/ExplorationsView"
-import TransfersView from "./components/TransfersView"
+import Footer from "./components/Footer"
 import InventoryView from "./components/InventoryView"
 import ProfileView from "./components/ProfileView"
+import Sidebar from "./components/Sidebar"
+import Topbar from "./components/Topbar"
+import TransfersView from "./components/TransfersView"
+import {
+  explorationsService,
+  resourcesService,
+  transfersService,
+  usersService,
+} from "./lib/services"
 
 import type {
-  Exploration,
-  Transfer,
-  Inventory,
+  Camp,
   CampBalance,
+  CampStatistics,
+  Exploration,
+  Inventory,
   InventoryMovement,
   Person,
-  CampStatistics,
-  Camp,
   ResourceItem,
+  Transfer,
 } from "./types"
+
+import InactivityGuard from "@/components/ui/InactivityGuard"
+import { useAuthStore, useTokenStore } from "@/store/useAuthStore"
+
+import "./campleader.css"
 
 export default function CampLeaderLayout() {
   const { user, logout } = useAuthStore()
@@ -62,10 +62,10 @@ export default function CampLeaderLayout() {
   const [resources, setResources] = useState<ResourceItem[]>([])
 
   // Load all data from the real backend
-  const reloadData = async () => {
+  const reloadData = useCallback(async () => {
     if (!user) return
     try {
-      const campId = Number(user.camp_id ?? (user as any).campId ?? 1)
+      const campId = Number(user.camp_id ?? 1)
 
       const [expList, trList, invList, balList, movList, resList, statVal, campsData, rVal] =
         await Promise.all([
@@ -98,7 +98,7 @@ export default function CampLeaderLayout() {
     } catch (e) {
       console.error("Error loading camp leader data:", e)
     }
-  }
+  }, [user])
 
   useEffect(() => {
     const run = async () => {
@@ -107,9 +107,10 @@ export default function CampLeaderLayout() {
       setLoading(false)
     }
     run()
-  }, [user])
+  }, [reloadData])
 
   // ── Exploration handlers ──────────────────────────────────────────────────
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleCreateExploration = async (data: any) => {
     setActionLoading(true)
     try {
@@ -130,6 +131,7 @@ export default function CampLeaderLayout() {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleReturnExploration = async (id: number, data: any) => {
     setActionLoading(true)
     try {
@@ -151,6 +153,7 @@ export default function CampLeaderLayout() {
   }
 
   // ── Transfer handlers ─────────────────────────────────────────────────────
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleCreateTransferRequest = async (data: any) => {
     setActionLoading(true)
     try {
@@ -227,7 +230,7 @@ export default function CampLeaderLayout() {
             camps={camps}
             resources={resources}
             inventory={inventory}
-            myCampId={Number(user?.camp_id ?? (user as any)?.campId ?? 1)}
+            myCampId={Number(user?.camp_id ?? 1)}
             onCreateTransferRequest={handleCreateTransferRequest}
             onApproveTransferRequest={handleApproveTransferRequest}
             onCancelTransferRequest={handleCancelTransferRequest}
@@ -246,76 +249,79 @@ export default function CampLeaderLayout() {
   return (
     <InactivityGuard
       isAuthenticated={!!user}
-      onLogout={() => { logout(); window.location.href = "/login" }}
+      onLogout={() => {
+        logout()
+        window.location.href = "/login"
+      }}
     >
-    <div className="campleader-view relative min-h-screen bg-[#161513] text-white flex flex-col overflow-x-hidden select-none">
-      {/* CRT SCANLINES SCREEN STYLES */}
-      <div className="crt-overlay" />
+      <div className="campleader-view relative min-h-screen bg-[#161513] text-white flex flex-col overflow-x-hidden select-none">
+        {/* CRT SCANLINES SCREEN STYLES */}
+        <div className="crt-overlay" />
 
-      {/* CORE FRAMEWORK GRID STRUCTURE */}
-      <div className="flex flex-1">
-        {/* LEFT TAB DIRECTORIES BAR */}
-        <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+        {/* CORE FRAMEWORK GRID STRUCTURE */}
+        <div className="flex flex-1">
+          {/* LEFT TAB DIRECTORIES BAR */}
+          <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
-        {/* RIGHT MAIN CONTAINER */}
-        <div className="flex-1 min-w-0 flex flex-col overflow-y-auto max-h-screen relative bg-[#161513]">
-          {/* HEADER SECTOR CHANNELS */}
-          <Topbar survivalScore={statistics.survival_score} />
+          {/* RIGHT MAIN CONTAINER */}
+          <div className="flex-1 min-w-0 flex flex-col overflow-y-auto max-h-screen relative bg-[#161513]">
+            {/* HEADER SECTOR CHANNELS */}
+            <Topbar survivalScore={statistics.survival_score} />
 
-          {/* COMPONENT VIEWS PORTAL */}
-          <main className="relative">
-            <AnimatePresence mode="wait">
-              {loading ? (
-                <div
-                  key="loading"
-                  className="absolute inset-0 flex flex-col items-center justify-center p-10 bg-[#161513]"
-                >
-                  <div className="relative flex h-8 w-8 mb-4">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#fca311] opacity-75" />
-                    <span className="relative inline-flex rounded-full h-8 w-8 bg-[#c27c2f]" />
+            {/* COMPONENT VIEWS PORTAL */}
+            <main className="relative">
+              <AnimatePresence mode="wait">
+                {loading ? (
+                  <div
+                    key="loading"
+                    className="absolute inset-0 flex flex-col items-center justify-center p-10 bg-[#161513]"
+                  >
+                    <div className="relative flex h-8 w-8 mb-4">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#fca311] opacity-75" />
+                      <span className="relative inline-flex rounded-full h-8 w-8 bg-[#c27c2f]" />
+                    </div>
+                    <h3 className="font-typewriter text-sm tracking-widest text-[#fca311] animate-pulse">
+                      CARGANDO DATOS DEL CAMPAMENTO...
+                    </h3>
                   </div>
-                  <h3 className="font-typewriter text-sm tracking-widest text-[#fca311] animate-pulse">
-                    CARGANDO DATOS DEL CAMPAMENTO...
-                  </h3>
-                </div>
-              ) : (
-                <motion.div
-                  key={activeTab}
-                  initial={{ opacity: 0, scale: 0.99, y: 3 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.99, y: -3 }}
-                  transition={{ type: "spring", stiffness: 220, damping: 25 }}
-                >
-                  {getActiveView()}
-                </motion.div>
-              )}
-            </AnimatePresence>
+                ) : (
+                  <motion.div
+                    key={activeTab}
+                    initial={{ opacity: 0, scale: 0.99, y: 3 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.99, y: -3 }}
+                    transition={{ type: "spring", stiffness: 220, damping: 25 }}
+                  >
+                    {getActiveView()}
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-            {/* ACTION LOADING OVERLAY */}
-            <AnimatePresence>
-              {actionLoading && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="fixed inset-0 bg-neutral-950/80 backdrop-blur-sm flex flex-col items-center justify-center z-[100] font-mono text-center"
-                >
-                  <div className="border border-[#c27c2f] max-w-xs w-full bg-[#161513] p-5 shadow-[4px_4px_0_#000] rounded">
-                    <span className="animate-spin inline-block w-8 h-8 rounded-full border-2 border-[#c27c2f] border-t-transparent mb-4" />
-                    <p className="font-typewriter text-xs text-white font-bold uppercase tracking-wider">
-                      ACTUALIZANDO REGISTRO CENTRAL...
-                    </p>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </main>
+              {/* ACTION LOADING OVERLAY */}
+              <AnimatePresence>
+                {actionLoading && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 bg-neutral-950/80 backdrop-blur-sm flex flex-col items-center justify-center z-[100] font-mono text-center"
+                  >
+                    <div className="border border-[#c27c2f] max-w-xs w-full bg-[#161513] p-5 shadow-[4px_4px_0_#000] rounded">
+                      <span className="animate-spin inline-block w-8 h-8 rounded-full border-2 border-[#c27c2f] border-t-transparent mb-4" />
+                      <p className="font-typewriter text-xs text-white font-bold uppercase tracking-wider">
+                        ACTUALIZANDO REGISTRO CENTRAL...
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </main>
 
-          {/* SYSTEM FOOTER */}
-          <Footer />
+            {/* SYSTEM FOOTER */}
+            <Footer />
+          </div>
         </div>
       </div>
-    </div>
     </InactivityGuard>
   )
 }

@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 
 interface BadgeLoginProps {
@@ -133,6 +133,7 @@ export function BadgeLogin({ onLogin, isProcessing, loginStatus }: BadgeLoginPro
         perspective: "1200px",
         transformStyle: "preserve-3d",
       }}
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       variants={badgeVariants as any}
       initial="initialDistortion"
       animate={currentVariant}
@@ -311,10 +312,14 @@ export function BadgeLogin({ onLogin, isProcessing, loginStatus }: BadgeLoginPro
                         : {}
                     }
                   >
-                    <label className="text-[12px] font-black font-sans text-[#1a1a1a] tracking-[0.2em] uppercase flex items-center gap-2">
+                    <label
+                      htmlFor="bl-username"
+                      className="text-[12px] font-black font-sans text-[#1a1a1a] tracking-[0.2em] uppercase flex items-center gap-2"
+                    >
                       USUARIO
                     </label>
                     <input
+                      id="bl-username"
                       type="text"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
@@ -333,11 +338,15 @@ export function BadgeLogin({ onLogin, isProcessing, loginStatus }: BadgeLoginPro
                         : {}
                     }
                   >
-                    <label className="text-[12px] font-black font-sans text-[#1a1a1a] tracking-[0.2em] uppercase flex items-center gap-2">
+                    <label
+                      htmlFor="bl-password"
+                      className="text-[12px] font-black font-sans text-[#1a1a1a] tracking-[0.2em] uppercase flex items-center gap-2"
+                    >
                       CONTRASEÑA
                     </label>
                     <div className="relative w-full">
                       <input
+                        id="bl-password"
                         type={showPassword ? "text" : "password"}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
@@ -421,13 +430,13 @@ export function BadgeLogin({ onLogin, isProcessing, loginStatus }: BadgeLoginPro
                   }}
                   disabled={!isHanging || isProcessing}
                   onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#2d1f00"
+                    ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = "#2d1f00"
                     ;(e.currentTarget as HTMLButtonElement).style.boxShadow =
                       "inset 0 0 0 2px #f59e0b, 0 4px 0 #0a0a0a, 0 0 20px rgba(245,158,11,0.4), 0 5px 5px rgba(0,0,0,0.5)"
                     ;(e.currentTarget as HTMLButtonElement).style.color = "#f59e0b"
                   }}
                   onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#1a1a1a"
+                    ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = "#1a1a1a"
                     ;(e.currentTarget as HTMLButtonElement).style.boxShadow =
                       "inset 0 0 0 2px #333, 0 4px 0 #0a0a0a, 0 5px 5px rgba(0,0,0,0.5)"
                     ;(e.currentTarget as HTMLButtonElement).style.color = "#cccccc"

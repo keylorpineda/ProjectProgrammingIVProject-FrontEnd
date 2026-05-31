@@ -1,7 +1,10 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
-import type { ReactNode } from "react"
-import { getSessionStatus } from "@/features/auth/services/auth.service"
+
 import { useAuth } from "./AuthContext"
+
+import type { ReactNode } from "react"
+
+import { getSessionStatus } from "@/features/auth/services/auth.service"
 
 interface SessionContextType {
   lastActivity: number
@@ -85,6 +88,7 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useSession = () => {
   const context = useContext(SessionContext)
   if (!context) {

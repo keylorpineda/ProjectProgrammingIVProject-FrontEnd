@@ -1,7 +1,11 @@
-import { useMemo, useState } from "react"
-import { AnimatePresence, motion } from "framer-motion"
-import type { Variants } from "framer-motion"
 import { useQuery } from "@tanstack/react-query"
+import { AnimatePresence, motion } from "framer-motion"
+import { useMemo, useState } from "react"
+
+import type { CreateCampBody } from "@/features/camps/services/camps.service"
+import type { Camp } from "@/types/api.types"
+import type { Variants } from "framer-motion"
+
 import {
   createCamp,
   deleteCamp,
@@ -9,8 +13,6 @@ import {
   getCamps,
   updateCamp,
 } from "@/features/camps/services/camps.service"
-import type { CreateCampBody } from "@/features/camps/services/camps.service"
-import type { Camp } from "@/types/api.types"
 import { MapCoordPicker } from "@/features/map-test/components/MapCoordPicker"
 import "./Camps.css"
 
@@ -68,7 +70,7 @@ function CampForm({
   return (
     <div className="form-grid">
       <div className="form-group form-full">
-        <label className="form-label">NOMBRE DEL CAMPAMENTO *</label>
+        <div className="form-label">NOMBRE DEL CAMPAMENTO *</div>
         <input
           className="vintage-input full-width"
           value={name}
@@ -77,7 +79,7 @@ function CampForm({
         />
       </div>
       <div className="form-group form-full">
-        <label className="form-label">DESCRIPCIÓN DE UBICACIÓN</label>
+        <div className="form-label">DESCRIPCIÓN DE UBICACIÓN</div>
         <input
           className="vintage-input full-width"
           value={locationDescription}
@@ -86,7 +88,7 @@ function CampForm({
         />
       </div>
       <div className="form-group form-full">
-        <label className="form-label">UBICACIÓN EN EL MAPA (CLICK PARA SELECCIONAR)</label>
+        <div className="form-label">UBICACIÓN EN EL MAPA (CLICK PARA SELECCIONAR)</div>
         <MapCoordPicker
           lat={latitude ? Number(latitude) : null}
           lng={longitude ? Number(longitude) : null}
@@ -97,7 +99,7 @@ function CampForm({
         />
       </div>
       <div className="form-group">
-        <label className="form-label">CAPACIDAD MÁXIMA</label>
+        <div className="form-label">CAPACIDAD MÁXIMA</div>
         <input
           type="number"
           min="1"
@@ -108,7 +110,7 @@ function CampForm({
         />
       </div>
       <div className="form-group">
-        <label className="form-label">FECHA DE FUNDACIÓN</label>
+        <div className="form-label">FECHA DE FUNDACIÓN</div>
         <input
           type="date"
           className="vintage-input full-width"
@@ -121,7 +123,12 @@ function CampForm({
 }
 
 export default function Camps() {
-  const { data: camps = [], isLoading: queryLoading, error: queryError, refetch } = useQuery({
+  const {
+    data: camps = [],
+    isLoading: queryLoading,
+    error: queryError,
+    refetch,
+  } = useQuery({
     queryKey: ["adminCamps"],
     queryFn: async () => await getCamps(),
     staleTime: 1000 * 60 * 2,
@@ -143,7 +150,6 @@ export default function Camps() {
   const [formLongitude, setFormLongitude] = useState("")
   const [formMaxCapacity, setFormMaxCapacity] = useState("")
   const [formFoundationDate, setFormFoundationDate] = useState("")
-
 
   const campViews = useMemo<CampView[]>(
     () =>

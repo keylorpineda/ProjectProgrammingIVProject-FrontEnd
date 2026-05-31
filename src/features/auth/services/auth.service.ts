@@ -1,5 +1,6 @@
-import api from "@/config/api"
 import type { AuthTokens, AuthUser } from "@/types/api.types"
+
+import api from "@/config/api"
 
 export interface LoginBody {
   username: string

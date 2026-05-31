@@ -1,5 +1,6 @@
-import api from "@/config/api"
 import type { AiAdmission, PaginatedResponse } from "@/types/api.types"
+
+import api from "@/config/api"
 
 export interface SubmitAdmissionBody {
   first_name: string

@@ -1,6 +1,6 @@
+import * as L from "leaflet"
 import { useEffect } from "react"
 import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from "react-leaflet"
-import L from "leaflet"
 import "leaflet/dist/leaflet.css"
 import "../styles/map-widgets.css"
 
@@ -14,7 +14,7 @@ interface MapCoordPickerProps {
 
 const pinIcon = L.divIcon({
   className: "",
-  html: "<div style=\"width:14px;height:14px;background:#c27c2f;border:2px solid #000;border-radius:50%;box-shadow:0 0 10px rgba(194,124,47,0.9),0 0 4px rgba(0,0,0,0.6);margin-left:-7px;margin-top:-7px\"></div>",
+  html: '<div style="width:14px;height:14px;background:#c27c2f;border:2px solid #000;border-radius:50%;box-shadow:0 0 10px rgba(194,124,47,0.9),0 0 4px rgba(0,0,0,0.6);margin-left:-7px;margin-top:-7px"></div>',
   iconSize: [0, 0],
   iconAnchor: [0, 0],
 })

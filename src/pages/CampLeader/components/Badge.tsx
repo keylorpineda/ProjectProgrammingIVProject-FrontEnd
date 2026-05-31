@@ -1,10 +1,8 @@
-﻿// @ts-nocheck
+// eslint-disable-next-line react-refresh/only-export-components
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
-
-import type React from "react"
 
 export interface AchievementDetails {
   name: string
@@ -15,10 +13,11 @@ export interface AchievementDetails {
   textColor: string
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const ACHIEVEMENTS_DICT: Record<string, AchievementDetails> = {
   VETERANO_PARAMO: {
     name: "Veterano del Paramo",
-    icon: "\uD83C\uDF96\uFE0F",
+    icon: "🎖️",
     description:
       "Sobreviviente de alto rango curtido en la exploracion de zonas contaminadas y escombros radiactivos.",
     bgColor: "rgba(156, 39, 32, 0.25)",
@@ -27,7 +26,7 @@ export const ACHIEVEMENTS_DICT: Record<string, AchievementDetails> = {
   },
   SOBREVIVIENTE_ELITE: {
     name: "Sobreviviente Elite",
-    icon: "\uD83C\uDFC6",
+    icon: "🏆",
     description:
       "Capitan experto de bunker con mas de 10 expediciones de combate exitosas reportadas.",
     bgColor: "rgba(194, 124, 47, 0.25)",
@@ -36,7 +35,7 @@ export const ACHIEVEMENTS_DICT: Record<string, AchievementDetails> = {
   },
   PRIMEROS_AUXILIOS_AVANZADOS: {
     name: "Primeros Auxilios Avanzados",
-    icon: "\uD83D\uDC89",
+    icon: "💉",
     description:
       "Medico de campo calificado para neutralizacion inmediata de toxinas mutantes y suturas rapidas.",
     bgColor: "rgba(76, 99, 81, 0.25)",
@@ -46,7 +45,6 @@ export const ACHIEVEMENTS_DICT: Record<string, AchievementDetails> = {
 }
 
 interface BadgeProps {
-  key?: React.Key | string | number
   code: string
   showText?: boolean
 }

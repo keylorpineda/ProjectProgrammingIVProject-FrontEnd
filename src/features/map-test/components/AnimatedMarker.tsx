@@ -1,8 +1,9 @@
-import { useMemo } from "react"
-import { Marker, Popup } from "react-leaflet"
-import { createPortal } from "react-dom"
-import L from "leaflet"
 import { motion } from "framer-motion"
+import * as L from "leaflet"
+import { useMemo } from "react"
+import { createPortal } from "react-dom"
+import { Marker, Popup } from "react-leaflet"
+
 import type { Camp } from "../types/camp"
 
 interface AnimatedMarkerProps {

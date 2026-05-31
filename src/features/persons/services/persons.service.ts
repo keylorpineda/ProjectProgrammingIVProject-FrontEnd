@@ -1,5 +1,6 @@
-import api from "@/config/api"
 import type { Person, Profession, PaginatedResponse, PersonStatus } from "@/types/api.types"
+
+import api from "@/config/api"
 
 export interface PersonsParams {
   campId?: string

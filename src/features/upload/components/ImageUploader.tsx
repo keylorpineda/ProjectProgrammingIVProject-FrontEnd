@@ -1,4 +1,5 @@
 import { useRef, useState } from "react"
+
 import type { UploadResult } from "../services/upload.service"
 
 interface ImageUploaderProps {

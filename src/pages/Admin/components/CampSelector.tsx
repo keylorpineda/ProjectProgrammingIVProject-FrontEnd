@@ -1,6 +1,8 @@
-import type { ChangeEvent } from "react"
 import { useState } from "react"
+
 import { useCamp } from "../context/CampContext"
+
+import type { ChangeEvent } from "react"
 import "./CampSelector.css"
 
 export default function CampSelector() {

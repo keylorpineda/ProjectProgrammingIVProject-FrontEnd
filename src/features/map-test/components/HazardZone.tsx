@@ -1,5 +1,5 @@
-import { Circle, Popup, Tooltip } from "react-leaflet"
 import { Flame, Package, ShieldAlert } from "lucide-react"
+import { Circle, Popup, Tooltip } from "react-leaflet"
 
 interface HazardZoneProps {
   coords: [number, number]

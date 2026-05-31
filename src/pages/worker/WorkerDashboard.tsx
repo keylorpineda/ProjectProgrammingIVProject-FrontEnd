@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
-import { useAuth } from "@/pages/Admin/context/AuthContext"
+import { useEffect, useState } from "react"
+
 import {
   useInventoryStatus,
   useInventoryMovements,
@@ -9,6 +9,7 @@ import {
   useMyBadges,
   useCamp,
 } from "@/features/worker/hooks/useWorkerAPI"
+import { useAuth } from "@/pages/Admin/context/AuthContext"
 import "./WorkerViews.css"
 
 const MOVEMENT_LABELS: Record<string, string> = {
@@ -142,9 +143,7 @@ export default function WorkerDashboard() {
       <div className="wv-board-header">
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <span className="wv-board-dot wv-board-dot-green" />
-          <h2 className="wv-board-title">
-            TABLERO — {campName}
-          </h2>
+          <h2 className="wv-board-title">TABLERO — {campName}</h2>
         </div>
         <span className="wv-board-time">{time}</span>
       </div>
@@ -182,9 +181,7 @@ export default function WorkerDashboard() {
             <h3 className="wv-section-title" style={{ marginBottom: 0 }}>
               BALANCE DIARIO DEL SECTOR
             </h3>
-            <span className="wv-section-count">
-              {balance.persons} PERSONAS EN OPERACIÓN
-            </span>
+            <span className="wv-section-count">{balance.persons} PERSONAS EN OPERACIÓN</span>
           </div>
 
           <div style={{ marginTop: 20, display: "flex", flexDirection: "column", gap: 16 }}>
@@ -205,9 +202,7 @@ export default function WorkerDashboard() {
               className="wv-balance-summary-item"
               style={{
                 color:
-                  balance.balance.food >= 0
-                    ? "var(--accent-approved)"
-                    : "var(--accent-critical)",
+                  balance.balance.food >= 0 ? "var(--accent-approved)" : "var(--accent-critical)",
               }}
             >
               COMIDA NET:{" "}
@@ -220,9 +215,7 @@ export default function WorkerDashboard() {
               className="wv-balance-summary-item"
               style={{
                 color:
-                  balance.balance.water >= 0
-                    ? "var(--accent-approved)"
-                    : "var(--accent-critical)",
+                  balance.balance.water >= 0 ? "var(--accent-approved)" : "var(--accent-critical)",
               }}
             >
               AGUA NET:{" "}
@@ -258,9 +251,7 @@ export default function WorkerDashboard() {
                   {m.quantity > 0 ? "+" : ""}
                   {m.quantity} {m.resource?.unit ?? ""}
                 </span>
-                <span className="wv-mv-date">
-                  {m.date ? String(m.date).split("T")[0] : "N/D"}
-                </span>
+                <span className="wv-mv-date">{m.date ? String(m.date).split("T")[0] : "N/D"}</span>
               </div>
             ))}
           </div>

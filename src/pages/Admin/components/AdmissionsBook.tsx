@@ -1,14 +1,17 @@
-import { useEffect, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
+import { useEffect, useState } from "react"
+
+import StampButton from "./StampButton"
 import { useCamp } from "../context/CampContext"
+
+import type { AiAdmission } from "@/types/api.types"
+
 import {
   createAdmissionAccount,
   getAdmissionById,
   getPendingAdmissions,
   reviewAdmission,
 } from "@/features/admissions/services/admissions.service"
-import type { AiAdmission } from "@/types/api.types"
-import StampButton from "./StampButton"
 import "./AdmissionsBook.css"
 
 type AdmissionSummary = {
@@ -145,16 +148,24 @@ const formatAiAnalysis = (text: string) => {
     .replace(/\bNote:/gi, "Nota:")
     .replace(/Warning:/gi, "Advertencia:")
     // ── Sentence starters about the candidate ────────────────────────────
-    .replace(/The (candidate|applicant) (has|is|shows|presents|demonstrates)/gi,
-      (_, _p, verb) => `El candidato ${verb === "has" ? "tiene" : verb === "is" ? "es" : verb === "shows" || verb === "presents" || verb === "demonstrates" ? "presenta" : verb}`)
-    .replace(/This (candidate|applicant) (has|is|shows|presents|demonstrates)/gi,
-      (_, _p, verb) => `Este candidato ${verb === "has" ? "tiene" : verb === "is" ? "es" : "presenta"}`)
+    .replace(
+      /The (candidate|applicant) (has|is|shows|presents|demonstrates)/gi,
+      (_, _p, verb) =>
+        `El candidato ${verb === "has" ? "tiene" : verb === "is" ? "es" : verb === "shows" || verb === "presents" || verb === "demonstrates" ? "presenta" : verb}`,
+    )
+    .replace(
+      /This (candidate|applicant) (has|is|shows|presents|demonstrates)/gi,
+      (_, _p, verb) =>
+        `Este candidato ${verb === "has" ? "tiene" : verb === "is" ? "es" : "presenta"}`,
+    )
     .replace(/The applicant/gi, "El solicitante")
     .replace(/The candidate/gi, "El candidato")
     .replace(/This applicant/gi, "Este solicitante")
     .replace(/This candidate/gi, "Este candidato")
-    .replace(/Based on the (evaluation|assessment|analysis|data|information|profile)/gi,
-      "Basándose en la evaluación")
+    .replace(
+      /Based on the (evaluation|assessment|analysis|data|information|profile)/gi,
+      "Basándose en la evaluación",
+    )
     .replace(/Based on available (data|information)/gi, "En base a los datos disponibles")
     .replace(/According to the (evaluation|assessment|profile)/gi, "Según la evaluación")
     .replace(/Taking into account/gi, "Teniendo en cuenta")
@@ -180,8 +191,14 @@ const formatAiAnalysis = (text: string) => {
     .replace(/\bSuitable\b/gi, "Apto")
     .replace(/\bUnsuitable\b/gi, "No apto")
     .replace(/Not suitable/gi, "No apto")
-    .replace(/Further evaluation (needed|required|recommended)/gi, "Se requiere evaluación adicional")
-    .replace(/Additional (evaluation|assessment) (needed|required)/gi, "Evaluación adicional requerida")
+    .replace(
+      /Further evaluation (needed|required|recommended)/gi,
+      "Se requiere evaluación adicional",
+    )
+    .replace(
+      /Additional (evaluation|assessment) (needed|required)/gi,
+      "Evaluación adicional requerida",
+    )
     .replace(/Meets (the )?requirements/gi, "Cumple los requisitos")
     .replace(/Does not meet (the )?requirements/gi, "No cumple los requisitos")
     // ── Field labels ──────────────────────────────────────────────────────
@@ -476,7 +493,9 @@ export default function AdmissionsBook() {
     }
 
     void loadAdmissions()
-    return () => { isMounted = false }
+    return () => {
+      isMounted = false
+    }
   }, [])
 
   useEffect(() => {
@@ -574,7 +593,10 @@ export default function AdmissionsBook() {
     setDecisionError("")
     setIsProcessing(true)
     if (isDemoData) {
-      setTimeout(() => { archiveAdmission(); setIsProcessing(false) }, 1000)
+      setTimeout(() => {
+        archiveAdmission()
+        setIsProcessing(false)
+      }, 1000)
       return
     }
     try {
@@ -612,7 +634,10 @@ export default function AdmissionsBook() {
     setAccountUsername(nameParts.slice(0, 20) || "sobreviviente")
 
     if (isDemoData) {
-      setTimeout(() => { setShowingProcessed(true); setIsProcessing(false) }, 1000)
+      setTimeout(() => {
+        setShowingProcessed(true)
+        setIsProcessing(false)
+      }, 1000)
       return
     }
     try {
@@ -655,18 +680,35 @@ export default function AdmissionsBook() {
     } catch (err: unknown) {
       // Extract the real error from the API response
       let msg = "No se pudo crear la cuenta."
-      const axiosErr = err as { response?: { data?: { message?: string | string[] } }; message?: string }
+      const axiosErr = err as {
+        response?: { data?: { message?: string | string[] } }
+        message?: string
+      }
       const backendMsg = axiosErr?.response?.data?.message
       if (backendMsg) {
         const raw = Array.isArray(backendMsg) ? backendMsg.join(", ") : backendMsg
-        if (raw.toLowerCase().includes("already exists") || raw.toLowerCase().includes("duplicate") || raw.toLowerCase().includes("ya existe")) {
-          msg = "⚠ Ya existe una cuenta con ese usuario o correo. Cambia el nombre de usuario e intenta de nuevo."
-        } else if (raw.toLowerCase().includes("not accepted") || raw.toLowerCase().includes("person not created")) {
-          msg = "⚠ La admisión no fue procesada correctamente. Recarga la página e intenta aceptar de nuevo."
-        } else if (raw.toLowerCase().includes("correo no pudo enviarse") || raw.toLowerCase().includes("correo no pudo")) {
+        if (
+          raw.toLowerCase().includes("already exists") ||
+          raw.toLowerCase().includes("duplicate") ||
+          raw.toLowerCase().includes("ya existe")
+        ) {
+          msg =
+            "⚠ Ya existe una cuenta con ese usuario o correo. Cambia el nombre de usuario e intenta de nuevo."
+        } else if (
+          raw.toLowerCase().includes("not accepted") ||
+          raw.toLowerCase().includes("person not created")
+        ) {
+          msg =
+            "⚠ La admisión no fue procesada correctamente. Recarga la página e intenta aceptar de nuevo."
+        } else if (
+          raw.toLowerCase().includes("correo no pudo enviarse") ||
+          raw.toLowerCase().includes("correo no pudo")
+        ) {
           // La cuenta SI fue creada, solo falló el email — marcar como done con advertencia
           setAccountDone(true)
-          setAccountError("⚠ Cuenta creada, pero el correo no se pudo enviar. Comunica las credenciales al candidato manualmente.")
+          setAccountError(
+            "⚠ Cuenta creada, pero el correo no se pudo enviar. Comunica las credenciales al candidato manualmente.",
+          )
           return
         } else {
           msg = `⚠ Error: ${raw}`
@@ -782,28 +824,28 @@ export default function AdmissionsBook() {
                     </div>
                   </div>
                   <div className="form-field">
-                    <label>EXPEDIENTE:</label> <span>{detailData.fileNumber}</span>
+                    <span>EXPEDIENTE:</span> <span>{detailData.fileNumber}</span>
                   </div>
                   <div className="form-field">
-                    <label>NOMBRE:</label> <span>{detailData.applicantName}</span>
+                    <span>NOMBRE:</span> <span>{detailData.applicantName}</span>
                   </div>
                   <div className="form-field">
-                    <label>FECHA:</label> <span>{detailData.date}</span>
+                    <span>FECHA:</span> <span>{detailData.date}</span>
                   </div>
                   <div className="form-field">
-                    <label>NOTAS:</label>
+                    <span>NOTAS:</span>
                     <span style={{ fontFamily: "var(--font-marker)" }}>
                       {detailData.appearanceNotes}
                     </span>
                   </div>
                   <div className="form-field">
-                    <label>BIOMETRÍA:</label>
+                    <span>BIOMETRÍA:</span>
                     <span className={detailData.fingerprintsScanned ? "biometrics-ok" : ""}>
                       {detailData.fingerprintsScanned ? "VERIFICADO" : "PENDIENTE"}
                     </span>
                   </div>
                   <div className="form-field">
-                    <label>CAMPAMENTO:</label>
+                    <span>CAMPAMENTO:</span>
                     <span style={{ fontWeight: "bold" }}>
                       {camps.find((c) => String(c.id) === String(detailData.campId))?.name ??
                         `BASE #${detailData.campId || "?"}`}
@@ -844,7 +886,7 @@ export default function AdmissionsBook() {
                       >
                         <div className="ai-evaluation-section">
                           <div className="form-field">
-                            <label>SCORE IA:</label>
+                            <span>SCORE IA:</span>
                             <span
                               style={{
                                 color:
@@ -858,7 +900,7 @@ export default function AdmissionsBook() {
                             </span>
                           </div>
                           <div className="form-field">
-                            <label>SUGERENCIA:</label>
+                            <span>SUGERENCIA:</span>
                             <span>
                               {detailData.suggestedDecision === "ACCEPT" ? "ACEPTAR" : "RECHAZAR"}
                             </span>
@@ -867,7 +909,7 @@ export default function AdmissionsBook() {
                             className="form-field"
                             style={{ display: "flex", flexDirection: "column" }}
                           >
-                            <label style={{ marginBottom: "5px" }}>ANÁLISIS:</label>
+                            <div style={{ marginBottom: "5px" }}>ANÁLISIS:</div>
                             <span
                               style={{
                                 fontFamily: "var(--font-typewriter)",
@@ -879,7 +921,7 @@ export default function AdmissionsBook() {
                             </span>
                           </div>
                           <div className="form-field">
-                            <label>REGLAS:</label>
+                            <span>REGLAS:</span>
                             <ul
                               style={{
                                 fontSize: "0.9em",
@@ -906,10 +948,14 @@ export default function AdmissionsBook() {
                         </div>
 
                         <div className="form-field comments-field" style={{ marginTop: "10px" }}>
-                          <label style={{ display: "block", marginBottom: "5px" }}>
+                          <label
+                            htmlFor="field-912"
+                            style={{ display: "block", marginBottom: "5px" }}
+                          >
                             COMENTARIOS (OPCIONAL):
                           </label>
                           <textarea
+                            id="field-912"
                             className="vintage-input"
                             value={adminNotes}
                             onChange={(event) => setAdminNotes(event.target.value)}
@@ -920,11 +966,18 @@ export default function AdmissionsBook() {
                       </div>
 
                       {decisionError && (
-                        <div style={{
-                          background: "rgba(156,39,32,0.12)", border: "1px solid #9c2720",
-                          color: "#9c2720", fontFamily: "var(--font-mono)", fontSize: "0.7rem",
-                          padding: "6px 10px", marginBottom: "8px", borderRadius: "3px",
-                        }}>
+                        <div
+                          style={{
+                            background: "rgba(156,39,32,0.12)",
+                            border: "1px solid #9c2720",
+                            color: "#9c2720",
+                            fontFamily: "var(--font-mono)",
+                            fontSize: "0.7rem",
+                            padding: "6px 10px",
+                            marginBottom: "8px",
+                            borderRadius: "3px",
+                          }}
+                        >
                           ⚠ {decisionError}
                         </div>
                       )}
@@ -973,44 +1026,101 @@ export default function AdmissionsBook() {
                       </div>
 
                       {!accountDone ? (
-                        <div style={{ width: "100%", marginTop: "60px", fontFamily: "var(--font-mono)" }}>
-                          <p style={{ fontSize: "0.8rem", color: "#444", marginBottom: "16px", textAlign: "center" }}>
+                        <div
+                          style={{
+                            width: "100%",
+                            marginTop: "60px",
+                            fontFamily: "var(--font-mono)",
+                          }}
+                        >
+                          <p
+                            style={{
+                              fontSize: "0.8rem",
+                              color: "#444",
+                              marginBottom: "16px",
+                              textAlign: "center",
+                            }}
+                          >
                             CREAR CUENTA DE ACCESO Y ENVIAR CREDENCIALES AL CORREO REGISTRADO
                           </p>
                           {detailData.contactEmail ? (
                             <>
                               <div style={{ marginBottom: "12px" }}>
-                                <label style={{ display: "block", fontSize: "0.7rem", fontWeight: "bold", marginBottom: "4px", color: "#333" }}>
+                                <div
+                                  style={{
+                                    display: "block",
+                                    fontSize: "0.7rem",
+                                    fontWeight: "bold",
+                                    marginBottom: "4px",
+                                    color: "#333",
+                                  }}
+                                >
                                   CORREO DESTINO
-                                </label>
-                                <div style={{ background: "#e8e0d4", border: "1px solid #bbb", padding: "6px 10px", fontSize: "0.8rem", color: "#555" }}>
+                                </div>
+                                <div
+                                  style={{
+                                    background: "#e8e0d4",
+                                    border: "1px solid #bbb",
+                                    padding: "6px 10px",
+                                    fontSize: "0.8rem",
+                                    color: "#555",
+                                  }}
+                                >
                                   {detailData.contactEmail}
                                 </div>
                               </div>
                               <div style={{ marginBottom: "12px" }}>
-                                <label style={{ display: "block", fontSize: "0.7rem", fontWeight: "bold", marginBottom: "4px", color: "#333" }}>
+                                <div
+                                  style={{
+                                    display: "block",
+                                    fontSize: "0.7rem",
+                                    fontWeight: "bold",
+                                    marginBottom: "4px",
+                                    color: "#333",
+                                  }}
+                                >
                                   NOMBRE DE USUARIO
-                                </label>
+                                </div>
                                 <input
                                   className="vintage-input"
                                   value={accountUsername}
                                   onChange={(e) => setAccountUsername(e.target.value)}
-                                  style={{ width: "100%", boxSizing: "border-box", fontSize: "0.85rem" }}
+                                  style={{
+                                    width: "100%",
+                                    boxSizing: "border-box",
+                                    fontSize: "0.85rem",
+                                  }}
                                   maxLength={30}
                                 />
                               </div>
                               {accountError && (
-                                <div style={{ color: "#9c2720", fontSize: "0.7rem", marginBottom: "10px" }}>
+                                <div
+                                  style={{
+                                    color: "#9c2720",
+                                    fontSize: "0.7rem",
+                                    marginBottom: "10px",
+                                  }}
+                                >
                                   ⚠ {accountError}
                                 </div>
                               )}
-                              <div className="binder-footer" style={{ position: "static", marginTop: "16px", gap: "12px", flexDirection: "column" }}>
+                              <div
+                                className="binder-footer"
+                                style={{
+                                  position: "static",
+                                  marginTop: "16px",
+                                  gap: "12px",
+                                  flexDirection: "column",
+                                }}
+                              >
                                 <button
                                   className="book-archive-btn"
                                   onClick={() => void handleCreateAccount()}
                                   disabled={isCreatingAccount}
                                 >
-                                  {isCreatingAccount ? "CREANDO CUENTA..." : "CREAR CUENTA Y ENVIAR EMAIL"}
+                                  {isCreatingAccount
+                                    ? "CREANDO CUENTA..."
+                                    : "CREAR CUENTA Y ENVIAR EMAIL"}
                                 </button>
                                 <button
                                   className="book-archive-btn book-archive-btn--secondary"
@@ -1022,10 +1132,24 @@ export default function AdmissionsBook() {
                             </>
                           ) : (
                             <>
-                              <p style={{ color: "#9c2720", fontSize: "0.75rem", textAlign: "center", marginBottom: "16px" }}>
+                              <p
+                                style={{
+                                  color: "#9c2720",
+                                  fontSize: "0.75rem",
+                                  textAlign: "center",
+                                  marginBottom: "16px",
+                                }}
+                              >
                                 ⚠ Sin correo registrado — no se puede crear cuenta automáticamente.
                               </p>
-                              <div className="binder-footer" style={{ position: "static", marginTop: "8px", justifyContent: "center" }}>
+                              <div
+                                className="binder-footer"
+                                style={{
+                                  position: "static",
+                                  marginTop: "8px",
+                                  justifyContent: "center",
+                                }}
+                              >
                                 <button className="book-archive-btn" onClick={archiveAdmission}>
                                   ARCHIVAR EXPEDIENTE
                                 </button>
@@ -1034,13 +1158,35 @@ export default function AdmissionsBook() {
                           )}
                         </div>
                       ) : (
-                        <div style={{ marginTop: "60px", textAlign: "center", fontFamily: "var(--font-mono)" }}>
-                          <div style={{ fontSize: "2rem", color: accountError ? "var(--accent-warning)" : "var(--accent-mil)", marginBottom: "12px" }}>
+                        <div
+                          style={{
+                            marginTop: "60px",
+                            textAlign: "center",
+                            fontFamily: "var(--font-mono)",
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: "2rem",
+                              color: accountError ? "var(--accent-warning)" : "var(--accent-mil)",
+                              marginBottom: "12px",
+                            }}
+                          >
                             {accountError ? "⚠" : "✓"}
                           </div>
-                          <p style={{ fontWeight: "bold", color: "#333", marginBottom: "6px" }}>CUENTA CREADA EXITOSAMENTE</p>
+                          <p style={{ fontWeight: "bold", color: "#333", marginBottom: "6px" }}>
+                            CUENTA CREADA EXITOSAMENTE
+                          </p>
                           {accountError ? (
-                            <p style={{ fontSize: "0.75rem", color: "#9c2720", border: "1px solid #9c2720", padding: "8px", marginBottom: "12px" }}>
+                            <p
+                              style={{
+                                fontSize: "0.75rem",
+                                color: "#9c2720",
+                                border: "1px solid #9c2720",
+                                padding: "8px",
+                                marginBottom: "12px",
+                              }}
+                            >
                               {accountError}
                             </p>
                           ) : (
@@ -1048,7 +1194,14 @@ export default function AdmissionsBook() {
                               Se enviaron las credenciales a {detailData.contactEmail}
                             </p>
                           )}
-                          <div className="binder-footer" style={{ position: "static", marginTop: "20px", justifyContent: "center" }}>
+                          <div
+                            className="binder-footer"
+                            style={{
+                              position: "static",
+                              marginTop: "20px",
+                              justifyContent: "center",
+                            }}
+                          >
                             <button className="book-archive-btn" onClick={archiveAdmission}>
                               ARCHIVAR Y CONTINUAR
                             </button>
@@ -1098,8 +1251,13 @@ export default function AdmissionsBook() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             style={{
-              position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.85)",
-              zIndex: 9999, display: "flex", justifyContent: "center", alignItems: "center",
+              position: "fixed",
+              inset: 0,
+              backgroundColor: "rgba(0,0,0,0.85)",
+              zIndex: 9999,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
               padding: "20px",
             }}
           >
@@ -1108,33 +1266,136 @@ export default function AdmissionsBook() {
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.92, y: 20 }}
               style={{
-                background: "#0e0d0c", border: "2px solid #c27c2f", color: "#fff",
-                fontFamily: "var(--font-mono)", width: "100%", maxWidth: "520px",
-                boxShadow: "0 0 40px rgba(194,124,47,0.2)", borderRadius: "4px", overflow: "hidden",
+                background: "#0e0d0c",
+                border: "2px solid #c27c2f",
+                color: "#fff",
+                fontFamily: "var(--font-mono)",
+                width: "100%",
+                maxWidth: "520px",
+                boxShadow: "0 0 40px rgba(194,124,47,0.2)",
+                borderRadius: "4px",
+                overflow: "hidden",
               }}
             >
               {/* Header */}
-              <div style={{ background: "#1a160f", borderBottom: "2px solid #c27c2f", padding: "16px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div
+                style={{
+                  background: "#1a160f",
+                  borderBottom: "2px solid #c27c2f",
+                  padding: "16px 24px",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
                 <div>
-                  <div style={{ fontSize: "0.65rem", color: "#c27c2f", letterSpacing: "0.15em", marginBottom: "2px" }}>APROBACIÓN — {detailData.applicantName.toUpperCase()}</div>
-                  <h3 style={{ margin: 0, color: "#fca311", fontSize: "1rem", fontFamily: "var(--font-typewriter)" }}>ASIGNAR CAMPAMENTO DESTINO</h3>
+                  <div
+                    style={{
+                      fontSize: "0.65rem",
+                      color: "#c27c2f",
+                      letterSpacing: "0.15em",
+                      marginBottom: "2px",
+                    }}
+                  >
+                    APROBACIÓN — {detailData.applicantName.toUpperCase()}
+                  </div>
+                  <h3
+                    style={{
+                      margin: 0,
+                      color: "#fca311",
+                      fontSize: "1rem",
+                      fontFamily: "var(--font-typewriter)",
+                    }}
+                  >
+                    ASIGNAR CAMPAMENTO DESTINO
+                  </h3>
                 </div>
-                <button onClick={() => setShowCampModal(false)} style={{ background: "transparent", border: "none", color: "#888", fontSize: "1.2rem", cursor: "pointer", lineHeight: 1 }}>✕</button>
+                <button
+                  onClick={() => setShowCampModal(false)}
+                  style={{
+                    background: "transparent",
+                    border: "none",
+                    color: "#888",
+                    fontSize: "1.2rem",
+                    cursor: "pointer",
+                    lineHeight: 1,
+                  }}
+                >
+                  ✕
+                </button>
               </div>
 
               {/* Score bar */}
-              <div style={{ padding: "12px 24px", background: "#161310", borderBottom: "1px solid #333", display: "flex", alignItems: "center", gap: "12px" }}>
-                <span style={{ fontSize: "0.65rem", color: "#ab9e8b", textTransform: "uppercase", letterSpacing: "0.1em" }}>Puntuación IA:</span>
-                <div style={{ flex: 1, height: "6px", background: "#2a2520", borderRadius: "3px", overflow: "hidden" }}>
-                  <div style={{ height: "100%", width: `${detailData.aiScore}%`, background: detailData.aiScore >= 70 ? "#4c6351" : detailData.aiScore >= 50 ? "#c27c2f" : "#9c2720", transition: "width 0.6s" }} />
+              <div
+                style={{
+                  padding: "12px 24px",
+                  background: "#161310",
+                  borderBottom: "1px solid #333",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: "0.65rem",
+                    color: "#ab9e8b",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.1em",
+                  }}
+                >
+                  Puntuación IA:
+                </span>
+                <div
+                  style={{
+                    flex: 1,
+                    height: "6px",
+                    background: "#2a2520",
+                    borderRadius: "3px",
+                    overflow: "hidden",
+                  }}
+                >
+                  <div
+                    style={{
+                      height: "100%",
+                      width: `${detailData.aiScore}%`,
+                      background:
+                        detailData.aiScore >= 70
+                          ? "#4c6351"
+                          : detailData.aiScore >= 50
+                            ? "#c27c2f"
+                            : "#9c2720",
+                      transition: "width 0.6s",
+                    }}
+                  />
                 </div>
-                <span style={{ fontSize: "0.8rem", fontWeight: "bold", color: detailData.aiScore >= 70 ? "#6abf7b" : "#fca311", minWidth: "36px", textAlign: "right" }}>{detailData.aiScore}/100</span>
+                <span
+                  style={{
+                    fontSize: "0.8rem",
+                    fontWeight: "bold",
+                    color: detailData.aiScore >= 70 ? "#6abf7b" : "#fca311",
+                    minWidth: "36px",
+                    textAlign: "right",
+                  }}
+                >
+                  {detailData.aiScore}/100
+                </span>
               </div>
 
               {/* Camps list */}
               <div style={{ padding: "16px 24px", maxHeight: "320px", overflowY: "auto" }}>
-                <p style={{ fontSize: "0.65rem", color: "#ab9e8b", textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 0, marginBottom: "12px" }}>
-                  Seleccione el campamento de destino — el indicado es donde el solicitante aplicó originalmente:
+                <p
+                  style={{
+                    fontSize: "0.65rem",
+                    color: "#ab9e8b",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.1em",
+                    marginTop: 0,
+                    marginBottom: "12px",
+                  }}
+                >
+                  Seleccione el campamento de destino — el indicado es donde el solicitante aplicó
+                  originalmente:
                 </p>
                 {camps.map((camp) => {
                   const isOriginal = String(camp.id) === String(detailData.campId)
@@ -1143,36 +1404,95 @@ export default function AdmissionsBook() {
                   const compat = isOriginal
                     ? detailData.aiScore
                     : Math.max(30, Math.round(detailData.aiScore * 0.75))
-                  const compatColor = compat >= 70 ? "#6abf7b" : compat >= 50 ? "#fca311" : "#e06050"
+                  const compatColor =
+                    compat >= 70 ? "#6abf7b" : compat >= 50 ? "#fca311" : "#e06050"
                   return (
                     <div
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => e.key === "Enter" && setSelectedCampId(String(camp.id))}
                       key={camp.id}
                       onClick={() => setSelectedCampId(String(camp.id))}
                       style={{
-                        padding: "12px 14px", marginBottom: "8px", cursor: "pointer", borderRadius: "3px",
+                        padding: "12px 14px",
+                        marginBottom: "8px",
+                        cursor: "pointer",
+                        borderRadius: "3px",
                         border: isSelected ? "2px solid #c27c2f" : "1px solid #333",
                         background: isSelected ? "#1e1710" : "#141210",
                         transition: "all 0.15s",
-                        display: "flex", alignItems: "center", gap: "12px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "12px",
                       }}
                     >
-                      <input type="radio" checked={isSelected} onChange={() => setSelectedCampId(String(camp.id))} style={{ accentColor: "#c27c2f" }} />
+                      <input
+                        type="radio"
+                        checked={isSelected}
+                        onChange={() => setSelectedCampId(String(camp.id))}
+                        style={{ accentColor: "#c27c2f" }}
+                      />
                       <div style={{ flex: 1 }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
-                          <span style={{ fontWeight: "bold", fontSize: "0.85rem", color: isSelected ? "#fca311" : "#ddd" }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            marginBottom: "4px",
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontWeight: "bold",
+                              fontSize: "0.85rem",
+                              color: isSelected ? "#fca311" : "#ddd",
+                            }}
+                          >
                             {camp.name?.toUpperCase() ?? `CAMPAMENTO ${camp.id}`}
                           </span>
                           {isOriginal && (
-                            <span style={{ fontSize: "0.6rem", background: "#c27c2f", color: "#000", padding: "1px 6px", borderRadius: "2px", fontWeight: "bold" }}>
+                            <span
+                              style={{
+                                fontSize: "0.6rem",
+                                background: "#c27c2f",
+                                color: "#000",
+                                padding: "1px 6px",
+                                borderRadius: "2px",
+                                fontWeight: "bold",
+                              }}
+                            >
                               SOLICITADO
                             </span>
                           )}
                         </div>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <div style={{ flex: 1, height: "4px", background: "#2a2520", borderRadius: "2px", overflow: "hidden" }}>
-                            <div style={{ height: "100%", width: `${compat}%`, background: compatColor }} />
+                          <div
+                            style={{
+                              flex: 1,
+                              height: "4px",
+                              background: "#2a2520",
+                              borderRadius: "2px",
+                              overflow: "hidden",
+                            }}
+                          >
+                            <div
+                              style={{
+                                height: "100%",
+                                width: `${compat}%`,
+                                background: compatColor,
+                              }}
+                            />
                           </div>
-                          <span style={{ fontSize: "0.7rem", color: compatColor, minWidth: "36px", textAlign: "right" }}>{compat}%</span>
+                          <span
+                            style={{
+                              fontSize: "0.7rem",
+                              color: compatColor,
+                              minWidth: "36px",
+                              textAlign: "right",
+                            }}
+                          >
+                            {compat}%
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -1181,10 +1501,29 @@ export default function AdmissionsBook() {
               </div>
 
               {/* Footer buttons */}
-              <div style={{ padding: "16px 24px", borderTop: "1px solid #333", display: "flex", gap: "12px", justifyContent: "flex-end" }}>
+              <div
+                style={{
+                  padding: "16px 24px",
+                  borderTop: "1px solid #333",
+                  display: "flex",
+                  gap: "12px",
+                  justifyContent: "flex-end",
+                }}
+              >
                 <button
-                  onClick={() => { setShowCampModal(false); setDecision(null) }}
-                  style={{ padding: "10px 20px", background: "transparent", color: "#aaa", border: "1px solid #555", cursor: "pointer", fontFamily: "var(--font-mono)", fontSize: "0.8rem" }}
+                  onClick={() => {
+                    setShowCampModal(false)
+                    setDecision(null)
+                  }}
+                  style={{
+                    padding: "10px 20px",
+                    background: "transparent",
+                    color: "#aaa",
+                    border: "1px solid #555",
+                    cursor: "pointer",
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "0.8rem",
+                  }}
                 >
                   CANCELAR
                 </button>
@@ -1192,10 +1531,15 @@ export default function AdmissionsBook() {
                   disabled={!selectedCampId}
                   onClick={() => void handleAcceptConfirm()}
                   style={{
-                    padding: "10px 24px", background: selectedCampId ? "#c27c2f" : "#2a2520",
-                    color: selectedCampId ? "#000" : "#555", border: "none", fontWeight: "bold",
-                    cursor: selectedCampId ? "pointer" : "not-allowed", fontFamily: "var(--font-mono)",
-                    fontSize: "0.85rem", borderRadius: "2px",
+                    padding: "10px 24px",
+                    background: selectedCampId ? "#c27c2f" : "#2a2520",
+                    color: selectedCampId ? "#000" : "#555",
+                    border: "none",
+                    fontWeight: "bold",
+                    cursor: selectedCampId ? "pointer" : "not-allowed",
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "0.85rem",
+                    borderRadius: "2px",
                   }}
                 >
                   CONFIRMAR INGRESO

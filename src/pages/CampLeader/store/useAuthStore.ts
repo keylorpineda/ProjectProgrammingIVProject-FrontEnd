@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * CampLeader Auth Store — reads the real JWT session from the global app store.
  */

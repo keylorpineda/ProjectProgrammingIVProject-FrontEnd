@@ -1,25 +1,32 @@
 import { motion, AnimatePresence } from "framer-motion"
-import { useAuth } from "@/pages/Admin/context/AuthContext"
-import { useInventory, useInventoryMovements, useCamp, useInventoryStatus } from "@/features/worker/hooks/useWorkerAPI"
+
 import type { InventoryItem } from "@/types/worker.api.types"
+
+import {
+  useInventory,
+  useInventoryMovements,
+  useCamp,
+  useInventoryStatus,
+} from "@/features/worker/hooks/useWorkerAPI"
+import { useAuth } from "@/pages/Admin/context/AuthContext"
 import "./WorkerViews.css"
 
 const MOVEMENT_LABELS: Record<string, string> = {
-  addition:    "ENTRADA",
-  removal:     "SALIDA",
-  adjustment:  "AJUSTE",
-  transfer:    "TRASLADO",
+  addition: "ENTRADA",
+  removal: "SALIDA",
+  adjustment: "AJUSTE",
+  transfer: "TRASLADO",
   consumption: "CONSUMO",
-  production:  "PRODUCCIÓN",
+  production: "PRODUCCIÓN",
 }
 
 const CATEGORY_ICON: Record<string, string> = {
-  food:     "🌽",
-  water:    "💧",
+  food: "🌽",
+  water: "💧",
   medicine: "💊",
-  tools:    "🔧",
-  weapons:  "⚔️",
-  fuel:     "⛽",
+  tools: "🔧",
+  weapons: "⚔️",
+  fuel: "⛽",
   clothing: "👕",
 }
 
@@ -29,11 +36,15 @@ const getStatus = (item: InventoryItem): "ok" | "warning" | "critical" => {
   return "ok"
 }
 
-const STATUS_LABELS: Record<string, string> = { ok: "NORMAL", warning: "ESCASO", critical: "CRÍTICO" }
+const STATUS_LABELS: Record<string, string> = {
+  ok: "NORMAL",
+  warning: "ESCASO",
+  critical: "CRÍTICO",
+}
 
 const STATUS_COLORS: Record<string, string> = {
-  ok:       "var(--accent-approved)",
-  warning:  "var(--accent-warning)",
+  ok: "var(--accent-approved)",
+  warning: "var(--accent-warning)",
   critical: "var(--accent-critical)",
 }
 
@@ -66,26 +77,19 @@ function StockBar({ item, index }: { item: InventoryItem & { status: string }; i
             </motion.span>
           ) : null}
         </div>
-        <div className="wv-res-category">
-          {item.resource?.category?.toUpperCase() ?? "—"}
-        </div>
+        <div className="wv-res-category">{item.resource?.category?.toUpperCase() ?? "—"}</div>
       </div>
 
       {/* Qty + bar */}
       <div className="wv-res-bar-zone">
         <div className="wv-res-qty-row">
-          <span style={{ color, fontWeight: "bold" }}>
-            {item.current_quantity}
-          </span>
+          <span style={{ color, fontWeight: "bold" }}>{item.current_quantity}</span>
           <span className="wv-res-unit">{item.resource?.unit ?? ""}</span>
           <span className="wv-res-min-label">/ mín {item.minimum_stock_required}</span>
         </div>
         <div className="wv-res-bar-track">
           {/* minimum marker */}
-          <div
-            className="wv-res-bar-min"
-            style={{ left: `${minPct}%` }}
-          />
+          <div className="wv-res-bar-min" style={{ left: `${minPct}%` }} />
           <motion.div
             className="wv-res-bar-fill"
             style={{ background: color, boxShadow: `0 0 6px ${color}40` }}
@@ -97,7 +101,10 @@ function StockBar({ item, index }: { item: InventoryItem & { status: string }; i
       </div>
 
       {/* Badge */}
-      <span className={`wv-badge wv-badge-${item.status}`} style={{ minWidth: 72, textAlign: "center" }}>
+      <span
+        className={`wv-badge wv-badge-${item.status}`}
+        style={{ minWidth: 72, textAlign: "center" }}
+      >
         {STATUS_LABELS[item.status]}
       </span>
     </motion.div>
@@ -119,8 +126,8 @@ export default function WorkerResources() {
   }))
 
   const criticalCount = rows.filter((r) => r.status === "critical").length
-  const warningCount  = rows.filter((r) => r.status === "warning").length
-  const okCount       = rows.filter((r) => r.status === "ok").length
+  const warningCount = rows.filter((r) => r.status === "warning").length
+  const okCount = rows.filter((r) => r.status === "ok").length
 
   return (
     <div className="wv-page">
@@ -163,7 +170,7 @@ export default function WorkerResources() {
           style={{ borderColor: "var(--accent-warning)" }}
           initial={{ scale: 0.85, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.10, type: "spring", stiffness: 160 }}
+          transition={{ delay: 0.1, type: "spring", stiffness: 160 }}
         >
           <div className="wv-res-stat-num" style={{ color: "var(--accent-warning)" }}>
             {warningCount}
@@ -194,7 +201,7 @@ export default function WorkerResources() {
           style={{ borderColor: "var(--panel-border-bright)" }}
           initial={{ scale: 0.85, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.20, type: "spring", stiffness: 160 }}
+          transition={{ delay: 0.2, type: "spring", stiffness: 160 }}
         >
           <div className="wv-res-stat-num" style={{ color: "var(--text-amber)" }}>
             {stats?.total ?? rows.length}
@@ -264,8 +271,7 @@ export default function WorkerResources() {
                 <span
                   className="wv-mv-qty"
                   style={{
-                    color:
-                      m.quantity > 0 ? "var(--accent-approved)" : "var(--accent-critical)",
+                    color: m.quantity > 0 ? "var(--accent-approved)" : "var(--accent-critical)",
                   }}
                 >
                   {m.quantity > 0 ? "+" : ""}

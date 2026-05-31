@@ -1,5 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react"
+
 import { campsService, TacticalMapApiError } from "../services/campsService"
+
 import type { Camp, ExpeditionEvent, HazardArea, TransferLine } from "../types/camp"
 
 interface CampContextType {
@@ -115,6 +117,7 @@ export const CampProvider = ({ children }: { children: React.ReactNode }) => {
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useCamps = () => {
   const context = useContext(CampContext)
   if (!context) throw new Error("useCamps must be used within a CampProvider")

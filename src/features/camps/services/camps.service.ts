@@ -1,5 +1,6 @@
-import api from "@/config/api"
 import type { Camp } from "@/types/api.types"
+
+import api from "@/config/api"
 
 export interface CreateCampBody {
   name: string

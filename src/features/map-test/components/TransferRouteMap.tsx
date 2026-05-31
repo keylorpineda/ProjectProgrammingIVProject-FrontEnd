@@ -1,6 +1,6 @@
+import * as L from "leaflet"
 import { useEffect } from "react"
 import { MapContainer, Marker, Polyline, TileLayer, useMap } from "react-leaflet"
-import L from "leaflet"
 import "leaflet/dist/leaflet.css"
 import "../styles/map-widgets.css"
 

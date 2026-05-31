@@ -1,4 +1,5 @@
 import axios from "axios"
+
 import { useTokenStore } from "@/store/useAuthStore"
 
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1"
@@ -171,7 +172,8 @@ export const resourcesService = {
     const { data } = await api.get(`/resources/inventory/${campId}`)
     // Normalize to the shape the UI expects
     return Array.isArray(data)
-      ? data.map((item: any) => ({
+      ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        data.map((item: any) => ({
           camp_id: item.camp_id ?? campId,
           resource_id: item.resource?.id ?? item.resource_id,
           current_quantity: Number(item.current_quantity ?? 0),
@@ -205,6 +207,7 @@ export const usersService = {
     const { data } = await api.get("/users/persons", { params })
     const list = Array.isArray(data) ? data : (data.data ?? [])
     // Map to the shape the CampLeader UI expects
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return list.map((p: any) => ({
       id: p.id,
       username: `${p.first_name} ${p.last_name}`,
@@ -230,6 +233,7 @@ export const usersService = {
     try {
       const { data } = await api.get(`/dashboard/metrics/${campId}`)
       const resources = data?.warehouse?.inventory ?? []
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return resources.map((item: any) => ({
         resource_id: item.resource_id,
         resource_name: item.resource_name ?? "Recurso",

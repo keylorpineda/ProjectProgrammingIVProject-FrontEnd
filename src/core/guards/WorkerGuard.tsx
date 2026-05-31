@@ -1,4 +1,5 @@
 import { Navigate } from "react-router-dom"
+
 import { useAuth } from "@/pages/Admin/context/AuthContext"
 
 interface WorkerGuardProps {
@@ -9,12 +10,12 @@ interface WorkerGuardProps {
 function dashboardForRole(role: string | undefined): string | null {
   if (!role) return null
   const r = role.toLowerCase()
-  if (r === "worker")          return null          // handled by caller
-  if (r.includes("admin"))     return "/admin/dashboard"
-  if (r === "camp_leader")     return "/campleader/dashboard"
-  if (r === "camp_manager")    return "/camp-manager"
-  if (r === "resource_manager")return "/camp-manager"
-  if (r === "travel_manager")  return "/travel-manager/dashboard"
+  if (r === "worker") return null // handled by caller
+  if (r.includes("admin")) return "/admin/dashboard"
+  if (r === "camp_leader") return "/campleader/dashboard"
+  if (r === "camp_manager") return "/camp-manager"
+  if (r === "resource_manager") return "/camp-manager"
+  if (r === "travel_manager") return "/travel-manager/dashboard"
   return null
 }
 

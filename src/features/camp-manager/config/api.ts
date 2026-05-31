@@ -1,4 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from "axios"
+
 import { useTokenStore } from "@/store/useAuthStore"
 
 // Creamos la instancia real apuntando a la URL del backend

@@ -1,14 +1,6 @@
-import React from "react"
-import type { UseQueryResult } from "@tanstack/react-query";
 import { useQuery } from "@tanstack/react-query"
-import { useTokenStore } from "@/store/useAuthStore"
-import workerService, { setAuthToken } from "@/features/worker/services/workerService"
-import {
-  fallbackAssignedResources,
-  fallbackInventory,
-  fallbackMovements,
-  fallbackProfessions,
-} from "@/features/worker/workerFallbackData"
+import { useEffect, useMemo } from "react"
+
 import type {
   WorkerAssignedResource,
   ProfessionWithPersons,
@@ -22,6 +14,16 @@ import type {
   CampWithMetrics,
   MyProfile,
 } from "@/types/worker.api.types"
+import type { UseQueryResult } from "@tanstack/react-query"
+
+import workerService, { setAuthToken } from "@/features/worker/services/workerService"
+import {
+  fallbackAssignedResources,
+  fallbackInventory,
+  fallbackMovements,
+  fallbackProfessions,
+} from "@/features/worker/workerFallbackData"
+import { useTokenStore } from "@/store/useAuthStore"
 
 // Query keys factory
 export const workerQueryKeys = {
@@ -46,7 +48,7 @@ export const useAssignedResources = (): UseQueryResult<WorkerAssignedResource[],
   const token = useTokenStore((s) => s.token)
 
   // Set token for API calls
-  React.useEffect(() => {
+  useEffect(() => {
     setAuthToken(token)
   }, [token])
 
@@ -68,7 +70,7 @@ export const useAssignedResources = (): UseQueryResult<WorkerAssignedResource[],
 export const useProfessions = (): UseQueryResult<ProfessionWithPersons[], ApiError> => {
   const token = useTokenStore((s) => s.token)
 
-  React.useEffect(() => {
+  useEffect(() => {
     setAuthToken(token)
   }, [token])
 
@@ -92,7 +94,7 @@ export const useResources = (
 ): UseQueryResult<Resource[], ApiError> => {
   const token = useTokenStore((s) => s.token)
 
-  React.useEffect(() => {
+  useEffect(() => {
     setAuthToken(token)
   }, [token])
 
@@ -115,7 +117,7 @@ export const useInventory = (
 ): UseQueryResult<InventoryItem[], ApiError> => {
   const token = useTokenStore((s) => s.token)
 
-  React.useEffect(() => {
+  useEffect(() => {
     setAuthToken(token)
   }, [token])
 
@@ -143,7 +145,7 @@ export const useInventoryMovements = (
 ): UseQueryResult<InventoryMovement[], ApiError> => {
   const token = useTokenStore((s) => s.token)
 
-  React.useEffect(() => {
+  useEffect(() => {
     setAuthToken(token)
   }, [token])
 
@@ -167,7 +169,7 @@ export const useInventoryMovements = (
 export const useProfessionMetrics = () => {
   const { data: professions, isLoading, error } = useProfessions()
 
-  const metrics = React.useMemo(() => {
+  const metrics = useMemo(() => {
     if (!professions) return []
 
     return professions.map((prof) => {
@@ -204,7 +206,7 @@ export const useProfessionMetrics = () => {
 export const useInventoryStatus = (campId: string | number | null | undefined) => {
   const { data: inventory, isLoading, error } = useInventory(campId)
 
-  const stats = React.useMemo(() => {
+  const stats = useMemo(() => {
     if (!inventory) {
       return {
         total: 0,
@@ -243,7 +245,7 @@ export const useInventoryStatus = (campId: string | number | null | undefined) =
 export const useMyBadges = (): UseQueryResult<UserBadge[], ApiError> => {
   const token = useTokenStore((s) => s.token)
 
-  React.useEffect(() => {
+  useEffect(() => {
     setAuthToken(token)
   }, [token])
 
@@ -267,7 +269,7 @@ export const useDailyBalance = (
 ): UseQueryResult<DailyBalance, ApiError> => {
   const token = useTokenStore((s) => s.token)
 
-  React.useEffect(() => {
+  useEffect(() => {
     setAuthToken(token)
   }, [token])
 
@@ -293,7 +295,7 @@ export const useCamp = (
 ): UseQueryResult<CampWithMetrics, ApiError> => {
   const token = useTokenStore((s) => s.token)
 
-  React.useEffect(() => {
+  useEffect(() => {
     setAuthToken(token)
   }, [token])
 
@@ -317,7 +319,7 @@ export const useCamp = (
 export const useMyProfile = (): UseQueryResult<MyProfile, ApiError> => {
   const token = useTokenStore((s) => s.token)
 
-  React.useEffect(() => {
+  useEffect(() => {
     setAuthToken(token)
   }, [token])
 
@@ -339,7 +341,7 @@ export const useCampExplorations = (
 ): UseQueryResult<unknown[], ApiError> => {
   const token = useTokenStore((s) => s.token)
 
-  React.useEffect(() => {
+  useEffect(() => {
     setAuthToken(token)
   }, [token])
 

@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import { useState, useEffect } from "react"
 
 interface Props {
   userId: string | number
@@ -29,7 +29,8 @@ function MedalSVG() {
 
       {/* Star */}
       <text
-        x="60" y="97"
+        x="60"
+        y="97"
         textAnchor="middle"
         fontSize="28"
         fontFamily="serif"
@@ -40,7 +41,14 @@ function MedalSVG() {
       </text>
 
       {/* Shine */}
-      <ellipse cx="48" cy="74" rx="8" ry="4" fill="rgba(255,255,255,0.15)" transform="rotate(-30 48 74)" />
+      <ellipse
+        cx="48"
+        cy="74"
+        rx="8"
+        ry="4"
+        fill="rgba(255,255,255,0.15)"
+        transform="rotate(-30 48 74)"
+      />
 
       <defs>
         <radialGradient id="medalGrad" cx="40%" cy="35%" r="65%">
@@ -115,26 +123,64 @@ export default function FirstLoginAchievement({ userId, userName }: Props) {
             }}
           >
             {/* Corner decorations */}
-            <div style={{ position:"absolute", top:0, left:0, width:18, height:18,
-              borderTop:"2px solid #b38536", borderLeft:"2px solid #b38536" }} />
-            <div style={{ position:"absolute", top:0, right:0, width:18, height:18,
-              borderTop:"2px solid #b38536", borderRight:"2px solid #b38536" }} />
-            <div style={{ position:"absolute", bottom:0, left:0, width:18, height:18,
-              borderBottom:"2px solid #b38536", borderLeft:"2px solid #b38536" }} />
-            <div style={{ position:"absolute", bottom:0, right:0, width:18, height:18,
-              borderBottom:"2px solid #b38536", borderRight:"2px solid #b38536" }} />
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: 18,
+                height: 18,
+                borderTop: "2px solid #b38536",
+                borderLeft: "2px solid #b38536",
+              }}
+            />
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                right: 0,
+                width: 18,
+                height: 18,
+                borderTop: "2px solid #b38536",
+                borderRight: "2px solid #b38536",
+              }}
+            />
+            <div
+              style={{
+                position: "absolute",
+                bottom: 0,
+                left: 0,
+                width: 18,
+                height: 18,
+                borderBottom: "2px solid #b38536",
+                borderLeft: "2px solid #b38536",
+              }}
+            />
+            <div
+              style={{
+                position: "absolute",
+                bottom: 0,
+                right: 0,
+                width: 18,
+                height: 18,
+                borderBottom: "2px solid #b38536",
+                borderRight: "2px solid #b38536",
+              }}
+            />
 
             {/* Top tag */}
-            <div style={{
-              fontFamily: "'JetBrains Mono', monospace",
-              fontSize: "0.55rem",
-              letterSpacing: 3,
-              color: "rgba(179,133,54,0.6)",
-              textTransform: "uppercase",
-              marginBottom: 20,
-              padding: "3px 12px",
-              border: "1px solid rgba(179,133,54,0.2)",
-            }}>
+            <div
+              style={{
+                fontFamily: "'JetBrains Mono', monospace",
+                fontSize: "0.55rem",
+                letterSpacing: 3,
+                color: "rgba(179,133,54,0.6)",
+                textTransform: "uppercase",
+                marginBottom: 20,
+                padding: "3px 12px",
+                border: "1px solid rgba(179,133,54,0.2)",
+              }}
+            >
               LOGRO DESBLOQUEADO
             </div>
 
@@ -154,62 +200,73 @@ export default function FirstLoginAchievement({ userId, userName }: Props) {
             </motion.div>
 
             {/* Title */}
-            <div style={{
-              fontFamily: "'Special Elite', monospace",
-              fontSize: "1.35rem",
-              color: "#c8a84b",
-              letterSpacing: 3,
-              textTransform: "uppercase",
-              lineHeight: 1.2,
-              marginBottom: 6,
-            }}>
+            <div
+              style={{
+                fontFamily: "'Special Elite', monospace",
+                fontSize: "1.35rem",
+                color: "#c8a84b",
+                letterSpacing: 3,
+                textTransform: "uppercase",
+                lineHeight: 1.2,
+                marginBottom: 6,
+              }}
+            >
               PRIMER TRABAJO
             </div>
 
             {/* Stars */}
-            <div style={{
-              color: "#ffe080",
-              fontSize: "1rem",
-              letterSpacing: 6,
-              marginBottom: 14,
-            }}>
+            <div
+              style={{
+                color: "#ffe080",
+                fontSize: "1rem",
+                letterSpacing: 6,
+                marginBottom: 14,
+              }}
+            >
               ★★★★★
             </div>
 
             {/* Flavor text */}
-            <div style={{
-              fontFamily: "'JetBrains Mono', monospace",
-              fontSize: "0.65rem",
-              color: "rgba(154,144,128,0.7)",
-              letterSpacing: 1.2,
-              lineHeight: 1.7,
-              marginBottom: 8,
-              padding: "0 8px",
-            }}>
+            <div
+              style={{
+                fontFamily: "'JetBrains Mono', monospace",
+                fontSize: "0.65rem",
+                color: "rgba(154,144,128,0.7)",
+                letterSpacing: 1.2,
+                lineHeight: 1.7,
+                marginBottom: 8,
+                padding: "0 8px",
+              }}
+            >
               {userName
                 ? `BIENVENIDO, ${String(userName).toUpperCase()}.`
                 : "BIENVENIDO AL SISTEMA."}{" "}
               HAS INICIADO SESIÓN POR PRIMERA VEZ EN EL SISTEMA DE SUPERVIVENCIA.
             </div>
 
-            <div style={{
-              fontFamily: "'Special Elite', monospace",
-              fontSize: "0.7rem",
-              color: "rgba(200,168,75,0.45)",
-              letterSpacing: 1.5,
-              marginBottom: 28,
-              fontStyle: "italic",
-            }}>
-              "LA SUPERVIVENCIA COMIENZA CON UN SOLO PASO."
+            <div
+              style={{
+                fontFamily: "'Special Elite', monospace",
+                fontSize: "0.7rem",
+                color: "rgba(200,168,75,0.45)",
+                letterSpacing: 1.5,
+                marginBottom: 28,
+                fontStyle: "italic",
+              }}
+            >
+              LA SUPERVIVENCIA COMIENZA CON UN SOLO PASO.
             </div>
 
             {/* Horizontal rule */}
-            <div style={{
-              width: "100%",
-              height: 1,
-              background: "linear-gradient(to right, transparent, rgba(179,133,54,0.5), transparent)",
-              marginBottom: 20,
-            }} />
+            <div
+              style={{
+                width: "100%",
+                height: 1,
+                background:
+                  "linear-gradient(to right, transparent, rgba(179,133,54,0.5), transparent)",
+                marginBottom: 20,
+              }}
+            />
 
             {/* Accept button */}
             <motion.button

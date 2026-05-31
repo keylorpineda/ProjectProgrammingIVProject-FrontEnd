@@ -1,7 +1,8 @@
-import { Radar } from "lucide-react"
 import { motion } from "framer-motion"
-import { CampProvider, useCamps } from "../context/CampContext"
+import { Radar } from "lucide-react"
+
 import { MapDashboard } from "./MapDashboard"
+import { CampProvider, useCamps } from "../context/CampContext"
 
 const TacticalMapStateGate = () => {
   const { error, loading, reload } = useCamps()

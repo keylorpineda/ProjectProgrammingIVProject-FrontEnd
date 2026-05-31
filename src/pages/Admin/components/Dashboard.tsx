@@ -1,10 +1,14 @@
-import { useEffect, useMemo, useState } from "react"
-import { motion } from "framer-motion"
-import { getDashboardMetrics } from "@/features/dashboard/services/dashboard.service"
-import { getPendingAdmissions } from "@/features/admissions/services/admissions.service"
-import type { CriticalResource } from "@/types/api.types"
-import { useCamp } from "../context/CampContext"
 import { useQuery } from "@tanstack/react-query"
+import { motion } from "framer-motion"
+import { useEffect, useMemo, useState } from "react"
+
+import { useCamp } from "../context/CampContext"
+
+import type { CriticalResource } from "@/types/api.types"
+
+import { getPendingAdmissions } from "@/features/admissions/services/admissions.service"
+import { getDashboardMetrics } from "@/features/dashboard/services/dashboard.service"
+
 import "./Dashboard.css"
 
 const formatTime = () => {
@@ -19,7 +23,11 @@ export default function Dashboard() {
   const { activeCampId, camps } = useCamp()
   const [time, setTime] = useState<string>(formatTime())
 
-  const { data, isLoading: queryLoading, error: queryError } = useQuery({
+  const {
+    data,
+    isLoading: queryLoading,
+    error: queryError,
+  } = useQuery({
     queryKey: ["adminDashboard", activeCampId],
     queryFn: async () => {
       if (!activeCampId) return null

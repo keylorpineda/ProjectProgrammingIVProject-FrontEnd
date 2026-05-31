@@ -1,4 +1,5 @@
 import { Navigate } from "react-router-dom"
+
 import { useAuthStore } from "@/store/useAuthStore"
 
 interface CampLeaderGuardProps {
@@ -18,10 +19,10 @@ export default function CampLeaderGuard({ children }: CampLeaderGuardProps) {
   if (isCampLeader) return <>{children}</>
 
   // Known non-camp-leader roles → redirect to their area
-  if (role === "worker")          return <Navigate to="/worker/dashboard" replace />
-  if (role === "camp_manager")    return <Navigate to="/camp-manager" replace />
-  if (role === "resource_manager")return <Navigate to="/camp-manager" replace />
-  if (role === "travel_manager")  return <Navigate to="/travel-manager/dashboard" replace />
+  if (role === "worker") return <Navigate to="/worker/dashboard" replace />
+  if (role === "camp_manager") return <Navigate to="/camp-manager" replace />
+  if (role === "resource_manager") return <Navigate to="/camp-manager" replace />
+  if (role === "travel_manager") return <Navigate to="/travel-manager/dashboard" replace />
 
   return <Navigate to="/login" replace />
 }

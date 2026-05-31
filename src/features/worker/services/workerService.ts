@@ -1,5 +1,5 @@
 import axios from "axios"
-import api from "@/config/api"
+
 import type {
   WorkerAssignedResource,
   ProfessionWithPersons,
@@ -12,6 +12,8 @@ import type {
   CampWithMetrics,
   MyProfile,
 } from "@/types/worker.api.types"
+
+import api from "@/config/api"
 
 // The worker module previously had its own axios instance and `setAuthToken`.
 // Per docs/ALIGNMENT_SPEC.md §1.5 / P0-5 there is exactly one HTTP client and

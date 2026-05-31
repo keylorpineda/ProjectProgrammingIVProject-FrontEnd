@@ -1,8 +1,10 @@
-import type { ChangeEvent, FormEvent } from "react"
-import { useEffect, useRef, useState } from "react"
 import { isAxiosError } from "axios"
 import { motion } from "framer-motion"
 import { ShieldAlert, CheckCircle, Loader2 } from "lucide-react"
+import { useEffect, useRef, useState } from "react"
+
+import type { ChangeEvent, FormEvent } from "react"
+
 import { submitAdmission } from "@/features/admissions/services/admissions.service"
 import { uploadPersonImage } from "@/features/upload/services/upload.service"
 import "./AdmissionNew.css"
@@ -99,16 +101,16 @@ const formatPersonalHistory = (formData: AdmissionFormData): string => {
 
 // Referencia de habilidades para que los candidatos sepan qué ingresar por profesión
 const SKILL_REFERENCE: Array<{ role: string; keywords: string }> = [
-  { role: "Explorador",      keywords: "exploración, reconocimiento, supervivencia, navegación" },
-  { role: "Guardia",         keywords: "seguridad, combate, defensa, armas, vigilancia" },
-  { role: "Médico",          keywords: "medicina, primeros auxilios, enfermería, salud" },
-  { role: "Granjero",        keywords: "agricultura, cultivo, cosecha, ganadería" },
-  { role: "Cazador",         keywords: "caza, rastreo, armas, puntería, trampas" },
-  { role: "Rec. Agua",       keywords: "agua, plomería, hidráulica, ingeniería" },
-  { role: "Ingeniero",       keywords: "ingeniería, mecánica, reparación, electricidad" },
-  { role: "Cocinero",        keywords: "cocina, gastronomía, preparación de alimentos" },
-  { role: "Constructor",     keywords: "construcción, carpintería, albañilería, obras" },
-  { role: "Investigador",    keywords: "investigación, ciencia, análisis, laboratorio" },
+  { role: "Explorador", keywords: "exploración, reconocimiento, supervivencia, navegación" },
+  { role: "Guardia", keywords: "seguridad, combate, defensa, armas, vigilancia" },
+  { role: "Médico", keywords: "medicina, primeros auxilios, enfermería, salud" },
+  { role: "Granjero", keywords: "agricultura, cultivo, cosecha, ganadería" },
+  { role: "Cazador", keywords: "caza, rastreo, armas, puntería, trampas" },
+  { role: "Rec. Agua", keywords: "agua, plomería, hidráulica, ingeniería" },
+  { role: "Ingeniero", keywords: "ingeniería, mecánica, reparación, electricidad" },
+  { role: "Cocinero", keywords: "cocina, gastronomía, preparación de alimentos" },
+  { role: "Constructor", keywords: "construcción, carpintería, albañilería, obras" },
+  { role: "Investigador", keywords: "investigación, ciencia, análisis, laboratorio" },
 ]
 
 const splitName = (full: string): { first_name: string; last_name: string } => {
@@ -140,7 +142,6 @@ const extractApiErrorMessage = (error: unknown): string => {
 
   return "No se pudo registrar la admision. Intenta nuevamente."
 }
-
 
 export function AdmissionFormTemplate({
   formData,
@@ -202,7 +203,10 @@ export function AdmissionFormTemplate({
     <div className="scene-container">
       {phase === "intro" && (
         <div
+          role="button"
+          tabIndex={0}
           onClick={handleZoom}
+          onKeyDown={(e) => e.key === "Enter" && handleZoom()}
           style={{
             position: "absolute",
             inset: 0,
@@ -590,7 +594,7 @@ export function AdmissionFormTemplate({
                     required
                   />
                   {errors.salud ? <p className="field-error">{errors.salud}</p> : null}
-                  
+
                   <div style={{ marginTop: "1rem" }}>
                     <label htmlFor="salud_score" className="input-label">
                       Puntaje de Salud (1-100)
@@ -607,7 +611,10 @@ export function AdmissionFormTemplate({
                         disabled={isSubmitting}
                         style={{ flex: 1, accentColor: "var(--system-green)" }}
                       />
-                      <span className="typewriter-input" style={{ width: "60px", textAlign: "center", padding: "4px" }}>
+                      <span
+                        className="typewriter-input"
+                        style={{ width: "60px", textAlign: "center", padding: "4px" }}
+                      >
                         {formData.salud_score}
                       </span>
                     </div>
@@ -643,7 +650,7 @@ export function AdmissionFormTemplate({
                   {errors.condicion_fisica ? (
                     <p className="field-error">{errors.condicion_fisica}</p>
                   ) : null}
-                  
+
                   <div style={{ marginTop: "1rem" }}>
                     <label htmlFor="condicion_fisica_score" className="input-label">
                       Puntaje Físico (1-100)
@@ -660,7 +667,10 @@ export function AdmissionFormTemplate({
                         disabled={isSubmitting}
                         style={{ flex: 1, accentColor: "var(--system-green)" }}
                       />
-                      <span className="typewriter-input" style={{ width: "60px", textAlign: "center", padding: "4px" }}>
+                      <span
+                        className="typewriter-input"
+                        style={{ width: "60px", textAlign: "center", padding: "4px" }}
+                      >
                         {formData.condicion_fisica_score}
                       </span>
                     </div>
@@ -681,7 +691,14 @@ export function AdmissionFormTemplate({
                 >
                   <label htmlFor="habilidades" className="input-label">
                     Habilidades <span className="text-fedra-rust">*</span>
-                    <span style={{ fontWeight: 400, fontSize: "0.7rem", color: "var(--system-green)", marginLeft: 6 }}>
+                    <span
+                      style={{
+                        fontWeight: 400,
+                        fontSize: "0.7rem",
+                        color: "var(--system-green)",
+                        marginLeft: 6,
+                      }}
+                    >
                       — use términos en inglés separados por comas
                     </span>
                   </label>
@@ -698,24 +715,35 @@ export function AdmissionFormTemplate({
                   />
                   {errors.habilidades ? <p className="field-error">{errors.habilidades}</p> : null}
                   <details style={{ marginTop: "0.5rem" }}>
-                    <summary style={{ cursor: "pointer", fontSize: "0.7rem", color: "var(--fedra-muted)", letterSpacing: "0.08em" }}>
+                    <summary
+                      style={{
+                        cursor: "pointer",
+                        fontSize: "0.7rem",
+                        color: "var(--fedra-muted)",
+                        letterSpacing: "0.08em",
+                      }}
+                    >
                       ▶ VER PALABRAS CLAVE POR ROL
                     </summary>
-                    <div style={{
-                      marginTop: "0.5rem",
-                      display: "grid",
-                      gridTemplateColumns: "1fr 1fr",
-                      gap: "4px 12px",
-                      fontSize: "0.65rem",
-                      fontFamily: "var(--font-mono)",
-                      color: "var(--fedra-muted)",
-                      border: "1px solid var(--fedra-border)",
-                      padding: "8px",
-                      background: "rgba(0,0,0,0.3)",
-                    }}>
+                    <div
+                      style={{
+                        marginTop: "0.5rem",
+                        display: "grid",
+                        gridTemplateColumns: "1fr 1fr",
+                        gap: "4px 12px",
+                        fontSize: "0.65rem",
+                        fontFamily: "var(--font-mono)",
+                        color: "var(--fedra-muted)",
+                        border: "1px solid var(--fedra-border)",
+                        padding: "8px",
+                        background: "rgba(0,0,0,0.3)",
+                      }}
+                    >
                       {SKILL_REFERENCE.map(({ role, keywords }) => (
                         <div key={role}>
-                          <span style={{ color: "var(--system-green)", fontWeight: 600 }}>{role}:</span>{" "}
+                          <span style={{ color: "var(--system-green)", fontWeight: 600 }}>
+                            {role}:
+                          </span>{" "}
                           <span style={{ opacity: 0.8 }}>{keywords}</span>
                         </div>
                       ))}
@@ -810,7 +838,9 @@ export function AdmissionFormTemplate({
                         marginTop: "8px",
                         fontFamily: "var(--font-mono)",
                         fontSize: "0.75rem",
-                        color: formData.criminal_record ? "var(--fedra-rust)" : "var(--fedra-muted)",
+                        color: formData.criminal_record
+                          ? "var(--fedra-rust)"
+                          : "var(--fedra-muted)",
                         letterSpacing: "0.08em",
                       }}
                     >
@@ -825,7 +855,10 @@ export function AdmissionFormTemplate({
                       />
                       {formData.criminal_record ? "⚠ ANTECEDENTES PENALES" : "SIN ANTECEDENTES"}
                     </label>
-                    <p className="field-helper" style={{ fontSize: "0.65rem", opacity: 0.6, marginTop: 4 }}>
+                    <p
+                      className="field-helper"
+                      style={{ fontSize: "0.65rem", opacity: 0.6, marginTop: 4 }}
+                    >
                       Anula puntos de riesgo si aplica
                     </p>
                   </motion.div>
@@ -845,7 +878,14 @@ export function AdmissionFormTemplate({
                 >
                   <label htmlFor="psychological_evaluation" className="input-label">
                     Evaluación Psicológica (0-100)
-                    <span style={{ fontWeight: 400, fontSize: "0.68rem", color: "var(--fedra-muted)", marginLeft: 6 }}>
+                    <span
+                      style={{
+                        fontWeight: 400,
+                        fontSize: "0.68rem",
+                        color: "var(--fedra-muted)",
+                        marginLeft: 6,
+                      }}
+                    >
                       — estabilidad emocional estimada
                     </span>
                   </label>
@@ -861,7 +901,10 @@ export function AdmissionFormTemplate({
                       disabled={isSubmitting}
                       style={{ flex: 1, accentColor: "var(--system-green)" }}
                     />
-                    <span className="typewriter-input" style={{ width: "60px", textAlign: "center", padding: "4px" }}>
+                    <span
+                      className="typewriter-input"
+                      style={{ width: "60px", textAlign: "center", padding: "4px" }}
+                    >
                       {formData.psychological_evaluation}
                     </span>
                   </div>
@@ -976,18 +1019,27 @@ async function compressImage(file: File, maxDim = 1024, quality = 0.75): Promise
       canvas.width = Math.round(width * scale)
       canvas.height = Math.round(height * scale)
       const ctx = canvas.getContext("2d")
-      if (!ctx) { resolve(file); return }
+      if (!ctx) {
+        resolve(file)
+        return
+      }
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
       canvas.toBlob(
         (blob) => {
-          if (!blob) { resolve(file); return }
+          if (!blob) {
+            resolve(file)
+            return
+          }
           resolve(new File([blob], file.name.replace(/\.\w+$/, ".jpg"), { type: "image/jpeg" }))
         },
         "image/jpeg",
         quality,
       )
     }
-    img.onerror = () => { URL.revokeObjectURL(blobUrl); resolve(file) }
+    img.onerror = () => {
+      URL.revokeObjectURL(blobUrl)
+      resolve(file)
+    }
     img.src = blobUrl
   })
 }
@@ -995,7 +1047,9 @@ async function compressImage(file: File, maxDim = 1024, quality = 0.75): Promise
 export default function AdmissionNew() {
   const [formData, setFormData] = useState<AdmissionFormData>(initialFormData)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [uploadPhase, setUploadPhase] = useState<"idle" | "compressing" | "uploading" | "registering">("idle")
+  const [uploadPhase, setUploadPhase] = useState<
+    "idle" | "compressing" | "uploading" | "registering"
+  >("idle")
   const [errors, setErrors] = useState<AdmissionFormErrors>({})
   const [submitMessage, setSubmitMessage] = useState("")
   const [submitError, setSubmitError] = useState("")

@@ -2,14 +2,17 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
-import type React from "react"
-import { useEffect, useState } from "react"
-import { api } from "../config/api"
-import type { IntercampRequest } from "../types/api.types"
-import { Truck, ShieldAlert, Plus, Archive, Mail, Send } from "lucide-react"
-import { motion } from "framer-motion"
 import { useQuery } from "@tanstack/react-query"
+import { motion } from "framer-motion"
+import { Truck, ShieldAlert, Plus, Archive, Mail, Send } from "lucide-react"
+import { useEffect, useState } from "react"
+import { type FormEvent } from "react"
+
+import { api } from "../config/api"
+
+import type { IntercampRequest } from "../types/api.types"
 
 interface ManagerLogisticsProps {
   campId: string
@@ -22,7 +25,12 @@ export default function ManagerLogistics({
   onDataChanged,
   refreshTrigger,
 }: ManagerLogisticsProps) {
-  const { data: requests = [], isLoading: loading, error: queryError, refetch } = useQuery({
+  const {
+    data: requests = [],
+    isLoading: loading,
+    error: queryError,
+    refetch,
+  } = useQuery({
     queryKey: ["managerLogistics", campId],
     queryFn: async () => {
       const res = await api.get(`/transfers/requests/camp/${campId}`)
@@ -32,7 +40,9 @@ export default function ManagerLogistics({
   })
 
   const [errorState, setErrorState] = useState<string | null>(null)
-  const error = queryError ? (queryError as any).message || "Error al descargar bitácora de transferencias." : errorState
+  const error = queryError
+    ? (queryError as any).message || "Error al descargar bitácora de transferencias."
+    : errorState
 
   useEffect(() => {
     if (refreshTrigger > 0) refetch()
@@ -49,7 +59,7 @@ export default function ManagerLogistics({
   // Action Loading state
   const [actionId, setActionId] = useState<string | null>(null)
 
-  const handleCreateRequest = async (e: React.FormEvent) => {
+  const handleCreateRequest = async (e: FormEvent) => {
     e.preventDefault()
     if (requestAmount <= 0) {
       setErrorState("Especifique una cantidad de carga superior a cero.")
@@ -71,9 +81,9 @@ export default function ManagerLogistics({
         resource_details: [
           {
             resource_id: Number(selectedResource),
-            requested_quantity: Number(requestAmount)
-          }
-        ]
+            requested_quantity: Number(requestAmount),
+          },
+        ],
       })
       setShowRequestModal(false)
       setRequestNotes("")
@@ -114,14 +124,6 @@ export default function ManagerLogistics({
     }
   }
 
-  if (loading) {
-    return <div className="min-h-[400px]" />
-  }
-
-  // Filter requests to show incoming (to us) and outgoing (from us)
-  const incomingRequests = requests.filter((r) => r.camp_destination_id === campId)
-  const outgoingRequests = requests.filter((r) => r.camp_source_id === campId)
-
   // Fetch resources for the dropdown
   const { data: resourceTypes = [] } = useQuery({
     queryKey: ["allResources"],
@@ -133,8 +135,16 @@ export default function ManagerLogistics({
         setSelectedResource(String(items[0].id))
       }
       return items
-    }
+    },
   })
+
+  if (loading) {
+    return <div className="min-h-[400px]" />
+  }
+
+  // Filter requests to show incoming (to us) and outgoing (from us)
+  const incomingRequests = requests.filter((r) => r.camp_destination_id === campId)
+  const outgoingRequests = requests.filter((r) => r.camp_source_id === campId)
 
   const bunkerList = [
     { id: "1", name: "Bunker-Alfa" },
@@ -227,7 +237,8 @@ export default function ManagerLogistics({
                         </div>
                         <h5 className="font-black text-xl md:text-2xl text-[#c27c2f] uppercase leading-tight">
                           {req.resourceDetails && req.resourceDetails.length > 0
-                            ? req.resourceDetails[0]?.resource?.name || `Recurso #${req.resourceDetails[0]?.resource_id}`
+                            ? req.resourceDetails[0]?.resource?.name ||
+                              `Recurso #${req.resourceDetails[0]?.resource_id}`
                             : req.type}
                         </h5>
                       </div>
@@ -244,7 +255,10 @@ export default function ManagerLogistics({
                           PESO DE CARGA:
                         </span>
                         <span className="font-black text-xl md:text-2xl text-[#e0d8cc]">
-                          {req.resourceDetails && req.resourceDetails.length > 0 ? req.resourceDetails[0].requested_quantity : "-"} uds
+                          {req.resourceDetails && req.resourceDetails.length > 0
+                            ? req.resourceDetails[0].requested_quantity
+                            : "-"}{" "}
+                          uds
                         </span>
                       </div>
                       <div className="text-right">
@@ -259,7 +273,7 @@ export default function ManagerLogistics({
 
                     {req.notes && (
                       <p className="mt-3 text-sm italic text-zinc-450 border-l border-[#c27c2f] pl-2 uppercase">
-                        "{req.notes}"
+                        {req.notes}
                       </p>
                     )}
 
@@ -333,8 +347,9 @@ export default function ManagerLogistics({
                       </div>
                       <h5 className="font-black text-xl md:text-2xl text-[#e0d8cc] uppercase leading-tight">
                         {req.resourceDetails && req.resourceDetails.length > 0
-                            ? req.resourceDetails[0]?.resource?.name || `Recurso #${req.resourceDetails[0]?.resource_id}`
-                            : req.type}
+                          ? req.resourceDetails[0]?.resource?.name ||
+                            `Recurso #${req.resourceDetails[0]?.resource_id}`
+                          : req.type}
                       </h5>
                     </div>
                     <span className="px-4 py-2 text-sm md:text-base font-black uppercase tracking-widest rounded-sm border border-black bg-zinc-800 text-zinc-400">
@@ -348,7 +363,10 @@ export default function ManagerLogistics({
                         PESO ENVIADO:
                       </span>
                       <span className="font-black block text-zinc-200 text-xl md:text-2xl">
-                        {req.resourceDetails && req.resourceDetails.length > 0 ? req.resourceDetails[0].requested_quantity : "-"} uds
+                        {req.resourceDetails && req.resourceDetails.length > 0
+                          ? req.resourceDetails[0].requested_quantity
+                          : "-"}{" "}
+                        uds
                       </span>
                     </div>
                     <div className="text-right">
@@ -384,10 +402,14 @@ export default function ManagerLogistics({
 
             <form onSubmit={handleCreateRequest} className="space-y-6">
               <div className="space-y-2">
-                <label className="text-sm text-zinc-500 uppercase font-black block">
+                <label
+                  htmlFor="field-392"
+                  className="text-sm text-zinc-500 uppercase font-black block"
+                >
                   BÚNKER_DE_SUMINISTRO_ORIGEN:
                 </label>
                 <select
+                  id="field-392"
                   value={sourceBunker}
                   onChange={(e) => setSourceBunker(e.target.value)}
                   className="w-full bg-[#2a2824] border-4 border-black p-4 bg-transparent text-[#e0d8cc] outline-none text-base font-black font-mono transition uppercase shadow-[inset_0_0_10px_rgba(0,0,0,0.8)]"
@@ -401,10 +423,14 @@ export default function ManagerLogistics({
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm text-zinc-500 uppercase font-black block">
+                <label
+                  htmlFor="field-409"
+                  className="text-sm text-zinc-500 uppercase font-black block"
+                >
                   RECURSO_BODEGA_SOLICITADO:
                 </label>
                 <select
+                  id="field-409"
                   value={selectedResource}
                   onChange={(e) => setSelectedResource(e.target.value)}
                   className="w-full bg-[#2a2824] border-4 border-black p-4 bg-transparent text-[#e0d8cc] outline-none text-base font-black font-mono transition uppercase shadow-[inset_0_0_10px_rgba(0,0,0,0.8)]"
@@ -418,9 +444,9 @@ export default function ManagerLogistics({
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm text-zinc-500 uppercase font-black block">
+                <div className="text-sm text-zinc-500 uppercase font-black block">
                   CANTIDAD_CARGA_PEDIDA:
-                </label>
+                </div>
                 <input
                   type="number"
                   min="1"
@@ -432,10 +458,14 @@ export default function ManagerLogistics({
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm text-zinc-500 uppercase font-black block">
+                <label
+                  htmlFor="field-440"
+                  className="text-sm text-zinc-500 uppercase font-black block"
+                >
                   MOTIVACIONES / JUSTIFICANTE LOGÍSTICO:
                 </label>
                 <textarea
+                  id="field-440"
                   value={requestNotes}
                   onChange={(e) => setRequestNotes(e.target.value)}
                   rows={3}

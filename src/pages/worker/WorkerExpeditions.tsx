@@ -1,7 +1,8 @@
 import { motion, AnimatePresence } from "framer-motion"
-import { useAuth } from "@/pages/Admin/context/AuthContext"
-import { useCampExplorations, useCamp, useMyProfile } from "@/features/worker/hooks/useWorkerAPI"
+
 import { ExplorationZoneMap } from "@/features/map-test/components/ExplorationZoneMap"
+import { useCampExplorations, useCamp, useMyProfile } from "@/features/worker/hooks/useWorkerAPI"
+import { useAuth } from "@/pages/Admin/context/AuthContext"
 import "./WorkerViews.css"
 
 type ExplorationStatus = "scheduled" | "in_progress" | "completed" | "cancelled"
@@ -33,10 +34,10 @@ interface Exploration {
 }
 
 const STATUS_MAP: Record<ExplorationStatus, { label: string; cls: string }> = {
-  scheduled:   { label: "PROGRAMADA",  cls: "wv-badge-warning" },
-  in_progress: { label: "EN CURSO",    cls: "wv-badge-critical" },
-  completed:   { label: "COMPLETADA",  cls: "wv-badge-ok" },
-  cancelled:   { label: "CANCELADA",   cls: "wv-badge-dim" },
+  scheduled: { label: "PROGRAMADA", cls: "wv-badge-warning" },
+  in_progress: { label: "EN CURSO", cls: "wv-badge-critical" },
+  completed: { label: "COMPLETADA", cls: "wv-badge-ok" },
+  cancelled: { label: "CANCELADA", cls: "wv-badge-dim" },
 }
 
 // Extract coordinates from description if present (format: [lat, lng])
@@ -62,12 +63,8 @@ export default function WorkerExpeditions() {
   const explorations = (rawExplorations ?? []) as Exploration[]
 
   // Separate into active vs history
-  const active = explorations.filter((e) =>
-    e.status === "in_progress" || e.status === "scheduled",
-  )
-  const history = explorations.filter((e) =>
-    e.status === "completed" || e.status === "cancelled",
-  )
+  const active = explorations.filter((e) => e.status === "in_progress" || e.status === "scheduled")
+  const history = explorations.filter((e) => e.status === "completed" || e.status === "cancelled")
 
   const isMember = (exp: Exploration) =>
     myPersonId != null && exp.explorationPersons.some((ep) => ep.person_id === myPersonId)
@@ -119,9 +116,7 @@ export default function WorkerExpeditions() {
                       <span className={`wv-badge ${s.cls}`}>{s.label}</span>
                     </div>
 
-                    {imIncluded ? (
-                      <div className="wv-exp-mine-tag">● TU MISIÓN</div>
-                    ) : null}
+                    {imIncluded ? <div className="wv-exp-mine-tag">● TU MISIÓN</div> : null}
 
                     <div className="wv-exp-name">{exp.name}</div>
 
@@ -203,7 +198,7 @@ export default function WorkerExpeditions() {
                       <div className="wv-exp-notes">
                         <span className="wv-prof-detail-key">NOTAS</span>
                         <span className="wv-prof-detail-val" style={{ fontStyle: "italic" }}>
-                          "{exp.notes}"
+                          {exp.notes}
                         </span>
                       </div>
                     ) : null}
@@ -237,7 +232,10 @@ export default function WorkerExpeditions() {
                   animate={{ opacity: 1 }}
                   transition={{ delay: i * 0.04 }}
                 >
-                  <span className={`wv-badge ${s.cls}`} style={{ minWidth: 90, textAlign: "center" }}>
+                  <span
+                    className={`wv-badge ${s.cls}`}
+                    style={{ minWidth: 90, textAlign: "center" }}
+                  >
                     {s.label}
                   </span>
                   <span className="wv-mv-resource" style={{ fontWeight: "bold" }}>

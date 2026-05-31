@@ -1,6 +1,12 @@
-import { useMemo, useState } from "react"
-import { AnimatePresence, motion } from "framer-motion"
 import { useQuery } from "@tanstack/react-query"
+import { AnimatePresence, motion } from "framer-motion"
+import { useMemo, useState } from "react"
+
+import { useCamp } from "../context/CampContext"
+
+import type { CreateMovementBody } from "@/features/inventory/services/inventory.service"
+import type { InventoryItem, InventoryMovement } from "@/types/api.types"
+
 import {
   createMovement,
   getInventory,
@@ -8,9 +14,7 @@ import {
   runDailyProcess,
   updateInventoryItem,
 } from "@/features/inventory/services/inventory.service"
-import type { CreateMovementBody } from "@/features/inventory/services/inventory.service"
-import type { InventoryItem, InventoryMovement } from "@/types/api.types"
-import { useCamp } from "../context/CampContext"
+
 import "./Resources.css"
 
 type InventoryRow = {
@@ -47,7 +51,7 @@ type ModalType = "movement" | "adjust-stock" | "history" | "daily-confirm" | nul
 
 export default function Resources() {
   const { activeCampId, camps } = useCamp()
-  
+
   const [movements, setMovements] = useState<InventoryMovement[]>([])
   const [selectedRow, setSelectedRow] = useState<InventoryRow | null>(null)
   const [activeModal, setActiveModal] = useState<ModalType>(null)
@@ -64,7 +68,12 @@ export default function Resources() {
 
   const campName = camps.find((c) => c.id === activeCampId)?.name ?? "Campamento"
 
-  const { data: items = [], isLoading: queryLoading, error: queryError, refetch } = useQuery({
+  const {
+    data: items = [],
+    isLoading: queryLoading,
+    error: queryError,
+    refetch,
+  } = useQuery({
     queryKey: ["adminResources", activeCampId],
     queryFn: async () => {
       if (!activeCampId) return []
@@ -322,8 +331,11 @@ export default function Resources() {
               <div className="modal-body">
                 <div className="form-grid">
                   <div className="form-group form-full">
-                    <label className="form-label">RECURSO *</label>
+                    <label htmlFor="field-recurso-329" className="form-label">
+                      RECURSO *
+                    </label>
                     <select
+                      id="field-recurso-329"
                       className="vintage-input full-width"
                       value={formResourceId}
                       onChange={(e) => setFormResourceId(e.target.value)}
@@ -337,8 +349,11 @@ export default function Resources() {
                     </select>
                   </div>
                   <div className="form-group">
-                    <label className="form-label">TIPO DE MOVIMIENTO</label>
+                    <label htmlFor="field-tipo-de-movimiento-344" className="form-label">
+                      TIPO DE MOVIMIENTO
+                    </label>
                     <select
+                      id="field-tipo-de-movimiento-344"
                       className="vintage-input full-width"
                       value={formMovementType}
                       onChange={(e) => setFormMovementType(e.target.value)}
@@ -351,7 +366,7 @@ export default function Resources() {
                     </select>
                   </div>
                   <div className="form-group">
-                    <label className="form-label">CANTIDAD *</label>
+                    <div className="form-label">CANTIDAD *</div>
                     <input
                       type="number"
                       min="1"
@@ -362,7 +377,7 @@ export default function Resources() {
                     />
                   </div>
                   <div className="form-group form-full">
-                    <label className="form-label">DESCRIPCIÓN (opcional)</label>
+                    <div className="form-label">DESCRIPCIÓN (opcional)</div>
                     <input
                       className="vintage-input full-width"
                       value={formDescription}

@@ -1,11 +1,13 @@
 import { createContext, useCallback, useContext, useMemo } from "react"
+
+import type { LoginBody } from "@/features/auth/services/auth.service"
+import type { AuthUser } from "@/types/api.types"
 import type { ReactNode } from "react"
+
 import {
   login as loginService,
   logout as logoutService,
 } from "@/features/auth/services/auth.service"
-import type { LoginBody } from "@/features/auth/services/auth.service"
-import type { AuthUser } from "@/types/api.types"
 import { useAuthStore, useTokenStore } from "@/store/useAuthStore"
 
 interface AuthContextType {
@@ -53,6 +55,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
   const context = useContext(AuthContext)
   if (!context) {
