@@ -23,7 +23,7 @@ export interface Person {
   expeditionsSurvived: number
   previous_skills: string
   photo_url?: string
-  profession: Profession
+  profession?: Profession
   achievements?: string[]
 }
 

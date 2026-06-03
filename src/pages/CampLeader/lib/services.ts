@@ -232,6 +232,12 @@ export const usersService = {
       experience_points: p.experience_points ?? 0,
       expeditionsSurvived: p.expeditions_survived ?? 0,
       experience_level: Math.min(5, Math.floor((p.experience_points ?? 0) / 100) + 1),
+      profession: p.profession
+        ? { id: p.profession.id ?? 0, name: p.profession.name ?? "Desconocida" }
+        : { id: 0, name: "Desconocida" },
+      achievements: p.achievements ?? [],
+      previous_skills: p.previous_skills ?? "",
+      photo_url: p.photo_url ?? undefined,
     }))
   },
 
