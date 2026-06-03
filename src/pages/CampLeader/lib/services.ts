@@ -45,18 +45,18 @@ export const explorationsService = {
     resourceConsumptions: { resource_id: number; quantity: number }[]
   }) {
     const payload = {
-      camp_id: data.camp_id,
+      camp_id: Number(data.camp_id),
       name: data.name,
       destination_description: data.destination_description,
       departure_date: data.departure_date,
-      estimated_days: data.estimated_days,
-      grace_days: data.grace_days ?? 0,
+      estimated_days: Number(data.estimated_days),
+      grace_days: Number(data.grace_days ?? 0),
       persons: data.personIds.map((id, idx) => ({
-        person_id: id,
+        person_id: Number(id),
         is_leader: idx === 0,
       })),
       resources: data.resourceConsumptions.map((rc) => ({
-        resource_id: rc.resource_id,
+        resource_id: Number(rc.resource_id),
         quantity: rc.quantity,
         flow: "out",
       })),
@@ -233,8 +233,12 @@ export const usersService = {
       expeditionsSurvived: p.expeditions_survived ?? 0,
       experience_level: Math.min(5, Math.floor((p.experience_points ?? 0) / 100) + 1),
       profession: p.profession
-        ? { id: p.profession.id ?? 0, name: p.profession.name ?? "Desconocida" }
-        : { id: 0, name: "Desconocida" },
+        ? { 
+            id: p.profession.id ?? 0, 
+            name: p.profession.name ?? "Desconocida",
+            can_explore: p.profession.can_explore ?? false 
+          }
+        : { id: 0, name: "Desconocida", can_explore: false },
       achievements: p.achievements ?? [],
       previous_skills: p.previous_skills ?? "",
       photo_url: p.photo_url ?? undefined,

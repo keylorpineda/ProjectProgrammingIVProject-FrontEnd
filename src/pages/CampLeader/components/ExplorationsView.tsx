@@ -26,6 +26,7 @@ interface ExplorationsViewProps {
   activePersons: Person[]
   inventory: Inventory[]
   resources: ResourceItem[]
+  myCampId: number
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onCreateExploration: (data: any) => Promise<void>
   onDepartExploration: (id: number) => Promise<void>
@@ -39,6 +40,7 @@ export default function ExplorationsView({
   activePersons,
   inventory,
   resources,
+  myCampId,
   onCreateExploration,
   onDepartExploration,
   onReturnExploration,
@@ -104,15 +106,18 @@ export default function ExplorationsView({
       return
     }
 
-    // Check inventory stock supplies
+    // Check inventory stock supplies — only if inventory loaded and resource qty > 0
     let stockOk = true
-    Object.entries(provisionStocks).forEach(([resId, reqQty]) => {
-      const dbInv = inventory.find((i) => i.resource_id === Number(resId))
-      if (!dbInv || dbInv.current_quantity < (reqQty as number)) {
-        setFormError("RECURSOS DISPONIBLES INSUFICIENTES EN ALMACÉN PARA PREPARAR VIAJE.")
-        stockOk = false
-      }
-    })
+    if (inventory.length > 0) {
+      Object.entries(provisionStocks).forEach(([resId, reqQty]) => {
+        if ((reqQty as number) <= 0) return // skip resources not requested
+        const dbInv = inventory.find((i) => i.resource_id === Number(resId))
+        if (!dbInv || dbInv.current_quantity < (reqQty as number)) {
+          setFormError(`RECURSOS INSUFICIENTES: se requieren ${reqQty} unidades del recurso #${resId} pero solo hay ${dbInv?.current_quantity ?? 0}.`)
+          stockOk = false
+        }
+      })
+    }
 
     if (!stockOk) return
 
@@ -128,7 +133,7 @@ export default function ExplorationsView({
         destLat != null && destLng != null ? ` [${destLat.toFixed(5)}, ${destLng.toFixed(5)}]` : ""
 
       await onCreateExploration({
-        camp_id: 1,
+        camp_id: myCampId,
         name: newExpName,
         destination_description: newExpDest + coordSuffix,
         departure_date: new Date().toISOString(),
@@ -149,8 +154,10 @@ export default function ExplorationsView({
       setDestLat(null)
       setDestLng(null)
       setIsNewModalOpen(false)
-    } catch (err: unknown) {
-      setFormError(err instanceof Error ? err.message : "FALLO EN REGISTRO DE MISIÓN.")
+    } catch (err: any) {
+      const backendMsg = err.response?.data?.message
+      const errorMsg = Array.isArray(backendMsg) ? backendMsg[0] : backendMsg
+      setFormError(errorMsg || (err instanceof Error ? err.message : "FALLO EN REGISTRO DE MISIÓN."))
     } finally {
       setIsSubmitting(false)
     }
@@ -632,34 +639,45 @@ export default function ExplorationsView({
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-40 overflow-y-auto p-2 bg-black/40 border border-zinc-900 rounded">
                       {activePersons.map((p) => {
+                        const canExplore = p.profession?.can_explore ?? false
                         const isSelected = selectedPeople.includes(p.id)
                         return (
                           <div
                             key={p.id}
-                            role="button"
-                            tabIndex={0}
-                            onClick={() => togglePersonSelection(p.id)}
-                            onKeyDown={(e) => e.key === "Enter" && togglePersonSelection(p.id)}
-                            className={`p-2 rounded border transition-colors cursor-pointer flex justify-between items-center ${
-                              isSelected
-                                ? "bg-amber-950/40 border-amber-500 text-white"
-                                : "bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:text-zinc-200"
+                            role={canExplore ? "button" : "presentation"}
+                            tabIndex={canExplore ? 0 : -1}
+                            onClick={() => canExplore && togglePersonSelection(p.id)}
+                            onKeyDown={(e) =>
+                              canExplore && e.key === "Enter" && togglePersonSelection(p.id)
+                            }
+                            className={`p-2 rounded border transition-colors flex justify-between items-center ${
+                              !canExplore 
+                                ? "bg-red-950/20 border-red-900/30 text-zinc-600 cursor-not-allowed opacity-60"
+                                : isSelected
+                                  ? "bg-amber-950/40 border-amber-500 text-white cursor-pointer"
+                                  : "bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:text-zinc-200 cursor-pointer"
                             }`}
                           >
                             <div className="text-left">
-                              <span className="font-bold text-xs block uppercase">
+                              <span className="font-bold text-xs block uppercase flex items-center gap-1.5">
                                 {p.first_name} {p.last_name}
+                                {!canExplore && (
+                                  <span className="text-[8px] bg-red-900/50 text-red-300 px-1 rounded-sm tracking-tighter">
+                                    NO APTO PARA ZONA
+                                  </span>
+                                )}
                               </span>
-                              <span className="text-[9px] block text-zinc-400 uppercase font-mono tracking-widest">
-                                {p.profession.name} • XP: {p.experience_points} (
+                              <span className={`text-[9px] block uppercase font-mono tracking-widest ${!canExplore ? 'text-red-900/50' : 'text-zinc-400'}`}>
+                                {p.profession?.name ?? "Desconocida"} • XP: {p.experience_points} (
                                 {p.expeditionsSurvived} EXT)
                               </span>
                             </div>
                             <input
                               type="checkbox"
                               checked={isSelected}
+                              disabled={!canExplore}
                               readOnly
-                              className="accent-amber-500 pointer-events-none"
+                              className={`accent-amber-500 pointer-events-none ${!canExplore ? 'opacity-20' : ''}`}
                             />
                           </div>
                         )

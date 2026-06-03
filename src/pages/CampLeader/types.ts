@@ -7,6 +7,7 @@ export interface Profession {
   id: number
   name: string
   description?: string
+  can_explore: boolean
 }
 
 export type PersonStatus = "active" | "sick" | "injured" | "exploring" | "deceased"
