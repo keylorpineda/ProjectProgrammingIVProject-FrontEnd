@@ -169,31 +169,43 @@ export const transfersService = {
 // ==========================================
 export const resourcesService = {
   async getCampInventory(campId: number) {
-    const { data } = await api.get(`/resources/inventory/${campId}`)
-    // Normalize to the shape the UI expects
-    return Array.isArray(data)
-      ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        data.map((item: any) => ({
-          camp_id: item.camp_id ?? campId,
-          resource_id: item.resource?.id ?? item.resource_id,
-          current_quantity: Number(item.current_quantity ?? 0),
-          minimum_stock_required: Number(item.minimum_stock_required ?? 0),
-          alert_active: item.alert_active ?? false,
-          resource: item.resource,
-        }))
-      : []
+    try {
+      const { data } = await api.get(`/resources/inventory/${campId}`)
+      // Normalize to the shape the UI expects
+      return Array.isArray(data)
+        ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          data.map((item: any) => ({
+            camp_id: item.camp_id ?? campId,
+            resource_id: item.resource?.id ?? item.resource_id,
+            current_quantity: Number(item.current_quantity ?? 0),
+            minimum_stock_required: Number(item.minimum_stock_required ?? 0),
+            alert_active: item.alert_active ?? false,
+            resource: item.resource,
+          }))
+        : []
+    } catch {
+      return []
+    }
   },
 
   async getInventoryMovements(campId: number) {
-    const { data } = await api.get(`/resources/movements/${campId}`)
-    return Array.isArray(data) ? data : []
+    try {
+      const { data } = await api.get(`/resources/movements/${campId}`)
+      return Array.isArray(data) ? data : []
+    } catch {
+      return []
+    }
   },
 
   async getAllResources() {
-    const { data } = await api.get("/resources", { params: { limit: 100 } })
-    // Backend may return paginated or array
-    const list = Array.isArray(data) ? data : (data.data ?? [])
-    return list
+    try {
+      const { data } = await api.get("/resources", { params: { limit: 100 } })
+      // Backend may return paginated or array
+      const list = Array.isArray(data) ? data : (data.data ?? [])
+      return list
+    } catch {
+      return []
+    }
   },
 }
 
@@ -231,7 +243,7 @@ export const usersService = {
   /** Balance diario: uses dashboard metrics as source of truth */
   async getCampBalances(campId: number) {
     try {
-      const { data } = await api.get(`/dashboard/metrics/${campId}`)
+      const { data } = await api.get(`/dashboard/${campId}`)
       const resources = data?.warehouse?.inventory ?? []
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return resources.map((item: any) => ({
@@ -249,7 +261,7 @@ export const usersService = {
   /** Camp statistics: derived from dashboard metrics */
   async getCampStatistics(campId: number) {
     try {
-      const { data } = await api.get(`/dashboard/metrics/${campId}`)
+      const { data } = await api.get(`/dashboard/${campId}`)
       const camp = data?.camp ?? {}
       return {
         total_persons: camp.total_people ?? 0,
