@@ -6,7 +6,6 @@ import CampSelector from "./components/CampSelector"
 import Dashboard from "./components/Dashboard"
 import Explorations from "./components/Explorations"
 import InactivityWarning from "./components/InactivityWarning"
-import MapTest from "./components/MapTest"
 import People from "./components/People"
 import Resources from "./components/Resources"
 import Sidebar from "./components/Sidebar"
@@ -30,7 +29,6 @@ const AdminLayout = () => {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const isMapTestRoute = location.pathname.startsWith("/admin/map-test")
 
   const handleLogout = () => {
     void logout().finally(() => navigate("/login"))
@@ -40,28 +38,20 @@ const AdminLayout = () => {
     <div className="admin-layout">
       <Sidebar />
       <div className="admin-main-content">
-        {!isMapTestRoute ? (
-          <header className="admin-topbar">
-            <div className="topbar-title">CONFIDENCIAL // ARCHIVO DE CAMPAMENTOS</div>
-            <div className="topbar-actions">
-              <CampSelector />
-              <div className="user-pill">
-                {user?.id ?? "USR"} [{user?.role ?? "role"}]
-              </div>
-              <button className="logout-btn" onClick={handleLogout}>
-                SALIR
-              </button>
+        <header className="admin-topbar">
+          <div className="topbar-title">CONFIDENCIAL // ARCHIVO DE CAMPAMENTOS</div>
+          <div className="topbar-actions">
+            <CampSelector />
+            <div className="user-pill">
+              {user?.id ?? "USR"} [{user?.role ?? "role"}]
             </div>
-          </header>
-        ) : (
-          <div className="admin-topbar-map-actions">
             <button className="logout-btn" onClick={handleLogout}>
               SALIR
             </button>
           </div>
-        )}
+        </header>
 
-        <div className={`admin-route-container ${isMapTestRoute ? "map-test-mode" : ""}`}>
+        <div className="admin-route-container">
           <Routes>
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="admissions" element={<AdmissionsBook />} />
@@ -70,7 +60,6 @@ const AdminLayout = () => {
             <Route path="explorations" element={<Explorations />} />
             <Route path="resources" element={<Resources />} />
             <Route path="transfers" element={<Transfers />} />
-            <Route path="map-test" element={<MapTest />} />
             <Route path="*" element={<Navigate to="dashboard" replace />} />
           </Routes>
         </div>
