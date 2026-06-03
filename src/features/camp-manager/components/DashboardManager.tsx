@@ -26,13 +26,6 @@ export default function DashboardManager() {
   const navigate = useNavigate()
   const campId = user?.campId
 
-  const roleTranslations: Record<string, string> = {
-    CAMP_LEADER: "LÍDER DE CAMPAMENTO",
-    ADMISSION_MANAGER: "GESTOR DE ADMISIONES",
-    RESOURCE_MANAGER: "GESTOR DE RECURSOS",
-    TRAVEL_MANAGER: "GESTOR DE VIAJES",
-    WORKER: "TRABAJADOR",
-  }
 
   const [activeTab, setActiveTab] = useState<TabID>(
     user?.role?.toLowerCase() === "resource_manager" ? "inventory" : "overview",
@@ -300,11 +293,7 @@ export default function DashboardManager() {
                       {user.name.toUpperCase()}
                     </div>
                     <span className="inline-block bg-[#3b4d3e] text-white text-xs font-bold px-2 py-1 uppercase tracking-widest">
-                      RANGO:{" "}
-                      {user.role
-                        ? roleTranslations[user.role.toUpperCase()] ||
-                          user.role.replace(/_/g, " ").toUpperCase()
-                        : "DESCONOCIDO"}
+                      RANGO: {user.role === "admin" ? "ADMINISTRADOR" : "GESTOR DE RECURSOS"}
                     </span>
                   </div>
                 </div>
