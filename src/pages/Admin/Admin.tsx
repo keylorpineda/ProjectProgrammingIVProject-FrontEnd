@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom"
+import { Navigate, Route, Routes, useNavigate } from "react-router-dom"
 
 import AdmissionsBook from "./components/AdmissionsBook"
 import Camps from "./components/Camps"
@@ -28,7 +28,6 @@ const RequireAdmin = ({ children }: { children: React.ReactNode }) => {
 const AdminLayout = () => {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
-  const location = useLocation()
 
   const handleLogout = () => {
     void logout().finally(() => navigate("/login"))
