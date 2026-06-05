@@ -257,16 +257,23 @@ export default function Explorations() {
     try {
       const validResources: ExplorationResourceBody[] = formOutResources
         .filter((r) => r.resource_id && r.quantity)
-        .map((r) => ({ resource_id: r.resource_id, flow: "out", quantity: Number(r.quantity) }))
+        .map((r) => ({
+          resource_id: Number(r.resource_id),
+          flow: "out",
+          quantity: Number(r.quantity),
+        }))
 
       const body: CreateExplorationBody = {
-        camp_id: activeCampId,
+        camp_id: Number(activeCampId),
         name: formName.trim(),
         destination_description: formDestination.trim(),
         departure_date: formDepartureDate,
         estimated_days: Number(formEstimatedDays),
         grace_days: formGraceDays ? Number(formGraceDays) : undefined,
-        persons: validPersons.map((p) => ({ person_id: p.person_id, is_leader: p.is_leader })),
+        persons: validPersons.map((p) => ({
+          person_id: Number(p.person_id),
+          is_leader: p.is_leader,
+        })),
         resources: validResources.length > 0 ? validResources : undefined,
       }
 
@@ -306,7 +313,11 @@ export default function Explorations() {
     try {
       const foundResources: ExplorationResourceBody[] = formFoundResources
         .filter((r) => r.resource_id && r.quantity)
-        .map((r) => ({ resource_id: r.resource_id, flow: "in", quantity: Number(r.quantity) }))
+        .map((r) => ({
+          resource_id: Number(r.resource_id),
+          flow: "in",
+          quantity: Number(r.quantity),
+        }))
 
       const body: ReturnExplorationBody = {
         real_return_date: formReturnDate,

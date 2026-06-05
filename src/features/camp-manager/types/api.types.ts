@@ -19,6 +19,7 @@ export interface Person {
 
 export interface InventoryItem {
   id: string
+  resource_id: number
   name: string
   category: "Food" | "Water" | "Medicine" | "Ammo" | "Materials" | "Fuel"
   current_stock: number

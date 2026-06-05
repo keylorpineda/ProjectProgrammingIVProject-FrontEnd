@@ -14,7 +14,8 @@ export interface CreatePersonBody {
   last_name: string
   last_name2?: string
   birth_date?: string
-  profession_id?: string
+  profession_id?: number
+  camp_id?: number
   previous_skills?: string
   notes?: string
   photo_url?: string

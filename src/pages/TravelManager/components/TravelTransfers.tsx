@@ -248,21 +248,21 @@ export default function TravelTransfers() {
     }
 
     createMutation.mutate({
-      camp_origin_id: String(campId),
-      camp_destination_id: String(destCampId),
+      camp_origin_id: Number(campId),
+      camp_destination_id: Number(destCampId),
       type: transferType,
       notes: notes || undefined,
       travel_days: travelDays,
       resource_details:
         transferType !== "people"
           ? selectedResources.map((r) => ({
-              resource_id: String(r.resource_id),
+              resource_id: Number(r.resource_id),
               requested_quantity: Number(r.requested_quantity),
             }))
           : undefined,
       person_details:
         transferType !== "resources"
-          ? selectedPersons.map((p) => ({ person_id: String(p.person_id) }))
+          ? selectedPersons.map((p) => ({ person_id: Number(p.person_id) }))
           : undefined,
     })
   }

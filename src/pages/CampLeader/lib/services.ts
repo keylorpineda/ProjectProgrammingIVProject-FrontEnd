@@ -231,7 +231,7 @@ export const usersService = {
   /** Balance diario: uses dashboard metrics as source of truth */
   async getCampBalances(campId: number) {
     try {
-      const { data } = await api.get(`/dashboard/metrics/${campId}`)
+      const { data } = await api.get(`/dashboard/${campId}`)
       const resources = data?.warehouse?.inventory ?? []
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return resources.map((item: any) => ({
@@ -249,7 +249,7 @@ export const usersService = {
   /** Camp statistics: derived from dashboard metrics */
   async getCampStatistics(campId: number) {
     try {
-      const { data } = await api.get(`/dashboard/metrics/${campId}`)
+      const { data } = await api.get(`/dashboard/${campId}`)
       const camp = data?.camp ?? {}
       return {
         total_persons: camp.total_people ?? 0,
