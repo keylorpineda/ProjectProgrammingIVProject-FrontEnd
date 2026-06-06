@@ -71,7 +71,7 @@ const AdminLayout = () => {
               </div>
               <div>
                 <h2 className="text-xs md:text-sm font-black text-[#e0d8cc] hover:text-[#df8120] transition uppercase tracking-widest">
-                  CONFIDENCIAL // SISTEMA CENTRAL
+                  CONFIDENCIAL
                 </h2>
                 <div className="text-sm text-zinc-500 uppercase font-bold mt-0.5 flex items-center gap-2">
                   <span>ARCHIVO DE CAMPAMENTOS</span>
@@ -84,7 +84,6 @@ const AdminLayout = () => {
             {/* Center Clock */}
             <div className="hidden lg:flex items-center gap-8 text-center px-6">
               <div className="flex items-center gap-2 text-left text-sm">
-                <span className="text-[#df8120]">⚡</span>
                 <span className="tracking-widest text-zinc-300 font-bold font-mono">
                   {utcTime}
                 </span>
