@@ -61,6 +61,7 @@ function StockBar({ item, index }: { item: InventoryItem & { status: string }; i
       initial={{ opacity: 0, x: -12 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.04, type: "spring", stiffness: 160 }}
+      whileHover={{ scale: 1.04, zIndex: 10 }}
     >
       {/* Icon + name */}
       <div className="wv-res-icon">{icon}</div>
@@ -252,17 +253,7 @@ export default function WorkerResources() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.03 }}
               >
-                <span
-                  className="wv-mv-type"
-                  style={{
-                    color:
-                      m.type === "removal" || m.type === "consumption"
-                        ? "var(--accent-critical)"
-                        : m.type === "addition" || m.type === "production"
-                          ? "var(--accent-approved)"
-                          : "var(--accent-warning)",
-                  }}
-                >
+                <span className={`wv-mv-type wv-mv-type-${m.type ?? "unknown"}`}>
                   {MOVEMENT_LABELS[m.type] ?? m.type?.toUpperCase() ?? "MOV"}
                 </span>
                 <span className="wv-mv-resource">

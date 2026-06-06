@@ -3,7 +3,6 @@ import { useEffect, useState } from "react"
 
 import {
   useInventoryStatus,
-  useInventoryMovements,
   useProfessionMetrics,
   useDailyBalance,
   useMyBadges,
@@ -12,19 +11,16 @@ import {
 import { useAuth } from "@/pages/Admin/context/AuthContext"
 import "./WorkerViews.css"
 
-const MOVEMENT_LABELS: Record<string, string> = {
-  addition: "ENTRADA",
-  removal: "SALIDA",
-  adjustment: "AJUSTE",
-  transfer: "TRASLADO",
-  consumption: "CONSUMO",
-  production: "PRODUCCION",
-}
-
 const formatTime = () => {
   const now = new Date()
   return now.toISOString().split("T")[1].split(".")[0] + "Z"
 }
+
+const normalizeStatus = (status: string) =>
+  status
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
 
 function BalanceBar({
   label,
@@ -84,7 +80,6 @@ export default function WorkerDashboard() {
   const [time, setTime] = useState(formatTime())
   const { stats } = useInventoryStatus(user?.camp_id)
   const { metrics } = useProfessionMetrics()
-  const { data: movements } = useInventoryMovements(user?.camp_id, 8)
   const { data: balance } = useDailyBalance(user?.camp_id)
   const { data: badges } = useMyBadges()
   const { data: campData } = useCamp(user?.camp_id)
@@ -95,43 +90,43 @@ export default function WorkerDashboard() {
     return () => window.clearInterval(timer)
   }, [])
 
-  const criticalProfessions = metrics.filter((m) => m.status === "CRÍTICO").length
-  const deficitProfessions = metrics.filter((m) => m.status === "DÉFICIT").length
+  const criticalProfessions = metrics.filter((m) => normalizeStatus(m.status) === "CRITICO").length
+  const deficitProfessions = metrics.filter((m) => normalizeStatus(m.status) === "DEFICIT").length
   const badgeCount = badges?.length ?? 0
 
   const cards = [
     {
       title: "RECURSOS OK",
       value: stats?.okItems ?? 0,
-      label: "Ítems en niveles normales",
+      label: "Items en niveles normales",
       pinClass: "wv-pin-green",
       rotate: -2,
     },
     {
-      title: "BAJO MÍNIMO",
+      title: "BAJO MINIMO",
       value: stats?.lowItems ?? 0,
-      label: "Ítems por debajo del umbral",
+      label: "Items por debajo del umbral",
       pinClass: "wv-pin-amber",
       rotate: 1.5,
     },
     {
-      title: "RECURSOS CRÍTICOS",
+      title: "RECURSOS CRITICOS",
       value: stats?.criticalItems ?? 0,
-      label: "Requieren atención inmediata",
+      label: "Requieren atencion inmediata",
       pinClass: "wv-pin-red",
       rotate: -1,
     },
     {
-      title: "PROFESIONES DÉFICIT",
+      title: "PROFESIONES DEFICIT",
       value: criticalProfessions + deficitProfessions,
-      label: `${criticalProfessions} críticas · ${deficitProfessions} en déficit`,
+      label: `${criticalProfessions} criticas / ${deficitProfessions} en deficit`,
       pinClass: criticalProfessions > 0 ? "wv-pin-red" : "wv-pin-amber",
       rotate: 2,
     },
     {
       title: "MIS INSIGNIAS",
       value: badgeCount,
-      label: badgeCount === 0 ? "Sin insignias aún" : "Insignias ganadas",
+      label: badgeCount === 0 ? "Sin insignias aun" : "Insignias ganadas",
       pinClass: "wv-pin-gold",
       rotate: -0.5,
     },
@@ -139,16 +134,14 @@ export default function WorkerDashboard() {
 
   return (
     <div className="wv-cork-board">
-      {/* Header bar */}
       <div className="wv-board-header">
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <span className="wv-board-dot wv-board-dot-green" />
-          <h2 className="wv-board-title">TABLERO — {campName}</h2>
+          <h2 className="wv-board-title">TABLERO - {campName}</h2>
         </div>
         <span className="wv-board-time">{time}</span>
       </div>
 
-      {/* Pinned stat cards */}
       <div className="wv-cork-grid">
         {cards.map((card, i) => (
           <motion.div
@@ -168,7 +161,6 @@ export default function WorkerDashboard() {
         ))}
       </div>
 
-      {/* ── SECTOR BALANCE ────────────────────────────────────── */}
       {balance ? (
         <motion.div
           className="wv-paper"
@@ -224,36 +216,6 @@ export default function WorkerDashboard() {
                 {balance.balance.water}
               </strong>
             </div>
-          </div>
-        </motion.div>
-      ) : null}
-
-      {/* ── RECENT MOVEMENTS ──────────────────────────────────── */}
-      {movements && movements.length > 0 ? (
-        <motion.div
-          className="wv-paper"
-          style={{ marginTop: 24, padding: 24 }}
-          initial={{ y: 40, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.7, type: "spring", stiffness: 100 }}
-        >
-          <h3 className="wv-section-title">ÚLTIMOS MOVIMIENTOS DE ALMACÉN</h3>
-          <div className="wv-movement-list">
-            {movements.slice(0, 8).map((m, i) => (
-              <div key={m.id ?? i} className="wv-movement-row">
-                <span className="wv-mv-type">
-                  {MOVEMENT_LABELS[m.type] ?? m.type?.toUpperCase() ?? "MOV"}
-                </span>
-                <span className="wv-mv-resource">
-                  {m.resource?.name ?? `Recurso #${m.resource_id}`}
-                </span>
-                <span className="wv-mv-qty">
-                  {m.quantity > 0 ? "+" : ""}
-                  {m.quantity} {m.resource?.unit ?? ""}
-                </span>
-                <span className="wv-mv-date">{m.date ? String(m.date).split("T")[0] : "N/D"}</span>
-              </div>
-            ))}
           </div>
         </motion.div>
       ) : null}

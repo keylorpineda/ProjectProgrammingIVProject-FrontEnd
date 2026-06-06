@@ -125,7 +125,7 @@ export default function WorkerProfessions() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05, type: "spring", stiffness: 160 }}
-              whileHover={{ translateY: -4 }}
+              whileHover={{ scale: 1.04, translateY: -4, zIndex: 10 }}
             >
               <div className="wv-prof-corner-badge" style={{ borderRightColor: cornerColor }} />
 
