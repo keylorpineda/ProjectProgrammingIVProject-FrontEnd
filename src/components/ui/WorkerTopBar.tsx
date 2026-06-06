@@ -1,8 +1,10 @@
+import { LogOut } from "lucide-react"
 import { useState, useEffect } from "react"
 
 interface WorkerTopBarProps {
   campName?: string | number
   userName?: string | number
+  onLogout?: () => void
 }
 
 function LiveClock() {
@@ -19,14 +21,14 @@ function LiveClock() {
   )
 }
 
-export default function WorkerTopBar({ campName, userName }: WorkerTopBarProps) {
+export default function WorkerTopBar({ campName, userName, onLogout }: WorkerTopBarProps) {
   return (
     <header
       style={{
         height: 56,
         minHeight: 56,
-        background: "#0f0e0c",
-        borderBottom: "1px solid #1a1917",
+        background: "#0e0d0b",
+        borderBottom: "1px solid rgba(212,168,67,0.18)",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
@@ -43,7 +45,7 @@ export default function WorkerTopBar({ campName, userName }: WorkerTopBarProps) 
           style={{
             fontFamily: "'Special Elite', monospace",
             fontSize: "0.82rem",
-            color: "rgba(200,168,75,0.7)",
+            color: "#d4a843",
             letterSpacing: 3,
             textTransform: "uppercase",
           }}
@@ -57,12 +59,12 @@ export default function WorkerTopBar({ campName, userName }: WorkerTopBarProps) 
           style={{
             fontFamily: "'JetBrains Mono', monospace",
             fontSize: "0.6rem",
-            color: "rgba(154,144,128,0.35)",
+            color: "rgba(212,168,67,0.55)",
             letterSpacing: 2,
             textTransform: "uppercase",
           }}
         >
-          CAMPAMENTO <span style={{ color: "rgba(200,168,75,0.75)" }}>{campName ?? "—"}</span>
+          CAMPAMENTO <span style={{ color: "#d4a843" }}>{campName ?? "—"}</span>
         </span>
       </div>
 
@@ -73,7 +75,7 @@ export default function WorkerTopBar({ campName, userName }: WorkerTopBarProps) 
           style={{
             fontFamily: "'JetBrains Mono', monospace",
             fontSize: "0.65rem",
-            color: "rgba(179,133,54,0.35)",
+            color: "rgba(212,168,67,0.42)",
             letterSpacing: 1,
             fontVariantNumeric: "tabular-nums",
           }}
@@ -83,40 +85,46 @@ export default function WorkerTopBar({ campName, userName }: WorkerTopBarProps) 
 
         <div style={{ width: 1, height: 14, background: "rgba(255,255,255,0.05)" }} />
 
-        {/* User chip */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 9,
-            padding: "5px 13px",
-            background: "rgba(0,0,0,0.4)",
-            border: "1px solid rgba(179,133,54,0.15)",
-          }}
-        >
-          {/* Small active dot */}
-          <span
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {/* User chip */}
+          <div
             style={{
-              width: 5,
-              height: 5,
-              borderRadius: "50%",
-              background: "#4c6351",
-              display: "inline-block",
-              boxShadow: "0 0 6px #4c6351",
-              flexShrink: 0,
-            }}
-          />
-          <span
-            style={{
-              fontFamily: "'Special Elite', monospace",
-              fontSize: "0.75rem",
-              color: "rgba(200,168,75,0.85)",
-              textTransform: "uppercase",
-              letterSpacing: 1,
+              display: "flex",
+              alignItems: "center",
+              gap: 9,
+              padding: "5px 13px",
+              background: "#1a1509",
+              border: "1px solid rgba(212,168,67,0.28)",
             }}
           >
-            {String(userName ?? "—").toUpperCase()}
-          </span>
+            {/* Small active dot */}
+            <span
+              style={{
+                width: 5,
+                height: 5,
+                borderRadius: "50%",
+                background: "#4c6351",
+                display: "inline-block",
+                boxShadow: "0 0 6px #4c6351",
+                flexShrink: 0,
+              }}
+            />
+            <span
+              style={{
+                fontFamily: "'Special Elite', monospace",
+                fontSize: "0.75rem",
+                color: "#d4a843",
+                textTransform: "uppercase",
+                letterSpacing: 1,
+              }}
+            >
+              {String(userName ?? "—").toUpperCase()}
+            </span>
+          </div>
+          <button type="button" onClick={onLogout} className="worker-topbar-logout">
+            <LogOut size={12} />
+            CERRAR SESIÓN
+          </button>
         </div>
       </div>
     </header>
