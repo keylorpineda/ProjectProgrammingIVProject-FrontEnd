@@ -3,19 +3,19 @@ import type { Exploration } from "@/types/api.types"
 import api from "@/config/api"
 
 export interface ExplorationPersonBody {
-  person_id: string
+  person_id: number
   is_leader?: boolean
 }
 
 export interface ExplorationResourceBody {
-  resource_id: string
+  resource_id: number
   /** "in" (brought back at return) or "out" (taken on the trip). */
   flow: string
   quantity: number
 }
 
 export interface CreateExplorationBody {
-  camp_id: string
+  camp_id: number
   name: string
   destination_description: string
   departure_date: string

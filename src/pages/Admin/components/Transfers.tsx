@@ -236,8 +236,8 @@ export default function Transfers() {
     setFormError("")
     try {
       const body: CreateTransferBody = {
-        camp_origin_id: activeCampId,
-        camp_destination_id: formDestId,
+        camp_origin_id: Number(activeCampId),
+        camp_destination_id: Number(formDestId),
         type: formType,
         notes: formNotes.trim() || undefined,
         travel_days: formTravelDays ? Number(formTravelDays) : undefined,
@@ -250,7 +250,7 @@ export default function Transfers() {
           return
         }
         body.resource_details = validRows.map((r) => ({
-          resource_id: r.resource_id,
+          resource_id: Number(r.resource_id),
           requested_quantity: Number(r.requested_quantity),
         }))
       }
@@ -262,7 +262,7 @@ export default function Transfers() {
           return
         }
         body.person_details = validPeople.map((p) => ({
-          person_id: p.person_id,
+          person_id: Number(p.person_id),
           is_leader: p.is_leader,
         }))
       }

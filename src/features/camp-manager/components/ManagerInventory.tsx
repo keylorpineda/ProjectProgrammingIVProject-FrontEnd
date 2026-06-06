@@ -34,7 +34,19 @@ export default function ManagerInventory({
     queryKey: ["managerInventory", campId],
     queryFn: async () => {
       const res = await api.get(`/resources/inventory/${campId}`)
-      return res.data as InventoryItem[]
+      // El backend devuelve filas con PK compuesta (camp_id, resource_id) y la
+      // relación .resource. Normalizamos al shape que consume la tabla local.
+      const raw = Array.isArray(res.data) ? res.data : []
+      return raw.map((item: any) => ({
+        id: String(item.resource_id),
+        resource_id: Number(item.resource_id),
+        name: item.resource?.name ?? `Recurso #${item.resource_id}`,
+        category: item.resource?.category ?? "Materials",
+        unit: item.resource?.unit ?? "",
+        current_stock: Number(item.current_quantity ?? 0),
+        minimum_stock_required: Number(item.minimum_stock_required ?? 0),
+        is_below_minimum: Boolean(item.alert_active),
+      })) as InventoryItem[]
     },
     staleTime: 1000 * 60 * 2, // 2 minutes
   })
@@ -74,7 +86,7 @@ export default function ManagerInventory({
     setSubmittingEdit(true)
     setErrorState(null)
     try {
-      await api.patch(`/resources/inventory/${campId}/${editingItem.id}`, {
+      await api.patch(`/resources/inventory/${campId}/${editingItem.resource_id}`, {
         minimum_stock_required: newMinStock,
       })
       setEditingItem(null)

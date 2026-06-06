@@ -3,18 +3,18 @@ import type { IntercampRequest } from "@/types/api.types"
 import api from "@/config/api"
 
 export interface TransferResourceDetail {
-  resource_id: string
+  resource_id: number
   requested_quantity: number
 }
 
 export interface TransferPersonDetail {
-  person_id: string
+  person_id: number
   is_leader?: boolean
 }
 
 export interface CreateTransferBody {
-  camp_origin_id: string
-  camp_destination_id: string
+  camp_origin_id: number
+  camp_destination_id: number
   type: "resources" | "people" | "both"
   notes?: string
   travel_days?: number

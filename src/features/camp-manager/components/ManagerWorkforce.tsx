@@ -52,6 +52,16 @@ export default function ManagerWorkforce({
     staleTime: 1000 * 60 * 2, // 2 minutes
   })
 
+  // Catálogo de profesiones para resolver nombre → id al asignar
+  const { data: professionsCatalog = [] } = useQuery({
+    queryKey: ["professionsCatalog"],
+    queryFn: async () => {
+      const res = await api.get("/users/professions")
+      return (res.data ?? []) as Array<{ id: number | string; name: string }>
+    },
+    staleTime: 1000 * 60 * 60,
+  })
+
   const [errorState, setErrorState] = useState<string | null>(null)
   const error = queryError
     ? (queryError as any).message || "Fallo de enlace biométrico de sobrevivientes."
@@ -110,9 +120,17 @@ export default function ManagerWorkforce({
     setSubmittingAssignment(true)
     setErrorState(null)
     try {
+      const matchedProfession = professionsCatalog.find(
+        (p) => p.name?.toLowerCase() === selectedProfession.toLowerCase(),
+      )
+      if (!matchedProfession) {
+        setErrorState(`Profesión "${selectedProfession}" no encontrada en el catálogo del sistema.`)
+        setSubmittingAssignment(false)
+        return
+      }
       await api.post("/users/temporary-assignments", {
         person_id: Number(assigningPerson.id),
-        profession_temporary_id: Number(selectedProfession),
+        profession_temporary_id: Number(matchedProfession.id),
       })
       setAssigningPerson(null)
       refetch()

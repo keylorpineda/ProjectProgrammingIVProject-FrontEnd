@@ -280,14 +280,21 @@ export default function TravelExplorations() {
       destLat !== null && destLng !== null ? ` [${destLat.toFixed(5)}, ${destLng.toFixed(5)}]` : ""
 
     createMutation.mutate({
-      camp_id: baseCampId,
+      camp_id: Number(baseCampId),
       name: newName,
       destination_description: newDestination + coordSuffix,
       departure_date: newDepartureDate,
       estimated_days: newEstimatedDays,
       grace_days: newGraceDays,
-      persons: newSelectedPersons,
-      resources: newSelectedResources.map((r) => ({ ...r, flow: "out" as const })),
+      persons: newSelectedPersons.map((p) => ({
+        person_id: Number(p.person_id),
+        is_leader: p.is_leader,
+      })),
+      resources: newSelectedResources.map((r) => ({
+        resource_id: Number(r.resource_id),
+        quantity: r.quantity,
+        flow: "out" as const,
+      })),
     })
   }
 

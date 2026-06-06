@@ -96,7 +96,7 @@ export default function ManagerLogistics({
     }
   }
 
-  const handleApproval = async (id: string, status: "approved" | "denied") => {
+  const handleApproval = async (id: string, status: "approved" | "rejected") => {
     setActionId(id)
     setErrorState(null)
     try {
@@ -217,7 +217,7 @@ export default function ManagerLogistics({
                 } else if (req.status === "approved") {
                   statusBadge = "bg-emerald-950/45 text-emerald-400 border border-emerald-500/30"
                   borderTheme = "border-2 border-black bg-[#141b17]"
-                } else if (req.status === "denied") {
+                } else if (req.status === "rejected") {
                   statusBadge = "bg-red-950 text-red-400 border border-red-900/40"
                   borderTheme = "border-2 border-black bg-[#1a1212]"
                 } else if (req.status === "arrived") {
@@ -284,7 +284,7 @@ export default function ManagerLogistics({
                           <button
                             type="button"
                             disabled={actionId !== null}
-                            onClick={() => handleApproval(req.id, "denied")}
+                            onClick={() => handleApproval(req.id, "rejected")}
                             className="border-2 border-black bg-[#4a1210]/20 hover:bg-[#9c2720] text-red-400 hover:text-white px-6 py-4 uppercase text-sm md:text-base font-black transition tracking-widest"
                             style={{ backgroundColor: "#1e1c19" }}
                           >
