@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion"
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 
 import {
   useAssignedResources,
@@ -96,8 +96,104 @@ function ProfessionChip({ name, canExplore }: { name: string; canExplore: boolea
 }
 
 // ── Main component ──────────────────────────────────────────────
+type SelectedBadge = {
+  name: string
+  description: string
+  rarity: number
+  tag?: string
+  acquiredAt?: string | null
+  imageUrl?: string | null
+}
+
+function BadgeMedal({ imageUrl, name }: { imageUrl?: string | null; name: string }) {
+  if (imageUrl) {
+    return <img src={imageUrl} alt={name} className="wv-achievement-modal-img" />
+  }
+
+  return (
+    <svg className="wv-achievement-modal-medal" viewBox="0 0 120 140" aria-hidden="true">
+      <polygon points="45,0 60,30 30,50 15,10" fill="#7c2d12" opacity="0.9" />
+      <polygon points="75,0 105,10 90,50 60,30" fill="#9c1c1c" opacity="0.9" />
+      <polygon points="50,0 70,0 65,28 55,28" fill="#b45309" />
+      <circle cx="60" cy="88" r="44" fill="rgba(179,133,54,0.15)" />
+      <circle cx="60" cy="88" r="40" fill="none" stroke="#b38536" strokeWidth="3" />
+      <circle cx="60" cy="88" r="33" fill="#c8a84b" />
+      <circle cx="60" cy="88" r="25" fill="none" stroke="rgba(255,220,100,0.3)" />
+      <text x="60" y="98" textAnchor="middle" fontSize="30" fontFamily="serif" fill="#ffe080">
+        ★
+      </text>
+    </svg>
+  )
+}
+
+function BadgeAchievementModal({
+  badge,
+  onClose,
+}: {
+  badge: SelectedBadge | null
+  onClose: () => void
+}) {
+  return (
+    <AnimatePresence>
+      {badge ? (
+        <motion.div
+          className="wv-achievement-overlay"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+        >
+          <motion.div
+            className="wv-achievement-card"
+            initial={{ scale: 0.45, rotate: -12, opacity: 0 }}
+            animate={{ scale: 1, rotate: 0, opacity: 1 }}
+            exit={{ scale: 0.65, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 160, damping: 18 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <span className="wv-achievement-corner top-left" />
+            <span className="wv-achievement-corner top-right" />
+            <span className="wv-achievement-corner bottom-left" />
+            <span className="wv-achievement-corner bottom-right" />
+
+            <div className="wv-achievement-tag">LOGRO DESBLOQUEADO</div>
+            <motion.div
+              className="wv-achievement-medal-wrap"
+              animate={{
+                filter: [
+                  "drop-shadow(0 0 8px rgba(179,133,54,0.5))",
+                  "drop-shadow(0 0 24px rgba(179,133,54,0.9))",
+                  "drop-shadow(0 0 8px rgba(179,133,54,0.5))",
+                ],
+              }}
+              transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <BadgeMedal imageUrl={badge.imageUrl} name={badge.name} />
+            </motion.div>
+            <div className="wv-achievement-title">{badge.name}</div>
+            <div className="wv-achievement-stars">
+              {"★".repeat(Math.min(badge.rarity, 5))}
+              <span>{"☆".repeat(Math.max(5 - badge.rarity, 0))}</span>
+            </div>
+            <div className="wv-achievement-description">{badge.description}</div>
+            <div className="wv-achievement-meta">
+              {RARITY_LABELS[badge.rarity] ?? "COMÚN"}
+              {badge.tag ? ` / ${badge.tag}` : ""}
+              {badge.acquiredAt ? ` / ${String(badge.acquiredAt).split("T")[0]}` : ""}
+            </div>
+            <button type="button" className="wv-achievement-button" onClick={onClose}>
+              ACEPTAR
+            </button>
+          </motion.div>
+        </motion.div>
+      ) : null}
+    </AnimatePresence>
+  )
+}
+
 export default function WorkerProfile() {
   const { user } = useAuth()
+  const [selectedBadge, setSelectedBadge] = useState<SelectedBadge | null>(null)
   const { data: assignedResources } = useAssignedResources()
   const { data: badges, isLoading: badgesLoading } = useMyBadges()
   const { data: campData } = useCamp(user?.camp_id)
@@ -274,10 +370,30 @@ export default function WorkerProfile() {
             {localBadge ? (
               <motion.div
                 className="wv-badge-card wv-rarity-1 wv-local-badge"
+                role="button"
+                tabIndex={0}
                 initial={{ scale: 0, opacity: 0, rotate: -8 }}
                 animate={{ scale: 1, opacity: 1, rotate: 0 }}
                 transition={{ type: "spring", stiffness: 220 }}
                 whileHover={{ scale: 1.08, rotate: -2, zIndex: 10 }}
+                onClick={() =>
+                  setSelectedBadge({
+                    name: localBadge.name,
+                    description: localBadge.description,
+                    rarity: localBadge.rarity,
+                    tag: "DEBUT",
+                  })
+                }
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    setSelectedBadge({
+                      name: localBadge.name,
+                      description: localBadge.description,
+                      rarity: localBadge.rarity,
+                      tag: "DEBUT",
+                    })
+                  }
+                }}
               >
                 <div className="wv-badge-rarity-corner wv-rarity-1" />
                 <div className="wv-badge-img-wrap">
@@ -301,10 +417,36 @@ export default function WorkerProfile() {
                 <motion.div
                   key={badge.id}
                   className={`wv-badge-card ${rarityClass}`}
+                  role="button"
+                  tabIndex={0}
                   initial={{ scale: 0, opacity: 0, rotate: -8 }}
                   animate={{ scale: 1, opacity: 1, rotate: 0 }}
                   transition={{ delay: i * 0.05 + 0.05, type: "spring", stiffness: 220 }}
                   whileHover={{ scale: 1.08, rotate: -2, zIndex: 10 }}
+                  onClick={() =>
+                    setSelectedBadge({
+                      name: badge.asset?.name ?? "Insignia",
+                      description:
+                        badge.asset?.description ?? "Insignia obtenida por el trabajador.",
+                      rarity,
+                      acquiredAt: badge.acquired_at,
+                      tag: badge.is_displayed ? "EN EXHIBICIÓN" : undefined,
+                      imageUrl: imgUrl,
+                    })
+                  }
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      setSelectedBadge({
+                        name: badge.asset?.name ?? "Insignia",
+                        description:
+                          badge.asset?.description ?? "Insignia obtenida por el trabajador.",
+                        rarity,
+                        acquiredAt: badge.acquired_at,
+                        tag: badge.is_displayed ? "EN EXHIBICIÓN" : undefined,
+                        imageUrl: imgUrl,
+                      })
+                    }
+                  }}
                 >
                   <div className={`wv-badge-rarity-corner ${rarityClass}`} />
                   <div className="wv-badge-img-wrap">
@@ -314,10 +456,9 @@ export default function WorkerProfile() {
                         alt={badge.asset?.name ?? "insignia"}
                         className="wv-badge-img"
                         onError={(e) => {
-                          ;(e.target as HTMLImageElement).style.display = "none"
-                          ;(e.target as HTMLImageElement).parentElement?.classList.add(
-                            "wv-badge-no-img",
-                          )
+                          const target = e.target as HTMLImageElement
+                          target.style.display = "none"
+                          target.parentElement?.classList.add("wv-badge-no-img")
                         }}
                       />
                     ) : (
@@ -406,7 +547,8 @@ export default function WorkerProfile() {
                         alt={name}
                         style={{ width: "100%", height: "100%", objectFit: "cover" }}
                         onError={(e) => {
-                          ;(e.target as HTMLImageElement).style.display = "none"
+                          const target = e.target as HTMLImageElement
+                          target.style.display = "none"
                         }}
                       />
                     ) : (
@@ -431,6 +573,7 @@ export default function WorkerProfile() {
           <div className="wv-empty">SIN EQUIPO ASIGNADO</div>
         )}
       </motion.div>
+      <BadgeAchievementModal badge={selectedBadge} onClose={() => setSelectedBadge(null)} />
     </div>
   )
 }

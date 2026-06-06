@@ -52,6 +52,10 @@ export default function WorkerProfessions() {
   const campName = campData?.camp?.name ?? `CAMPAMENTO #${user?.camp_id ?? "?"}`
   const myProfessionId = profile?.person?.profession_id ?? null
   const myProfessionName = profile?.person?.profession?.name ?? null
+  const sortedProfessions = [...(professions ?? [])].sort((a, b) => {
+    if (a.can_explore === b.can_explore) return a.name.localeCompare(b.name)
+    return a.can_explore ? -1 : 1
+  })
 
   const criticalCount = metrics.filter((m) => m.status === "CRÍTICO").length
 
@@ -94,7 +98,7 @@ export default function WorkerProfessions() {
       </AnimatePresence>
 
       <div className="wv-profession-grid">
-        {(professions ?? []).map((profession, i) => {
+        {sortedProfessions.map((profession, i) => {
           const metric = metrics.find((m) => m.id === profession.id)
           const count = profession.persons?.length ?? 0
           const activeCount = profession.persons?.filter((p) => p.status === "activo").length ?? 0
@@ -226,7 +230,7 @@ export default function WorkerProfessions() {
           )
         })}
 
-        {(professions ?? []).length === 0 ? (
+        {sortedProfessions.length === 0 ? (
           <div className="wv-empty">SIN DATOS DE PROFESIONES</div>
         ) : null}
       </div>
