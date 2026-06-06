@@ -217,6 +217,7 @@ export default function CampLeaderLayout() {
             activePersons={activeHealthyResidents}
             inventory={inventory}
             resources={resources}
+            myCampId={Number(user?.camp_id ?? 1)}
             onCreateExploration={handleCreateExploration}
             onDepartExploration={handleDepartExploration}
             onReturnExploration={handleReturnExploration}

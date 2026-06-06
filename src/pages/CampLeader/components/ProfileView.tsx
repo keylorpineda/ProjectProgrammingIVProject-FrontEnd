@@ -238,7 +238,7 @@ export default function ProfileView({ user, statistics, residents }: ProfileView
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {residents.map((p) => {
-            const levelStars = Array.from({ length: p.experience_level }, (_, i) => i)
+            const levelStars = Array.from({ length: p.experience_level ?? 0 }, (_, i) => i)
 
             return (
               <div
@@ -278,7 +278,7 @@ export default function ProfileView({ user, statistics, residents }: ProfileView
                   </div>
 
                   <p className="text-[10px] text-[#ab9e8b] uppercase pb-1 border-b border-zinc-900/60 leading-3">
-                    PROFESION: <span className="text-white font-bold">{p.profession.name}</span>
+                    PROFESION: <span className="text-white font-bold">{p.profession?.name ?? "Desconocida"}</span>
                   </p>
 
                   {/* MINI BADGES - GAMIFICACION */}
@@ -401,7 +401,7 @@ export default function ProfileView({ user, statistics, residents }: ProfileView
                         PROFESION
                       </span>
                       <span className="text-white font-bold block truncate mt-0.5">
-                        {selectedPerson.profession.name}
+                        {selectedPerson.profession?.name ?? "Desconocida"}
                       </span>
                     </div>
                     <div>
@@ -425,7 +425,7 @@ export default function ProfileView({ user, statistics, residents }: ProfileView
                         LOGISTICA / RANGO
                       </span>
                       <div className="flex text-amber-500 mt-0.5">
-                        {Array.from({ length: selectedPerson.experience_level }).map((_, idx) => (
+                        {Array.from({ length: selectedPerson.experience_level ?? 0 }).map((_, idx) => (
                           <Star key={idx} className="w-3.5 h-3.5 fill-current shrink-0" />
                         ))}
                       </div>
