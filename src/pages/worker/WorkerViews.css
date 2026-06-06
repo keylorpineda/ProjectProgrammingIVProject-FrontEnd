@@ -2723,3 +2723,283 @@
     grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
   }
 }
+
+.wv-profile-page .wv-badge-card {
+  cursor: pointer;
+}
+
+.wv-profile-page .wv-badge-card:focus-visible {
+  outline: 2px solid #c27c2f;
+  outline-offset: 3px;
+}
+
+.wv-profile-page .wv-badge-grid {
+  grid-template-columns: repeat(auto-fit, minmax(158px, 184px));
+  gap: 16px;
+}
+
+.wv-profile-page .wv-badge-card {
+  min-height: 204px;
+  padding: 15px 12px 13px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 32%, rgba(179, 133, 54, 0.22), transparent 42%), #1a1712 !important;
+  border: 2px solid #b38536 !important;
+  border-left-width: 2px !important;
+  color: #c8a84b !important;
+  box-shadow:
+    0 0 28px rgba(179, 133, 54, 0.12),
+    4px 4px 0 rgba(0, 0, 0, 0.72) !important;
+}
+
+.wv-profile-page .wv-badge-card::before,
+.wv-profile-page .wv-badge-card::after {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+}
+
+.wv-profile-page .wv-badge-card::before {
+  top: 0;
+  left: 0;
+  border-top: 2px solid #b38536;
+  border-left: 2px solid #b38536;
+}
+
+.wv-profile-page .wv-badge-card::after {
+  right: 0;
+  bottom: 0;
+  border-right: 2px solid #b38536;
+  border-bottom: 2px solid #b38536;
+}
+
+.wv-profile-page .wv-badge-card:hover {
+  background:
+    radial-gradient(circle at 50% 32%, rgba(179, 133, 54, 0.3), transparent 44%), #211d16 !important;
+  box-shadow:
+    0 0 38px rgba(179, 133, 54, 0.22),
+    7px 7px 0 rgba(0, 0, 0, 0.78) !important;
+}
+
+.wv-profile-page .wv-badge-rarity-corner {
+  display: none;
+}
+
+.wv-profile-page .wv-badge-img-wrap {
+  width: 76px;
+  height: 86px;
+  margin-bottom: 6px;
+  border: 0;
+  background:
+    radial-gradient(circle, rgba(179, 133, 54, 0.22), transparent 62%), transparent !important;
+  overflow: visible;
+}
+
+.wv-profile-page .wv-badge-img {
+  filter: drop-shadow(0 0 14px rgba(179, 133, 54, 0.55));
+}
+
+.wv-profile-page .wv-badge-icon-placeholder {
+  width: 68px;
+  height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid #b38536;
+  border-radius: 50%;
+  background: #c8a84b;
+  color: #ffe080 !important;
+  font-size: 1.95rem;
+  text-shadow: 0 0 8px rgba(122, 92, 30, 0.9);
+  box-shadow:
+    0 0 0 8px rgba(179, 133, 54, 0.12),
+    inset 0 0 16px rgba(122, 92, 30, 0.45);
+}
+
+.wv-profile-page .wv-badge-name {
+  color: #c8a84b !important;
+  font-family: var(--font-typewriter);
+  font-size: 0.82rem;
+  letter-spacing: 1.6px;
+  line-height: 1.15;
+}
+
+.wv-profile-page .wv-badge-stars {
+  color: #ffe080;
+  font-size: 0.82rem;
+  letter-spacing: 3px;
+}
+
+.wv-profile-page .wv-badge-stars-empty {
+  color: rgba(154, 144, 128, 0.34);
+}
+
+.wv-profile-page .wv-badge-rarity-label,
+.wv-profile-page .wv-badge-date,
+.wv-profile-page .wv-badge-displayed-tag {
+  color: rgba(200, 168, 75, 0.62) !important;
+  font-family: var(--font-mono);
+}
+
+.wv-profile-page .wv-badge-displayed-tag {
+  background: transparent;
+  border-color: rgba(179, 133, 54, 0.36);
+}
+
+.wv-achievement-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(3px);
+}
+
+.wv-achievement-card {
+  width: 340px;
+  max-width: 90vw;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 36px 28px 28px;
+  background: #1a1712;
+  border: 2px solid #b38536;
+  box-shadow:
+    0 0 60px rgba(179, 133, 54, 0.35),
+    0 0 0 8px rgba(179, 133, 54, 0.06);
+  text-align: center;
+}
+
+.wv-achievement-corner {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+}
+
+.wv-achievement-corner.top-left {
+  top: 0;
+  left: 0;
+  border-top: 2px solid #b38536;
+  border-left: 2px solid #b38536;
+}
+
+.wv-achievement-corner.top-right {
+  top: 0;
+  right: 0;
+  border-top: 2px solid #b38536;
+  border-right: 2px solid #b38536;
+}
+
+.wv-achievement-corner.bottom-left {
+  bottom: 0;
+  left: 0;
+  border-bottom: 2px solid #b38536;
+  border-left: 2px solid #b38536;
+}
+
+.wv-achievement-corner.bottom-right {
+  right: 0;
+  bottom: 0;
+  border-right: 2px solid #b38536;
+  border-bottom: 2px solid #b38536;
+}
+
+.wv-achievement-tag {
+  margin-bottom: 20px;
+  padding: 3px 12px;
+  border: 1px solid rgba(179, 133, 54, 0.2);
+  color: rgba(179, 133, 54, 0.6);
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+.wv-achievement-medal-wrap {
+  width: 120px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.wv-achievement-modal-medal,
+.wv-achievement-modal-img {
+  width: 120px;
+  height: 140px;
+  object-fit: contain;
+}
+
+.wv-achievement-title {
+  margin-bottom: 6px;
+  color: #c8a84b;
+  font-family: var(--font-typewriter);
+  font-size: 1.35rem;
+  letter-spacing: 3px;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.wv-achievement-stars {
+  margin-bottom: 14px;
+  color: #ffe080;
+  font-size: 1rem;
+  letter-spacing: 6px;
+}
+
+.wv-achievement-stars span {
+  color: rgba(154, 144, 128, 0.35);
+}
+
+.wv-achievement-description {
+  margin-bottom: 12px;
+  padding: 0 8px;
+  color: rgba(154, 144, 128, 0.78);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 1.2px;
+  line-height: 1.7;
+  text-transform: uppercase;
+}
+
+.wv-achievement-meta {
+  width: 100%;
+  margin-bottom: 20px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(179, 133, 54, 0.35);
+  color: rgba(200, 168, 75, 0.52);
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.wv-achievement-button {
+  width: 100%;
+  padding: 10px 40px;
+  border: 1px solid rgba(179, 133, 54, 0.5);
+  background: transparent;
+  color: #c8a84b;
+  font-family: var(--font-typewriter);
+  font-size: 0.85rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    transform 0.15s;
+}
+
+.wv-achievement-button:hover {
+  background: rgba(179, 133, 54, 0.18);
+  transform: scale(1.02);
+}
