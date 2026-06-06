@@ -384,13 +384,13 @@ export function BadgeRegister({ onRegister, isProcessing, registerStatus }: Badg
                   }}
                   disabled={!isHanging || isProcessing}
                   onMouseEnter={(e) => {
-                    ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = "#001f3f"
+                    (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#001f3f"
                     ;(e.currentTarget as HTMLButtonElement).style.boxShadow =
                       "inset 0 0 0 2px #3b82f6, 0 4px 0 #0a0a0a, 0 0 20px rgba(59,130,246,0.4), 0 5px 5px rgba(0,0,0,0.5)"
                     ;(e.currentTarget as HTMLButtonElement).style.color = "#3b82f6"
                   }}
                   onMouseLeave={(e) => {
-                    ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = "#1a1a1a"
+                    (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#1a1a1a"
                     ;(e.currentTarget as HTMLButtonElement).style.boxShadow =
                       "inset 0 0 0 2px #333, 0 4px 0 #0a0a0a, 0 5px 5px rgba(0,0,0,0.5)"
                     ;(e.currentTarget as HTMLButtonElement).style.color = "#cccccc"

@@ -1288,9 +1288,9 @@ export default function TravelExplorations() {
                 </div>
                 {inventory.length > 0 && (
                   <div>
-                    <label className="text-xs font-mono font-black text-[#c27c2f] uppercase tracking-widest block mb-1">
+                    <div className="text-xs font-mono font-black text-[#c27c2f] uppercase tracking-widest block mb-1">
                       Recursos Recuperados / Encontrados
-                    </label>
+                    </div>
                     <div className="max-h-40 overflow-y-auto custom-scrollbar space-y-1 border border-[#c27c2f]/10 p-2 bg-black/20">
                       {inventory.map((item) => {
                         const sel = returnFoundResources.find((r) => r.resource_id === String(item.resource_id))
