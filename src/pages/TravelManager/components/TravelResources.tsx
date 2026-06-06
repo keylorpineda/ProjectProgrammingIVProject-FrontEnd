@@ -24,7 +24,7 @@ import { useState, useMemo } from "react"
 
 import { getCamps } from "@/features/camps/services/camps.service"
 import { getInventory } from "@/features/inventory/services/inventory.service"
-import { useAuth } from "@/pages/Admin/context/AuthContext"
+import { useAuthStore } from "@/store/useAuthStore"
 
 export interface Resource {
   id: string
@@ -42,7 +42,7 @@ export interface Resource {
 type ResourceStatus = Resource["status"] | "all"
 
 export default function TravelResources() {
-  const { user } = useAuth()
+  const { user } = useAuthStore()
   const baseCampId = user?.camp_id ?? ""
   const [activeStatus, setActiveStatus] = useState<ResourceStatus>("all")
   const [searchQuery, setSearchQuery] = useState("")

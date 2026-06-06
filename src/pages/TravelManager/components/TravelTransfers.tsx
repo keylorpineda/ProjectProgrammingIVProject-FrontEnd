@@ -28,11 +28,12 @@ import {
   cancelTransfer,
   confirmTransferArrival,
 } from "@/features/transfers/services/transfers.service"
-import { useAuth } from "@/pages/Admin/context/AuthContext"
+import { useAuthStore, useTokenStore } from "@/store/useAuthStore"
 
 // ── Status helpers ──────────────────────────────────────────────────────────
 
-function getTransferStatusLabel(status: string): string {
+function getTransferStatusLabel(rawStatus: string): string {
+  const status = String(rawStatus ?? "").toLowerCase().replace(/\s+/g, "_")
   switch (status) {
     case "pending":
       return "Pendiente"
@@ -47,11 +48,12 @@ function getTransferStatusLabel(status: string): string {
     case "cancelled":
       return "Cancelado"
     default:
-      return status
+      return rawStatus
   }
 }
 
-function getTransferStatusColorClass(status: string): string {
+function getTransferStatusColorClass(rawStatus: string): string {
+  const status = String(rawStatus ?? "").toLowerCase().replace(/\s+/g, "_")
   switch (status) {
     case "pending":
       return "text-[#c27c2f]"
@@ -68,7 +70,8 @@ function getTransferStatusColorClass(status: string): string {
   }
 }
 
-function getTransferTypeBadge(type: string): string {
+function getTransferTypeBadge(rawType: string): string {
+  const type = String(rawType ?? "").toLowerCase()
   switch (type) {
     case "resources":
       return "RECURSOS"
@@ -77,7 +80,7 @@ function getTransferTypeBadge(type: string): string {
     case "both":
       return "MIXTO"
     default:
-      return type.toUpperCase()
+      return rawType.toUpperCase()
   }
 }
 
@@ -95,7 +98,8 @@ interface SelectedPerson {
 // ── Main component ──────────────────────────────────────────────────────────
 
 export default function TravelTransfers() {
-  const { user, token } = useAuth()
+  const { user } = useAuthStore()
+  const token = useTokenStore((state) => state.token)
   const queryClient = useQueryClient()
   const campId = user?.camp_id ?? ""
 
@@ -178,17 +182,21 @@ export default function TravelTransfers() {
   })
 
   // ── Derived state ────────────────────────────────────────────────────────
+  const normalize = (s: string | null | undefined) =>
+    String(s ?? "").toLowerCase().replace(/\s+/g, "_")
+
   const filteredTransfers = useMemo(() => {
     return transfers.filter((t) => {
       const matchesSearch =
         String(t.id).toLowerCase().includes(search.toLowerCase()) ||
         String(t.camp_origin_id).toLowerCase().includes(search.toLowerCase()) ||
         String(t.camp_destination_id).toLowerCase().includes(search.toLowerCase())
-      const matchesStatus = statusFilter === "all" || t.status === statusFilter
+      const tStatus = normalize(t.status)
+      const matchesStatus = statusFilter === "all" || tStatus === normalize(statusFilter)
       const matchesRole =
         roleFilter === "all" ||
-        (roleFilter === "origin" && t.camp_origin_id === campId) ||
-        (roleFilter === "destination" && t.camp_destination_id === campId)
+        (roleFilter === "origin" && String(t.camp_origin_id) === String(campId)) ||
+        (roleFilter === "destination" && String(t.camp_destination_id) === String(campId))
       return matchesSearch && matchesStatus && matchesRole
     })
   }, [transfers, search, statusFilter, roleFilter, campId])
@@ -203,11 +211,13 @@ export default function TravelTransfers() {
 
   const stats = useMemo(
     () => ({
-      pending: transfers.filter((t) => t.status === "pending").length,
-      inTransit: transfers.filter((t) => t.status === "in_transit" || t.status === "approved")
-        .length,
-      sent: transfers.filter((t) => t.camp_origin_id === campId).length,
-      received: transfers.filter((t) => t.camp_destination_id === campId).length,
+      pending: transfers.filter((t) => normalize(t.status) === "pending").length,
+      inTransit: transfers.filter((t) => {
+        const s = normalize(t.status)
+        return s === "in_transit" || s === "approved"
+      }).length,
+      sent: transfers.filter((t) => String(t.camp_origin_id) === String(campId)).length,
+      received: transfers.filter((t) => String(t.camp_destination_id) === String(campId)).length,
     }),
     [transfers, campId],
   )

@@ -19,6 +19,7 @@ import type { Variants } from "framer-motion"
 import { getCamps } from "@/features/camps/services/camps.service"
 import { getExplorations } from "@/features/explorations/services/explorations.service"
 import { getInventory } from "@/features/inventory/services/inventory.service"
+import { getPersons } from "@/features/persons/services/persons.service"
 import { getCampTransfers } from "@/features/transfers/services/transfers.service"
 import { useAuthStore } from "@/store/useAuthStore"
 
@@ -45,7 +46,7 @@ export default function TravelDashboard() {
   const navigate = useNavigate()
   const { user } = useAuthStore()
 
-  const baseCampId = user?.camp_id ?? ""
+  const baseCampId = user?.camp_id ? String(user.camp_id) : ""
 
   const { data: camps = [], isError: campsError } = useQuery({
     queryKey: ["camps"],
@@ -70,20 +71,45 @@ export default function TravelDashboard() {
     enabled: !!baseCampId,
   })
 
+  const { data: personsResponse } = useQuery({
+    queryKey: ["persons", baseCampId],
+    queryFn: () => getPersons({ campId: baseCampId, limit: 1000 }),
+    enabled: !!baseCampId,
+  })
+  const persons = personsResponse?.data ?? []
+
+  const inBaseCount = persons.filter((p) => {
+    const key = String(p.status ?? "").toLowerCase().replace(/\s+/g, "_")
+    return key === "active" || key === "idle"
+  }).length
+
+  const inFieldCount = persons.filter((p) => {
+    const key = String(p.status ?? "").toLowerCase().replace(/\s+/g, "_")
+    return key === "exploring"
+  }).length
+
   const hasError = campsError || expError || transfersError || invError
 
-  const baseCamp = camps.find((c) => c.id === baseCampId)
+  const baseCamp = camps.find((c) => String(c.id) === baseCampId)
   const consultedCamp = baseCamp
 
-  const activeExplorations = explorations.filter(
-    (e) => e.status === "active" || e.status === "in_progress",
-  )
-  const scheduledExplorations = explorations.filter((e) => e.status === "scheduled")
+  const activeExplorations = explorations.filter((e) => {
+    const key = String(e.status ?? "").toLowerCase().replace(/\s+/g, "_")
+    return key === "active" || key === "in_progress"
+  })
+  const scheduledExplorations = explorations.filter((e) => {
+    const key = String(e.status ?? "").toLowerCase().replace(/\s+/g, "_")
+    return key === "scheduled"
+  })
 
-  const transitTransfers = transfers.filter(
-    (t) => t.status === "in_transit" || t.status === "approved",
-  )
-  const pendingRequests = transfers.filter((t) => t.status === "pending")
+  const transitTransfers = transfers.filter((t) => {
+    const key = String(t.status ?? "").toLowerCase().replace(/\s+/g, "_")
+    return key === "in_transit" || key === "approved"
+  })
+  const pendingRequests = transfers.filter((t) => {
+    const key = String(t.status ?? "").toLowerCase().replace(/\s+/g, "_")
+    return key === "pending"
+  })
 
   const expeditionSupplies = inventory
     .map((item) => ({
@@ -236,7 +262,10 @@ export default function TravelDashboard() {
             </div>
 
             <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar space-y-2">
-              {[...activeExplorations, ...scheduledExplorations].map((exp) => (
+              {[...activeExplorations, ...scheduledExplorations].map((exp) => {
+                const expKey = String(exp.status ?? "").toLowerCase().replace(/\s+/g, "_")
+                const isActive = expKey === "active" || expKey === "in_progress"
+                return (
                 <div
                   key={exp.id}
                   className="flex items-center justify-between p-3 bg-bg-paper paper-texture border-2 border-[#8b7355]/20 rounded-sm shadow-lg group relative overflow-hidden"
@@ -248,14 +277,12 @@ export default function TravelDashboard() {
                     </span>
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <div
-                        className={`h-1 w-1 rounded-full ${exp.status === "active" || exp.status === "in_progress" ? "bg-[#43523d]" : "bg-[#89633e]"}`}
+                        className={`h-1 w-1 rounded-full ${isActive ? "bg-[#43523d]" : "bg-[#89633e]"}`}
                       />
                       <span
-                        className={`text-sm font-black uppercase tracking-widest ${exp.status === "active" || exp.status === "in_progress" ? "text-[#43523d]" : "text-[#89633e]"}`}
+                        className={`text-sm font-black uppercase tracking-widest ${isActive ? "text-[#43523d]" : "text-[#89633e]"}`}
                       >
-                        {exp.status === "active" || exp.status === "in_progress"
-                          ? "EN CURSO"
-                          : "PROGRAMADA"}
+                        {isActive ? "EN CURSO" : "PROGRAMADA"}
                       </span>
                     </div>
                   </div>
@@ -266,7 +293,8 @@ export default function TravelDashboard() {
                     Ver
                   </button>
                 </div>
-              ))}
+                )
+              })}
               {activeExplorations.length === 0 && scheduledExplorations.length === 0 && (
                 <p className="text-center py-10 text-sm font-mono text-white/20 uppercase tracking-widest">
                   Sin operaciones registradas
@@ -293,13 +321,13 @@ export default function TravelDashboard() {
                   <span className="block text-sm font-mono text-ink/40 uppercase mb-0.5 font-black tracking-widest">
                     En Base
                   </span>
-                  <span className="text-2xl font-mono font-black text-ink">--</span>
+                  <span className="text-2xl font-mono font-black text-ink">{inBaseCount}</span>
                 </div>
                 <div className="bg-bg-paper paper-texture border-2 border-[#8b7355]/20 p-3 rounded-sm text-center shadow-md">
                   <span className="block text-sm font-mono text-ink/40 uppercase mb-0.5 font-black tracking-widest">
                     En Campo
                   </span>
-                  <span className="text-2xl font-mono font-black text-[#89633e]">--</span>
+                  <span className="text-2xl font-mono font-black text-[#89633e]">{inFieldCount}</span>
                 </div>
               </div>
 

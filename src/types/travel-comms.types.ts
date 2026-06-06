@@ -28,6 +28,7 @@ export interface CreateExplorationFormData {
 export interface ReturnExplorationFormData {
   real_return_date: string
   notes: string
+  found_resources?: Array<{ resource_id: number; flow: string; quantity: number }>
 }
 
 // DTO for creating a transfer (maps to CreateTransferBody)

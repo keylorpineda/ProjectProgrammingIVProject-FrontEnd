@@ -21,7 +21,7 @@ import type { Variants } from "framer-motion"
 
 import { getCamps } from "@/features/camps/services/camps.service"
 import { getPersons } from "@/features/persons/services/persons.service"
-import { useAuth } from "@/pages/Admin/context/AuthContext"
+import { useAuthStore } from "@/store/useAuthStore"
 import { PersonStatus } from "@/types/api.types"
 
 type ActiveStatusFilter = PersonStatus | "all"
@@ -44,12 +44,13 @@ const itemVariants: Variants = {
 }
 
 export default function TravelTeam() {
-  const { user } = useAuth()
+  const { user } = useAuthStore()
+  const baseCampId = user?.camp_id ?? ""
 
-  // ── Data Fetching ──────────────────────────────────────────────────────────
   const { data: personsResponse, isError: personsError } = useQuery({
-    queryKey: ["persons"],
-    queryFn: () => getPersons({}),
+    queryKey: ["persons", baseCampId],
+    queryFn: () => getPersons({ campId: baseCampId, limit: 1000 }),
+    enabled: !!baseCampId,
   })
   const persons: Person[] = useMemo(() => personsResponse?.data ?? [], [personsResponse])
 
@@ -61,7 +62,6 @@ export default function TravelTeam() {
   const hasError = personsError || campsError
 
   // ── Local State ────────────────────────────────────────────────────────────
-  const baseCampId = user?.camp_id ?? ""
   const [activeStatus, setActiveStatus] = useState<ActiveStatusFilter>("all")
   const [searchQuery, setSearchQuery] = useState("")
   const [professionFilter, setProfessionFilter] = useState("all")
@@ -79,8 +79,8 @@ export default function TravelTeam() {
   // ── Derived State ──────────────────────────────────────────────────────────
   const filteredTeam = useMemo(() => {
     return persons.filter((p) => {
-      if (baseCampId && String(p.camp_id ?? "") !== String(baseCampId)) return false
-      if (activeStatus !== "all" && p.status !== activeStatus) return false
+      const pStatus = String(p.status ?? "").toLowerCase().replace(/\s+/g, "_")
+      if (activeStatus !== "all" && pStatus !== String(activeStatus).toLowerCase().replace(/\s+/g, "_")) return false
 
       const pProfession = p.profession?.name || "Desconocido"
       if (professionFilter !== "all" && pProfession !== professionFilter) return false
@@ -92,7 +92,7 @@ export default function TravelTeam() {
       }
       return true
     })
-  }, [persons, baseCampId, activeStatus, professionFilter, searchQuery])
+  }, [persons, activeStatus, professionFilter, searchQuery])
 
   const selectedPerson = useMemo(
     () => persons.find((p) => p.id === selectedId) || null,
@@ -104,17 +104,20 @@ export default function TravelTeam() {
     return ["all", ...Array.from(new Set(allProfs))]
   }, [persons])
 
-  const activeCount = persons.filter(
-    (p) =>
-      String(p.camp_id ?? "") === String(baseCampId) &&
-      (p.status === PersonStatus.Active || p.status === PersonStatus.Idle),
-  ).length
-  const inFieldCount = persons.filter(
-    (p) => String(p.camp_id ?? "") === String(baseCampId) && p.status === PersonStatus.Exploring,
-  ).length
-  const injuredCount = persons.filter(
-    (p) => String(p.camp_id ?? "") === String(baseCampId) && p.status === PersonStatus.Injured,
-  ).length
+  const activeCount = persons.filter((p) => {
+    const key = String(p.status ?? "").toLowerCase().replace(/\s+/g, "_")
+    return key === "active" || key === "idle"
+  }).length
+
+  const inFieldCount = persons.filter((p) => {
+    const key = String(p.status ?? "").toLowerCase().replace(/\s+/g, "_")
+    return key === "exploring"
+  }).length
+
+  const injuredCount = persons.filter((p) => {
+    const key = String(p.status ?? "").toLowerCase().replace(/\s+/g, "_")
+    return key === "injured"
+  }).length
 
   const getStatusLabel = (status: PersonStatus) => {
     switch (status) {

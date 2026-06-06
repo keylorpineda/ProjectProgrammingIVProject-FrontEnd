@@ -40,7 +40,8 @@ import { useAuthStore } from "@/store/useAuthStore"
 
 // ── Status helpers ──────────────────────────────────────────────────────────
 
-function getStatusLabel(status: string): string {
+function getStatusLabel(rawStatus: string): string {
+  const status = String(rawStatus ?? "").toLowerCase().replace(/\s+/g, "_")
   switch (status) {
     case "active":
     case "in_progress":
@@ -53,11 +54,12 @@ function getStatusLabel(status: string): string {
     case "cancelled":
       return "Cancelada"
     default:
-      return status
+      return rawStatus
   }
 }
 
-function getStatusColorClass(status: string): string {
+function getStatusColorClass(rawStatus: string): string {
+  const status = String(rawStatus ?? "").toLowerCase().replace(/\s+/g, "_")
   switch (status) {
     case "active":
     case "in_progress":
@@ -115,6 +117,9 @@ export default function TravelExplorations() {
   // Return form state
   const [returnDate, setReturnDate] = useState(new Date().toISOString().substring(0, 10))
   const [returnNotes, setReturnNotes] = useState("")
+  const [returnFoundResources, setReturnFoundResources] = useState<
+    Array<{ resource_id: string; quantity: number }>
+  >([])
 
   // ── React Query ──────────────────────────────────────────────────────────
   const { data: explorations = [], error } = useQuery({
@@ -153,7 +158,11 @@ export default function TravelExplorations() {
 
   const returnMutation = useMutation({
     mutationFn: ({ id, body }: { id: string; body: ReturnExplorationFormData }) =>
-      returnExploration(id, { real_return_date: body.real_return_date, notes: body.notes }),
+      returnExploration(id, { 
+        real_return_date: body.real_return_date, 
+        notes: body.notes,
+        found_resources: body.found_resources
+      }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["explorations", baseCampId] })
       setIsReturnModalOpen(false)
@@ -176,7 +185,8 @@ export default function TravelExplorations() {
         String(exp.destination_description || "")
           .toLowerCase()
           .includes(q)
-      const matchesStatus = filterStatus === "" || exp.status === filterStatus
+      const expStatus = String(exp.status ?? "").toLowerCase().replace(/\s+/g, "_")
+      const matchesStatus = filterStatus === "" || expStatus === String(filterStatus).toLowerCase().replace(/\s+/g, "_")
       return matchesSearch && matchesStatus
     })
   }, [explorations, search, filterStatus])
@@ -312,8 +322,33 @@ export default function TravelExplorations() {
     if (!selectedExp) return
     returnMutation.mutate({
       id: selectedExp.id,
-      body: { real_return_date: returnDate, notes: returnNotes },
+      body: { 
+        real_return_date: returnDate, 
+        notes: returnNotes,
+        found_resources: returnFoundResources.map(r => ({
+          resource_id: Number(r.resource_id),
+          flow: "in",
+          quantity: r.quantity
+        }))
+      },
     })
+  }
+
+  function handleToggleReturnResourceSelect(resourceId: string) {
+    const exists = returnFoundResources.find((r) => r.resource_id === String(resourceId))
+    if (exists) {
+      setReturnFoundResources(returnFoundResources.filter((r) => r.resource_id !== String(resourceId)))
+    } else {
+      setReturnFoundResources([...returnFoundResources, { resource_id: String(resourceId), quantity: 1 }])
+    }
+  }
+
+  function handleReturnResourceQuantityChange(resourceId: string, quantity: number) {
+    setReturnFoundResources(
+      returnFoundResources.map((r) =>
+        r.resource_id === String(resourceId) ? { ...r, quantity: Math.max(1, quantity) } : r,
+      ),
+    )
   }
 
   function handleTogglePersonSelect(personId: string) {
@@ -1251,6 +1286,51 @@ export default function TravelExplorations() {
                     className="vintage-input w-full resize-none"
                   />
                 </div>
+                {inventory.length > 0 && (
+                  <div>
+                    <label className="text-xs font-mono font-black text-[#c27c2f] uppercase tracking-widest block mb-1">
+                      Recursos Recuperados / Encontrados
+                    </label>
+                    <div className="max-h-40 overflow-y-auto custom-scrollbar space-y-1 border border-[#c27c2f]/10 p-2 bg-black/20">
+                      {inventory.map((item) => {
+                        const sel = returnFoundResources.find((r) => r.resource_id === String(item.resource_id))
+                        const isSelected = !!sel
+                        return (
+                          <div
+                            key={item.resource_id}
+                            className={`flex items-center justify-between p-2 border transition-all ${
+                              isSelected ? "bg-[#c27c2f]/10 border-[#c27c2f]/30" : "bg-black/20 border-white/5"
+                            }`}
+                          >
+                            <div
+                              role="button"
+                              tabIndex={0}
+                              className="flex items-center gap-2 cursor-pointer flex-1"
+                              onClick={() => handleToggleReturnResourceSelect(String(item.resource_id))}
+                              onKeyDown={(e) => e.key === "Enter" && handleToggleReturnResourceSelect(String(item.resource_id))}
+                            >
+                              <div className={`h-3 w-3 border flex items-center justify-center shrink-0 ${isSelected ? "border-[#c27c2f] bg-[#c27c2f]/20" : "border-white/20"}`}>
+                                {isSelected && <Check className="h-2 w-2 text-[#c27c2f]" />}
+                              </div>
+                              <span className="text-sm font-mono font-black text-white/80 uppercase">{item.resource!.name}</span>
+                              <span className="text-sm font-mono text-white/40 uppercase">[{item.resource!.unit}]</span>
+                            </div>
+                            {isSelected && (
+                              <input
+                                type="number"
+                                min={1}
+                                value={sel.quantity}
+                                onClick={(ev) => ev.stopPropagation()}
+                                onChange={(e) => handleReturnResourceQuantityChange(String(item.resource_id), Number(e.target.value))}
+                                className="vintage-input w-16 text-sm ml-2"
+                              />
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="p-4 border-t border-[#c27c2f]/20 flex justify-end gap-3 bg-black/20">
