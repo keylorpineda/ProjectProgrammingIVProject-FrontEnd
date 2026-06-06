@@ -7,6 +7,7 @@ export interface Profession {
   id: number
   name: string
   description?: string
+  can_explore: boolean
 }
 
 export type PersonStatus = "active" | "sick" | "injured" | "exploring" | "deceased"
@@ -23,7 +24,7 @@ export interface Person {
   expeditionsSurvived: number
   previous_skills: string
   photo_url?: string
-  profession: Profession
+  profession?: Profession
   achievements?: string[]
 }
 

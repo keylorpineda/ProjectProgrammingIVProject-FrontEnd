@@ -37,14 +37,16 @@ export default function ManagerWorkforce({
   } = useQuery({
     queryKey: ["managerWorkforce", campId, page],
     queryFn: async () => {
-      const [personsRes, alertsRes] = await Promise.all([
+      const [personsRes, alertsRes, professionsRes] = await Promise.all([
         api.get(`/users/persons?campId=${campId}&page=${page}&limit=${limit}`),
         api.get("/users/professions/alerts/needing-workers"),
+        api.get("/users/professions"),
       ])
       return {
         persons: personsRes.data.data as Person[],
         total: personsRes.data.total as number,
         alerts: alertsRes.data as ProfessionAlert[],
+        professions: professionsRes.data as { id: number; name: string }[],
       }
     },
     staleTime: 1000 * 60 * 2, // 2 minutes
@@ -80,10 +82,11 @@ export default function ManagerWorkforce({
   const persons = localPersons
   const total = data?.total || 0
   const alerts = data?.alerts || []
+  const professionsList = data?.professions || []
 
   // Temporary Assignment Modal State
   const [assigningPerson, setAssigningPerson] = useState<Person | null>(null)
-  const [selectedProfession, setSelectedProfession] = useState<string>("Farmer")
+  const [selectedProfession, setSelectedProfession] = useState<string>("")
   const [submittingAssignment, setSubmittingAssignment] = useState<boolean>(false)
 
   const handleStatusChange = async (personId: string, newStatus: PersonStatus) => {
@@ -107,7 +110,7 @@ export default function ManagerWorkforce({
 
   const handleOpenAssignModal = (person: Person) => {
     setAssigningPerson(person)
-    setSelectedProfession(person.profession || "Farmer")
+    setSelectedProfession(professionsList.length > 0 ? professionsList[0].id.toString() : "1")
   }
 
   const handleSaveAssignment = async (e: FormEvent) => {
@@ -143,7 +146,7 @@ export default function ManagerWorkforce({
     return <div className="min-h-[400px]" />
   }
 
-  const professionsList = ["Farmer", "Doctor", "Engineer", "Soldier", "Scavenger"]
+  const staticProfessionsList = ["Farmer", "Doctor", "Engineer", "Soldier", "Scavenger"]
 
   return (
     <motion.div
@@ -452,8 +455,8 @@ export default function ManagerWorkforce({
                   className="w-full bg-[#2a2824] border-4 border-black p-4 bg-transparent text-[#e0d8cc] outline-none text-base font-black font-mono transition uppercase shadow-[inset_0_0_10px_rgba(0,0,0,0.8)]"
                 >
                   {professionsList.map((prof) => (
-                    <option key={prof} value={prof} className="bg-[#161513] text-[#e0d8cc]">
-                      {prof.toUpperCase()}
+                    <option key={prof.id} value={prof.id} className="bg-[#161513] text-[#e0d8cc]">
+                      {prof.name.toUpperCase()}
                     </option>
                   ))}
                 </select>
