@@ -40,7 +40,7 @@ export function BadgeLogin({ onLogin, isProcessing, loginStatus }: BadgeLoginPro
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault()
     if (isHanging && !isProcessing) {
-      if (!username || !password) {
+      if (!username || !password || password.length < 6) {
         setShake(true)
         setTimeout(() => setShake(false), 500)
         return
@@ -333,7 +333,7 @@ export function BadgeLogin({ onLogin, isProcessing, loginStatus }: BadgeLoginPro
                   <motion.div
                     className="flex flex-col gap-1.5 relative"
                     animate={
-                      (shake && !password) || loginStatus === "denied"
+                      (shake && (!password || password.length < 6)) || loginStatus === "denied"
                         ? { x: [-8, 8, -6, 6, -4, 4, 0], transition: { duration: 0.4 } }
                         : {}
                     }
@@ -350,7 +350,7 @@ export function BadgeLogin({ onLogin, isProcessing, loginStatus }: BadgeLoginPro
                         type={showPassword ? "text" : "password"}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className={`w-full ${(shake && !password) || loginStatus === "denied" ? "bg-red-900/10 border-red-900/50 text-red-900 placeholder:text-red-900/50" : "bg-[#000]/[0.05] border-[#000]/20 text-[#1a1814] placeholder:text-[#1a1814]/40 focus:border-[#000]/40"} rounded-[4px] px-6 py-8 border-2 outline-none font-mono text-[14px] sm:text-[16px] tracking-[0.2em] font-bold placeholder:tracking-normal transition-colors shadow-[inset_0_2px_4px_rgba(0,0,0,0.15),0_1px_0_rgba(255,255,255,0.4)] pr-12`}
+                        className={`w-full ${(shake && (!password || password.length < 6)) || loginStatus === "denied" ? "bg-red-900/10 border-red-900/50 text-red-900 placeholder:text-red-900/50" : "bg-[#000]/[0.05] border-[#000]/20 text-[#1a1814] placeholder:text-[#1a1814]/40 focus:border-[#000]/40"} rounded-[4px] px-6 py-8 border-2 outline-none font-mono text-[14px] sm:text-[16px] tracking-[0.2em] font-bold placeholder:tracking-normal transition-colors shadow-[inset_0_2px_4px_rgba(0,0,0,0.15),0_1px_0_rgba(255,255,255,0.4)] pr-12`}
                         style={{ height: "44px" }}
                         placeholder=""
                         disabled={!isHanging || isProcessing}
