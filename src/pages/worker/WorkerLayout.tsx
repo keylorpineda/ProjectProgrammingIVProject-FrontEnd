@@ -51,12 +51,15 @@ export default function WorkerLayout() {
           setActiveTab={setActiveTab}
           userName={user?.username ?? user?.id}
           campName={campName}
-          onLogout={handleLogout}
         />
 
         {/* Main Content Area */}
         <div className="worker-main-content">
-          <WorkerTopBar campName={campName} userName={user?.username ?? user?.id} />
+          <WorkerTopBar
+            campName={campName}
+            userName={user?.username ?? user?.id}
+            onLogout={handleLogout}
+          />
 
           <main className="worker-route-container custom-scrollbar">
             <div className="max-w-7xl mx-auto">

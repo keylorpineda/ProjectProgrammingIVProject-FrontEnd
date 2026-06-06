@@ -138,25 +138,18 @@ export default function TravelDashboard() {
       {/* 1. MASTER HUD - CONTROL DE EXPEDICIONES */}
       <motion.div
         variants={itemVariants}
-        className="archive-panel p-3 rounded-lg shrink-0 border-l-4 border-l-[#d4a373] bg-[#12110f]"
+        className="archive-panel p-4 rounded-lg shrink-0 border border-[#d4a373]/25 bg-[#12110f] shadow-[0_-2px_0_0_rgba(212,163,115,0.4)]"
       >
-        <div className="flex justify-between items-center mb-1 border-b border-[#d4a373]/10 pb-1">
-          <div className="flex items-center gap-4">
-            <span className="archive-header italic text-xs text-white/40 uppercase">
-              Base de Viajes — Panel de Coordinación
+        <div className="flex justify-between items-center mb-2 border-b border-[#d4a373]/10 pb-2">
+          <span className="font-mono text-[10px] text-white/30 uppercase tracking-wider">
+            Panel de Coordinación · Gestión de Viajes
+          </span>
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-1.5 font-mono text-[10px] text-accent-approved uppercase tracking-wider">
+              <span className="w-1.5 h-1.5 rounded-full bg-accent-approved animate-pulse inline-block" />
+              Enlace activo
             </span>
-            <div className="h-3 w-px bg-white/10" />
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-mono text-white/20 uppercase">
-                Panel de Coordinación Local
-              </span>
-            </div>
-          </div>
-          <div className="flex items-center gap-6">
-            <span className="archive-header text-sm text-accent-approved animate-pulse">
-              ENLACE_ACTIVO
-            </span>
-            <span className="archive-header text-sm text-[#d4a373] tracking-widest font-black border border-[#d4a373]/30 px-3 py-1 bg-black/40">
+            <span className="font-mono text-xs text-[#d4a373] font-semibold border border-[#d4a373]/25 px-2.5 py-0.5 bg-black/40 rounded-sm tracking-widest">
               {baseCamp?.name?.toUpperCase() ?? baseCampId}
             </span>
           </div>
@@ -164,77 +157,63 @@ export default function TravelDashboard() {
 
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-3">
-            <div className="bg-[#d4a373]/20 p-2 border border-[#d4a373]/30">
-              <Radio className="h-6 w-6 text-[#d4a373]" />
+            <div className="bg-[#d4a373]/15 p-2 border border-[#d4a373]/25 rounded-sm">
+              <Radio className="h-5 w-5 text-[#d4a373]" />
             </div>
             <div>
-              <h1 className="archive-title text-xl lg:text-2xl text-white uppercase">
+              <h1 className="font-typewriter text-xl lg:text-2xl text-white font-black uppercase tracking-tight leading-none">
                 {consultedCamp?.name ?? baseCampId}
               </h1>
-              <p className="text-sm font-mono text-[#d4a373] uppercase tracking-[0.2em] font-black">
-                Gestión Directa de Movilidad
+              <p className="text-[11px] font-mono text-[#d4a373]/70 uppercase tracking-[0.18em] font-medium mt-1">
+                Gestión de Movilidad
               </p>
             </div>
           </div>
 
           <div className="grid grid-cols-4 gap-3 w-full md:w-auto">
             <div
-              className="bg-[#d4a373]/10 border border-[#d4a373]/30 px-4 py-1.5 rounded text-center min-w-[90px] cursor-help transition-all hover:bg-[#d4a373]/20"
+              className="bg-[#d4a373]/10 border border-[#d4a373]/30 px-4 py-3 rounded text-center min-w-[90px] cursor-help transition-all hover:bg-[#d4a373]/20"
               title="Expediciones activas sin retorno registrado."
             >
-              <div className="flex flex-col mb-0.5 leading-none">
-                <span className="text-sm font-mono text-[#d4a373]/60 uppercase font-black">
-                  Exploraciones
-                </span>
-                <span className="text-sm font-mono text-[#d4a373] uppercase font-black">
-                  En Curso
-                </span>
-              </div>
-              <span className="text-xl font-mono font-black text-white">
+              <span className="text-3xl font-mono font-black text-white leading-none block mb-1">
                 {activeExplorations.length}
               </span>
+              <span className="text-[10px] font-mono text-[#d4a373]/70 uppercase tracking-wider font-medium block leading-snug">
+                Exploraciones<br />en curso
+              </span>
             </div>
             <div
-              className="bg-accent-critical/10 border border-accent-critical/30 px-4 py-1.5 rounded text-center min-w-[90px] cursor-help transition-all hover:bg-accent-critical/20"
+              className="bg-accent-critical/10 border border-accent-critical/30 px-4 py-3 rounded text-center min-w-[90px] cursor-help transition-all hover:bg-accent-critical/20"
               title="Solicitudes intercampamento esperando aprobación."
             >
-              <div className="flex flex-col mb-0.5 leading-none">
-                <span className="text-sm font-mono text-accent-critical/60 uppercase font-black">
-                  Solicitudes
-                </span>
-                <span className="text-sm font-mono text-accent-critical uppercase font-black">
-                  Pendientes
-                </span>
-              </div>
-              <span className="text-xl font-mono font-black text-white">
+              <span className="text-3xl font-mono font-black text-white leading-none block mb-1">
                 {pendingRequests.length}
               </span>
-            </div>
-            <div
-              className="bg-[#c27c2f]/10 border border-[#c27c2f]/30 px-4 py-1.5 rounded text-center min-w-[90px] cursor-help transition-all hover:bg-[#c27c2f]/20"
-              title="Solicitudes aprobadas que aún no registran llegada."
-            >
-              <div className="flex flex-col mb-0.5 leading-none">
-                <span className="text-sm font-mono text-[#c27c2f]/60 uppercase font-black">
-                  Transferencias
-                </span>
-                <span className="text-sm font-mono text-[#c27c2f] uppercase font-black">
-                  En Tránsito
-                </span>
-              </div>
-              <span className="text-xl font-mono font-black text-white">
-                {transitTransfers.length}
+              <span className="text-[10px] font-mono text-accent-critical/70 uppercase tracking-wider font-medium block leading-snug">
+                Solicitudes<br />pendientes
               </span>
             </div>
             <div
-              className="bg-bg-paper border border-[#8b7355]/30 px-4 py-1.5 rounded text-center min-w-[90px] cursor-help transition-all hover:bg-bg-paper-shadow/20"
+              className="bg-[#c27c2f]/10 border border-[#c27c2f]/30 px-4 py-3 rounded text-center min-w-[90px] cursor-help transition-all hover:bg-[#c27c2f]/20"
+              title="Solicitudes aprobadas que aún no registran llegada."
+            >
+              <span className="text-3xl font-mono font-black text-white leading-none block mb-1">
+                {transitTransfers.length}
+              </span>
+              <span className="text-[10px] font-mono text-[#c27c2f]/70 uppercase tracking-wider font-medium block leading-snug">
+                Transferencias<br />en tránsito
+              </span>
+            </div>
+            <div
+              className="bg-bg-paper border border-[#8b7355]/30 px-4 py-3 rounded text-center min-w-[90px] cursor-help transition-all hover:bg-bg-paper-shadow/20"
               title="Insumos para viaje por debajo del mínimo recomendado."
             >
-              <div className="flex flex-col mb-0.5 leading-none">
-                <span className="text-sm font-mono text-ink/40 uppercase font-black">Recursos</span>
-                <span className="text-sm font-mono text-ink uppercase font-black">Bajos</span>
-              </div>
-              <span className="text-xl font-mono font-black text-ink">{lowResourcesCount}</span>
+              <span className="text-3xl font-mono font-black text-ink leading-none block mb-1">
+                {lowResourcesCount}
+              </span>
+              <span className="text-[10px] font-mono text-ink/50 uppercase tracking-wider font-medium block leading-snug">
+                Recursos<br />bajos
+              </span>
             </div>
           </div>
         </div>
@@ -256,8 +235,8 @@ export default function TravelDashboard() {
         <section className="md:col-span-4 flex flex-col gap-4 overflow-hidden h-full">
           <div className="archive-panel p-4 rounded-lg flex-1 flex flex-col overflow-hidden shadow-2xl bg-[#12100d]">
             <div className="flex items-center justify-between mb-4 border-b border-[#d4a373]/20 pb-2 shrink-0">
-              <h2 className="text-sm font-mono font-black text-[#d4a373] uppercase tracking-widest flex items-center gap-2">
-                <Compass className="h-4 w-4" /> Operaciones de Campo
+              <h2 className="text-xs font-mono font-semibold text-[#d4a373] uppercase tracking-widest flex items-center gap-2">
+                <Compass className="h-3.5 w-3.5" /> Operaciones de Campo
               </h2>
             </div>
 
@@ -312,22 +291,22 @@ export default function TravelDashboard() {
 
           {/* EQUIPO DISPONIBLE */}
           <div className="archive-panel p-4 rounded-lg h-[35%] shrink-0 flex flex-col overflow-hidden bg-[#15120e]">
-            <h2 className="text-sm font-mono font-black text-[#d4a373] uppercase tracking-widest mb-3 flex items-center gap-2 border-b border-[#d4a373]/20 pb-2 shrink-0">
-              <Users className="h-4 w-4" /> Resumen de Equipo
+            <h2 className="text-xs font-mono font-semibold text-[#d4a373] uppercase tracking-widest mb-3 flex items-center gap-2 border-b border-[#d4a373]/20 pb-2 shrink-0">
+              <Users className="h-3.5 w-3.5" /> Resumen de Equipo
             </h2>
             <div className="flex-1 flex flex-col justify-center gap-4">
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-bg-paper paper-texture border-2 border-[#8b7355]/20 p-3 rounded-sm text-center shadow-md">
-                  <span className="block text-sm font-mono text-ink/40 uppercase mb-0.5 font-black tracking-widest">
+                  <span className="text-2xl font-mono font-black text-ink leading-none block mb-1">{inBaseCount}</span>
+                  <span className="block text-[10px] font-mono text-ink/50 uppercase tracking-wider font-medium">
                     En Base
                   </span>
-                  <span className="text-2xl font-mono font-black text-ink">{inBaseCount}</span>
                 </div>
                 <div className="bg-bg-paper paper-texture border-2 border-[#8b7355]/20 p-3 rounded-sm text-center shadow-md">
-                  <span className="block text-sm font-mono text-ink/40 uppercase mb-0.5 font-black tracking-widest">
+                  <span className="text-2xl font-mono font-black text-[#89633e] leading-none block mb-1">{inFieldCount}</span>
+                  <span className="block text-[10px] font-mono text-ink/50 uppercase tracking-wider font-medium">
                     En Campo
                   </span>
-                  <span className="text-2xl font-mono font-black text-[#89633e]">{inFieldCount}</span>
                 </div>
               </div>
 
@@ -346,8 +325,8 @@ export default function TravelDashboard() {
         <section className="md:col-span-4 flex flex-col gap-4 overflow-hidden h-full">
           {/* PANEL: EN MOVIMIENTO */}
           <div className="archive-panel p-4 rounded-lg flex-1 flex flex-col overflow-hidden bg-[#110e0c]">
-            <h2 className="text-sm font-mono font-black text-[#d4a373] uppercase tracking-widest mb-3 border-b border-[#d4a373]/20 pb-2 flex items-center gap-2 shrink-0">
-              <Target className="h-4 w-4" /> Transferencias Activas
+            <h2 className="text-xs font-mono font-semibold text-[#d4a373] uppercase tracking-widest mb-3 border-b border-[#d4a373]/20 pb-2 flex items-center gap-2 shrink-0">
+              <Target className="h-3.5 w-3.5" /> Transferencias Activas
             </h2>
 
             <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar space-y-2 cursor-default flex flex-col">
@@ -399,8 +378,8 @@ export default function TravelDashboard() {
 
           {/* PANEL: APROBACIONES PENDIENTES */}
           <div className="archive-panel p-4 rounded-lg h-[45%] shrink-0 flex flex-col overflow-hidden bg-[#15120e]">
-            <h2 className="text-sm font-mono font-black text-accent-critical uppercase tracking-widest mb-3 border-b border-accent-critical/30 pb-2 flex items-center gap-2 shrink-0">
-              <AlertTriangle className="h-4 w-4" /> Aprobaciones
+            <h2 className="text-xs font-mono font-semibold text-accent-critical uppercase tracking-widest mb-3 border-b border-accent-critical/30 pb-2 flex items-center gap-2 shrink-0">
+              <AlertTriangle className="h-3.5 w-3.5" /> Aprobaciones pendientes
             </h2>
             <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar space-y-3">
               {pendingRequests.map((p) => (
@@ -411,42 +390,32 @@ export default function TravelDashboard() {
                   <div className="absolute -top-1 -right-1 opacity-10">
                     <AlertTriangle className="h-10 w-10 text-accent-critical" />
                   </div>
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="flex flex-col min-w-0">
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="flex flex-col min-w-0 flex-1 mr-2">
                       <span className="text-sm font-mono font-black text-ink uppercase truncate leading-tight">
                         {getCampName(p.camp_origin_id)} → {getCampName(p.camp_destination_id)}
                       </span>
-                      <span className="text-sm font-mono text-ink/40 font-black uppercase mt-0.5 tracking-widest">
-                        Protocolo de Asignación
+                      <span className="text-[10px] font-mono text-ink/40 font-medium uppercase mt-0.5 tracking-wider">
+                        {p.type === "resources" ? "Recursos" : p.type === "people" ? "Personal" : "Mixto"} · Solicitud pendiente
                       </span>
                     </div>
-                    <div className="px-2 py-0.5 border border-[#632a2a]/30 bg-[#632a2a]/10 rotate-2">
-                      <span className="text-sm font-mono font-black text-[#632a2a] uppercase leading-none">
+                    <div className="px-2 py-0.5 border border-[#632a2a]/40 bg-[#632a2a]/15 rounded-sm shrink-0">
+                      <span className="text-[10px] font-mono font-black text-[#c84040] uppercase leading-none tracking-widest">
                         ALTA
                       </span>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3 mb-4 text-xs font-mono font-black text-ink/30 border-y border-ink/5 py-1.5">
-                    <span className="uppercase">
-                      {p.type === "resources"
-                        ? "RECURSOS"
-                        : p.type === "people"
-                          ? "PERSONAL"
-                          : "MIXTO"}
-                    </span>
-                  </div>
-
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 mt-3">
                     <button
                       onClick={() => navigate("/travel-manager/transfers")}
-                      className="flex-1 bg-[#43523d] text-white py-2 text-xs font-mono font-black uppercase rounded shadow-md hover:bg-white hover:text-[#43523d] transition-all active:scale-95"
+                      className="flex-1 bg-[#43523d] text-white py-2.5 text-xs font-mono font-bold uppercase rounded shadow-md hover:bg-white hover:text-[#43523d] transition-all active:scale-95 tracking-wider"
                     >
                       Aprobar
                     </button>
                     <button
                       onClick={() => navigate("/travel-manager/transfers")}
-                      className="flex-1 bg-ink/5 text-ink/60 border border-ink/10 py-2 text-xs font-mono font-black uppercase rounded hover:bg-ink hover:text-[#fca311] transition-all"
+                      className="flex-1 bg-ink/5 text-ink/50 border border-ink/10 py-2.5 text-xs font-mono font-bold uppercase rounded hover:bg-ink hover:text-[#fca311] transition-all tracking-wider"
                     >
                       Rechazar
                     </button>
@@ -469,8 +438,8 @@ export default function TravelDashboard() {
         <section className="md:col-span-4 flex flex-col gap-4 overflow-hidden h-full">
           {/* ESTADO DE INSUMOS */}
           <div className="archive-panel p-4 rounded-lg flex-1 flex flex-col overflow-hidden bg-[#12110f]">
-            <h2 className="text-sm font-mono font-black text-[#d4a373] uppercase tracking-widest mb-4 border-b border-[#d4a373]/20 pb-2 flex items-center gap-2 shrink-0">
-              <AlertTriangle className="h-3.5 w-3.5 text-[#c27c2f]" /> Recursos Críticos
+            <h2 className="text-xs font-mono font-semibold text-[#d4a373] uppercase tracking-widest mb-4 border-b border-[#d4a373]/20 pb-2 flex items-center gap-2 shrink-0">
+              <AlertTriangle className="h-3.5 w-3.5 text-[#c27c2f]" /> Recursos críticos
             </h2>
             <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3.5">
               {expeditionSupplies.map((res, i) => (

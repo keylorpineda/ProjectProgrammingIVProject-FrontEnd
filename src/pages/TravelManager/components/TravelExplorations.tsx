@@ -415,17 +415,17 @@ export default function TravelExplorations() {
   return (
     <div className="h-full flex flex-col gap-3 overflow-hidden bg-bunker-bg">
       {/* ── Vista Header ── */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-industrial-metal py-4 pl-4 pr-8 md:pr-16 border-l-4 border-l-accent-warning shrink-0 shadow-lg relative overflow-hidden">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-industrial-metal py-4 pl-4 pr-8 md:pr-16 border-b border-b-[#c27c2f]/20 shrink-0 shadow-lg relative overflow-hidden">
         <div className="flex items-center gap-4 relative z-10">
-          <div className="bg-[#c27c2f]/10 p-2 border border-[#c27c2f]/30">
-            <Compass className="h-6 w-6 text-[#c27c2f]" />
+          <div className="bg-[#c27c2f]/10 p-2 border border-[#c27c2f]/25 rounded-sm">
+            <Compass className="h-5 w-5 text-[#c27c2f]" />
           </div>
           <div>
-            <h2 className="text-2xl font-typewriter font-black text-white uppercase tracking-tight leading-none">
-              OPERACIONES DE CAMPO
+            <h2 className="text-xl font-typewriter font-black text-white uppercase tracking-tight leading-none">
+              Operaciones de Campo
             </h2>
-            <p className="font-mono text-xs text-[#c27c2f] font-black uppercase tracking-[0.2em] mt-2 opacity-80">
-              Protocolo de Archivo: {baseCampId.toUpperCase()}
+            <p className="font-mono text-[10px] text-[#c27c2f]/70 font-medium uppercase tracking-wider mt-1">
+              Base: {baseCampId.toUpperCase()}
             </p>
           </div>
         </div>
@@ -506,9 +506,11 @@ export default function TravelExplorations() {
           {/* LEFT: Lista fichero */}
           <div className="w-[280px] flex flex-col gap-2 shrink-0 overflow-hidden bg-industrial-metal p-3 border-l-2 border-l-accent-warning/40">
             <div className="flex items-center justify-between px-1 mb-1 border-b border-[#c27c2f]/10 pb-2">
-              <span className="text-xs font-mono font-black text-[#c27c2f] uppercase tracking-widest">
+              <span className="text-[10px] font-mono font-medium text-[#c27c2f]/70 uppercase tracking-wider">
                 Fichero Operativo
-                {filteredExplorations.length} REG
+              </span>
+              <span className="text-[10px] font-mono font-medium text-white/30 uppercase tracking-wider">
+                {filteredExplorations.length} reg
               </span>
             </div>
 
@@ -540,11 +542,11 @@ export default function TravelExplorations() {
                       {exp.name}
                     </h5>
                     <p
-                      className={`text-sm font-mono uppercase tracking-tighter font-bold ${
-                        selectedExp?.id === exp.id ? "text-ink/80" : "text-white/40"
+                      className={`text-[10px] font-mono uppercase tracking-wide font-normal truncate mt-0.5 ${
+                        selectedExp?.id === exp.id ? "text-ink/60" : "text-white/30"
                       }`}
                     >
-                      Destino: {exp.destination_description}
+                      {exp.destination_description}
                     </p>
                     <div className="flex justify-between items-center mt-2">
                       <div className="flex -space-x-2">
@@ -619,14 +621,14 @@ export default function TravelExplorations() {
                 {/* Panel header */}
                 <div className="p-4 border-b border-[#c27c2f]/10 flex justify-between items-center bg-black/20 shrink-0">
                   <div className="flex items-center gap-3">
-                    <div className="bg-[#c27c2f]/10 p-2">
+                    <div className="bg-[#c27c2f]/10 p-2 rounded-sm border border-[#c27c2f]/20">
                       <MapPin className="h-4 w-4 text-[#c27c2f]" />
                     </div>
                     <div>
-                      <span className="text-sm font-mono font-black text-[#c27c2f] uppercase tracking-[0.3em] block mb-0.5">
-                        Bitácora de Coordenadas
+                      <span className="text-[10px] font-mono font-medium text-[#c27c2f]/60 uppercase tracking-widest block mb-0.5">
+                        Expedición
                       </span>
-                      <h3 className="text-lg font-typewriter font-black text-white uppercase leading-none tracking-tight">
+                      <h3 className="text-base font-typewriter font-black text-white uppercase leading-none tracking-tight">
                         {selectedExp.name}
                       </h3>
                     </div>
@@ -776,27 +778,27 @@ export default function TravelExplorations() {
                 </div>
 
                 {/* Action buttons */}
-                <div className="p-3 border-t border-[#c27c2f]/10 flex gap-2 shrink-0 bg-black/20">
+                <div className="p-4 border-t border-[#c27c2f]/10 flex gap-3 shrink-0 bg-black/30">
                   {selectedExp.status === "scheduled" && (
                     <>
                       <button
                         onClick={() => handleMarkDeparture(selectedExp.id)}
                         disabled={departMutation.isPending}
-                        className="flex items-center gap-1.5 px-4 py-2 bg-accent-mil text-white text-xs font-mono font-black uppercase hover:bg-accent-approved transition-all disabled:opacity-50"
+                        className="flex items-center gap-2 px-6 py-2.5 bg-accent-mil text-white text-sm font-mono font-black uppercase hover:bg-accent-approved transition-all disabled:opacity-50 shadow-md tracking-wider"
                       >
                         {departMutation.isPending ? (
-                          <Loader2 className="h-3 w-3 animate-spin" />
+                          <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
-                          <Zap className="h-3 w-3" />
+                          <Zap className="h-4 w-4" />
                         )}
                         Marcar Salida
                       </button>
                       <button
                         onClick={() => handleCancelExploration(selectedExp.id)}
                         disabled={cancelMutation.isPending}
-                        className="flex items-center gap-1.5 px-4 py-2 bg-accent-critical/10 border border-accent-critical/30 text-accent-critical text-xs font-mono font-black uppercase hover:bg-accent-critical hover:text-[#fca311] transition-all disabled:opacity-50"
+                        className="flex items-center gap-2 px-5 py-2.5 bg-accent-critical/10 border border-accent-critical/40 text-accent-critical text-sm font-mono font-semibold uppercase hover:bg-accent-critical hover:text-white transition-all disabled:opacity-50 tracking-wider"
                       >
-                        <X className="h-3 w-3" />
+                        <X className="h-4 w-4" />
                         Cancelar
                       </button>
                     </>
@@ -804,15 +806,15 @@ export default function TravelExplorations() {
                   {(selectedExp.status === "active" || selectedExp.status === "in_progress") && (
                     <button
                       onClick={() => setIsReturnModalOpen(true)}
-                      className="flex items-center gap-1.5 px-4 py-2 bg-accent-emergency/80 text-ink-black text-xs font-mono font-black uppercase hover:bg-accent-emergency transition-all"
+                      className="flex items-center gap-2 px-6 py-2.5 bg-accent-emergency/80 text-ink-black text-sm font-mono font-black uppercase hover:bg-accent-emergency transition-all shadow-md tracking-wider"
                     >
-                      <CheckCircle2 className="h-3 w-3" />
+                      <CheckCircle2 className="h-4 w-4" />
                       Registrar Retorno
                     </button>
                   )}
                   {(selectedExp.status === "completed" || selectedExp.status === "cancelled") && (
                     <span className="text-xs font-mono text-white/30 uppercase tracking-widest flex items-center gap-1.5">
-                      <Shield className="h-3 w-3" />
+                      <Shield className="h-3.5 w-3.5" />
                       Expedición archivada
                     </span>
                   )}

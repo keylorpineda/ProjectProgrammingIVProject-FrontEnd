@@ -346,15 +346,18 @@ export default function TravelTransfers() {
   return (
     <div className="w-full flex-1 h-full flex flex-col gap-3 overflow-hidden bg-bunker-bg min-w-0">
       {/* ── Vista Header ── */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-industrial-metal py-4 pl-4 pr-8 md:pr-16 border-l-4 border-l-accent-approved shrink-0 shadow-lg">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-industrial-metal py-4 pl-4 pr-8 md:pr-16 border-b border-b-accent-approved/20 shrink-0 shadow-lg">
         <div className="flex items-center gap-4">
-          <div className="bg-accent-approved/10 p-2 border border-accent-approved/30">
-            <ArrowLeftRight className="h-6 w-6 text-accent-approved" />
+          <div className="bg-accent-approved/10 p-2 border border-accent-approved/20 rounded-sm">
+            <ArrowLeftRight className="h-5 w-5 text-accent-approved" />
           </div>
           <div>
-            <h2 className="text-2xl font-typewriter font-black text-white uppercase tracking-tight leading-none">
-              GESTIÓN DE TRASLADOS
+            <h2 className="text-xl font-typewriter font-black text-white uppercase tracking-tight leading-none">
+              Gestión de Traslados
             </h2>
+            <p className="text-[10px] font-mono font-medium text-accent-approved/60 uppercase tracking-wider mt-1">
+              Base: {campId}
+            </p>
           </div>
         </div>
 
@@ -445,11 +448,11 @@ export default function TravelTransfers() {
           {/* LEFT: Transfer list */}
           <div className="w-[320px] flex flex-col gap-2 shrink-0 overflow-hidden bg-industrial-metal p-3 border-l-2 border-l-accent-approved/40">
             <div className="flex items-center justify-between px-1 mb-1 border-b border-accent-approved/10 pb-2">
-              <span className="text-xs font-mono font-black text-accent-approved uppercase tracking-widest">
+              <span className="text-[10px] font-mono font-medium text-accent-approved/70 uppercase tracking-wider">
                 Registro de Traslados
               </span>
-              <span className="text-sm font-mono font-black text-white/20 uppercase">
-                {filteredTransfers.length} REG
+              <span className="text-[10px] font-mono font-medium text-white/30 uppercase tracking-wider">
+                {filteredTransfers.length} reg
               </span>
             </div>
 
@@ -560,16 +563,16 @@ export default function TravelTransfers() {
                 {/* Detail header */}
                 <div className="p-4 border-b border-accent-approved/10 flex justify-between items-start bg-black/20 shrink-0">
                   <div>
-                    <span className="text-sm font-mono font-black text-accent-approved uppercase tracking-[0.3em] block mb-2">
-                      Orden de Traslado #{selectedTransfer.id.slice(0, 8).toUpperCase()}
+                    <span className="text-[10px] font-mono font-medium text-accent-approved/60 uppercase tracking-widest block mb-2">
+                      Orden #{selectedTransfer.id.slice(0, 8).toUpperCase()}
                     </span>
-                    <div className="flex items-center gap-4 bg-black/40 py-2 px-4 border border-accent-approved/20 rounded-sm">
-                      <span className="font-typewriter text-white font-black uppercase text-xl">
-                        BÚNKER {selectedTransfer.camp_origin_id}
+                    <div className="flex items-center gap-4 bg-black/40 py-2.5 px-4 border border-accent-approved/20 rounded-sm">
+                      <span className="font-typewriter text-white font-black uppercase text-lg leading-none">
+                        {selectedTransfer.camp_origin_id}
                       </span>
-                      <ArrowLeftRight className="h-6 w-6 text-accent-approved" />
-                      <span className="font-typewriter text-white font-black uppercase text-xl">
-                        BÚNKER {selectedTransfer.camp_destination_id}
+                      <ArrowLeftRight className="h-5 w-5 text-accent-approved shrink-0" />
+                      <span className="font-typewriter text-white font-black uppercase text-lg leading-none">
+                        {selectedTransfer.camp_destination_id}
                       </span>
                     </div>
                   </div>
@@ -678,13 +681,13 @@ export default function TravelTransfers() {
                 </div>
 
                 {/* Action buttons */}
-                <div className="p-4 border-t border-accent-approved/10 flex gap-2 mt-auto">
+                <div className="p-4 border-t border-accent-approved/10 flex gap-3 mt-auto">
                   {selectedTransfer.status === "pending" &&
                     selectedTransfer.camp_origin_id === campId && (
                       <button
                         onClick={() => handleCancelTransfer(selectedTransfer.id)}
                         disabled={cancelMutation.isPending}
-                        className="flex items-center gap-2 px-6 py-3 bg-[#9c2720]/20 border border-[#9c2720] text-[#ff4a4a] text-sm font-mono font-black uppercase hover:bg-[#9c2720] hover:text-white transition-all disabled:opacity-50 shadow-lg"
+                        className="flex items-center gap-2 px-6 py-2.5 bg-[#9c2720]/20 border border-[#9c2720]/60 text-[#ff4a4a] text-sm font-mono font-semibold uppercase hover:bg-[#9c2720] hover:text-white transition-all disabled:opacity-50 shadow-md tracking-wider"
                       >
                         {cancelMutation.isPending ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
@@ -699,12 +702,12 @@ export default function TravelTransfers() {
                       <button
                         onClick={() => handleConfirmArrival(selectedTransfer.id)}
                         disabled={confirmMutation.isPending}
-                        className="flex items-center gap-1.5 px-4 py-2 bg-accent-approved text-white text-xs font-mono font-black uppercase hover:opacity-90 transition-all disabled:opacity-50"
+                        className="flex items-center gap-2 px-8 py-2.5 bg-accent-approved text-white text-sm font-mono font-black uppercase hover:opacity-90 transition-all disabled:opacity-50 shadow-lg tracking-wider"
                       >
                         {confirmMutation.isPending ? (
-                          <Loader2 className="h-3 w-3 animate-spin" />
+                          <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
-                          <CheckCircle2 className="h-3 w-3" />
+                          <CheckCircle2 className="h-4 w-4" />
                         )}
                         Confirmar Llegada
                       </button>
@@ -713,7 +716,7 @@ export default function TravelTransfers() {
                     selectedTransfer.status === "rejected" ||
                     selectedTransfer.status === "cancelled") && (
                     <span className="text-xs font-mono text-white/30 uppercase tracking-widest flex items-center gap-1.5">
-                      <Archive className="h-3 w-3" />
+                      <Archive className="h-3.5 w-3.5" />
                       Traslado archivado
                     </span>
                   )}

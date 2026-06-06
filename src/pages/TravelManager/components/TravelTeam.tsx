@@ -172,41 +172,34 @@ export default function TravelTeam() {
       {/* 1. MASTER HUD - CONTROL DE EQUIPO */}
       <motion.div
         variants={itemVariants}
-        className="archive-panel p-3 rounded-lg shrink-0 border-l-4 border-l-[#d4a373] bg-[#12110f]"
+        className="archive-panel p-4 rounded-lg shrink-0 border border-[#d4a373]/25 bg-[#12110f] shadow-[0_-2px_0_0_rgba(212,163,115,0.4)]"
       >
-        <div className="flex justify-between items-center mb-1 border-b border-[#d4a373]/10 pb-1">
-          <div className="flex items-center gap-4">
-            <span className="archive-header italic text-xs text-white/40 uppercase">
-              Base de Viajes // Gestión de Personal
+        <div className="flex justify-between items-center mb-2 border-b border-[#d4a373]/10 pb-2">
+          <span className="font-mono text-[10px] text-white/30 uppercase tracking-wider">
+            Panel de Coordinación · Gestión de Personal
+          </span>
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-1.5 font-mono text-[10px] text-accent-approved uppercase tracking-wider">
+              <span className="w-1.5 h-1.5 rounded-full bg-accent-approved animate-pulse inline-block" />
+              Enlace activo
             </span>
-            <div className="h-3 w-px bg-white/10" />
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-mono text-white/20 uppercase">
-                Panel de Coordinación Local
-              </span>
-            </div>
-          </div>
-          <div className="flex items-center gap-6">
-            <span className="archive-header text-sm text-accent-approved animate-pulse">
-              ENLACE_ACTIVO
-            </span>
-            <span className="archive-header text-sm text-white/30 tracking-widest">
-              OP_BASE::{baseCamp?.name?.toUpperCase() ?? baseCampId}
+            <span className="font-mono text-xs text-[#d4a373] font-semibold border border-[#d4a373]/25 px-2.5 py-0.5 bg-black/40 rounded-sm tracking-widest">
+              {baseCamp?.name?.toUpperCase() ?? baseCampId}
             </span>
           </div>
         </div>
 
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-3">
-            <div className="bg-[#d4a373]/20 p-2 border border-[#d4a373]/30">
-              <Users className="h-6 w-6 text-[#d4a373]" />
+            <div className="bg-[#d4a373]/15 p-2 border border-[#d4a373]/25 rounded-sm">
+              <Users className="h-5 w-5 text-[#d4a373]" />
             </div>
             <div>
-              <h1 className="archive-title text-xl lg:text-2xl text-white uppercase">
-                EQUIPO - {consultedCamp?.name ?? baseCampId}
+              <h1 className="font-typewriter text-xl lg:text-2xl text-white font-black uppercase tracking-tight leading-none">
+                Equipo — {consultedCamp?.name ?? baseCampId}
               </h1>
-              <p className="text-sm font-mono text-[#d4a373] uppercase tracking-[0.2em] font-black">
-                Personal Operativo y Logístico
+              <p className="text-[11px] font-mono text-[#d4a373]/70 uppercase tracking-[0.18em] font-medium mt-1">
+                Personal Operativo
               </p>
             </div>
           </div>
@@ -216,17 +209,12 @@ export default function TravelTeam() {
               onClick={() =>
                 setActiveStatus(activeStatus === PersonStatus.Active ? "all" : PersonStatus.Active)
               }
-              className={`bg-[#d4a373]/10 border px-4 py-1.5 rounded text-center min-w-[90px] transition-all hover:bg-[#d4a373]/20 ${activeStatus === PersonStatus.Active ? "border-accent-approved shadow-inner shadow-accent-approved/20" : "border-[#d4a373]/30"}`}
+              className={`bg-[#d4a373]/10 border px-4 py-3 rounded text-center min-w-[90px] transition-all hover:bg-[#d4a373]/20 ${activeStatus === PersonStatus.Active ? "border-accent-approved shadow-inner shadow-accent-approved/20" : "border-[#d4a373]/30"}`}
             >
-              <div className="flex flex-col mb-0.5 leading-none">
-                <span className="text-sm font-mono text-accent-approved/60 uppercase font-black">
-                  Operativos
-                </span>
-                <span className="text-sm font-mono text-accent-approved uppercase font-black">
-                  Disponibles
-                </span>
-              </div>
-              <span className="text-xl font-mono font-black text-white">{activeCount}</span>
+              <span className="text-3xl font-mono font-black text-white leading-none block mb-1">{activeCount}</span>
+              <span className="text-[10px] font-mono text-accent-approved/70 uppercase tracking-wider font-medium block leading-snug">
+                Operativos<br />disponibles
+              </span>
             </button>
             <button
               onClick={() =>
@@ -234,17 +222,12 @@ export default function TravelTeam() {
                   activeStatus === PersonStatus.Exploring ? "all" : PersonStatus.Exploring,
                 )
               }
-              className={`bg-[#d4a373]/10 border px-4 py-1.5 rounded text-center min-w-[90px] transition-all hover:bg-[#d4a373]/20 ${activeStatus === PersonStatus.Exploring ? "border-[#c27c2f] shadow-inner shadow-accent-warning/20" : "border-[#d4a373]/30"}`}
+              className={`bg-[#d4a373]/10 border px-4 py-3 rounded text-center min-w-[90px] transition-all hover:bg-[#d4a373]/20 ${activeStatus === PersonStatus.Exploring ? "border-[#c27c2f] shadow-inner shadow-accent-warning/20" : "border-[#d4a373]/30"}`}
             >
-              <div className="flex flex-col mb-0.5 leading-none">
-                <span className="text-sm font-mono text-[#c27c2f]/60 uppercase font-black">
-                  Personal
-                </span>
-                <span className="text-sm font-mono text-[#c27c2f] uppercase font-black">
-                  En Campo
-                </span>
-              </div>
-              <span className="text-xl font-mono font-black text-white">{inFieldCount}</span>
+              <span className="text-3xl font-mono font-black text-white leading-none block mb-1">{inFieldCount}</span>
+              <span className="text-[10px] font-mono text-[#c27c2f]/70 uppercase tracking-wider font-medium block leading-snug">
+                Personal<br />en campo
+              </span>
             </button>
             <button
               onClick={() =>
@@ -252,17 +235,12 @@ export default function TravelTeam() {
                   activeStatus === PersonStatus.Injured ? "all" : PersonStatus.Injured,
                 )
               }
-              className={`bg-[#d4a373]/10 border px-4 py-1.5 rounded text-center min-w-[90px] transition-all hover:bg-[#d4a373]/20 ${activeStatus === PersonStatus.Injured ? "border-accent-critical shadow-inner shadow-accent-critical/20" : "border-[#d4a373]/30"}`}
+              className={`bg-[#d4a373]/10 border px-4 py-3 rounded text-center min-w-[90px] transition-all hover:bg-[#d4a373]/20 ${activeStatus === PersonStatus.Injured ? "border-accent-critical shadow-inner shadow-accent-critical/20" : "border-[#d4a373]/30"}`}
             >
-              <div className="flex flex-col mb-0.5 leading-none">
-                <span className="text-sm font-mono text-accent-critical/60 uppercase font-black">
-                  Bajas
-                </span>
-                <span className="text-sm font-mono text-accent-critical uppercase font-black">
-                  Heridos
-                </span>
-              </div>
-              <span className="text-xl font-mono font-black text-white">{injuredCount}</span>
+              <span className="text-3xl font-mono font-black text-white leading-none block mb-1">{injuredCount}</span>
+              <span className="text-[10px] font-mono text-accent-critical/70 uppercase tracking-wider font-medium block leading-snug">
+                Bajas<br />heridos
+              </span>
             </button>
           </div>
         </div>
@@ -287,7 +265,7 @@ export default function TravelTeam() {
         >
           <div className="archive-panel p-4 rounded-lg flex-1 flex flex-col overflow-hidden shadow-2xl bg-[#12100d]">
             <div className="flex items-center justify-between mb-4 border-b border-[#d4a373]/20 pb-2 shrink-0">
-              <h2 className="text-sm font-mono font-black text-[#d4a373] uppercase tracking-widest flex items-center gap-2">
+              <h2 className="text-xs font-mono font-semibold text-[#d4a373] uppercase tracking-widest flex items-center gap-2">
                 <Users className="h-4 w-4" /> Registro de Personal
               </h2>
             </div>
@@ -378,7 +356,7 @@ export default function TravelTeam() {
           className="md:col-span-8 flex flex-col gap-4 overflow-hidden h-full"
         >
           <div className="archive-panel p-6 rounded-lg flex-1 flex flex-col overflow-hidden bg-[#110e0c] relative">
-            <h2 className="text-sm font-mono font-black text-[#d4a373] uppercase tracking-widest mb-4 border-b border-[#d4a373]/20 pb-2 flex items-center justify-between shrink-0">
+            <h2 className="text-xs font-mono font-semibold text-[#d4a373] uppercase tracking-widest mb-4 border-b border-[#d4a373]/20 pb-2 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2">
                 <FileText className="h-4 w-4" /> Expediente Clasificado
               </div>

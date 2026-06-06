@@ -104,7 +104,6 @@ export default function WorkerProfile() {
   const { data: profile } = useMyProfile()
 
   const camp = campData?.camp
-  const campMetrics = campData?.metrics
   const person = profile?.person
   const profession = person?.profession
 
@@ -136,7 +135,7 @@ export default function WorkerProfile() {
   }, [hasFirstLogin])
 
   return (
-    <div className="wv-page">
+    <div className="wv-page wv-profile-page">
       {/* ── Page header ── */}
       <div className="wv-page-header">
         <h2>EXPEDIENTE DEL SUPERVIVIENTE</h2>
@@ -149,6 +148,7 @@ export default function WorkerProfile() {
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ type: "spring", stiffness: 130 }}
+        whileHover={{ scale: 1.025, zIndex: 10 }}
       >
         {/* Left column */}
         <div className="wv-id-left">
@@ -250,64 +250,6 @@ export default function WorkerProfile() {
           </div>
         </div>
       </motion.div>
-
-      {/* ── CAMP INTEL ── */}
-      {camp ? (
-        <motion.div
-          className="wv-paper-dark"
-          style={{ padding: 24, marginTop: 20 }}
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 120, delay: 0.1 }}
-        >
-          <div className="wv-section-title-row">
-            <h3 className="wv-section-title" style={{ marginBottom: 0 }}>
-              INTELIGENCIA DE SECTOR
-            </h3>
-            <span
-              className="wv-section-count"
-              style={{ color: camp.active ? "var(--accent-approved)" : "var(--accent-critical)" }}
-            >
-              {camp.active ? "● ACTIVO" : "○ INACTIVO"}
-            </span>
-          </div>
-          <div className="wv-camp-grid">
-            {[
-              { label: "NOMBRE DEL CAMPAMENTO", value: camp.name },
-              { label: "UBICACIÓN", value: camp.location_description ?? "CLASIFICADA" },
-              {
-                label: "CAPACIDAD MÁXIMA",
-                value: camp.max_capacity ? `${camp.max_capacity} PERSONAS` : "N/D",
-              },
-              {
-                label: "FECHA DE FUNDACIÓN",
-                value: camp.foundation_date
-                  ? String(camp.foundation_date).split("T")[0]
-                  : "DESCONOCIDA",
-              },
-              ...(campMetrics
-                ? [
-                    { label: "RECURSOS TOTALES", value: String(campMetrics.totalResources) },
-                    {
-                      label: "RECURSOS CON ALERTA",
-                      value: String(campMetrics.resourcesWithAlerts),
-                    },
-                  ]
-                : []),
-            ].map((row) => (
-              <div key={row.label} className="wv-camp-row">
-                <span className="wv-id-row-label">{row.label}</span>
-                <span className="wv-id-row-value">{row.value}</span>
-              </div>
-            ))}
-          </div>
-          {camp.latitude != null && camp.longitude != null ? (
-            <div className="wv-coords">
-              COORDS: {Number(camp.latitude).toFixed(4)}°N / {Number(camp.longitude).toFixed(4)}°W
-            </div>
-          ) : null}
-        </motion.div>
-      ) : null}
 
       {/* ── INSIGNIAS ── */}
       <motion.div
