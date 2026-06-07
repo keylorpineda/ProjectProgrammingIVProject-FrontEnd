@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { AnimatePresence, motion } from "framer-motion"
 import { useEffect, useMemo, useState } from "react"
 
@@ -122,7 +122,8 @@ export default function Transfers() {
   const isLoading = queryLoading && transfers.length === 0
   const error = queryError ? "No se pudieron cargar las transferencias." : ""
 
-  const reload = () => refetch()
+  const queryClient = useQueryClient()
+  const reload = () => queryClient.invalidateQueries({ queryKey: ["adminTransfers", activeCampId] })
 
   useEffect(() => {
     let isMounted = true
@@ -269,8 +270,15 @@ export default function Transfers() {
       await createTransferRequest(body)
       closeAll()
       reload()
-    } catch {
-      setFormError("No se pudo crear la solicitud de traslado.")
+    } catch (err: any) {
+      // Surface the real backend error so the user knows why it failed
+      const serverMsg =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        err?.message
+      const display = Array.isArray(serverMsg) ? serverMsg.join(", ") : serverMsg
+      console.error("[Transfers] createTransferRequest failed:", err?.response?.data ?? err)
+      setFormError(display ?? "No se pudo crear la solicitud de traslado.")
     } finally {
       setIsSaving(false)
     }
