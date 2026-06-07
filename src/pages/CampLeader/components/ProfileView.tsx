@@ -1,14 +1,15 @@
 import { motion, AnimatePresence } from "framer-motion"
 import {
-  User,
-  Users,
-  TrendingUp,
   Award,
   CheckCircle,
+  FileText,
   Shield,
   Star,
+  TrendingUp,
+  Trophy,
+  User,
+  Users,
   X,
-  FileText,
 } from "lucide-react"
 import { useState } from "react"
 
@@ -23,8 +24,35 @@ interface ProfileViewProps {
   residents: Person[]
 }
 
+function getRankInfo(score: number) {
+  if (score >= 900)
+    return {
+      label: "LEYENDA DEL PARAMO",
+      color: "#fca311",
+      nextThreshold: null,
+      prevThreshold: 900,
+    }
+  if (score >= 600)
+    return { label: "COMANDANTE", color: "#c27c2f", nextThreshold: 900, prevThreshold: 600 }
+  if (score >= 300)
+    return { label: "VETERANO", color: "#ab9e8b", nextThreshold: 600, prevThreshold: 300 }
+  if (score >= 100)
+    return { label: "EXPLORADOR", color: "#3b7a5a", nextThreshold: 300, prevThreshold: 100 }
+  return { label: "RECLUTA", color: "#71717a", nextThreshold: 100, prevThreshold: 0 }
+}
+
 export default function ProfileView({ user, statistics, residents }: ProfileViewProps) {
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null)
+  const rank = getRankInfo(statistics.survival_score)
+  const rankProgress =
+    rank.nextThreshold !== null
+      ? Math.min(
+          100,
+          ((statistics.survival_score - rank.prevThreshold) /
+            (rank.nextThreshold - rank.prevThreshold)) *
+            100,
+        )
+      : 100
 
   // Status color badges
   const getStatusBadge = (status: Person["status"]) => {
@@ -65,158 +93,172 @@ export default function ProfileView({ user, statistics, residents }: ProfileView
   }
 
   return (
-    <div className="p-10 space-y-10">
-      {/* PAGE HEADER */}
-      <div className="border-b border-[#c27c2f]/30 pb-6 flex flex-col md:flex-row justify-between items-start md:items-center">
+    <div className="mx-4 my-4 flex flex-col gap-5">
+      {/* HEADER */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 bg-black/40 border border-[#d4be8c]/15 border-l-[3px] border-l-[#c27c2f] px-4 py-3">
         <div>
-          <h2 className="font-typewriter text-2xl font-bold tracking-wider text-[#fca311] uppercase uppercase">
-            EXPEDIENTE JURIDICO DEL REFUGIO Y COMBATIENTES
+          <h2 className="font-typewriter text-base font-bold tracking-widest text-[#df8120] uppercase">
+            EXPEDIENTE DEL REFUGIO Y COMBATIENTES
           </h2>
-          <p className="font-mono text-xs text-[#fca311]/60 uppercase tracking-widest">
-            REGISTRO DE PERSONAS DE COMBATE, SALUD VITAL Y EXPEDIENTES EXCURSIONISTAS
+          <p className="font-mono text-[10px] text-[#9a8a74] uppercase tracking-wider mt-0.5">
+            REGISTRO VITAL · BUNKER ALFA
           </p>
         </div>
-        <div className="vintage-tape mt-2 md:mt-0">CONFIDENCIAL COMANDANTE</div>
+        <div className="vintage-tape shrink-0">CONFIDENCIAL</div>
       </div>
 
-      {/* COMMANDER & BUNKER MACRO OVERVIEWS */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* COL 1: COMMANDER METRICS OVERVIEW */}
+      {/* COMANDANTE + ESTADÍSTICAS */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* COL 1: COMANDANTE */}
         <div
           id="commander-manifest-card"
-          className="bg-[#9a9080] border border-black relative overflow-hidden text-black transition-transform hover:scale-[1.01] p-8 flex flex-col justify-between"
+          className="bg-[#141312] border border-[#d4be8c]/10 border-l-4 border-l-[#c27c2f] relative overflow-hidden p-4 flex flex-col justify-between"
         >
           <div>
-            <span className="font-mono text-[9px] font-bold text-zinc-600 block uppercase tracking-wider">
-              [IDENTIFICACION CONSEJO MILITAR]
+            <span className="font-mono text-[10px] font-bold text-[#9a8a74] block uppercase tracking-wider">
+              IDENTIFICACIÓN — CONSEJO MILITAR
             </span>
-            <h3 className="font-typewriter text-md font-bold text-black uppercase mt-1 leading-5">
-              MANIFEST DE COMANDANCIA ALFA
+            <h3 className="font-typewriter text-sm font-bold text-[#df8120] uppercase mt-1">
+              COMANDANCIA ALFA
             </h3>
 
-            <div className="border border-dashed border-black/25 rounded p-3 bg-black/5 mt-4 space-y-2 text-xs font-mono text-zinc-950">
+            <div className="border border-dashed border-[#d4be8c]/20 p-3 bg-black/20 mt-3 space-y-1.5 text-[11px] font-mono">
               <p className="flex justify-between">
-                <span className="text-zinc-600 uppercase font-bold">NOMBRE:</span>
-                <span className="font-bold text-right truncate w-2/3 uppercase">
+                <span className="text-[#9a8a74] uppercase">NOMBRE:</span>
+                <span className="font-bold text-[#e8dcc8] uppercase truncate ml-2">
                   {user?.username}
                 </span>
               </p>
               <p className="flex justify-between">
-                <span className="text-zinc-600 uppercase font-bold">CREDITO:</span>
-                <span className="font-bold">LIDER DE CAMPAMENTO</span>
+                <span className="text-[#9a8a74] uppercase">CRÉDITO:</span>
+                <span className="font-bold text-[#e8dcc8]">LÍDER DE CAMPAMENTO</span>
               </p>
               <p className="flex justify-between">
-                <span className="text-zinc-600 uppercase font-bold">BASE ASIGNADA:</span>
-                <span className="font-bold text-red-900">REFUGIO CENTRAL</span>
+                <span className="text-[#9a8a74] uppercase">BASE:</span>
+                <span className="font-bold text-[#9c2720]">REFUGIO CENTRAL</span>
               </p>
               <p className="flex justify-between">
-                <span className="text-zinc-600 uppercase font-bold">SEGURIDAD LICENCIA:</span>
-                <span className="font-bold">NIVEL COBRE IV</span>
+                <span className="text-[#9a8a74] uppercase">RANGO:</span>
+                <span className="font-bold uppercase" style={{ color: rank.color }}>
+                  {rank.label}
+                </span>
               </p>
+            </div>
+
+            {/* PUNTUACIÓN */}
+            <div className="mt-3 border border-[#d4be8c]/15 p-3 bg-black/20">
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-mono text-[9px] uppercase font-bold text-[#9a8a74]">
+                  PUNTUACIÓN DE SUPERVIVENCIA
+                </span>
+                <Trophy className="w-3.5 h-3.5 text-[#c27c2f]" />
+              </div>
+              <div className="flex items-end gap-2">
+                <span className="font-typewriter text-3xl font-black" style={{ color: rank.color }}>
+                  {statistics.survival_score}
+                </span>
+                <span className="font-mono text-[9px] text-[#9a8a74] uppercase mb-1">PTS</span>
+              </div>
+              <div className="w-full h-1.5 bg-black/40 overflow-hidden mt-1">
+                <div
+                  className="h-full transition-all duration-700"
+                  style={{ width: `${rankProgress}%`, backgroundColor: rank.color }}
+                />
+              </div>
+              {rank.nextThreshold !== null && (
+                <p className="font-mono text-[9px] text-[#9a8a74] mt-1 uppercase">
+                  FALTAN {rank.nextThreshold - statistics.survival_score} PTS PARA{" "}
+                  {getRankInfo(rank.nextThreshold).label}
+                </p>
+              )}
             </div>
           </div>
 
-          <div className="mt-8 border-t border-black/10 pt-4 flex items-center gap-3">
-            <Shield className="w-8 h-8 text-amber-800 shrink-0" />
-            <p className="text-[10px] font-mono text-zinc-700 uppercase leading-3.5">
-              EL COMANDANTE ASUME RESPONSABILIDAD PENAL ABSOLUTA POR LAS BAJAS COMPROBADAS EN LA
-              ZONA MUERTA EXTERIOR.
+          <div className="mt-3 border-t border-white/5 pt-3 flex items-center gap-2">
+            <Shield className="w-5 h-5 text-[#c27c2f] shrink-0" />
+            <p className="text-[10px] font-mono text-[#9a8a74] uppercase leading-4">
+              EL COMANDANTE ASUME RESPONSABILIDAD POR LAS BAJAS EN ZONA MUERTA.
             </p>
           </div>
         </div>
 
-        {/* COL 2: SURVIVAL STATS GRID */}
+        {/* COL 2: ESTADÍSTICAS */}
         <div
           id="bunker-audit-card"
-          className="bg-black/30 border border-[#3b4d3e] rounded-lg backdrop-blur-sm shadow-md p-8 flex flex-col justify-between col-span-2"
+          className="bg-[#141312] border border-[#d4be8c]/10 border-l-4 border-l-[#4c6351] p-4 flex flex-col gap-4 col-span-2"
         >
-          <div>
-            <div className="flex items-center gap-2 border-b border-[#c27c2f]/20 pb-3 mb-4">
-              <Users className="w-5 h-5 text-amber-500 animate-pulse" />
-              <h3 className="font-typewriter text-sm text-[#fca311] font-bold tracking-widest">
-                INFORMES INTEGRALES DEL REFUGIO ALFA-01
-              </h3>
-            </div>
-
-            {/* Stats list items */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 mt-4">
-              <div className="bg-black/45 p-5 rounded border border-[#3b4d3e]/40 text-center">
-                <span className="text-xs font-mono text-[#ab9e8b] block uppercase mb-1">
-                  POBLACIÓN TOTAL
-                </span>
-                <span className="font-typewriter text-4xl font-bold text-amber-500">
-                  {statistics.total_persons}
-                </span>
-                <span className="text-xs font-mono text-zinc-500 block uppercase mt-2">
-                  SOBREVIVIENTES
-                </span>
-              </div>
-
-              <div className="bg-black/45 p-5 rounded border border-[#3b4d3e]/40 text-center">
-                <span className="text-xs font-mono text-[#ab9e8b] block uppercase mb-1">
-                  MANO DE OBRA
-                </span>
-                <span className="font-typewriter text-4xl font-bold text-emerald-500">
-                  {statistics.active_workers}
-                </span>
-                <span className="text-xs font-mono text-zinc-500 block uppercase mt-2">
-                  OPERARIOS ACTIVOS
-                </span>
-              </div>
-
-              <div className="bg-black/45 p-5 rounded border border-[#3b4d3e]/40 text-center">
-                <span className="text-xs font-mono text-[#ab9e8b] block uppercase mb-1">
-                  EN EXPEDICIÓN
-                </span>
-                <span className="font-typewriter text-4xl font-bold text-blue-400">
-                  {statistics.exploring}
-                </span>
-                <span className="text-xs font-mono text-zinc-500 block uppercase mt-2">
-                  EMBARCADOS
-                </span>
-              </div>
-
-              <div className="bg-black/45 p-5 rounded border border-[#3b4d3e]/40 text-center">
-                <span className="text-xs font-mono text-red-400 block uppercase mb-1">
-                  ENFERMOS / HERIDOS
-                </span>
-                <span className="font-typewriter text-4xl font-bold text-red-500">
-                  {statistics.injured_or_sick}
-                </span>
-                <span className="text-xs font-mono text-zinc-500 block uppercase mt-2">
-                  EN CUIDADOS
-                </span>
-              </div>
-            </div>
+          <div className="flex items-center gap-2 border-b border-white/5 pb-3">
+            <Users className="w-4 h-4 text-[#4c6351] animate-pulse" />
+            <h3 className="font-typewriter text-sm text-[#df8120] font-bold tracking-widest">
+              INFORME BUNKER ALFA-01
+            </h3>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-zinc-900 pt-4 mt-4">
-            <div className="flex gap-3 items-center">
-              <TrendingUp className="w-5 h-5 text-amber-500" />
-              <div>
-                <span className="text-[10px] text-zinc-400 font-mono block uppercase">
-                  TASA OCUPACION BUNKER (8 CAMAS)
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              {
+                label: "POBLACIÓN",
+                value: statistics.total_persons,
+                sub: "SOBREVIVIENTES",
+                color: "text-[#fca311]",
+              },
+              {
+                label: "MANO DE OBRA",
+                value: statistics.active_workers,
+                sub: "ACTIVOS",
+                color: "text-[#4c6351]",
+              },
+              {
+                label: "EN EXPEDICIÓN",
+                value: statistics.exploring,
+                sub: "EMBARCADOS",
+                color: "text-blue-400",
+              },
+              {
+                label: "BAJAS / HERIDOS",
+                value: statistics.injured_or_sick,
+                sub: "EN CUIDADOS",
+                color: "text-[#9c2720]",
+              },
+            ].map((s) => (
+              <div key={s.label} className="bg-black/30 border border-white/5 p-3 text-center">
+                <span className="text-[10px] font-mono text-[#9a8a74] block uppercase mb-1">
+                  {s.label}
                 </span>
-                <div className="w-full h-1.5 bg-zinc-800 rounded mt-1 overflow-hidden">
+                <span className={`font-typewriter text-3xl font-bold ${s.color}`}>{s.value}</span>
+                <span className="text-[10px] font-mono text-[#6e5f4d] block uppercase mt-1">
+                  {s.sub}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 border-t border-white/5 pt-3">
+            <div className="flex gap-2 items-center">
+              <TrendingUp className="w-4 h-4 text-[#c27c2f] shrink-0" />
+              <div className="flex-1">
+                <span className="text-[10px] text-[#9a8a74] font-mono block uppercase">
+                  OCUPACIÓN BUNKER
+                </span>
+                <div className="w-full h-1 bg-black/50 mt-1 overflow-hidden">
                   <div
-                    className="bg-yellow-500 h-full"
+                    className="bg-[#c27c2f] h-full"
                     style={{ width: `${statistics.occupancy_rate}%` }}
                   />
                 </div>
-                <span className="text-[9px] text-zinc-500 font-mono">
-                  {statistics.occupancy_rate}% CAPACIDAD OCUPADA
+                <span className="text-[9px] text-[#6e5f4d] font-mono">
+                  {statistics.occupancy_rate}% OCUPADO
                 </span>
               </div>
             </div>
-
-            <div className="flex gap-2.5 items-center justify-end">
-              <Award className="w-5 h-5 text-[#3b4d3e]" />
+            <div className="flex gap-2 items-center justify-end">
+              <Award className="w-4 h-4 text-[#4c6351]" />
               <div className="text-right">
-                <span className="text-[10px] text-zinc-400 font-mono block uppercase">
-                  EXPEDICIONES SATISFACTORIAS
+                <span className="text-[10px] text-[#9a8a74] font-mono block uppercase">
+                  EXPEDICIONES EXITOSAS
                 </span>
-                <span className="font-typewriter text-md font-bold text-white uppercase">
-                  {statistics.explorations_completed} EXITOSAS
+                <span className="font-typewriter text-lg font-bold text-[#e8dcc8]">
+                  {statistics.explorations_completed}
                 </span>
               </div>
             </div>
@@ -224,19 +266,22 @@ export default function ProfileView({ user, statistics, residents }: ProfileView
         </div>
       </div>
 
-      {/* ROSTER PERSONS COMPREHENSIVE CITIZENRY FILE */}
+      {/* PERSONAL DEL BUNKER */}
       <div
         id="citizens-manifest-section"
-        className="bg-black/30 border border-[#3b4d3e] rounded-lg backdrop-blur-sm shadow-md p-8"
+        className="bg-[#141312] border border-[#d4be8c]/10 border-l-4 border-l-[#9a8a74] p-4"
       >
-        <div className="flex items-center gap-3 border-b border-[#c27c2f]/20 pb-4 mb-6">
-          <CheckCircle className="w-5 h-5 text-amber-500" />
-          <h3 className="font-typewriter text-2xl font-bold tracking-wider text-[#fca311] uppercase">
-            LISTADO OPERACIONAL DE PERSONAL EN BUNKER ALFA
+        <div className="flex items-center gap-2 border-b border-white/5 pb-3 mb-4">
+          <CheckCircle className="w-4 h-4 text-[#c27c2f]" />
+          <h3 className="font-typewriter text-sm font-bold tracking-widest text-[#df8120] uppercase">
+            PERSONAL EN BUNKER ALFA
           </h3>
+          <span className="ml-auto text-[10px] font-mono text-[#9a8a74]">
+            {residents.length} REG.
+          </span>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
           {residents.map((p) => {
             const levelStars = Array.from({ length: p.experience_level ?? 0 }, (_, i) => i)
 
@@ -247,69 +292,56 @@ export default function ProfileView({ user, statistics, residents }: ProfileView
                 tabIndex={0}
                 onClick={() => setSelectedPerson(p)}
                 onKeyDown={(e) => e.key === "Enter" && setSelectedPerson(p)}
-                className="bg-black/30 border border-[#3b4d3e]/30 p-6 rounded-lg flex flex-col sm:flex-row gap-5 relative hover:border-[#c27c2f]/50 hover:bg-black/50 transition-all duration-150 cursor-pointer group select-none"
+                className="bg-black/30 border border-white/5 p-3 flex gap-3 relative hover:border-[#c27c2f]/40 hover:bg-black/50 transition-all cursor-pointer group select-none"
               >
-                {/* ID Tag top corner */}
-                <div className="absolute top-3 right-3 text-[9px] font-mono text-zinc-500">
-                  ID: #{p.id}
+                <div className="absolute top-2 right-2 text-[9px] font-mono text-[#6e5f4d]">
+                  #{p.id}
                 </div>
 
-                {/* Left Profile Avatar */}
-                <div className="w-24 h-24 bg-zinc-900 border border-zinc-800 shrink-0 flex items-center justify-center overflow-hidden rounded relative">
+                {/* Avatar */}
+                <div className="w-12 h-12 bg-black/40 border border-white/10 shrink-0 flex items-center justify-center overflow-hidden">
                   {p.photo_url ? (
                     <img
                       src={p.photo_url}
                       alt={p.first_name}
                       referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover filter contrast-125 saturate-50 group-hover:scale-105 transition-transform duration-200"
+                      className="w-full h-full object-cover filter contrast-110 saturate-50"
                     />
                   ) : (
-                    <User className="w-8 h-8 text-zinc-600 animate-pulse" />
+                    <User className="w-5 h-5 text-[#6e5f4d]" />
                   )}
                 </div>
 
-                {/* Right Person files details */}
-                <div className="flex-1 space-y-1.5 font-mono text-xs">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h4 className="font-typewriter text-sm font-bold text-white uppercase group-hover:text-[#fca311] transition-colors">
+                {/* Info */}
+                <div className="flex-1 min-w-0 font-mono text-xs">
+                  <div className="flex items-center gap-2 flex-wrap mb-1">
+                    <h4 className="font-typewriter text-xs font-bold text-[#e8dcc8] uppercase group-hover:text-[#fca311] transition-colors truncate">
                       {p.first_name} {p.last_name}
                     </h4>
                     {getStatusBadge(p.status)}
                   </div>
 
-                  <p className="text-[10px] text-[#ab9e8b] uppercase pb-1 border-b border-zinc-900/60 leading-3">
-                    PROFESION: <span className="text-white font-bold">{p.profession?.name ?? "Desconocida"}</span>
+                  <p className="text-[10px] text-[#9a8a74] uppercase">
+                    {p.profession?.name ?? "Desconocida"}
                   </p>
 
-                  {/* MINI BADGES - GAMIFICACION */}
-                  <div className="flex flex-wrap gap-1 py-1">
-                    {p.achievements && p.achievements.length > 0 ? (
-                      p.achievements.map((ach) => <Badge key={ach} code={ach} showText={false} />)
-                    ) : (
-                      <span className="text-[9px] text-zinc-600 font-bold uppercase italic tracking-wider">
-                        - SIN LOGROS REGISTRADOS -
-                      </span>
-                    )}
+                  <div className="flex justify-between items-center text-[10px] mt-1">
+                    <div className="flex gap-0.5 text-[#c27c2f]">
+                      {levelStars.map((s) => (
+                        <Star key={s} className="w-2.5 h-2.5 fill-current" />
+                      ))}
+                    </div>
+                    <span className="text-[#9a8a74]">
+                      EXPED:{" "}
+                      <span className="text-[#e8dcc8] font-bold">{p.expeditionsSurvived}</span>
+                    </span>
                   </div>
 
-                  <div className="flex justify-between items-center text-[11px] pt-1 border-t border-zinc-900/30">
-                    <div className="flex gap-1 items-center">
-                      <span className="text-zinc-500">RANGO:</span>
-                      <div className="flex text-amber-500 shrink-0">
-                        {levelStars.map((s) => (
-                          <Star key={s} className="w-3 h-3 fill-current shrink-0" />
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <span className="text-zinc-500">EXPEDICIONES RESISTIDOS:</span>
-                      <span className="text-white font-bold ml-1">{p.expeditionsSurvived}</span>
-                    </div>
-                  </div>
-
-                  {p.previous_skills && (
-                    <div className="bg-zinc-900/50 p-1.5 rounded text-[10.5px] text-[#ab9e8b] font-mono leading-3.5 italic border border-zinc-900 truncate max-w-[280px]">
-                      * Notas de reclutamiento: &quot;{p.previous_skills}&quot;
+                  {p.achievements && p.achievements.length > 0 && (
+                    <div className="flex flex-wrap gap-0.5 mt-1">
+                      {p.achievements.slice(0, 3).map((ach) => (
+                        <Badge key={ach} code={ach} showText={false} />
+                      ))}
                     </div>
                   )}
                 </div>
@@ -425,9 +457,11 @@ export default function ProfileView({ user, statistics, residents }: ProfileView
                         LOGISTICA / RANGO
                       </span>
                       <div className="flex text-amber-500 mt-0.5">
-                        {Array.from({ length: selectedPerson.experience_level ?? 0 }).map((_, idx) => (
-                          <Star key={idx} className="w-3.5 h-3.5 fill-current shrink-0" />
-                        ))}
+                        {Array.from({ length: selectedPerson.experience_level ?? 0 }).map(
+                          (_, idx) => (
+                            <Star key={idx} className="w-3.5 h-3.5 fill-current shrink-0" />
+                          ),
+                        )}
                       </div>
                     </div>
                   </div>
@@ -437,7 +471,7 @@ export default function ProfileView({ user, statistics, residents }: ProfileView
               {/* Psych Notes */}
               <div className="py-4 space-y-1.5">
                 <h4 className="text-[10px] text-[#fca311] tracking-widest font-bold uppercase flex items-center gap-1.5">
-                  <FileText className="w-4 h-4 text-[#c27c2f]" /> NOTAS PSICOLOGICAS Y DE
+                  <FileText className="w-4 h-4 text-[#c27c2f]" /> NOTAS PSICOLÓGICAS Y DE
                   CAMPAMENTO:
                 </h4>
                 <p className="bg-neutral-950/60 p-3 rounded text-[11.5px] leading-4 text-zinc-300 border border-zinc-900 italic font-mono">

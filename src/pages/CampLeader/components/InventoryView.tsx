@@ -1,9 +1,4 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
-import { Boxes, Flame, Droplet, HeartPulse, Wrench, Sword, AlertTriangle } from "lucide-react"
+import { AlertTriangle, Boxes, Droplet, Flame, HeartPulse, Sword, Wrench } from "lucide-react"
 import { useState } from "react"
 
 import type { Inventory, ResourceCategory } from "../types"
@@ -38,67 +33,62 @@ export default function InventoryView({ inventory }: InventoryViewProps) {
   }
 
   return (
-    <div className="p-6 lg:p-8 space-y-6">
-      {/* PAGE HEADER */}
-      <div className="border-b border-[#c27c2f]/30 pb-6 flex flex-col md:flex-row justify-between items-start md:items-center">
+    <div className="p-8 lg:p-10 flex flex-col gap-8">
+      {/* HEADER */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b-4 border-[#c27c2f] pb-6">
         <div>
-          <h2 className="font-typewriter text-2xl font-bold tracking-wider text-[#fca311] uppercase">
+          <h2 className="font-typewriter text-2xl lg:text-3xl font-bold text-[#fca311] uppercase tracking-wider">
             BODEGA CENTRAL DE SUMINISTROS
           </h2>
-          <p className="font-mono text-xs text-[#fca311]/60 uppercase tracking-widest">
-            AUDITORÍA HISTÓRICA DE RACIONES Y ELEMENTOS EN EL REFUGIO ALFA
+          <p className="font-mono text-sm text-[#9a8a74] uppercase tracking-wider mt-1">
+            INVENTARIO · REFUGIO ALFA
           </p>
         </div>
-        <div className="vintage-tape mt-2 md:mt-0">LOGÍSTICA CONFIDENCIAL</div>
+        <div className="vintage-tape shrink-0 text-sm px-4 py-2">LOGÍSTICA</div>
       </div>
 
-      {/* FILTER BUTTONS ROW — horizontally scrollable on mobile */}
-      <div className="bg-black/40 p-3 border border-[#3b4d3e] rounded">
-        <div
-          className="flex gap-2 overflow-x-auto pb-1 md:pb-0 md:flex-wrap"
-          style={{ scrollbarWidth: "none" }}
+      {/* FILTROS */}
+      <div className="flex flex-wrap gap-2">
+        <button
+          onClick={() => setFilterCategory("ALL")}
+          className={`px-4 py-2.5 font-mono text-xs uppercase font-bold tracking-wider border-2 cursor-pointer transition-all flex items-center gap-2 ${
+            filterCategory === "ALL"
+              ? "bg-[#c27c2f] text-black border-black shadow-[2px_2px_0_#000]"
+              : "bg-transparent border-[#9a8a74]/50 text-[#9a8a74] hover:border-[#c27c2f] hover:text-[#fca311]"
+          }`}
         >
-          <button
-            onClick={() => setFilterCategory("ALL")}
-            className={`px-3 py-2 font-mono text-xs uppercase font-semibold tracking-wide rounded border cursor-pointer shrink-0 min-h-[44px] ${
-              filterCategory === "ALL"
-                ? "bg-[#c27c2f] text-black border-black"
-                : "bg-[#111] border-[#3b4d3e]/60 text-zinc-400 hover:text-[#fca311]"
-            }`}
-          >
-            Todo
-          </button>
+          TODO
+        </button>
 
-          {[
-            { id: "food", label: "Comida", icon: Flame },
-            { id: "water", label: "Agua", icon: Droplet },
-            { id: "medicine", label: "Medicina", icon: HeartPulse },
-            { id: "tools", label: "Herramientas", icon: Wrench },
-            { id: "weapons", label: "Armamento", icon: Sword },
-          ].map((cat) => {
-            const IconComp = cat.icon
-            const isActive = filterCategory === cat.id
+        {[
+          { id: "food", label: "COMIDA", icon: Flame },
+          { id: "water", label: "AGUA", icon: Droplet },
+          { id: "medicine", label: "MEDICINA", icon: HeartPulse },
+          { id: "tools", label: "HERRAMIENTAS", icon: Wrench },
+          { id: "weapons", label: "ARMAMENTO", icon: Sword },
+        ].map((cat) => {
+          const IconComp = cat.icon
+          const isActive = filterCategory === cat.id
 
-            return (
-              <button
-                key={cat.id}
-                onClick={() => setFilterCategory(cat.id as ResourceCategory)}
-                aria-pressed={isActive}
-                className={`px-3 py-2 font-mono text-xs uppercase font-semibold tracking-wide rounded border flex items-center gap-2 cursor-pointer shrink-0 min-h-[44px] ${
-                  isActive
-                    ? "bg-[#9a9080] text-black border-black"
-                    : "bg-[#111] border-[#3b4d3e]/60 text-zinc-400 hover:text-[#fca311]"
-                }`}
-              >
-                <IconComp className="w-3.5 h-3.5" />
-                {cat.label}
-              </button>
-            )
-          })}
-        </div>
+          return (
+            <button
+              key={cat.id}
+              onClick={() => setFilterCategory(cat.id as ResourceCategory)}
+              aria-pressed={isActive}
+              className={`px-4 py-2.5 font-mono text-xs uppercase font-bold tracking-wider border-2 flex items-center gap-2 cursor-pointer transition-all ${
+                isActive
+                  ? "bg-[#e8dcc8] text-black border-black shadow-[2px_2px_0_#000]"
+                  : "bg-transparent border-[#9a8a74]/50 text-[#9a8a74] hover:border-[#9a8a74] hover:text-[#c8bfae]"
+              }`}
+            >
+              <IconComp className="w-4 h-4" />
+              {cat.label}
+            </button>
+          )
+        })}
       </div>
 
-      {/* WAREHOUSE GRID ITEMS */}
+      {/* INVENTARIO */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {filteredInventory.map((inv) => {
           const ratio = Math.min(
@@ -109,72 +99,63 @@ export default function InventoryView({ inventory }: InventoryViewProps) {
           return (
             <div
               key={inv.resource_id}
-              className={`bg-[#9a9080] border border-black relative overflow-hidden text-black transition-transform hover:scale-[1.01] p-6 flex flex-col justify-between ${inv.alert_active ? "warning-card" : ""}`}
-              style={{ transform: `rotate(${Math.sin(inv.resource_id) * 0.4}deg)` }}
+              className="bg-[#e8dcc8] border-2 border-black shadow-[5px_5px_0_#000] flex flex-col gap-5 p-6"
+              style={{ borderLeft: `6px solid ${inv.alert_active ? "#9c2720" : "#4c6351"}` }}
             >
-              {/* Alert top bar indicator */}
-              {inv.alert_active && (
-                <div className="absolute top-0 right-0 left-0 h-[3px] bg-[#9c2720]" />
-              )}
-
-              <div className="flex justify-between items-start mb-4">
+              {/* CABECERA */}
+              <div className="flex justify-between items-start">
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 border-2 border-black flex items-center justify-center bg-black/5 rounded shrink-0">
+                  <div className="w-12 h-12 border-2 border-black flex items-center justify-center bg-black/10 shrink-0">
                     {getCategoryIcon(inv.resource.category)}
                   </div>
                   <div>
-                    <span className="text-xs font-mono font-bold tracking-widest text-zinc-600 block uppercase mb-1">
+                    <span className="font-mono text-xs font-bold text-black/50 block uppercase tracking-wider">
                       {inv.resource.category}
                     </span>
-                    <h3 className="font-typewriter text-lg font-bold text-black uppercase tracking-tight">
+                    <h3 className="font-typewriter text-lg font-bold text-black uppercase leading-tight">
                       {inv.resource.name}
                     </h3>
                   </div>
                 </div>
 
                 {inv.alert_active ? (
-                  <div className="flex items-center gap-1 bg-red-950 text-red-100 text-[11px] font-bold font-mono px-2 py-1 rounded border border-red-700 animate-pulse">
-                    <AlertTriangle className="w-3.5 h-3.5 text-red-400" />
-                    BAJO MÍNIMO
+                  <div className="flex items-center gap-1.5 text-white text-xs font-bold font-mono border-2 border-black bg-[#9c2720] px-2.5 py-1.5 shrink-0">
+                    <AlertTriangle className="w-3.5 h-3.5" />
+                    BAJO MÍN.
                   </div>
                 ) : (
-                  <div className="bg-emerald-950/20 text-[#2c3d31] border border-[#2c3d31]/50 text-[11px] font-bold font-mono px-2 py-1 rounded">
+                  <div className="text-white border-2 border-black bg-[#4c6351] text-xs font-bold font-mono px-2.5 py-1.5 shrink-0">
                     STOCK OK
                   </div>
                 )}
               </div>
 
-              {/* Progress Quantity Bars */}
+              {/* CANTIDAD Y BARRA */}
               <div className="space-y-3 font-mono">
                 <div className="flex justify-between items-end">
-                  <span className="text-sm text-zinc-600 font-bold uppercase">Stock:</span>
-                  <span className="font-typewriter text-2xl font-bold text-zinc-950">
-                    {inv.current_quantity} <span className="text-sm">{inv.resource.unit}</span>
+                  <span className="text-sm font-bold text-black/60 uppercase">Stock actual:</span>
+                  <span className="font-typewriter text-3xl font-bold text-black">
+                    {inv.current_quantity}{" "}
+                    <span className="text-sm text-black/50">{inv.resource.unit}</span>
                   </span>
                 </div>
 
-                {/* Main Progress bar */}
-                <div className="w-full h-4 bg-black/10 border border-black/25 rounded-sm overflow-hidden p-[2px]">
+                <div className="w-full h-3 bg-black/15 border border-black/20 overflow-hidden">
                   <div
-                    className={`h-full rounded-sm transition-all duration-300 ${
-                      inv.alert_active ? "bg-[#9c2720]" : "bg-[#3b4d3e]"
-                    }`}
-                    style={{ width: `${ratio}%` }}
+                    className="h-full transition-all duration-500"
+                    style={{
+                      width: `${ratio}%`,
+                      backgroundColor: inv.alert_active ? "#9c2720" : "#4c6351",
+                    }}
                   />
                 </div>
 
-                <div className="flex justify-between text-xs text-zinc-600">
+                <div className="flex justify-between text-xs text-black/60">
                   <span>
                     MÍN: {inv.minimum_stock_required} {inv.resource.unit}
                   </span>
-                  <span className="font-bold text-sm">{Math.round(ratio)}% STOCK</span>
+                  <span className="font-bold text-black">{Math.round(ratio)}%</span>
                 </div>
-              </div>
-
-              {/* Category-specific descriptions */}
-              <div className="mt-4 pt-3 border-t border-black/5 flex justify-between items-center text-[10px] font-mono text-zinc-700">
-                <span>REGISTRO LOGISTICO COSTA GRIS</span>
-                <span>REG. LOG: #{200 + inv.resource_id}</span>
               </div>
             </div>
           )

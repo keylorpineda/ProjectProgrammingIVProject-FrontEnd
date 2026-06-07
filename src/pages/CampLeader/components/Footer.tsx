@@ -1,9 +1,4 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
-import { Radio, Cpu } from "lucide-react"
+import { Cpu, Radio } from "lucide-react"
 import { useEffect, useState } from "react"
 
 export default function Footer() {

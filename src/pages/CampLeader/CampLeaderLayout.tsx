@@ -207,6 +207,7 @@ export default function CampLeaderLayout() {
             inventory={inventory}
             balances={balances}
             movements={movements}
+            statistics={statistics}
             onNavigate={(tag) => setActiveTab(tag)}
           />
         )
@@ -255,27 +256,31 @@ export default function CampLeaderLayout() {
         window.location.href = "/login"
       }}
     >
-      <div className="campleader-view relative min-h-screen bg-[#161513] text-white flex flex-col overflow-x-hidden select-none">
-        {/* CRT SCANLINES SCREEN STYLES */}
+      <div className="campleader-view h-screen max-h-screen bg-[#161513] text-white relative overflow-hidden flex flex-col select-none">
+        {/* CRT SCANLINES OVERLAY */}
         <div className="crt-overlay" />
 
-        {/* CORE FRAMEWORK GRID STRUCTURE */}
-        <div className="flex flex-1">
-          {/* LEFT TAB DIRECTORIES BAR */}
-          <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+        {/* MAIN FLEX ROW */}
+        <div className="flex-1 flex overflow-hidden">
+          {/* SIDEBAR */}
+          <Sidebar
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            survivalScore={statistics.survival_score}
+          />
 
-          {/* RIGHT MAIN CONTAINER */}
-          <div className="flex-1 min-w-0 flex flex-col overflow-y-auto max-h-screen relative bg-[#161513]">
-            {/* HEADER SECTOR CHANNELS */}
+          {/* RIGHT CONTENT COLUMN */}
+          <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+            {/* TOPBAR */}
             <Topbar survivalScore={statistics.survival_score} />
 
-            {/* COMPONENT VIEWS PORTAL */}
-            <main className="relative">
+            {/* SCROLLABLE MAIN AREA */}
+            <main className="flex-1 overflow-y-auto overflow-x-hidden relative">
               <AnimatePresence mode="wait">
                 {loading ? (
                   <div
                     key="loading"
-                    className="absolute inset-0 flex flex-col items-center justify-center p-10 bg-[#161513]"
+                    className="flex flex-col items-center justify-center p-10 h-64"
                   >
                     <div className="relative flex h-8 w-8 mb-4">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#fca311] opacity-75" />
@@ -297,31 +302,31 @@ export default function CampLeaderLayout() {
                   </motion.div>
                 )}
               </AnimatePresence>
-
-              {/* ACTION LOADING OVERLAY */}
-              <AnimatePresence>
-                {actionLoading && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="fixed inset-0 bg-neutral-950/80 backdrop-blur-sm flex flex-col items-center justify-center z-[100] font-mono text-center"
-                  >
-                    <div className="border border-[#c27c2f] max-w-xs w-full bg-[#161513] p-5 shadow-[4px_4px_0_#000] rounded">
-                      <span className="animate-spin inline-block w-8 h-8 rounded-full border-2 border-[#c27c2f] border-t-transparent mb-4" />
-                      <p className="font-typewriter text-xs text-white font-bold uppercase tracking-wider">
-                        ACTUALIZANDO REGISTRO CENTRAL...
-                      </p>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
             </main>
 
-            {/* SYSTEM FOOTER */}
+            {/* FOOTER */}
             <Footer />
           </div>
         </div>
+
+        {/* ACTION LOADING OVERLAY */}
+        <AnimatePresence>
+          {actionLoading && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-neutral-950/80 backdrop-blur-sm flex flex-col items-center justify-center z-[100] font-mono text-center"
+            >
+              <div className="border border-[#c27c2f] max-w-xs w-full bg-[#161513] p-5 shadow-[4px_4px_0_#000] rounded">
+                <span className="animate-spin inline-block w-8 h-8 rounded-full border-2 border-[#c27c2f] border-t-transparent mb-4" />
+                <p className="font-typewriter text-xs text-white font-bold uppercase tracking-wider">
+                  ACTUALIZANDO REGISTRO CENTRAL...
+                </p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </InactivityGuard>
   )

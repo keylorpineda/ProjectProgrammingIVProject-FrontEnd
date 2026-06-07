@@ -233,10 +233,10 @@ export const usersService = {
       expeditionsSurvived: p.expeditions_survived ?? 0,
       experience_level: Math.min(5, Math.floor((p.experience_points ?? 0) / 100) + 1),
       profession: p.profession
-        ? { 
-            id: p.profession.id ?? 0, 
+        ? {
+            id: p.profession.id ?? 0,
             name: p.profession.name ?? "Desconocida",
-            can_explore: p.profession.can_explore ?? false 
+            can_explore: p.profession.can_explore ?? false,
           }
         : { id: 0, name: "Desconocida", can_explore: false },
       achievements: p.achievements ?? [],

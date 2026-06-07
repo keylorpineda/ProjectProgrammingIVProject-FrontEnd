@@ -57,9 +57,7 @@ export default function Topbar({ survivalScore }: TopbarProps) {
       {/* Center Clock */}
       <div className="hidden lg:flex items-center gap-8 text-center px-6">
         <div className="flex items-center gap-2 text-left text-sm">
-          <span className="tracking-widest text-zinc-300 font-bold font-mono">
-            {utcTime}
-          </span>
+          <span className="tracking-widest text-zinc-300 font-bold font-mono">{utcTime}</span>
         </div>
       </div>
 
@@ -101,9 +99,7 @@ export default function Topbar({ survivalScore }: TopbarProps) {
           title="SALIR"
         >
           <LogOut className="h-6 w-6 shrink-0" />
-          <span className="text-sm font-bold tracking-widest whitespace-nowrap">
-            SALIR
-          </span>
+          <span className="text-sm font-bold tracking-widest whitespace-nowrap">SALIR</span>
         </button>
       </div>
     </header>

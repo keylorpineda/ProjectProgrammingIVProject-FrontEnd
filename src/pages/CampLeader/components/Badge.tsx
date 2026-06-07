@@ -1,8 +1,4 @@
 /* eslint-disable react-refresh/only-export-components */
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
 
 export interface AchievementDetails {
   name: string

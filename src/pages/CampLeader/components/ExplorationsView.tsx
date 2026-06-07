@@ -1,8 +1,3 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import { motion, AnimatePresence } from "framer-motion"
 import {
   Archive,
@@ -216,33 +211,31 @@ export default function ExplorationsView({
   }
 
   return (
-    <div className="p-6 space-y-6">
-      {/* HEADER SECTION */}
-      <div className="border-b border-[#c27c2f]/30 pb-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div className="p-8 lg:p-10 flex flex-col gap-8">
+      {/* HEADER */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b-4 border-[#c27c2f] pb-6">
         <div>
-          <h2 className="font-typewriter text-2xl font-bold tracking-wider text-[#fca311] uppercase">
+          <h2 className="font-typewriter text-2xl lg:text-3xl font-bold text-[#fca311] uppercase tracking-wider">
             EXPLORACIONES EN LA ZONA MUERTA
           </h2>
-          <p className="font-mono text-xs text-[#fca311]/60 uppercase tracking-widest">
-            RECLUTAMIENTO, LANZAMIENTOS DE RUTA Y SEGUIMIENTO DE PATRULLAS EXTERIORES
+          <p className="font-mono text-sm text-[#9a8a74] uppercase tracking-wider mt-1">
+            PATRULLAS DE CAMPO · ZONA MUERTA
           </p>
         </div>
-
         <button
           onClick={() => {
             setFormError(null)
             setIsNewModalOpen(true)
           }}
-          className="bg-[#c27c2f] hover:bg-[#d68b38] text-black text-xs font-bold uppercase py-2 px-4 shadow-[2px_2px_0_#000] border border-black hover:translate-x-0.5 hover:translate-y-0.5 active:shadow-none transition-all cursor-pointer rounded-sm flex items-center gap-2"
+          className="bg-[#c27c2f] text-black font-typewriter text-sm font-bold uppercase py-3 px-6 border-2 border-black shadow-[3px_3px_0_#000] hover:bg-[#df8120] active:shadow-none active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer flex items-center gap-2 shrink-0"
         >
           <Plus className="w-4 h-4" />
-          ORGANIZAR EXPLORACIÓN
+          NUEVA EXPLORACIÓN
         </button>
       </div>
 
-      {/* FILTER BUTTONS & HUNT SEARCH BAR */}
-      <div className="flex flex-col md:flex-row gap-4 justify-between items-center bg-black/40 p-4 border border-[#3b4d3e] rounded">
-        {/* State filters */}
+      {/* FILTERS */}
+      <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
         <div className="flex flex-wrap gap-2">
           {(
             [
@@ -256,10 +249,10 @@ export default function ExplorationsView({
             <button
               key={key}
               onClick={() => setFilterStatus(key as ExplorationStatus | "ALL")}
-              className={`px-3 py-1 font-mono text-xs uppercase font-bold tracking-wider rounded border cursor-pointer ${
+              className={`px-4 py-2 font-mono text-xs uppercase font-bold tracking-wider border-2 cursor-pointer transition-all ${
                 filterStatus === key
-                  ? "bg-[#c27c2f] text-black border-black font-semibold"
-                  : "bg-[#111] border-[#3b4d3e]/60 text-zinc-400 hover:text-[#fca311]"
+                  ? "bg-[#c27c2f] text-black border-black shadow-[2px_2px_0_#000]"
+                  : "bg-transparent border-[#9a8a74]/50 text-[#9a8a74] hover:border-[#c27c2f] hover:text-[#fca311]"
               }`}
             >
               {label}
@@ -267,29 +260,28 @@ export default function ExplorationsView({
           ))}
         </div>
 
-        {/* Searching text */}
-        <div className="relative w-full md:w-72">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9a8a74]" />
           <input
             type="text"
             placeholder="BUSCAR RUTA/ZONA..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 bg-black/50 border border-[#3b4d3e]/70 text-white font-mono text-xs rounded uppercase focus:outline-none focus:border-[#c27c2f]"
+            className="w-full md:w-72 pl-10 pr-4 py-2.5 bg-black/40 border-2 border-[#3b4d3e]/70 text-white font-mono text-sm uppercase focus:outline-none focus:border-[#c27c2f]"
           />
         </div>
       </div>
 
-      {/* EXPEDITIONS MAP LIST */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* LISTA DE EXPEDICIONES */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {filteredExplorations.length === 0 ? (
-          <div className="col-span-2 text-center py-16 border border-dashed border-zinc-800 rounded">
-            <Compass className="w-12 h-12 text-zinc-600 mx-auto mb-3 animate-pulse" />
-            <h4 className="font-typewriter text-sm text-[#ab9e8b] uppercase font-bold">
-              SIN REGISTROS DE EXPEDICIÓN EN LA COLA FILTRADA
-            </h4>
-            <p className="font-mono text-xs text-zinc-500 mt-1">
-              ASEGURESE DE EXPANDIR SUS FILTROS O CREAR NUEVOS CONVOYES DE SALIDA.
+          <div className="col-span-2 text-center py-20 border-2 border-dashed border-[#9a8a74]/30">
+            <Compass className="w-12 h-12 text-[#6e5f4d] mx-auto mb-4 animate-pulse" />
+            <p className="font-typewriter text-base text-[#9a8a74] uppercase font-bold">
+              SIN EXPEDICIONES EN LA COLA
+            </p>
+            <p className="font-mono text-sm text-[#6e5f4d] mt-2 uppercase">
+              AJUSTE FILTROS O CREE UNA NUEVA EXPLORACIÓN.
             </p>
           </div>
         ) : (
@@ -303,150 +295,130 @@ export default function ExplorationsView({
               exp.explorationPersons.find((ep) => ep.is_leader)?.person.first_name || "SIN ASIGNAR"
             const membersList = exp.explorationPersons.map((ep) => ep.person.first_name).join(", ")
 
+            const borderColor = isInProgress
+              ? "#4c6351"
+              : isCompleted
+                ? "#5a5040"
+                : isCancelled
+                  ? "#9c2720"
+                  : "#c27c2f"
+
+            const statusLabel = isScheduled
+              ? "PROGRAMADA"
+              : isInProgress
+                ? "EN CURSO"
+                : isCompleted
+                  ? "COMPLETADA"
+                  : "CANCELADA"
+
             return (
               <div
                 key={exp.id}
-                className={`bg-[#9a9080] border border-black relative overflow-hidden text-black transition-transform hover:scale-[1.01] p-5 relative overflow-hidden flex flex-col justify-between ${isCancelled ? "opacity-85 filter contrast-75 bg-zinc-400" : ""}`}
-                style={{ transform: `rotate(${Math.sin(exp.id) * 0.4}deg)` }}
+                className={`bg-[#e8dcc8] border-2 border-black shadow-[5px_5px_0_#000] flex flex-col ${isCancelled ? "opacity-60" : ""}`}
+                style={{ borderLeft: `6px solid ${borderColor}` }}
               >
-                {/* STATUS BADGES AND CORNER DESIGN */}
-                <div className="flex justify-between items-start border-b border-black/10 pb-3 mb-3">
-                  <div>
-                    <span className="font-mono text-xs font-bold text-zinc-700 uppercase block tracking-wider">
+                {/* CABECERA */}
+                <div className="flex justify-between items-start p-6 pb-4">
+                  <div className="flex flex-col gap-1 flex-1 min-w-0 pr-4">
+                    <span className="font-mono text-xs font-bold text-black/40 uppercase tracking-widest">
                       MISIÓN #{exp.id}
                     </span>
-                    <h3 className="font-typewriter text-md font-bold text-black uppercase tracking-tight mt-0.5">
+                    <h3 className="font-typewriter text-xl font-bold text-black uppercase leading-tight">
                       {exp.name}
                     </h3>
                   </div>
-
-                  {/* Aesthetic stamp labels */}
                   <span
-                    className={`px-2 py-1 font-mono text-[11px] font-bold rounded uppercase border ${
+                    className={`font-typewriter text-xs font-bold px-3 py-1.5 uppercase border-2 border-black shrink-0 ${
                       isScheduled
-                        ? "bg-amber-300 text-black border-amber-500"
+                        ? "bg-[#c27c2f] text-black"
                         : isInProgress
-                          ? "bg-amber-500 text-black border-black animate-pulse"
+                          ? "bg-[#4c6351] text-white"
                           : isCompleted
-                            ? "bg-[#3b4d3e] text-white border-black"
-                            : "bg-red-800 text-white border-black"
+                            ? "bg-[#5a5040] text-[#e8dcc8]"
+                            : "bg-[#9c2720] text-white"
                     }`}
                   >
-                    {isScheduled
-                      ? "PROGRAMADA"
-                      : isInProgress
-                        ? "● EN CURSO"
-                        : isCompleted
-                          ? "COMPLETADA"
-                          : "CANCELADA"}
+                    {statusLabel}
                   </span>
                 </div>
 
-                {/* TRIP DESCRIPTION */}
-                <div className="space-y-2 mb-4 text-xs font-mono text-zinc-950">
-                  <p className="flex items-start gap-1 pb-1">
-                    <span className="font-bold shrink-0">DESTINO:</span>
-                    <span className="text-zinc-900 uppercase font-medium">
+                {/* DETALLES */}
+                <div className="px-6 flex flex-col gap-4 flex-1">
+                  <div className="flex items-start gap-2">
+                    <MapPin className="w-4 h-4 text-black/50 shrink-0 mt-0.5" />
+                    <span className="font-mono text-sm text-black uppercase leading-5">
                       {exp.destination_description}
                     </span>
-                  </p>
+                  </div>
 
-                  <div className="grid grid-cols-2 gap-2 bg-black/5 p-2 rounded border border-black/10">
+                  <div className="grid grid-cols-2 gap-4 bg-black/10 border border-black/15 p-4">
                     <div>
-                      <span className="text-[11px] block text-zinc-600 font-bold uppercase">
-                        FECHA SALIDA
+                      <span className="font-mono text-xs font-bold text-black/50 uppercase tracking-wider block mb-1">
+                        SALIDA
                       </span>
-                      <span className="font-bold text-zinc-900">
+                      <span className="font-typewriter text-sm font-bold text-black">
                         {exp.departure_date.split("T")[0]}
                       </span>
                     </div>
                     <div>
-                      <span className="text-[11px] block text-zinc-600 font-bold uppercase">
-                        ALERTA RETORNO
+                      <span className="font-mono text-xs font-bold text-black/50 uppercase tracking-wider block mb-1">
+                        RETORNO EST.
                       </span>
-                      <span className="font-bold text-zinc-900">
-                        {exp.estimated_days} DÍAS (+{exp.grace_days} GRACIA)
+                      <span className="font-typewriter text-sm font-bold text-black">
+                        {exp.estimated_days}D (+{exp.grace_days}G)
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-mono text-xs font-bold text-black/50 uppercase tracking-wider block mb-1">
+                        LÍDER
+                      </span>
+                      <span className="font-typewriter text-sm font-bold text-black uppercase">
+                        {leaderName}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-mono text-xs font-bold text-black/50 uppercase tracking-wider block mb-1">
+                        EQUIPO
+                      </span>
+                      <span className="font-mono text-sm text-black uppercase truncate block">
+                        {membersList}
                       </span>
                     </div>
                   </div>
 
-                  {/* Show map pin if coordinates embedded in description */}
-                  {/\[-?\d+\.\d+,\s*-?\d+\.\d+\]/.test(exp.destination_description) &&
-                    (() => {
-                      const match = exp.destination_description.match(
-                        /\[(-?\d+\.\d+),\s*(-?\d+\.\d+)\]/,
-                      )
-                      if (!match) return null
-                      const lat = parseFloat(match[1])
-                      const lng = parseFloat(match[2])
-                      return (
-                        <div className="flex items-center gap-1.5 text-[10px] font-mono text-amber-700 bg-amber-950/20 border border-amber-900/30 rounded px-2 py-1">
-                          <MapPin className="w-3 h-3 text-amber-600" />
-                          ZONA: {lat.toFixed(4)}, {lng.toFixed(4)}
-                        </div>
-                      )
-                    })()}
-
-                  {/* MEMBERS & PROVISIONS SUMMARY */}
-                  <div className="space-y-1">
-                    <p className="flex gap-1">
-                      <span className="font-bold">LÍDER:</span>
-                      <span className="font-bold text-red-950 uppercase">{leaderName}</span>
-                    </p>
-                    <p className="flex gap-2">
-                      <span className="font-bold">EQUIPO:</span>
-                      <span className="text-zinc-800 uppercase truncate">{membersList}</span>
-                    </p>
-                    {exp.explorationResources.length > 0 && (
-                      <p className="flex gap-1 text-[10px]">
-                        <span className="font-bold">EQUIPAMIENTO:</span>
-                        <span className="text-zinc-700 italic">
-                          {exp.explorationResources
-                            .map((er) => `${er.quantity} ${er.resource.unit} ${er.resource.name}`)
-                            .join(", ")}
-                        </span>
-                      </p>
-                    )}
-                  </div>
-
-                  {/* REAL RETURN DISCHARGE NOTES IF COMPLETED */}
                   {isCompleted && exp.real_return_date && (
-                    <div className="bg-[#4c6351]/25 border border-[#3b4d3e] p-2 rounded text-[11px] text-[#2c3d31] font-mono mt-2">
-                      <p className="font-bold">
-                        RETORNO EJECUTADO EL: {exp.real_return_date.split("T")[0]}
-                      </p>
-                      <p className="mt-0.5 italic">NOTAS: {exp.notes}</p>
+                    <div className="bg-[#4c6351]/20 border-l-4 border-[#4c6351] px-4 py-3 font-mono text-sm text-black">
+                      <span className="font-bold block">RETORNO REGISTRADO</span>
+                      {exp.real_return_date.split("T")[0]}
+                      {exp.notes ? ` — ${exp.notes}` : ""}
                     </div>
                   )}
 
                   {exp.notes && !isCompleted && (
-                    <p className="text-xs text-zinc-700 italic mt-1 font-sans">
-                      * Notas: {exp.notes}
-                    </p>
+                    <p className="font-mono text-sm text-black/60 italic">* {exp.notes}</p>
                   )}
                 </div>
 
-                {/* DYNAMIC ACTION BUTTONS */}
-                <div className="flex gap-2 border-t border-black/10 pt-3 mt-auto">
+                {/* ACCIONES */}
+                <div className="flex gap-3 border-t-2 border-black/15 p-6 pt-4 mt-4">
                   {isScheduled && (
                     <>
                       <button
                         onClick={() => onDepartExploration(exp.id)}
-                        className="flex-1 bg-black text-amber-500 font-typewriter text-xs py-2.5 px-3 hover:text-white transition-all flex items-center justify-center gap-1.5 cursor-pointer border-2 border-zinc-900 shadow-[2px_2px_0_#000]"
+                        className="flex-1 bg-[#c27c2f] text-black font-typewriter text-sm font-bold uppercase py-3 px-4 border-2 border-black hover:bg-[#df8120] cursor-pointer flex items-center justify-center gap-2 transition-colors"
                       >
-                        <Play className="w-3.5 h-3.5" />
+                        <Play className="w-4 h-4" />
                         PARTIR
                       </button>
                       <button
                         onClick={() => onCancelExploration(exp.id)}
-                        className="bg-[#9c2720] hover:bg-red-800 text-white py-2.5 px-3 font-typewriter font-bold text-xs uppercase border-2 border-black shadow-[2px_2px_0_#000] flex items-center gap-1.5 cursor-pointer"
+                        className="bg-[#9c2720] hover:bg-red-800 text-white py-3 px-4 font-typewriter text-sm font-bold uppercase border-2 border-black flex items-center gap-2 cursor-pointer"
                       >
-                        <XSquare className="w-3.5 h-3.5" />
+                        <XSquare className="w-4 h-4" />
                         CANCELAR
                       </button>
                     </>
                   )}
-
                   {isInProgress && (
                     <button
                       onClick={() => {
@@ -454,16 +426,15 @@ export default function ExplorationsView({
                         setIsReturnModalOpen(true)
                         setReturnNotes("")
                       }}
-                      className="w-full bg-[#4c6351] text-white hover:bg-[#3b4d3e] font-typewriter text-xs font-bold py-2.5 px-3 transition-colors flex items-center justify-center gap-1.5 cursor-pointer border-2 border-black"
+                      className="w-full bg-[#4c6351] text-white hover:bg-[#3b4d3e] font-typewriter text-sm font-bold py-3 px-4 flex items-center justify-center gap-2 cursor-pointer border-2 border-black"
                     >
-                      <CheckSquare className="w-4 h-4 text-emerald-300" />
-                      REGISTRAR RETORNO DE EQUIPO
+                      <CheckSquare className="w-4 h-4" />
+                      REGISTRAR RETORNO
                     </button>
                   )}
-
                   {(isCompleted || isCancelled) && (
-                    <div className="w-full text-center py-2 text-zinc-600 font-typewriter text-xs uppercase font-bold tracking-wider">
-                      â€” EXPERIMENTADO SIN ACTIVIDAD ADICIONAL â€”
+                    <div className="w-full text-center py-3 text-black/40 font-mono text-sm uppercase tracking-wider">
+                      — SIN ACTIVIDAD ADICIONAL —
                     </div>
                   )}
                 </div>
@@ -511,7 +482,7 @@ export default function ExplorationsView({
                       htmlFor="exp-name"
                       className="text-[10px] text-[#ab9e8b] uppercase font-bold"
                     >
-                      NOMBRE CLAVED DE LA OPERACIÓN
+                      NOMBRE CLAVE DE LA OPERACIÓN
                     </label>
                     <input
                       type="text"
@@ -634,7 +605,7 @@ export default function ExplorationsView({
                 {/* SELECTOR PERSONAS INTEGRANTES */}
                 <div>
                   <div className="text-[10px] text-[#ab9e8b] uppercase font-bold block mb-2">
-                    SELECCIÓN DE CONTRINGENTES DISPONIBLES (PRIMERO SERÁ EL LÍDER)
+                    SELECCIÓN DE CONTINGENTES DISPONIBLES (PRIMERO SERÁ EL LÍDER)
                   </div>
                   {activePersons.length === 0 ? (
                     <div className="p-3 bg-zinc-900 text-zinc-500 text-center text-xs uppercase border border-dashed border-zinc-800 rounded">
@@ -695,7 +666,7 @@ export default function ExplorationsView({
                 {/* EQUIPAMIENTOS REQUERIDOS (PROVISIONES DESDE EL REFUGIO) */}
                 <div>
                   <div className="text-[10px] text-[#ab9e8b] uppercase font-bold block mb-2">
-                    SUMINISTROS DE EXPEDICIÓN (CONTRADUCIDOS DE BODEGA)
+                    SUMINISTROS DE EXPEDICIÓN (EXTRAÍDOS DE BODEGA)
                   </div>
                   <div className="grid grid-cols-2 gap-4 bg-zinc-900/60 p-3 rounded-md border border-zinc-800">
                     <div>
