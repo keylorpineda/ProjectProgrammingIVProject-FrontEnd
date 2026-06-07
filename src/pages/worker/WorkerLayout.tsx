@@ -29,6 +29,17 @@ export default function WorkerLayout() {
     return route || "dashboard"
   }, [location.pathname])
 
+  const activeLabel = useMemo(() => {
+    const labels: Record<string, string> = {
+      dashboard: "TABLERO",
+      profile: "MI EXPEDIENTE",
+      professions: "OCUPACIONES",
+      resources: "ALMACÉN",
+      expeditions: "EXPEDICIONES",
+    }
+    return labels[activeTab] ?? "TABLERO"
+  }, [activeTab])
+
   const setActiveTab = (tab: string) => {
     navigate(`/worker/${tab}`)
   }
@@ -55,11 +66,7 @@ export default function WorkerLayout() {
 
         {/* Main Content Area */}
         <div className="worker-main-content">
-          <WorkerTopBar
-            campName={campName}
-            userName={user?.username ?? user?.id}
-            onLogout={handleLogout}
-          />
+          <WorkerTopBar campName={campName} activeLabel={activeLabel} onLogout={handleLogout} />
 
           <main className="worker-route-container custom-scrollbar">
             <div className="max-w-7xl mx-auto">

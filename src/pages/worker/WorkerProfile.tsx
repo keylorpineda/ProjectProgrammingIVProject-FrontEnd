@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion"
 import { useMemo, useState } from "react"
+import { useNavigate } from "react-router-dom"
 
 import {
   useAssignedResources,
@@ -193,6 +194,7 @@ function BadgeAchievementModal({
 
 export default function WorkerProfile() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [selectedBadge, setSelectedBadge] = useState<SelectedBadge | null>(null)
   const { data: assignedResources } = useAssignedResources()
   const { data: badges, isLoading: badgesLoading } = useMyBadges()
@@ -235,7 +237,13 @@ export default function WorkerProfile() {
       {/* ── Page header ── */}
       <div className="wv-page-header">
         <h2>EXPEDIENTE DEL SUPERVIVIENTE</h2>
-        <span className="wv-breadcrumb">{camp?.name ?? `CAMPAMENTO #${user?.camp_id ?? "?"}`}</span>
+        <button
+          type="button"
+          className="wv-header-action"
+          onClick={() => navigate("/worker/dashboard")}
+        >
+          → TABLERO
+        </button>
       </div>
 
       {/* ── ID CARD ── */}
