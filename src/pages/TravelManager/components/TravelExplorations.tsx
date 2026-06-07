@@ -1481,7 +1481,6 @@ export default function TravelExplorations() {
           </motion.div>
         )}
       </AnimatePresence>
-
     </div>
   )
 }
