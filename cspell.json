@@ -133,7 +133,9 @@
     "información",
     "distribución",
     "Csvg",
-    "TRÁNS"
+    "TRÁNS",
+    "Intercampal",
+    "intercampal"
   ],
   "ignorePaths": [
     "node_modules",

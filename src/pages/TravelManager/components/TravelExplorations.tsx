@@ -432,18 +432,27 @@ export default function TravelExplorations() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="flex-1 h-full flex flex-col gap-3 overflow-hidden bg-bunker-bg min-h-0">
+    <div className="flex-1 h-full flex flex-col gap-3 overflow-hidden bg-[#0a0a0a] min-h-0">
       {/* ── Vista Header ── */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-industrial-metal py-4 px-4 border-b border-b-[#c27c2f]/20 shrink-0 shadow-lg relative overflow-hidden">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-[#12110f] py-4 px-4 border-b border-b-[#d4a373]/20 border-t-2 border-t-[#d4a373]/60 shrink-0 shadow-lg relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-40 h-40 bg-[#d4a373]/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl pointer-events-none" />
         <div className="flex items-center gap-4 relative z-10">
-          <div className="bg-[#c27c2f]/10 p-2 border border-[#c27c2f]/25 rounded-sm">
-            <Compass className="h-5 w-5 text-[#c27c2f]" />
+          <div className="bg-[#d4a373]/10 p-2 border border-[#d4a373]/30">
+            <Compass className="h-6 w-6 text-[#d4a373]" />
           </div>
           <div>
-            <h2 className="text-xl font-typewriter font-black text-white uppercase tracking-tight leading-none">
-              Operaciones de Campo
+            <div className="flex items-center gap-2 mb-1">
+              <span className="px-1.5 py-0.5 bg-bg-paper paper-texture text-ink text-xs font-mono font-black uppercase rotate-1 shadow-sm border border-[#8b7355]/30">
+                Operaciones_Campo
+              </span>
+              <span className="text-xs font-mono text-[#d4a373]/40 uppercase tracking-widest font-black">
+                FIELD_OPS
+              </span>
+            </div>
+            <h2 className="text-lg font-typewriter font-bold text-white uppercase tracking-tight leading-none">
+              OPERACIONES DE CAMPO
             </h2>
-            <p className="font-mono text-[10px] text-[#c27c2f]/70 font-medium uppercase tracking-wider mt-1">
+            <p className="font-mono text-xs text-[#d4a373]/60 uppercase tracking-widest mt-1">
               Base: {baseCampId.toUpperCase()}
             </p>
           </div>
@@ -457,11 +466,11 @@ export default function TravelExplorations() {
                 onClick={() => setFilterStatus(filterStatus === s.id ? "" : s.id)}
                 className={`flex flex-col items-center transition-all px-2 md:px-4 py-2 border border-transparent ${
                   filterStatus === s.id
-                    ? "bg-[#c27c2f]/10 border-[#c27c2f]/20 shadow-inner"
-                    : "hover:bg-[#d4a373]/20"
+                    ? "bg-[#d4a373]/10 border-[#d4a373]/20 shadow-inner"
+                    : "hover:bg-[#d4a373]/10"
                 }`}
               >
-                <span className="text-base md:text-lg font-mono font-black text-[#c27c2f]">
+                <span className="text-base md:text-lg font-mono font-black text-[#d4a373]">
                   {s.count}
                 </span>
                 <span className="text-xs md:text-sm font-mono font-bold uppercase tracking-tighter text-white/40">
@@ -472,8 +481,7 @@ export default function TravelExplorations() {
           </div>
           <button
             onClick={() => setIsNewModalOpen(true)}
-            className="text-white px-4 md:px-6 py-2.5 text-xs md:text-sm font-mono font-black uppercase hover:brightness-110 hover:shadow-xl transition-all shadow-lg active:scale-95 flex items-center gap-2 border-b-2 border-r-2 border-black/20 whitespace-nowrap"
-            style={{ backgroundColor: "#c27c2f" }}
+            className="bg-[#c27c2f] text-black px-4 md:px-6 py-2.5 text-xs md:text-sm font-mono font-black uppercase hover:bg-[#df8120] hover:shadow-xl transition-all shadow-lg active:scale-95 flex items-center gap-2 border-b-2 border-r-2 border-black/20 whitespace-nowrap"
           >
             <Plus className="h-3.5 w-3.5" /> NUEVA EXPLORACIÓN
           </button>
@@ -492,7 +500,7 @@ export default function TravelExplorations() {
 
       <div className="flex-1 flex flex-col gap-3 overflow-hidden px-4 pb-4">
         {/* ── Filtros ── */}
-        <div className="flex flex-wrap gap-3 shrink-0 items-center bg-industrial-metal/60 p-2 border border-white/5">
+        <div className="flex flex-wrap gap-3 shrink-0 items-center bg-[#12110f] p-2 border border-white/5">
           <div className="relative w-full md:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/20" />
             <input
@@ -503,10 +511,10 @@ export default function TravelExplorations() {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <div className="flex items-center gap-2 bg-black/40 border border-[#c27c2f]/10 px-4 py-2.5">
-            <span className="text-sm font-mono text-white/30 uppercase font-black">Estado:</span>
+          <div className="flex items-center gap-2 bg-black/40 border border-[#d4a373]/10 px-4 py-2.5">
+            <span className="text-xs font-mono text-white/30 uppercase font-black">Estado:</span>
             <select
-              className="bg-transparent text-xs font-mono text-[#c27c2f] font-black focus:outline-none uppercase"
+              className="bg-transparent text-xs font-mono text-[#d4a373] font-black focus:outline-none uppercase"
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
             >
@@ -523,13 +531,13 @@ export default function TravelExplorations() {
         {/* ── Layout 3 columnas ── */}
         <div className="flex-1 flex gap-4 overflow-hidden">
           {/* LEFT: Lista fichero */}
-          <div className="w-[280px] flex flex-col gap-2 shrink-0 overflow-hidden bg-industrial-metal p-3 border-l-2 border-l-accent-warning/40">
-            <div className="flex items-center justify-between px-1 mb-1 border-b border-[#c27c2f]/10 pb-2">
-              <span className="text-[10px] font-mono font-medium text-[#c27c2f]/70 uppercase tracking-wider">
+          <div className="w-[280px] flex flex-col gap-2 shrink-0 overflow-hidden bg-[#12110f] p-3 border border-[#d4a373]/15">
+            <div className="flex items-center justify-between px-1 mb-1 border-b border-[#d4a373]/10 pb-2">
+              <span className="text-[10px] font-mono font-semibold text-[#d4a373] uppercase tracking-widest">
                 Fichero Operativo
               </span>
-              <span className="text-[10px] font-mono font-medium text-white/30 uppercase tracking-wider">
-                {filteredExplorations.length} reg
+              <span className="text-[10px] font-mono text-white/30 uppercase bg-white/5 px-1.5 py-0.5 tabular-nums">
+                {filteredExplorations.length}
               </span>
             </div>
 
@@ -540,22 +548,22 @@ export default function TravelExplorations() {
                     key={exp.id}
                     whileHover={{ x: 2 }}
                     onClick={() => setSelectedId(exp.id)}
-                    className={`w-full text-left p-3 relative transition-all border border-[#c27c2f]/10 ${
+                    className={`w-full text-left p-3 relative transition-all border border-[#d4a373]/10 ${
                       selectedExp?.id === exp.id
                         ? "tm-paper-texture shadow-xl scale-[1.02] z-10"
-                        : "bg-[#c27c2f]/5 hover:bg-[#c27c2f]/10 opacity-70 hover:opacity-100"
+                        : "bg-[#b69e7e]/5 hover:bg-[#b69e7e]/10 opacity-70 hover:opacity-100"
                     }`}
                   >
                     <div
                       className={`absolute top-2 right-3 font-mono text-sm font-black tracking-tighter ${
-                        selectedExp?.id === exp.id ? "text-ink-soft/50" : "text-[#c27c2f]/30"
+                        selectedExp?.id === exp.id ? "text-ink/40" : "text-[#d4a373]/30"
                       }`}
                     >
                       REF-{exp.id.slice(0, 4).toUpperCase()}
                     </div>
                     <h5
                       className={`text-[12px] font-typewriter font-black uppercase leading-tight mb-1 ${
-                        selectedExp?.id === exp.id ? "text-ink" : "text-[#c27c2f]"
+                        selectedExp?.id === exp.id ? "text-ink" : "text-[#d4a373]"
                       }`}
                     >
                       {exp.name}
@@ -612,19 +620,19 @@ export default function TravelExplorations() {
                       </div>
                     </div>
                     {selectedExp?.id === exp.id && (
-                      <div className="absolute top-0 bottom-0 left-0 w-1 bg-[#c27c2f]" />
+                      <div className="absolute top-0 left-0 right-0 h-0.5 bg-[#d4a373]" />
                     )}
                   </motion.button>
                 ))
               ) : (
                 <div className="flex flex-col items-center justify-center py-20 text-center">
-                  <Archive className="h-10 w-10 text-[#c27c2f]/10 mb-4" />
-                  <p className="text-sm font-mono text-white/30 uppercase leading-relaxed font-black mb-3">
+                  <Archive className="h-10 w-10 text-[#d4a373]/10 mb-4" />
+                  <p className="text-sm font-mono text-white/20 uppercase font-black mb-3">
                     Sin expediciones para esta consulta
                   </p>
                   <button
                     onClick={() => setIsNewModalOpen(true)}
-                    className="px-4 py-2 border border-[#c27c2f]/30 text-sm font-mono font-bold text-[#c27c2f] hover:bg-[#c27c2f]/10 transition-colors uppercase"
+                    className="px-4 py-2 border border-[#d4a373]/30 text-xs font-mono font-bold text-[#d4a373] hover:bg-[#d4a373]/10 transition-colors uppercase"
                   >
                     Nueva exploración
                   </button>
@@ -634,50 +642,50 @@ export default function TravelExplorations() {
           </div>
 
           {/* CENTER: Mapa / Detalle */}
-          <div className="flex-1 flex flex-col overflow-hidden bg-industrial-metal border border-[#c27c2f]/10">
+          <div className="flex-1 flex flex-col overflow-hidden bg-[#12110f] border border-white/5">
             {selectedExp ? (
               <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Panel header */}
-                <div className="p-4 border-b border-[#c27c2f]/10 flex justify-between items-center bg-black/20 shrink-0">
+                <div className="p-4 border-b border-[#d4a373]/20 flex justify-between items-center bg-black/20 shrink-0">
                   <div className="flex items-center gap-3">
-                    <div className="bg-[#c27c2f]/10 p-2 rounded-sm border border-[#c27c2f]/20">
-                      <MapPin className="h-4 w-4 text-[#c27c2f]" />
+                    <div className="bg-[#d4a373]/10 p-2 border border-[#d4a373]/20">
+                      <MapPin className="h-4 w-4 text-[#d4a373]" />
                     </div>
                     <div>
-                      <span className="text-[10px] font-mono font-medium text-[#c27c2f]/60 uppercase tracking-widest block mb-0.5">
+                      <span className="text-[10px] font-mono font-medium text-[#d4a373]/60 uppercase tracking-widest block mb-0.5">
                         Expedición
                       </span>
-                      <h3 className="text-base font-typewriter font-black text-white uppercase leading-none tracking-tight">
+                      <h3 className="text-base font-typewriter font-bold text-white uppercase leading-none tracking-tight">
                         {selectedExp.name}
                       </h3>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
                     <div
-                      className={`px-2 py-0.5 border inline-flex items-center gap-1.5 ${
+                      className={`px-2 py-1.5 border inline-flex items-center gap-1.5 ${
                         selectedExp.status === "active" || selectedExp.status === "in_progress"
-                          ? "bg-accent-mil/10 border-accent-mil/20 text-accent-approved"
+                          ? "bg-[#d4a373]/10 border-[#d4a373]/30 text-[#d4a373]"
                           : selectedExp.status === "scheduled"
                             ? "bg-[#c27c2f]/10 border-[#c27c2f]/20 text-[#c27c2f]"
                             : "bg-white/5 border-white/10 text-white/40"
                       }`}
                     >
                       <div
-                        className={`h-1 w-1 rounded-full ${
+                        className={`h-1.5 w-1.5 rounded-full ${
                           selectedExp.status === "active" || selectedExp.status === "in_progress"
-                            ? "bg-accent-approved animate-pulse"
+                            ? "bg-[#d4a373] animate-pulse"
                             : selectedExp.status === "scheduled"
                               ? "bg-[#c27c2f]"
                               : "bg-white/40"
                         }`}
                       />
-                      <span className="text-sm font-mono font-black uppercase tracking-widest leading-none">
+                      <span className="text-xs font-mono font-black uppercase tracking-widest leading-none">
                         {getStatusLabel(selectedExp.status)}
                       </span>
                     </div>
                     <button
                       onClick={() => setIsDetailOpen(true)}
-                      className="text-xs font-mono font-black text-[#c27c2f] border border-[#c27c2f]/30 px-4 py-2.5 hover:bg-[#c27c2f] hover:text-ink-black transition-all"
+                      className="text-xs font-mono font-black text-[#d4a373] border border-[#d4a373]/30 px-4 py-2.5 hover:bg-[#d4a373]/10 transition-all"
                     >
                       VER EXPEDIENTE
                     </button>
@@ -707,8 +715,8 @@ export default function TravelExplorations() {
 
                         {/* Origin node */}
                         <div className="flex flex-col items-center gap-4 z-20">
-                          <div className="p-1.5 bg-bg-paper border-2 border-accent-mil rotate-2 shadow-lg">
-                            <Radio className="h-6 w-6 text-accent-mil" />
+                          <div className="p-1.5 bg-bg-paper border-2 border-ink/30 rotate-2 shadow-lg">
+                            <Radio className="h-6 w-6 text-ink/60" />
                           </div>
                           <div className="text-center">
                             <span className="text-sm font-mono font-black text-ink/30 uppercase block mb-1">
@@ -766,9 +774,9 @@ export default function TravelExplorations() {
                 </div>
 
                 {/* Timeline */}
-                <div className="h-28 bg-black/40 border-t border-[#c27c2f]/10 p-4 flex flex-col shrink-0 relative overflow-hidden">
+                <div className="h-28 bg-black/40 border-t border-[#d4a373]/10 p-4 flex flex-col shrink-0 relative overflow-hidden">
                   <div className="flex items-center justify-between px-16 relative flex-1">
-                    <div className="absolute top-1/2 left-0 right-0 h-[1px] bg-[#c27c2f]/10 -translate-y-1/2 mx-20" />
+                    <div className="absolute top-1/2 left-0 right-0 h-[1px] bg-[#d4a373]/10 -translate-y-1/2 mx-20" />
                     {timelineSteps.map((step, i) => {
                       const StepIcon = step.Icon
                       return (
@@ -776,10 +784,10 @@ export default function TravelExplorations() {
                           <div
                             className={`h-8 w-8 rounded-full border-2 flex items-center justify-center transition-all shadow-lg ${
                               step.status === "completed"
-                                ? "bg-paper-dark border-white/20 text-white"
+                                ? "bg-[#1a0f05] border-[#d4a373]/30 text-[#d4a373]"
                                 : step.status === "current"
-                                  ? "bg-accent-mil border-[#c27c2f] text-white animate-pulse"
-                                  : "bg-black/80 border-[#c27c2f]/10 text-[#c27c2f]/20"
+                                  ? "bg-[#c27c2f] border-[#c27c2f] text-black animate-pulse"
+                                  : "bg-black/80 border-[#d4a373]/10 text-[#d4a373]/20"
                             }`}
                           >
                             <StepIcon className="h-3.5 w-3.5" />
@@ -787,8 +795,8 @@ export default function TravelExplorations() {
                           <span
                             className={`absolute top-full mt-2 text-sm font-mono font-black tracking-widest whitespace-nowrap ${
                               step.status !== "pending"
-                                ? "text-[#c27c2f] opacity-80"
-                                : "text-[#c27c2f]/10"
+                                ? "text-[#d4a373] opacity-80"
+                                : "text-[#d4a373]/10"
                             }`}
                           >
                             {step.label}
@@ -800,13 +808,13 @@ export default function TravelExplorations() {
                 </div>
 
                 {/* Action buttons */}
-                <div className="p-4 border-t border-[#c27c2f]/10 flex gap-3 shrink-0 bg-black/30">
+                <div className="p-4 border-t border-[#d4a373]/10 flex gap-3 shrink-0 bg-black/20">
                   {selectedExp.status === "scheduled" && (
                     <>
                       <button
                         onClick={() => handleMarkDeparture(selectedExp.id)}
                         disabled={departMutation.isPending}
-                        className="flex items-center gap-2 px-6 py-2.5 bg-accent-mil text-white text-sm font-mono font-black uppercase hover:bg-accent-approved transition-all disabled:opacity-50 shadow-md tracking-wider"
+                        className="flex items-center gap-2 px-6 py-2.5 bg-[#c27c2f] text-black text-sm font-mono font-black uppercase hover:bg-[#df8120] transition-all disabled:opacity-50 shadow-md tracking-wider"
                       >
                         {departMutation.isPending ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
@@ -828,7 +836,7 @@ export default function TravelExplorations() {
                   {(selectedExp.status === "active" || selectedExp.status === "in_progress") && (
                     <button
                       onClick={() => setIsReturnModalOpen(true)}
-                      className="flex items-center gap-2 px-6 py-2.5 bg-accent-emergency/80 text-ink-black text-sm font-mono font-black uppercase hover:bg-accent-emergency transition-all shadow-md tracking-wider"
+                      className="flex items-center gap-2 px-6 py-2.5 bg-[#4c6351] text-white text-sm font-mono font-black uppercase hover:opacity-90 transition-all shadow-md tracking-wider"
                     >
                       <CheckCircle2 className="h-4 w-4" />
                       Registrar Retorno
@@ -844,12 +852,12 @@ export default function TravelExplorations() {
               </div>
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center p-12 text-center">
-                <Compass className="h-20 w-20 mb-6 text-[#c27c2f] opacity-20 animate-spin" />
-                <p className="font-typewriter text-2xl text-white/20 font-black uppercase mb-3">
+                <Compass className="h-16 w-16 mb-6 text-[#d4a373] opacity-20" />
+                <h3 className="text-base font-typewriter font-bold text-white/40 uppercase mb-2">
                   Seleccione una Expedición
-                </p>
-                <p className="font-mono text-sm text-white/20 uppercase tracking-widest">
-                  o cree una nueva para comenzar
+                </h3>
+                <p className="text-xs font-mono text-white/25 max-w-xs leading-relaxed">
+                  Elige una expedición del fichero o crea una nueva.
                 </p>
               </div>
             )}
@@ -857,11 +865,11 @@ export default function TravelExplorations() {
 
           {/* RIGHT: Team panel */}
           {selectedExp && (
-            <div className="w-60 flex flex-col gap-3 shrink-0 overflow-hidden bg-industrial-metal p-3 border-r-2 border-r-accent-warning/20">
-              <div className="border-b border-[#c27c2f]/10 pb-2">
+            <div className="w-60 flex flex-col gap-3 shrink-0 overflow-hidden bg-[#12110f] p-3 border border-[#d4a373]/15">
+              <div className="border-b border-[#d4a373]/10 pb-2">
                 <div className="flex items-center gap-1.5 min-w-[70px]">
                   <Users className="w-3.5 h-3.5 text-[#d4a373]/60" />
-                  <span className="text-xs font-mono font-black text-[#c27c2f] uppercase tracking-widest">
+                  <span className="text-xs font-mono font-black text-[#d4a373] uppercase tracking-widest">
                     Equipo Asignado
                   </span>
                   <span className="text-sm font-mono text-[#d4a373] uppercase ml-auto">
@@ -908,7 +916,7 @@ export default function TravelExplorations() {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-industrial-metal border-4 border-double border-[#c27c2f]/50 w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl"
+              className="bg-[#141414] border-4 border-double border-[#d4a373]/40 w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl"
             >
               {/* Modal header */}
               <div className="flex items-center justify-between p-6 border-b-2 border-[#c27c2f]/30 bg-black/50">
@@ -1256,11 +1264,11 @@ export default function TravelExplorations() {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-industrial-metal border border-[#c27c2f]/30 w-full max-w-md shadow-2xl"
+              className="bg-[#141414] border border-[#d4a373]/30 w-full max-w-md shadow-2xl"
             >
               <div className="flex items-center justify-between p-4 border-b border-[#c27c2f]/20 bg-black/30">
                 <div className="flex items-center gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-accent-approved" />
+                  <CheckCircle2 className="h-5 w-5 text-[#d4a373]" />
                   <h3 className="font-typewriter font-black text-white uppercase">
                     Registrar Retorno
                   </h3>
@@ -1384,7 +1392,7 @@ export default function TravelExplorations() {
                 <button
                   onClick={handleRegisterReturn}
                   disabled={returnMutation.isPending}
-                  className="px-6 py-2 bg-accent-approved text-white text-sm font-mono font-black uppercase hover:opacity-90 transition-all disabled:opacity-50 flex items-center gap-2"
+                  className="px-6 py-2 bg-[#4c6351] text-white text-sm font-mono font-black uppercase hover:opacity-90 transition-all disabled:opacity-50 flex items-center gap-2"
                 >
                   {returnMutation.isPending ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />

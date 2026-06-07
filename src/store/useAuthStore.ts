@@ -1,20 +1,28 @@
 import { create } from "zustand"
-import { persist } from "zustand/middleware"
+import { persist, createJSONStorage } from "zustand/middleware"
 
 import type { AuthUser } from "@/types/api.types"
 
-// In-memory store — access_token never touches localStorage
+// sessionStorage store — token survives page reloads but not tab/browser close
 interface TokenState {
   token: string | null
   setToken: (token: string | null) => void
   getToken: () => string | null
 }
 
-export const useTokenStore = create<TokenState>()((set, get) => ({
-  token: null,
-  setToken: (token) => set({ token }),
-  getToken: () => get().token,
-}))
+export const useTokenStore = create<TokenState>()(
+  persist(
+    (set, get) => ({
+      token: null,
+      setToken: (token) => set({ token }),
+      getToken: () => get().token,
+    }),
+    {
+      name: "auth-token-session",
+      storage: createJSONStorage(() => sessionStorage),
+    },
+  ),
+)
 
 // Persisted store — only non-sensitive user data
 interface AuthState {

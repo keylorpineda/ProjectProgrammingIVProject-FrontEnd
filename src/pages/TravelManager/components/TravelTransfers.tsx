@@ -14,6 +14,14 @@ import {
   Truck,
   Archive,
   Package,
+  Users,
+  Droplets,
+  Utensils,
+  HeartPulse,
+  Hammer,
+  Crosshair,
+  Flame,
+  Bed,
 } from "lucide-react"
 import { useState, useMemo, useEffect } from "react"
 import { useLocation } from "react-router-dom"
@@ -56,26 +64,6 @@ function getTransferStatusLabel(rawStatus: string): string {
   }
 }
 
-function getTransferStatusColorClass(rawStatus: string): string {
-  const status = String(rawStatus ?? "")
-    .toLowerCase()
-    .replace(/\s+/g, "_")
-  switch (status) {
-    case "pending":
-      return "text-[#c27c2f]"
-    case "approved":
-    case "in_transit":
-      return "text-accent-approved"
-    case "completed":
-      return "text-paper-dark"
-    case "rejected":
-    case "cancelled":
-      return "text-accent-critical"
-    default:
-      return "text-paper-dark/40"
-  }
-}
-
 function getTransferTypeBadge(rawType: string): string {
   const type = String(rawType ?? "").toLowerCase()
   switch (type) {
@@ -87,6 +75,63 @@ function getTransferTypeBadge(rawType: string): string {
       return "MIXTO"
     default:
       return rawType.toUpperCase()
+  }
+}
+
+function getTypeIcon(rawType: string) {
+  const type = String(rawType ?? "").toLowerCase()
+  if (type === "resources") return Package
+  if (type === "people") return Users
+  return Truck
+}
+
+function getStatusDotClass(rawStatus: string): string {
+  const status = String(rawStatus ?? "")
+    .toLowerCase()
+    .replace(/\s+/g, "_")
+  if (status === "in_transit" || status === "approved") return "bg-[#d4a373] animate-pulse"
+  if (status === "pending") return "bg-[#c27c2f]"
+  if (status === "rejected" || status === "cancelled") return "bg-[#9c2720]"
+  return "bg-black/20"
+}
+
+function getStatusColorOnPaper(rawStatus: string): string {
+  const status = String(rawStatus ?? "")
+    .toLowerCase()
+    .replace(/\s+/g, "_")
+  switch (status) {
+    case "completed":
+    case "approved":
+    case "in_transit":
+      return "text-[#4c6351]"
+    case "rejected":
+    case "cancelled":
+      return "text-[#9c2720]"
+    case "pending":
+      return "text-[#c27c2f]"
+    default:
+      return "text-[#1a0f05]/40"
+  }
+}
+
+function getCategoryIcon(category: string | null | undefined) {
+  switch (String(category ?? "").toLowerCase()) {
+    case "water":
+      return Droplets
+    case "food":
+      return Utensils
+    case "medicine":
+      return HeartPulse
+    case "tools":
+      return Hammer
+    case "weapons":
+      return Crosshair
+    case "fuel":
+      return Flame
+    case "shelter":
+      return Bed
+    default:
+      return Package
   }
 }
 
@@ -180,6 +225,11 @@ export default function TravelTransfers() {
   })
   const camps = campsResponse ?? []
 
+  const { data: allCamps = [] } = useQuery({
+    queryKey: ["camps"],
+    queryFn: getCamps,
+  })
+
   const { data: inventory = [] } = useQuery<InventoryItem[]>({
     queryKey: ["inventory", campId],
     queryFn: () => getInventory(campId),
@@ -258,6 +308,9 @@ export default function TravelTransfers() {
     }),
     [transfers, campId],
   )
+
+  const getCampName = (id: string | number) =>
+    allCamps.find((c) => String(c.id) === String(id))?.name || `Base #${id}`
 
   // ── Handlers ─────────────────────────────────────────────────────────────
   function resetForm() {
@@ -355,57 +408,41 @@ export default function TravelTransfers() {
     }
   }
 
-  // ── Loading / Error guards ────────────────────────────────────────────────
-  // El loader bloqueante ha sido desactivado para que la UI cargue inmediatamente
-  // if (isLoading) {
-  //   return (
-  //     <div className="travelmanager-page-content flex-1 flex items-center justify-center">
-  //       <Loader2 className="h-8 w-8 animate-spin text-[#c27c2f]" />
-  //       <span className="ml-3 font-mono text-sm uppercase text-paper-dark">
-  //         Cargando traslados...
-  //       </span>
-  //     </div>
-  //   )
-  // }
-
-  // En caso de error de conexión, el UI sigue cargando vacío para permitir navegación
-  // if (error) {
-  //   return (
-  //     <div className="travelmanager-page-content">
-  //       <div className="warning-card p-4 font-mono text-sm text-accent-critical uppercase">
-  //         Error al cargar traslados. Verifique la conexión con el servidor.
-  //       </div>
-  //     </div>
-  //   )
-  // }
-
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="flex-1 h-full flex flex-col gap-3 overflow-hidden bg-bunker-bg min-h-0 min-w-0">
+    <div className="flex-1 h-full flex flex-col gap-3 overflow-hidden bg-[#0a0a0a] min-h-0 min-w-0">
       {/* ── Vista Header ── */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-industrial-metal py-4 px-4 border-b border-b-accent-approved/20 shrink-0 shadow-lg">
-        <div className="flex items-center gap-4">
-          <div className="bg-accent-approved/10 p-2 border border-accent-approved/20 rounded-sm">
-            <ArrowLeftRight className="h-5 w-5 text-accent-approved" />
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-[#12110f] py-4 px-4 border-b border-b-[#d4a373]/20 border-t-2 border-t-[#d4a373]/60 shrink-0 shadow-lg relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-40 h-40 bg-[#d4a373]/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl pointer-events-none" />
+        <div className="flex items-center gap-4 relative z-10">
+          <div className="bg-[#d4a373]/10 p-2 border border-[#d4a373]/30">
+            <ArrowLeftRight className="h-6 w-6 text-[#d4a373]" />
           </div>
           <div>
-            <h2 className="text-xl font-typewriter font-black text-white uppercase tracking-tight leading-none">
-              Gestión de Traslados
+            <div className="flex items-center gap-2 mb-1">
+              <span className="px-1.5 py-0.5 bg-bg-paper paper-texture text-ink text-xs font-mono font-black uppercase rotate-1 shadow-sm border border-[#8b7355]/30">
+                Logística_Enlace
+              </span>
+              <span className="text-xs font-mono text-[#d4a373]/40 uppercase tracking-widest font-black">
+                TRASLADOS_OP
+              </span>
+            </div>
+            <h2 className="text-lg font-typewriter font-bold text-white uppercase tracking-tight leading-none">
+              GESTIÓN DE TRASLADOS
             </h2>
-            <p className="text-[10px] font-mono font-medium text-accent-approved/60 uppercase tracking-wider mt-1">
-              Base: {campId}
+            <p className="font-mono text-xs text-[#d4a373]/60 uppercase tracking-widest mt-1">
+              Base operativa: {campId}
             </p>
           </div>
         </div>
 
-        {/* Stats summary */}
-        <div className="flex flex-wrap items-center gap-4 md:gap-6 mt-4 md:mt-0 w-full md:w-auto">
+        <div className="flex flex-wrap items-center gap-4 md:gap-6 mt-4 md:mt-0 relative z-10 w-full md:w-auto">
           <div className="flex flex-wrap gap-2 md:gap-4 border-r border-white/10 pr-4 md:pr-6">
             {[
               { label: "Pendientes", count: stats.pending, color: "text-[#c27c2f]" },
-              { label: "En Tránsito", count: stats.inTransit, color: "text-accent-approved" },
-              { label: "Enviados", count: stats.sent, color: "text-paper-dark" },
-              { label: "Recibidos", count: stats.received, color: "text-paper-dark" },
+              { label: "En Tránsito", count: stats.inTransit, color: "text-[#d4a373]" },
+              { label: "Enviados", count: stats.sent, color: "text-white/50" },
+              { label: "Recibidos", count: stats.received, color: "text-white/50" },
             ].map((s) => (
               <div key={s.label} className="flex flex-col items-center px-2">
                 <span className={`text-base md:text-lg font-mono font-black ${s.color}`}>
@@ -419,7 +456,7 @@ export default function TravelTransfers() {
           </div>
           <button
             onClick={() => setIsNewModalOpen(true)}
-            className="bg-accent-approved text-white px-4 md:px-6 py-2.5 text-xs md:text-sm font-mono font-black uppercase hover:brightness-110 hover:shadow-xl transition-all shadow-lg active:scale-95 flex items-center gap-2 border-b-2 border-r-2 border-black/20 whitespace-nowrap"
+            className="bg-[#c27c2f] text-black px-4 md:px-6 py-2.5 text-xs md:text-sm font-mono font-black uppercase hover:bg-[#df8120] hover:shadow-xl transition-all shadow-lg active:scale-95 flex items-center gap-2 border-b-2 border-r-2 border-black/20 whitespace-nowrap"
           >
             <Plus className="h-3.5 w-3.5" /> NUEVO TRASLADO
           </button>
@@ -429,31 +466,28 @@ export default function TravelTransfers() {
       {error && (
         <div className="mx-4 mt-2 bg-red-950/40 border border-red-500/50 p-3 font-mono text-sm text-red-400 uppercase flex items-center gap-2 shadow-lg">
           <AlertCircle className="w-4 h-4 shrink-0" />
-          <span>
-            Error de conexión con la central. Modo fuera de línea activo. No se pudieron cargar los
-            datos recientes.
-          </span>
+          <span>Error de conexión con la central. Modo fuera de línea activo.</span>
         </div>
       )}
 
       <div className="flex-1 flex flex-col gap-3 overflow-hidden px-4 pb-4">
         {/* ── Filtros ── */}
-        <div className="flex flex-wrap gap-3 shrink-0 items-center bg-industrial-metal/60 p-2 border border-white/5">
-          <div className="relative w-full md:w-56">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/20" />
+        <div className="bg-[#12110f] p-2 px-4 flex flex-wrap items-center gap-3 shrink-0 border border-white/5">
+          <div className="flex-1 flex items-center gap-3 bg-black/40 px-3 py-2 border border-white/10 focus-within:border-[#d4a373]/40 transition-all min-w-[160px]">
+            <Search className="h-3.5 w-3.5 text-white/20 shrink-0" />
             <input
               type="text"
               placeholder="Buscar por ID o campamento..."
-              className="vintage-input w-full pl-9 text-sm"
+              className="bg-transparent border-none focus:outline-none text-xs font-mono text-white/70 w-full placeholder:text-white/20"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <div className="flex items-center gap-2 bg-black/40 border border-[#c27c2f]/10 px-4 py-2.5">
+          <div className="flex items-center gap-2 bg-black/40 border border-[#d4a373]/10 px-4 py-2.5">
             <Filter className="h-3 w-3 text-white/20" />
-            <span className="text-sm font-mono text-white/30 uppercase font-black">Estado:</span>
+            <span className="text-xs font-mono text-white/30 uppercase font-black">Estado:</span>
             <select
-              className="bg-transparent text-xs font-mono text-[#c27c2f] font-black focus:outline-none uppercase"
+              className="bg-transparent text-xs font-mono text-[#d4a373] font-black focus:outline-none uppercase"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
             >
@@ -466,10 +500,10 @@ export default function TravelTransfers() {
               <option value="cancelled">CANCELADO</option>
             </select>
           </div>
-          <div className="flex items-center gap-2 bg-black/40 border border-[#c27c2f]/10 px-4 py-2.5">
-            <span className="text-sm font-mono text-white/30 uppercase font-black">Rol:</span>
+          <div className="flex items-center gap-2 bg-black/40 border border-[#d4a373]/10 px-4 py-2.5">
+            <span className="text-xs font-mono text-white/30 uppercase font-black">Rol:</span>
             <select
-              className="bg-transparent text-xs font-mono text-[#c27c2f] font-black focus:outline-none uppercase"
+              className="bg-transparent text-xs font-mono text-[#d4a373] font-black focus:outline-none uppercase"
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value as "all" | "origin" | "destination")}
             >
@@ -483,108 +517,111 @@ export default function TravelTransfers() {
         {/* ── Main layout ── */}
         <div className="flex-1 flex gap-4 overflow-hidden">
           {/* LEFT: Transfer list */}
-          <div className="w-[320px] flex flex-col gap-2 shrink-0 overflow-hidden bg-industrial-metal p-3 border-l-2 border-l-accent-approved/40">
-            <div className="flex items-center justify-between px-1 mb-1 border-b border-accent-approved/10 pb-2">
-              <span className="text-[10px] font-mono font-medium text-accent-approved/70 uppercase tracking-wider">
+          <div className="w-[300px] flex flex-col gap-2 shrink-0 overflow-hidden bg-[#12110f] p-3 border border-[#d4a373]/15 shadow-2xl relative">
+            <div className="absolute top-0 right-0 w-16 h-16 bg-[#d4a373]/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl pointer-events-none" />
+
+            <div className="flex items-center justify-between px-1 mb-1 border-b border-[#d4a373]/10 pb-2 relative z-10">
+              <span className="text-[10px] font-mono font-semibold text-[#d4a373] uppercase tracking-widest">
                 Registro de Traslados
               </span>
-              <span className="text-[10px] font-mono font-medium text-white/30 uppercase tracking-wider">
-                {filteredTransfers.length} reg
+              <span className="text-[10px] font-mono text-white/30 uppercase bg-white/5 px-1.5 py-0.5 tabular-nums">
+                {filteredTransfers.length}
               </span>
             </div>
 
-            <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar space-y-2">
+            <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar space-y-2 relative z-10">
               {filteredTransfers.length > 0 ? (
                 filteredTransfers.map((transfer) => {
-                  const isOrigin = transfer.camp_origin_id === campId
+                  const isOrigin = String(transfer.camp_origin_id) === String(campId)
+                  const TypeIcon = getTypeIcon(transfer.type)
+                  const isSelected = selectedTransfer?.id === transfer.id
                   return (
                     <motion.button
                       key={transfer.id}
                       whileHover={{ x: 2 }}
                       onClick={() => setSelectedId(transfer.id)}
-                      className={`w-full text-left p-3 relative transition-all flex flex-col gap-1 border border-accent-approved/10 ${
-                        selectedTransfer?.id === transfer.id
-                          ? "bg-accent-approved/20 shadow-xl scale-[1.02] z-10 border-accent-approved/50"
-                          : "bg-accent-approved/5 hover:bg-accent-approved/10 opacity-70 hover:opacity-100"
+                      className={`w-full text-left p-3 relative transition-all border border-[#d4a373]/10 group shadow-md ${
+                        isSelected
+                          ? "tm-paper-texture scale-[1.02] z-10"
+                          : "bg-[#b69e7e]/5 hover:bg-[#b69e7e]/10 opacity-70 hover:opacity-100"
                       }`}
                     >
-                      <div className="flex items-center justify-between mb-1 w-full gap-2">
-                        <span
-                          className={`text-xs font-mono font-black uppercase px-1.5 py-0.5 shrink-0 ${
-                            isOrigin
-                              ? "bg-[#c27c2f]/20 text-[#c27c2f]"
-                              : "bg-accent-approved/20 text-accent-approved"
-                          }`}
-                        >
-                          {isOrigin ? "↑ ENVIADO" : "↓ RECIBIDO"}
-                        </span>
-                        <span
-                          className={`text-xs font-mono font-black uppercase truncate ${
-                            selectedTransfer?.id === transfer.id ? "text-white/90" : "text-white/40"
-                          }`}
-                        >
-                          {getTransferTypeBadge(transfer.type)}
-                        </span>
-                      </div>
-
-                      <div
-                        className={`text-sm font-typewriter font-black uppercase leading-tight mb-1 truncate ${
-                          selectedTransfer?.id === transfer.id
-                            ? "text-white"
-                            : "text-accent-approved"
-                        }`}
-                      >
-                        {isOrigin
-                          ? `→ ${transfer.camp_destination_id}`
-                          : `← ${transfer.camp_origin_id}`}
-                      </div>
-
-                      <p
-                        className={`text-xs font-mono uppercase truncate ${
-                          selectedTransfer?.id === transfer.id ? "text-white/70" : "text-white/30"
-                        }`}
-                      >
-                        REF: {transfer.id.slice(0, 8).toUpperCase()}
-                      </p>
-
-                      <div className="flex items-center gap-1.5 mt-2">
-                        <div
-                          className={`h-2 w-2 rounded-full border border-black/10 ${
-                            transfer.status === "in_transit" || transfer.status === "approved"
-                              ? "bg-accent-approved animate-pulse"
-                              : transfer.status === "pending"
-                                ? "bg-[#c27c2f]"
-                                : transfer.status === "rejected" || transfer.status === "cancelled"
-                                  ? "bg-accent-critical"
-                                  : "bg-black/20"
-                          }`}
-                        />
-                        <span
-                          className={`text-sm font-mono font-black uppercase tracking-widest ${
-                            selectedTransfer?.id === transfer.id
-                              ? getTransferStatusColorClass(transfer.status)
-                              : "text-white/20"
-                          }`}
-                        >
-                          {getTransferStatusLabel(transfer.status)}
-                        </span>
-                      </div>
-
-                      {selectedTransfer?.id === transfer.id && (
-                        <div className="absolute top-0 bottom-0 left-0 w-1 bg-accent-approved shadow-[0_0_10px_#c27c2f]" />
+                      {isSelected && (
+                        <div className="absolute top-0 left-0 right-0 h-0.5 bg-[#d4a373]" />
                       )}
+                      <div className="flex items-start gap-3">
+                        <div
+                          className={`p-2 border shrink-0 ${
+                            isSelected ? "bg-ink/5 border-ink/10" : "bg-black/20 border-white/5"
+                          }`}
+                        >
+                          <TypeIcon
+                            className={`h-4 w-4 ${isSelected ? "text-ink/60" : "text-[#d4a373]/40"}`}
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h5
+                            className={`text-xs font-typewriter font-bold uppercase truncate ${
+                              isSelected ? "text-ink" : "text-[#d4a373]"
+                            }`}
+                          >
+                            {isOrigin
+                              ? `→ ${getCampName(transfer.camp_destination_id)}`
+                              : `← ${getCampName(transfer.camp_origin_id)}`}
+                          </h5>
+                          <div className="flex justify-between items-center mt-1">
+                            <span
+                              className={`text-[10px] font-mono uppercase tracking-wide ${
+                                isSelected ? "text-ink/40" : "text-[#d4a373]/40"
+                              }`}
+                            >
+                              {isOrigin ? "↑ ENVIADO" : "↓ RECIBIDO"}
+                            </span>
+                            <span
+                              className={`text-[10px] font-mono font-semibold tabular-nums ${
+                                isSelected ? "text-ink/70" : "text-white/40"
+                              }`}
+                            >
+                              {getTransferTypeBadge(transfer.type)}
+                            </span>
+                          </div>
+
+                          <div className="mt-2 flex items-center gap-2">
+                            <div
+                              className={`h-1.5 w-1.5 rounded-full border border-black/10 ${getStatusDotClass(transfer.status)}`}
+                            />
+                            <span
+                              className={`text-[10px] font-mono font-semibold uppercase ${
+                                isSelected
+                                  ? getStatusColorOnPaper(transfer.status)
+                                  : "text-white/20"
+                              }`}
+                            >
+                              {getTransferStatusLabel(transfer.status)}
+                            </span>
+                          </div>
+
+                          <p
+                            className={`text-[10px] font-mono uppercase mt-1.5 ${
+                              isSelected ? "text-ink/30" : "text-white/15"
+                            }`}
+                          >
+                            REF: {transfer.id.slice(0, 8).toUpperCase()}
+                          </p>
+                        </div>
+                      </div>
                     </motion.button>
                   )
                 })
               ) : (
                 <div className="flex flex-col items-center justify-center py-20 text-center">
-                  <Archive className="h-10 w-10 text-accent-approved/10 mb-4" />
-                  <p className="text-sm font-mono text-white/30 uppercase leading-relaxed font-black mb-3">
+                  <Archive className="h-10 w-10 text-[#d4a373]/10 mb-4" />
+                  <p className="text-sm font-mono text-white/20 uppercase font-black">
                     Sin traslados para esta consulta
                   </p>
                   <button
                     onClick={() => setIsNewModalOpen(true)}
-                    className="px-4 py-2 border border-accent-approved/30 text-sm font-mono font-bold text-accent-approved hover:bg-accent-approved/10 transition-colors uppercase"
+                    className="mt-3 px-4 py-2 border border-[#d4a373]/30 text-xs font-mono font-bold text-[#d4a373] hover:bg-[#d4a373]/10 transition-colors uppercase"
                   >
                     Nuevo traslado
                   </button>
@@ -593,183 +630,254 @@ export default function TravelTransfers() {
             </div>
           </div>
 
-          {/* RIGHT: Transfer detail */}
-          <div className="flex-1 flex flex-col overflow-hidden bg-industrial-metal border border-accent-approved/10">
-            {selectedTransfer ? (
-              <div className="flex-1 flex flex-col overflow-y-auto">
-                {/* Detail header */}
-                <div className="p-4 border-b border-accent-approved/10 flex justify-between items-start bg-black/20 shrink-0">
-                  <div>
-                    <span className="text-[10px] font-mono font-medium text-accent-approved/60 uppercase tracking-widest block mb-2">
-                      Orden #{selectedTransfer.id.slice(0, 8).toUpperCase()}
-                    </span>
-                    <div className="flex items-center gap-4 bg-black/40 py-2.5 px-4 border border-accent-approved/20 rounded-sm">
-                      <span className="font-typewriter text-white font-black uppercase text-lg leading-none">
-                        {selectedTransfer.camp_origin_id}
-                      </span>
-                      <ArrowLeftRight className="h-5 w-5 text-accent-approved shrink-0" />
-                      <span className="font-typewriter text-white font-black uppercase text-lg leading-none">
-                        {selectedTransfer.camp_destination_id}
-                      </span>
-                    </div>
-                  </div>
-                  <div
-                    className={`px-4 py-2.5 border inline-flex items-center gap-1.5 ${
-                      selectedTransfer.status === "in_transit" ||
-                      selectedTransfer.status === "approved"
-                        ? "bg-accent-approved/10 border-accent-approved/30 text-accent-approved"
-                        : selectedTransfer.status === "pending"
-                          ? "bg-[#c27c2f]/10 border-[#c27c2f]/30 text-[#c27c2f]"
-                          : "bg-white/5 border-white/10 text-white/40"
-                    }`}
-                  >
-                    <div
-                      className={`h-1.5 w-1.5 rounded-full ${
-                        selectedTransfer.status === "in_transit" ||
-                        selectedTransfer.status === "approved"
-                          ? "bg-accent-approved animate-pulse"
-                          : selectedTransfer.status === "pending"
-                            ? "bg-[#c27c2f] animate-pulse"
-                            : "bg-white/40"
-                      }`}
-                    />
-                    <span className="text-xs font-mono font-black uppercase tracking-widest">
-                      {getTransferStatusLabel(selectedTransfer.status)}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Transfer info grid */}
-                <div className="p-6 grid grid-cols-2 gap-4">
-                  <div className="glass-panel p-4 rounded-sm">
-                    <p className="text-sm font-mono text-white/30 uppercase tracking-widest mb-1">
-                      Tipo de Carga
-                    </p>
-                    <p className="font-typewriter text-white font-black uppercase">
-                      {getTransferTypeBadge(selectedTransfer.type)}
-                    </p>
-                  </div>
-                  <div className="glass-panel p-4 rounded-sm">
-                    <p className="text-sm font-mono text-white/30 uppercase tracking-widest mb-1">
-                      Días de Viaje
-                    </p>
-                    <p className="font-typewriter text-white font-black">
-                      {selectedTransfer.travel_days ?? "—"} días
-                    </p>
-                  </div>
-                  <div className="glass-panel p-4 rounded-sm">
-                    <p className="text-sm font-mono text-white/30 uppercase tracking-widest mb-1">
-                      Fecha de Solicitud
-                    </p>
-                    <p className="font-mono text-white text-sm">
-                      {new Date(selectedTransfer.created_at).toLocaleString()}
-                    </p>
-                  </div>
-                  <div className="glass-panel p-4 rounded-sm">
-                    <p className="text-sm font-mono text-white/30 uppercase tracking-widest mb-1">
-                      Última Actualización
-                    </p>
-                    <p className="font-mono text-white text-sm">
-                      {new Date(selectedTransfer.updated_at).toLocaleString()}
-                    </p>
-                  </div>
-
-                  {selectedTransfer.notes && (
-                    <div className="col-span-2 glass-panel p-4 rounded-sm">
-                      <p className="text-sm font-mono text-white/30 uppercase tracking-widest mb-1">
-                        Notas
-                      </p>
-                      <p className="font-mono text-white/80 text-sm">{selectedTransfer.notes}</p>
-                    </div>
-                  )}
-
-                  {/* Approval info */}
-                  {selectedTransfer.approvals && selectedTransfer.approvals.length > 0 ? (
-                    <div className="col-span-2 glass-panel p-4 rounded-sm border border-accent-approved/20">
-                      <p className="text-sm font-mono text-accent-approved uppercase tracking-widest mb-2">
-                        Decisiones de Aprobación
-                      </p>
-                      <div className="flex flex-col gap-2">
-                        {selectedTransfer.approvals.map((app, i) => (
-                          <div key={i} className="flex items-center gap-3">
-                            <span
-                              className={`text-sm font-mono font-black uppercase px-2 py-0.5 ${
-                                app.status === "approved"
-                                  ? "bg-accent-approved/20 text-accent-approved"
-                                  : "bg-accent-critical/20 text-accent-critical"
-                              }`}
-                            >
-                              {app.status === "approved" ? "APROBADO" : "RECHAZADO"}
-                            </span>
-                            <span className="font-mono text-white/60 text-sm">
-                              {app.user?.username || "Sistema"}
-                            </span>
-                          </div>
-                        ))}
+          {/* RIGHT: Transfer detail — paper manifest */}
+          <div
+            className={`flex-1 flex flex-col overflow-hidden bg-[#12110f] border border-white/5 shadow-2xl relative ${
+              !selectedTransfer ? "hidden md:flex" : "flex"
+            }`}
+          >
+            <AnimatePresence mode="wait">
+              {selectedTransfer ? (
+                <motion.div
+                  key={selectedTransfer.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="flex-1 flex flex-col overflow-hidden"
+                >
+                  {/* Detail header */}
+                  <div className="p-4 border-b border-white/5 flex justify-between items-center bg-black/20 shrink-0">
+                    <div className="flex items-center gap-4">
+                      <div className="bg-[#b69e7e]/10 p-2 border border-[#b69e7e]/20">
+                        <ArrowLeftRight className="h-5 w-5 text-[#d4a373]" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-typewriter font-bold text-white uppercase tracking-wider">
+                          Orden de Traslado
+                        </h3>
+                        <p className="text-[10px] font-mono text-[#d4a373]/50 uppercase tracking-wide">
+                          Ref. #{selectedTransfer.id.slice(0, 8).toUpperCase()}
+                        </p>
                       </div>
                     </div>
-                  ) : (
-                    <div className="col-span-2 glass-panel p-4 rounded-sm">
-                      <p className="text-xs font-mono font-bold text-white/30 uppercase tracking-widest">
-                        Esperando Aprobación
-                      </p>
+                    <div
+                      className={`px-3 py-1.5 border inline-flex items-center gap-1.5 ${
+                        normalize(selectedTransfer.status) === "in_transit" ||
+                        normalize(selectedTransfer.status) === "approved"
+                          ? "bg-[#d4a373]/10 border-[#d4a373]/30 text-[#d4a373]"
+                          : normalize(selectedTransfer.status) === "pending"
+                            ? "bg-[#c27c2f]/10 border-[#c27c2f]/30 text-[#c27c2f]"
+                            : "bg-white/5 border-white/10 text-white/40"
+                      }`}
+                    >
+                      <div
+                        className={`h-1.5 w-1.5 rounded-full ${getStatusDotClass(selectedTransfer.status)}`}
+                      />
+                      <span className="text-xs font-mono font-black uppercase tracking-widest">
+                        {getTransferStatusLabel(selectedTransfer.status)}
+                      </span>
                     </div>
-                  )}
-                </div>
+                  </div>
 
-                {/* Action buttons */}
-                <div className="p-4 border-t border-accent-approved/10 flex gap-3 mt-auto">
-                  {selectedTransfer.status === "pending" &&
-                    selectedTransfer.camp_origin_id === campId && (
-                      <button
-                        onClick={() => handleCancelTransfer(selectedTransfer.id)}
-                        disabled={cancelMutation.isPending}
-                        className="flex items-center gap-2 px-6 py-2.5 bg-[#9c2720]/20 border border-[#9c2720]/60 text-[#ff4a4a] text-sm font-mono font-semibold uppercase hover:bg-[#9c2720] hover:text-white transition-all disabled:opacity-50 shadow-md tracking-wider"
-                      >
-                        {cancelMutation.isPending ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <X className="h-4 w-4" />
-                        )}
-                        Cancelar Traslado
-                      </button>
+                  {/* Paper manifest */}
+                  <div className="flex-1 p-6 flex flex-col overflow-auto bg-[#0c0c0c] items-center justify-start">
+                    <div className="w-full max-w-2xl tm-paper-texture shadow-[0_0_50px_rgba(0,0,0,0.8)] relative overflow-hidden p-10 border-[8px] border-[#8b7355]/10 flex flex-col">
+                      {/* Stamp decoration */}
+                      <div className="absolute top-8 right-8 flex flex-col items-center rotate-6 select-none opacity-25 pointer-events-none">
+                        <div className="border-4 border-ink p-1 mb-1">
+                          <span className="text-base font-black font-mono px-2 text-ink uppercase">
+                            {normalize(selectedTransfer.status) === "completed"
+                              ? "COMPLETADO"
+                              : normalize(selectedTransfer.status) === "rejected"
+                                ? "RECHAZADO"
+                                : normalize(selectedTransfer.status) === "cancelled"
+                                  ? "CANCELADO"
+                                  : normalize(selectedTransfer.status) === "in_transit"
+                                    ? "EN TRÁNSITO"
+                                    : "EN PROCESO"}
+                          </span>
+                        </div>
+                        <span className="text-xs font-mono font-black italic text-ink">
+                          Logística Central
+                        </span>
+                      </div>
+
+                      <div className="flex-1 flex flex-col relative z-10">
+                        {/* Manifest header */}
+                        <div className="mb-8 pb-5 border-b-4 border-double border-ink/20">
+                          <p className="text-xs font-mono text-ink/40 uppercase tracking-widest mb-3">
+                            Manifiesto de Traslado Intercampal
+                          </p>
+                          <div className="flex items-center gap-6 flex-wrap">
+                            <div className="flex flex-col">
+                              <span className="text-[10px] font-mono text-ink/40 uppercase tracking-wider mb-0.5">
+                                Origen
+                              </span>
+                              <h2 className="text-2xl font-typewriter font-bold text-ink uppercase leading-none">
+                                {getCampName(selectedTransfer.camp_origin_id)}
+                              </h2>
+                            </div>
+                            <ArrowLeftRight className="h-5 w-5 text-ink/20 flex-shrink-0" />
+                            <div className="flex flex-col">
+                              <span className="text-[10px] font-mono text-ink/40 uppercase tracking-wider mb-0.5">
+                                Destino
+                              </span>
+                              <h2 className="text-2xl font-typewriter font-bold text-ink uppercase leading-none">
+                                {getCampName(selectedTransfer.camp_destination_id)}
+                              </h2>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Data grid */}
+                        <div className="grid grid-cols-2 gap-x-12 gap-y-6 mb-8">
+                          <div>
+                            <span className="text-xs font-mono text-ink/40 uppercase tracking-wider">
+                              Tipo de Carga
+                            </span>
+                            <div className="flex items-center gap-2 mt-1">
+                              {(() => {
+                                const TIcon = getTypeIcon(selectedTransfer.type)
+                                return <TIcon className="h-4 w-4 text-ink/40" />
+                              })()}
+                              <p className="text-sm font-typewriter font-bold text-ink uppercase">
+                                {getTransferTypeBadge(selectedTransfer.type)}
+                              </p>
+                            </div>
+                          </div>
+                          <div>
+                            <span className="text-xs font-mono text-ink/40 uppercase tracking-wider">
+                              Días de Viaje
+                            </span>
+                            <p className="text-sm font-mono font-semibold text-ink uppercase mt-1">
+                              {selectedTransfer.travel_days ?? "—"} días
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-xs font-mono text-ink/40 uppercase tracking-wider">
+                              Fecha de Solicitud
+                            </span>
+                            <p className="text-sm font-mono text-ink mt-1">
+                              {new Date(selectedTransfer.created_at).toLocaleString()}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-xs font-mono text-ink/40 uppercase tracking-wider">
+                              Última Actualización
+                            </span>
+                            <p className="text-sm font-mono text-ink mt-1">
+                              {new Date(selectedTransfer.updated_at).toLocaleString()}
+                            </p>
+                          </div>
+
+                          {selectedTransfer.notes && (
+                            <div className="col-span-2">
+                              <span className="text-xs font-mono text-ink/40 uppercase tracking-wider">
+                                Notas Operativas
+                              </span>
+                              <div className="mt-1 p-3 bg-white/40 border border-ink/10 italic font-typewriter text-sm text-ink/80 leading-relaxed">
+                                {selectedTransfer.notes}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Approval section */}
+                        <div>
+                          <h4 className="text-xs font-mono font-black text-ink/40 border-b border-ink/5 pb-1 mb-3 uppercase">
+                            Historial de Aprobación
+                          </h4>
+                          {selectedTransfer.approvals && selectedTransfer.approvals.length > 0 ? (
+                            <div className="space-y-2">
+                              {selectedTransfer.approvals.map((app, i) => (
+                                <div
+                                  key={i}
+                                  className="flex items-center gap-3 p-2 bg-ink/5 border border-ink/10"
+                                >
+                                  <span
+                                    className={`text-xs font-mono font-black uppercase px-2 py-0.5 border ${
+                                      app.status === "approved"
+                                        ? "border-[#4c6351] text-[#4c6351] bg-[#4c6351]/10"
+                                        : "border-[#9c2720] text-[#9c2720] bg-[#9c2720]/10"
+                                    }`}
+                                  >
+                                    {app.status === "approved" ? "APROBADO" : "RECHAZADO"}
+                                  </span>
+                                  <span className="font-mono text-ink/60 text-sm">
+                                    {app.user?.username || "Sistema"}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-xs font-mono text-ink/30 uppercase italic">
+                              Pendiente de revisión por el comité logístico.
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="mt-8 pt-4 flex justify-between items-center text-[10px] font-mono text-ink/30 uppercase border-t border-ink/10">
+                          <span>Generado: {new Date().toLocaleDateString("es-CR")}</span>
+                          <span className="text-ink/40">Ref. {selectedTransfer.id}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action buttons */}
+                  <div className="p-4 border-t border-white/5 flex gap-3 shrink-0 bg-black/20">
+                    {normalize(selectedTransfer.status) === "pending" &&
+                      String(selectedTransfer.camp_origin_id) === String(campId) && (
+                        <button
+                          onClick={() => handleCancelTransfer(selectedTransfer.id)}
+                          disabled={cancelMutation.isPending}
+                          className="flex items-center gap-2 px-6 py-2.5 bg-[#9c2720]/20 border border-[#9c2720]/60 text-[#ff4a4a] text-sm font-mono font-semibold uppercase hover:bg-[#9c2720] hover:text-white transition-all disabled:opacity-50 shadow-md tracking-wider"
+                        >
+                          {cancelMutation.isPending ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <X className="h-4 w-4" />
+                          )}
+                          Cancelar Traslado
+                        </button>
+                      )}
+                    {normalize(selectedTransfer.status) === "in_transit" &&
+                      String(selectedTransfer.camp_destination_id) === String(campId) && (
+                        <button
+                          onClick={() => handleConfirmArrival(selectedTransfer.id)}
+                          disabled={confirmMutation.isPending}
+                          className="flex items-center gap-2 px-8 py-2.5 bg-[#4c6351] text-white text-sm font-mono font-black uppercase hover:opacity-90 transition-all disabled:opacity-50 shadow-lg tracking-wider"
+                        >
+                          {confirmMutation.isPending ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <CheckCircle2 className="h-4 w-4" />
+                          )}
+                          Confirmar Llegada
+                        </button>
+                      )}
+                    {(normalize(selectedTransfer.status) === "completed" ||
+                      normalize(selectedTransfer.status) === "rejected" ||
+                      normalize(selectedTransfer.status) === "cancelled") && (
+                      <span className="text-xs font-mono text-white/30 uppercase tracking-widest flex items-center gap-1.5">
+                        <Archive className="h-3.5 w-3.5" />
+                        Traslado archivado
+                      </span>
                     )}
-                  {selectedTransfer.status === "in_transit" &&
-                    selectedTransfer.camp_destination_id === campId && (
-                      <button
-                        onClick={() => handleConfirmArrival(selectedTransfer.id)}
-                        disabled={confirmMutation.isPending}
-                        className="flex items-center gap-2 px-8 py-2.5 bg-accent-approved text-white text-sm font-mono font-black uppercase hover:opacity-90 transition-all disabled:opacity-50 shadow-lg tracking-wider"
-                      >
-                        {confirmMutation.isPending ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <CheckCircle2 className="h-4 w-4" />
-                        )}
-                        Confirmar Llegada
-                      </button>
-                    )}
-                  {(selectedTransfer.status === "completed" ||
-                    selectedTransfer.status === "rejected" ||
-                    selectedTransfer.status === "cancelled") && (
-                    <span className="text-xs font-mono text-white/30 uppercase tracking-widest flex items-center gap-1.5">
-                      <Archive className="h-3.5 w-3.5" />
-                      Traslado archivado
-                    </span>
-                  )}
+                  </div>
+                </motion.div>
+              ) : (
+                <div className="flex-1 flex flex-col items-center justify-center p-12 text-center">
+                  <Truck className="h-16 w-16 mb-6 text-[#d4a373] opacity-20" />
+                  <h3 className="text-base font-typewriter font-bold text-white/40 uppercase mb-2">
+                    Selecciona un Traslado
+                  </h3>
+                  <p className="text-xs font-mono text-white/25 max-w-xs leading-relaxed">
+                    Elige una orden del registro para ver su manifiesto completo.
+                  </p>
                 </div>
-              </div>
-            ) : (
-              <div className="flex-1 flex flex-col items-center justify-center p-12 text-center">
-                <Truck className="h-20 w-20 mb-6 text-accent-approved opacity-20" />
-                <p className="font-typewriter text-2xl text-white/20 font-black uppercase mb-3">
-                  Seleccione un Traslado
-                </p>
-                <p className="font-mono text-sm text-white/20 uppercase tracking-widest">
-                  o cree uno nuevo para comenzar
-                </p>
-              </div>
-            )}
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </div>
@@ -787,22 +895,27 @@ export default function TravelTransfers() {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-industrial-metal border-4 border-double border-accent-approved/50 w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl"
+              className="bg-[#141414] border-4 border-double border-[#d4a373]/40 w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl"
             >
               {/* Modal header */}
-              <div className="flex items-center justify-between p-6 border-b-2 border-accent-approved/30 bg-black/50">
+              <div className="flex items-center justify-between p-6 border-b-2 border-[#d4a373]/20 bg-black/50">
                 <div className="flex items-center gap-4">
-                  <ArrowLeftRight className="h-8 w-8 text-accent-approved animate-pulse" />
-                  <h3 className="font-typewriter font-black text-white uppercase text-xl md:text-2xl tracking-widest">
-                    Nueva Solicitud de Traslado
-                  </h3>
+                  <ArrowLeftRight className="h-7 w-7 text-[#d4a373] animate-pulse" />
+                  <div>
+                    <h3 className="font-typewriter font-black text-white uppercase text-xl tracking-widest">
+                      Nueva Solicitud de Traslado
+                    </h3>
+                    <p className="text-[10px] font-mono text-[#d4a373]/50 uppercase tracking-widest mt-0.5">
+                      Protocolo Logístico Intercampal
+                    </p>
+                  </div>
                 </div>
                 <button
                   onClick={() => {
                     setIsNewModalOpen(false)
                     resetForm()
                   }}
-                  className="text-white/40 hover:text-[#fca311] transition-colors"
+                  className="text-white/40 hover:text-[#d4a373] transition-colors"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -815,17 +928,18 @@ export default function TravelTransfers() {
               >
                 <div className="p-8 space-y-8">
                   {formError && (
-                    <div className="bg-red-950/40 border border-red-500/50 p-4 font-mono text-sm text-red-400 uppercase flex items-center gap-2 shadow-lg mb-4">
+                    <div className="bg-red-950/40 border border-red-500/50 p-4 font-mono text-sm text-red-400 uppercase flex items-center gap-2 shadow-lg">
                       <AlertCircle className="w-5 h-5 shrink-0" />
                       <span>{formError}</span>
                     </div>
                   )}
+
                   {/* Origin indicator */}
-                  <div className="bg-black/60 border-2 border-white/10 px-6 py-4 flex items-center gap-4">
-                    <span className="text-sm md:text-base font-mono text-white/50 uppercase font-black tracking-widest">
+                  <div className="bg-black/60 border-2 border-[#d4a373]/15 px-6 py-4 flex items-center gap-4">
+                    <span className="text-sm font-mono text-white/50 uppercase font-black tracking-widest">
                       Campamento Origen:
                     </span>
-                    <span className="text-lg md:text-xl font-mono font-black text-accent-approved uppercase">
+                    <span className="text-lg font-mono font-black text-[#d4a373] uppercase">
                       {campId}
                     </span>
                     <span className="text-white/30 text-xl">→</span>
@@ -834,7 +948,7 @@ export default function TravelTransfers() {
                   <div>
                     <label
                       htmlFor="destCampId"
-                      className="text-sm md:text-base font-mono font-black text-accent-approved uppercase tracking-widest block mb-2"
+                      className="text-sm font-mono font-black text-[#d4a373] uppercase tracking-widest block mb-2"
                     >
                       Campamento Destino *
                     </label>
@@ -842,7 +956,7 @@ export default function TravelTransfers() {
                       id="destCampId"
                       value={destCampId}
                       onChange={(e) => setDestCampId(e.target.value)}
-                      className="vintage-input w-full p-4 text-base md:text-lg"
+                      className="vintage-input w-full p-4 text-base"
                     >
                       <option value="" disabled>
                         Seleccione un destino...
@@ -861,7 +975,7 @@ export default function TravelTransfers() {
                     <div>
                       <label
                         htmlFor="transferType"
-                        className="text-sm md:text-base font-mono font-black text-accent-approved uppercase tracking-widest block mb-2"
+                        className="text-sm font-mono font-black text-[#d4a373] uppercase tracking-widest block mb-2"
                       >
                         Tipo de Traslado *
                       </label>
@@ -871,7 +985,7 @@ export default function TravelTransfers() {
                         onChange={(e) =>
                           setTransferType(e.target.value as "resources" | "people" | "both")
                         }
-                        className="vintage-input w-full p-4 text-base md:text-lg"
+                        className="vintage-input w-full p-4 text-base"
                       >
                         <option value="resources">RECURSOS</option>
                         <option value="people">PERSONAS</option>
@@ -881,7 +995,7 @@ export default function TravelTransfers() {
                     <div>
                       <label
                         htmlFor="travelDays"
-                        className="text-sm md:text-base font-mono font-black text-accent-approved uppercase tracking-widest block mb-2"
+                        className="text-sm font-mono font-black text-[#d4a373] uppercase tracking-widest block mb-2"
                       >
                         Días de Viaje
                       </label>
@@ -891,7 +1005,7 @@ export default function TravelTransfers() {
                         min={1}
                         value={travelDays}
                         onChange={(e) => setTravelDays(Number(e.target.value))}
-                        className="vintage-input w-full p-4 text-base md:text-lg"
+                        className="vintage-input w-full p-4 text-base"
                       />
                     </div>
                   </div>
@@ -899,7 +1013,7 @@ export default function TravelTransfers() {
                   <div>
                     <label
                       htmlFor="notes"
-                      className="text-sm md:text-base font-mono font-black text-accent-approved uppercase tracking-widest block mb-2"
+                      className="text-sm font-mono font-black text-[#d4a373] uppercase tracking-widest block mb-2"
                     >
                       Notas / Motivo
                     </label>
@@ -909,17 +1023,17 @@ export default function TravelTransfers() {
                       onChange={(e) => setNotes(e.target.value)}
                       placeholder="Razón del traslado, instrucciones especiales..."
                       rows={3}
-                      className="vintage-input w-full resize-none p-4 text-base md:text-lg"
+                      className="vintage-input w-full resize-none p-4 text-base"
                     />
                   </div>
 
                   {/* Resources section */}
                   {(transferType === "resources" || transferType === "both") && (
                     <div>
-                      <label className="text-xs font-mono font-black text-accent-approved uppercase tracking-widest block mb-2">
+                      <label className="text-xs font-mono font-black text-[#d4a373] uppercase tracking-widest block mb-2">
                         Recursos a Transferir * ({selectedResources.length} seleccionado(s))
                       </label>
-                      <div className="max-h-40 overflow-y-auto custom-scrollbar space-y-1 border border-accent-approved/10 p-2 bg-black/20">
+                      <div className="max-h-40 overflow-y-auto custom-scrollbar space-y-1 border border-[#d4a373]/10 p-2 bg-black/20">
                         {inventory.length === 0 ? (
                           <p className="text-xs font-mono text-white/30 uppercase text-center py-4">
                             Cargando inventario...
@@ -937,7 +1051,7 @@ export default function TravelTransfers() {
                                   key={item.resource_id}
                                   className={`flex items-center justify-between p-2 border transition-all ${
                                     isSelected
-                                      ? "bg-accent-approved/10 border-accent-approved/30"
+                                      ? "bg-[#d4a373]/10 border-[#d4a373]/30"
                                       : "bg-black/20 border-white/5"
                                   }`}
                                 >
@@ -949,23 +1063,26 @@ export default function TravelTransfers() {
                                     <div
                                       className={`h-3 w-3 border flex items-center justify-center shrink-0 ${
                                         isSelected
-                                          ? "border-accent-approved bg-accent-approved/20"
+                                          ? "border-[#d4a373] bg-[#d4a373]/20"
                                           : "border-white/20"
                                       }`}
                                     >
-                                      {isSelected && (
-                                        <Check className="h-2 w-2 text-accent-approved" />
-                                      )}
+                                      {isSelected && <Check className="h-2 w-2 text-[#d4a373]" />}
                                     </div>
                                     <div className="flex items-center gap-2">
-                                      <div className="w-6 h-6 rounded bg-black/20 border border-ink/10 flex items-center justify-center">
-                                        <Package className="w-3 h-3 text-white/60" />
-                                      </div>
+                                      {(() => {
+                                        const CatIcon = getCategoryIcon(item.resource?.category)
+                                        return (
+                                          <div className="w-6 h-6 bg-black/20 border border-[#d4a373]/10 flex items-center justify-center">
+                                            <CatIcon className="w-3 h-3 text-[#d4a373]/60" />
+                                          </div>
+                                        )
+                                      })()}
                                       <div className="flex flex-col">
                                         <span className="text-sm font-mono font-black text-white/80 uppercase">
                                           {item.resource?.name || "Desconocido"}
                                         </span>
-                                        <span className="text-sm font-mono text-white/40 uppercase">
+                                        <span className="text-xs font-mono text-white/40 uppercase">
                                           {item.resource?.category || "N/A"} {"//"}{" "}
                                           {item.current_quantity} {item.resource?.unit || "U"}
                                         </span>
@@ -999,10 +1116,10 @@ export default function TravelTransfers() {
                   {/* Persons section */}
                   {(transferType === "people" || transferType === "both") && (
                     <div>
-                      <label className="text-xs font-mono font-black text-accent-approved uppercase tracking-widest block mb-2">
+                      <label className="text-xs font-mono font-black text-[#d4a373] uppercase tracking-widest block mb-2">
                         Personas a Transferir * ({selectedPersons.length} seleccionada(s))
                       </label>
-                      <div className="max-h-40 overflow-y-auto custom-scrollbar space-y-1 border border-accent-approved/10 p-2 bg-black/20">
+                      <div className="max-h-40 overflow-y-auto custom-scrollbar space-y-1 border border-[#d4a373]/10 p-2 bg-black/20">
                         {persons.length === 0 ? (
                           <p className="text-xs font-mono text-white/30 uppercase text-center py-4">
                             Cargando personas...
@@ -1026,26 +1143,27 @@ export default function TravelTransfers() {
                                   onClick={() => handleTogglePerson(person.id)}
                                   className={`flex items-center gap-2 p-2 border cursor-pointer transition-all text-left w-full bg-transparent outline-none focus:outline-none ${
                                     isSelected
-                                      ? "bg-accent-approved/10 border-accent-approved/30"
-                                      : "bg-black/20 border-white/5 hover:border-accent-approved/20"
+                                      ? "bg-[#d4a373]/10 border-[#d4a373]/30"
+                                      : "bg-black/20 border-white/5 hover:border-[#d4a373]/20"
                                   }`}
                                 >
                                   <div
                                     className={`h-3 w-3 border flex items-center justify-center shrink-0 ${
                                       isSelected
-                                        ? "border-accent-approved bg-accent-approved/20"
+                                        ? "border-[#d4a373] bg-[#d4a373]/20"
                                         : "border-white/20"
                                     }`}
                                   >
-                                    {isSelected && (
-                                      <Check className="h-2 w-2 text-accent-approved" />
-                                    )}
+                                    {isSelected && <Check className="h-2 w-2 text-[#d4a373]" />}
+                                  </div>
+                                  <div className="w-6 h-6 rounded-full bg-black/30 border border-[#d4a373]/10 flex items-center justify-center shrink-0">
+                                    <Users className="w-3 h-3 text-[#d4a373]/60" />
                                   </div>
                                   <span className="text-sm font-mono text-white/80 uppercase">
                                     {person.first_name} {person.last_name}
                                   </span>
                                   {person.profession && (
-                                    <span className="text-sm font-mono text-white/30">
+                                    <span className="text-xs font-mono text-white/30">
                                       [{person.profession.name}]
                                     </span>
                                   )}
@@ -1056,12 +1174,10 @@ export default function TravelTransfers() {
                       </div>
                     </div>
                   )}
-
-                  {/* End Persons section */}
                 </div>
 
                 {/* Modal footer */}
-                <div className="p-6 border-t-2 border-accent-approved/30 flex justify-end gap-4 bg-black/40">
+                <div className="p-6 border-t-2 border-[#d4a373]/20 flex justify-end gap-4 bg-black/40">
                   <button
                     type="button"
                     onClick={() => {
@@ -1075,7 +1191,7 @@ export default function TravelTransfers() {
                   <button
                     type="submit"
                     disabled={createMutation.isPending}
-                    className="px-6 py-3 md:px-8 md:py-4 bg-accent-approved text-black text-base font-mono font-black uppercase hover:bg-white transition-all disabled:opacity-50 flex items-center gap-3"
+                    className="px-6 py-3 md:px-8 md:py-4 bg-[#c27c2f] text-black text-base font-mono font-black uppercase hover:bg-[#df8120] transition-all disabled:opacity-50 flex items-center gap-3"
                   >
                     {createMutation.isPending ? (
                       <Loader2 className="h-5 w-5 animate-spin" />
