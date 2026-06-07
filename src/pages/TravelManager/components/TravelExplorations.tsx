@@ -20,6 +20,7 @@ import {
   Footprints,
   Loader2,
   ChevronRight,
+  Package,
 } from "lucide-react"
 import { useState, useMemo } from "react"
 
@@ -41,9 +42,7 @@ import { useAuthStore } from "@/store/useAuthStore"
 // ── Status helpers ──────────────────────────────────────────────────────────
 
 function getStatusLabel(rawStatus: string): string {
-  const status = String(rawStatus ?? "")
-    .toLowerCase()
-    .replace(/\s+/g, "_")
+  const status = String(rawStatus ?? "").toLowerCase().replace(/\s+/g, "_")
   switch (status) {
     case "active":
     case "in_progress":
@@ -61,9 +60,7 @@ function getStatusLabel(rawStatus: string): string {
 }
 
 function getStatusColorClass(rawStatus: string): string {
-  const status = String(rawStatus ?? "")
-    .toLowerCase()
-    .replace(/\s+/g, "_")
+  const status = String(rawStatus ?? "").toLowerCase().replace(/\s+/g, "_")
   switch (status) {
     case "active":
     case "in_progress":
@@ -155,10 +152,9 @@ export default function TravelExplorations() {
       resetNewForm()
       setIsNewModalOpen(false)
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
       const msg = error.response?.data?.message || error.message
-      setFormError(Array.isArray(msg) ? msg.join(", ") : msg || "Error al crear la expedición.")
+      setFormError(Array.isArray(msg) ? msg.join(", ") : (msg || "Error al crear la expedición."))
     },
   })
 
@@ -172,7 +168,7 @@ export default function TravelExplorations() {
       returnExploration(id, {
         real_return_date: body.real_return_date,
         notes: body.notes,
-        found_resources: body.found_resources,
+        found_resources: body.found_resources
       }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["explorations", baseCampId] })
@@ -196,11 +192,8 @@ export default function TravelExplorations() {
         String(exp.destination_description || "")
           .toLowerCase()
           .includes(q)
-      const expStatus = String(exp.status ?? "")
-        .toLowerCase()
-        .replace(/\s+/g, "_")
-      const matchesStatus =
-        filterStatus === "" || expStatus === String(filterStatus).toLowerCase().replace(/\s+/g, "_")
+      const expStatus = String(exp.status ?? "").toLowerCase().replace(/\s+/g, "_")
+      const matchesStatus = filterStatus === "" || expStatus === String(filterStatus).toLowerCase().replace(/\s+/g, "_")
       return matchesSearch && matchesStatus
     })
   }, [explorations, search, filterStatus])
@@ -339,11 +332,11 @@ export default function TravelExplorations() {
       body: {
         real_return_date: new Date(returnDate).toISOString(),
         notes: returnNotes,
-        found_resources: returnFoundResources.map((r) => ({
+        found_resources: returnFoundResources.map(r => ({
           resource_id: Number(r.resource_id),
           flow: "in",
-          quantity: r.quantity,
-        })),
+          quantity: r.quantity
+        }))
       },
     })
   }
@@ -351,14 +344,9 @@ export default function TravelExplorations() {
   function handleToggleReturnResourceSelect(resourceId: string) {
     const exists = returnFoundResources.find((r) => r.resource_id === String(resourceId))
     if (exists) {
-      setReturnFoundResources(
-        returnFoundResources.filter((r) => r.resource_id !== String(resourceId)),
-      )
+      setReturnFoundResources(returnFoundResources.filter((r) => r.resource_id !== String(resourceId)))
     } else {
-      setReturnFoundResources([
-        ...returnFoundResources,
-        { resource_id: String(resourceId), quantity: 1 },
-      ])
+      setReturnFoundResources([...returnFoundResources, { resource_id: String(resourceId), quantity: 1 }])
     }
   }
 
@@ -431,65 +419,63 @@ export default function TravelExplorations() {
   // }
 
   // ── Render ────────────────────────────────────────────────────────────────
+  const getRowClass = (status: string) => {
+    const s = String(status ?? "").toLowerCase().replace(/\s+/g, "_")
+    if (s === "active" || s === "in_progress") return "tm-row-active"
+    if (s === "scheduled") return "tm-row-transit"
+    if (s === "cancelled") return "tm-row-pending"
+    return "tm-row-sched"
+  }
+
+  const getChipClass = (status: string) => {
+    const s = String(status ?? "").toLowerCase().replace(/\s+/g, "_")
+    if (s === "active" || s === "in_progress") return "tm-chip-active"
+    if (s === "scheduled") return "tm-chip-transit"
+    if (s === "cancelled") return "tm-chip-pending"
+    return "tm-chip-sched"
+  }
+
   return (
-    <div className="flex-1 h-full flex flex-col gap-3 overflow-hidden bg-[#0a0a0a] min-h-0">
+    <div className="tm-container">
       {/* ── Vista Header ── */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-[#12110f] py-4 px-4 border-b border-b-[#d4a373]/20 border-t-2 border-t-[#d4a373]/60 shrink-0 shadow-lg relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-40 h-40 bg-[#d4a373]/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl pointer-events-none" />
-        <div className="flex items-center gap-4 relative z-10">
-          <div className="bg-[#d4a373]/10 p-2 border border-[#d4a373]/30">
-            <Compass className="h-6 w-6 text-[#d4a373]" />
-          </div>
+      <div className="tm-board-header">
+        <div className="tm-board-left">
+          <div className="tm-online-dot" />
           <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="px-1.5 py-0.5 bg-bg-paper paper-texture text-ink text-xs font-mono font-black uppercase rotate-1 shadow-sm border border-[#8b7355]/30">
-                Operaciones_Campo
-              </span>
-              <span className="text-xs font-mono text-[#d4a373]/40 uppercase tracking-widest font-black">
-                FIELD_OPS
-              </span>
-            </div>
-            <h2 className="text-lg font-typewriter font-bold text-white uppercase tracking-tight leading-none">
-              OPERACIONES DE CAMPO
-            </h2>
-            <p className="font-mono text-xs text-[#d4a373]/60 uppercase tracking-widest mt-1">
-              Base: {baseCampId.toUpperCase()}
-            </p>
+            <h2 className="tm-board-title leading-none">Operaciones de Campo</h2>
+            <p className="tm-board-sub mt-1">Base: {baseCampId.toUpperCase()}</p>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-4 md:gap-6 mt-4 md:mt-0 relative z-10 w-full md:w-auto">
-          <div className="flex flex-wrap gap-2 md:gap-4 border-r border-white/10 pr-4 md:pr-6">
+        <div className="flex flex-wrap items-center gap-4 shrink-0">
+          <div className="tm-folder-tabs">
             {stats.map((s) => (
               <button
+                type="button"
                 key={s.id}
                 onClick={() => setFilterStatus(filterStatus === s.id ? "" : s.id)}
-                className={`flex flex-col items-center transition-all px-2 md:px-4 py-2 border border-transparent ${
-                  filterStatus === s.id
-                    ? "bg-[#d4a373]/10 border-[#d4a373]/20 shadow-inner"
-                    : "hover:bg-[#d4a373]/10"
-                }`}
+                className={`tm-tab ${filterStatus === s.id ? "tm-tab-active" : ""}`}
               >
-                <span className="text-base md:text-lg font-mono font-black text-[#d4a373]">
-                  {s.count}
-                </span>
-                <span className="text-xs md:text-sm font-mono font-bold uppercase tracking-tighter text-white/40">
-                  {s.label}
-                </span>
+                {s.label.toUpperCase()} ({s.count})
               </button>
             ))}
           </div>
           <button
+            type="button"
             onClick={() => setIsNewModalOpen(true)}
-            className="bg-[#c27c2f] text-black px-4 md:px-6 py-2.5 text-xs md:text-sm font-mono font-black uppercase hover:bg-[#df8120] hover:shadow-xl transition-all shadow-lg active:scale-95 flex items-center gap-2 border-b-2 border-r-2 border-black/20 whitespace-nowrap"
+            className="tm-action-btn tm-action-btn-primary"
+            style={{ padding: "8px 16px", borderRadius: "4px" }}
           >
-            <Plus className="h-3.5 w-3.5" /> NUEVA EXPLORACIÓN
+            <span className="tm-action-label">
+              <Plus className="h-3.5 w-3.5" /> Nueva exploración
+            </span>
+            <span className="tm-action-sub">Protocolo de salida</span>
           </button>
         </div>
       </div>
 
       {error && (
-        <div className="mx-4 mt-2 bg-red-950/40 border border-red-500/50 p-3 font-mono text-sm text-red-400 uppercase flex items-center gap-2 shadow-lg">
+        <div className="tm-alert">
           <AlertCircle className="w-4 h-4 shrink-0" />
           <span>
             Error de conexión con la central. Modo fuera de línea activo. No se pudieron cargar los
@@ -498,11 +484,11 @@ export default function TravelExplorations() {
         </div>
       )}
 
-      <div className="flex-1 flex flex-col gap-3 overflow-hidden px-4 pb-4">
+      <div className="flex-1 flex flex-col gap-3 overflow-hidden">
         {/* ── Filtros ── */}
-        <div className="flex flex-wrap gap-3 shrink-0 items-center bg-[#12110f] p-2 border border-white/5">
+        <div className="flex flex-wrap gap-3 shrink-0 items-center bg-[#1c1208] p-3 border border-[#d4a373]/20 rounded-md">
           <div className="relative w-full md:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/20" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/30" />
             <input
               type="text"
               placeholder="Buscar ruta o destino..."
@@ -511,10 +497,10 @@ export default function TravelExplorations() {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <div className="flex items-center gap-2 bg-black/40 border border-[#d4a373]/10 px-4 py-2.5">
+          <div className="flex items-center gap-2 bg-[#121110] border border-[#d4a373]/20 px-4 py-2 rounded-md">
             <span className="text-xs font-mono text-white/30 uppercase font-black">Estado:</span>
             <select
-              className="bg-transparent text-xs font-mono text-[#d4a373] font-black focus:outline-none uppercase"
+              className="bg-transparent text-xs font-mono text-[#c27c2f] font-black focus:outline-none uppercase cursor-pointer"
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
             >
@@ -531,250 +517,301 @@ export default function TravelExplorations() {
         {/* ── Layout 3 columnas ── */}
         <div className="flex-1 flex gap-4 overflow-hidden">
           {/* LEFT: Lista fichero */}
-          <div className="w-[280px] flex flex-col gap-2 shrink-0 overflow-hidden bg-[#12110f] p-3 border border-[#d4a373]/15">
-            <div className="flex items-center justify-between px-1 mb-1 border-b border-[#d4a373]/10 pb-2">
-              <span className="text-[10px] font-mono font-semibold text-[#d4a373] uppercase tracking-widest">
-                Fichero Operativo
-              </span>
-              <span className="text-[10px] font-mono text-white/30 uppercase bg-white/5 px-1.5 py-0.5 tabular-nums">
-                {filteredExplorations.length}
+          <div className="w-[290px] flex flex-col gap-3 shrink-0 overflow-hidden bg-[#1c1208] p-4 border border-[#d4a373]/20 rounded-md shadow-lg">
+            <div className="tm-folder-header-row mb-1">
+              <h4 className="tm-folder-title">FICHERO OPERATIVO</h4>
+              <span className="text-[10px] font-mono font-medium text-white/30 uppercase tracking-wider">
+                {filteredExplorations.length} REG
               </span>
             </div>
 
-            <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar space-y-2">
+            <div className="tm-op-list">
               {filteredExplorations.length > 0 ? (
                 filteredExplorations.map((exp) => (
                   <motion.button
                     key={exp.id}
                     whileHover={{ x: 2 }}
                     onClick={() => setSelectedId(exp.id)}
-                    className={`w-full text-left p-3 relative transition-all border border-[#d4a373]/10 ${
-                      selectedExp?.id === exp.id
-                        ? "tm-paper-texture shadow-xl scale-[1.02] z-10"
-                        : "bg-[#b69e7e]/5 hover:bg-[#b69e7e]/10 opacity-70 hover:opacity-100"
+                    className={`tm-op-row cursor-pointer transition-all ${getRowClass(exp.status)} ${
+                      selectedExp?.id === exp.id ? "selected" : ""
                     }`}
                   >
-                    <div
-                      className={`absolute top-2 right-3 font-mono text-sm font-black tracking-tighter ${
-                        selectedExp?.id === exp.id ? "text-ink/40" : "text-[#d4a373]/30"
-                      }`}
-                    >
-                      REF-{exp.id.slice(0, 4).toUpperCase()}
+                    {/* Header: ID + Status */}
+                    <div className="flex items-center justify-between w-full">
+                      <span className="px-2 py-0.5 bg-white/10 text-[8px] font-mono text-[#e8dcc8] font-bold tracking-wider rounded-sm">
+                        REF-{exp.id.slice(0, 4).toUpperCase()}
+                      </span>
+                      <span className={`text-[9px] font-mono font-bold uppercase tracking-wider ${getStatusColorClass(exp.status)}`}>
+                        {getStatusLabel(exp.status)}
+                      </span>
                     </div>
-                    <h5
-                      className={`text-[12px] font-typewriter font-black uppercase leading-tight mb-1 ${
-                        selectedExp?.id === exp.id ? "text-ink" : "text-[#d4a373]"
-                      }`}
-                    >
+
+                    {/* Name: Crisp and Bolder */}
+                    <h5 className={`text-[12px] font-mono font-bold uppercase tracking-tight truncate mt-0.5 w-full ${
+                      selectedExp?.id === exp.id ? "text-[#df8120]" : "text-white"
+                    }`}>
                       {exp.name}
                     </h5>
-                    <p
-                      className={`text-[10px] font-mono uppercase tracking-wide font-normal truncate mt-0.5 ${
-                        selectedExp?.id === exp.id ? "text-ink/60" : "text-white/30"
-                      }`}
-                    >
-                      {exp.destination_description}
+
+                    {/* Destination Description */}
+                    <p className="text-[10px] font-mono text-[#faf4e6]/90 truncate flex items-center gap-1 w-full">
+                      <span className="text-[#df8120] font-bold">➔</span> {exp.destination_description}
                     </p>
-                    <div className="flex justify-between items-center mt-2">
-                      <div className="flex -space-x-2">
+
+                    {/* Footer: Crew + Duration */}
+                    <div className="flex justify-between items-center w-full mt-1.5">
+                      <div className="flex -space-x-1">
                         {exp.explorationPersons.slice(0, 3).map((ep, i) => (
                           <div
                             key={i}
-                            className="w-6 h-6 rounded-full border border-[#1a1a1a] bg-[#43523d] flex items-center justify-center shadow-md z-10"
+                            className="w-5 h-5 rounded-full border border-[#121110] bg-[#4c6351] flex items-center justify-center shadow-sm z-10"
                             title={ep.person?.first_name || "Explorador"}
                           >
-                            <span className="text-sm font-bold text-white uppercase">
+                            <span className="text-[8px] font-mono font-black text-white uppercase">
                               {(ep.person?.first_name || "X").substring(0, 2)}
                             </span>
                           </div>
                         ))}
                         {exp.explorationPersons.length > 3 && (
-                          <div className="w-6 h-6 rounded-full border border-[#1a1a1a] bg-black/40 flex items-center justify-center shadow-md z-0">
-                            <span className="text-sm font-bold text-white uppercase">
+                          <div className="w-5 h-5 rounded-full border border-[#121110] bg-black/40 flex items-center justify-center shadow-sm z-0">
+                            <span className="text-[7px] font-mono font-black text-white uppercase">
                               +{exp.explorationPersons.length - 3}
                             </span>
                           </div>
                         )}
                       </div>
-                      <div className="flex items-center gap-1.5">
-                        <div
-                          className={`h-2 w-2 rounded-full border border-black/10 ${
-                            exp.status === "active" || exp.status === "in_progress"
-                              ? "bg-accent-approved animate-pulse"
-                              : exp.status === "scheduled"
-                                ? "bg-[#c27c2f]"
-                                : exp.status === "cancelled"
-                                  ? "bg-accent-critical"
-                                  : "bg-black/20"
-                          }`}
-                        />
-                        <span
-                          className={`text-sm font-mono font-black uppercase tracking-widest ${
-                            selectedExp?.id === exp.id
-                              ? getStatusColorClass(exp.status)
-                              : "text-white/20"
-                          }`}
-                        >
-                          {getStatusLabel(exp.status)}
-                        </span>
-                      </div>
+                      <span className="text-[8px] font-mono text-[#c8bfae] uppercase font-bold">
+                        Duración: {exp.estimated_days}d
+                      </span>
                     </div>
-                    {selectedExp?.id === exp.id && (
-                      <div className="absolute top-0 left-0 right-0 h-0.5 bg-[#d4a373]" />
-                    )}
                   </motion.button>
                 ))
               ) : (
                 <div className="flex flex-col items-center justify-center py-20 text-center">
-                  <Archive className="h-10 w-10 text-[#d4a373]/10 mb-4" />
-                  <p className="text-sm font-mono text-white/20 uppercase font-black mb-3">
-                    Sin expediciones para esta consulta
+                  <Archive className="h-10 w-10 text-[#df8120]/15 mb-4" />
+                  <p className="text-xs font-mono text-white/30 uppercase leading-relaxed font-black mb-3">
+                    Sin expediciones registradas
                   </p>
                   <button
+                    type="button"
                     onClick={() => setIsNewModalOpen(true)}
-                    className="px-4 py-2 border border-[#d4a373]/30 text-xs font-mono font-bold text-[#d4a373] hover:bg-[#d4a373]/10 transition-colors uppercase"
+                    className="tm-btn"
                   >
-                    Nueva exploración
+                    <Plus className="h-3.5 w-3.5" /> Nueva Exploración
                   </button>
                 </div>
               )}
             </div>
           </div>
 
-          {/* CENTER: Mapa / Detalle */}
-          <div className="flex-1 flex flex-col overflow-hidden bg-[#12110f] border border-white/5">
+          {/* MIDDLE: Visualizador */}
+          <div className="flex-1 flex flex-col bg-[#1c1208] border border-[#d4a373]/20 rounded-md overflow-hidden shadow-lg">
             {selectedExp ? (
               <div className="flex-1 flex flex-col overflow-hidden">
-                {/* Panel header */}
-                <div className="p-4 border-b border-[#d4a373]/20 flex justify-between items-center bg-black/20 shrink-0">
+                {/* Header visualizador */}
+                <div className="p-4 border-b border-[#d4a373]/15 flex items-center justify-between shrink-0 bg-black/20">
                   <div className="flex items-center gap-3">
-                    <div className="bg-[#d4a373]/10 p-2 border border-[#d4a373]/20">
-                      <MapPin className="h-4 w-4 text-[#d4a373]" />
-                    </div>
+                    <Compass className="h-5 w-5 text-[#df8120] shrink-0" />
                     <div>
-                      <span className="text-[10px] font-mono font-medium text-[#d4a373]/60 uppercase tracking-widest block mb-0.5">
-                        Expedición
+                      <span className="text-[10px] font-mono text-white/30 uppercase tracking-widest font-black block mb-0.5">
+                        OPERACIÓN SELECCIONADA
                       </span>
-                      <h3 className="text-base font-typewriter font-bold text-white uppercase leading-none tracking-tight">
+                      <h3 className="text-sm font-typewriter font-black text-white uppercase leading-none tracking-wider">
                         {selectedExp.name}
                       </h3>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
-                    <div
-                      className={`px-2 py-1.5 border inline-flex items-center gap-1.5 ${
-                        selectedExp.status === "active" || selectedExp.status === "in_progress"
-                          ? "bg-[#d4a373]/10 border-[#d4a373]/30 text-[#d4a373]"
-                          : selectedExp.status === "scheduled"
-                            ? "bg-[#c27c2f]/10 border-[#c27c2f]/20 text-[#c27c2f]"
-                            : "bg-white/5 border-white/10 text-white/40"
-                      }`}
-                    >
-                      <div
-                        className={`h-1.5 w-1.5 rounded-full ${
-                          selectedExp.status === "active" || selectedExp.status === "in_progress"
-                            ? "bg-[#d4a373] animate-pulse"
-                            : selectedExp.status === "scheduled"
-                              ? "bg-[#c27c2f]"
-                              : "bg-white/40"
-                        }`}
-                      />
-                      <span className="text-xs font-mono font-black uppercase tracking-widest leading-none">
-                        {getStatusLabel(selectedExp.status)}
-                      </span>
-                    </div>
+                    <span className={`tm-op-chip ${getChipClass(selectedExp.status)} text-xs px-3 py-1`}>
+                      {getStatusLabel(selectedExp.status).toUpperCase()}
+                    </span>
                     <button
+                      type="button"
                       onClick={() => setIsDetailOpen(true)}
-                      className="text-xs font-mono font-black text-[#d4a373] border border-[#d4a373]/30 px-4 py-2.5 hover:bg-[#d4a373]/10 transition-all"
+                      className="tm-op-btn"
+                      style={{ padding: "6px 12px" }}
                     >
-                      VER EXPEDIENTE
+                      Ver Expediente
                     </button>
                   </div>
                 </div>
 
-                {/* Paper map visualization */}
-                <div className="flex-1 p-6 flex flex-col overflow-hidden bg-black/40 items-center justify-center relative">
-                  <div
-                    className="w-full h-full max-w-4xl tm-paper-texture shadow-[0_0_40px_rgba(0,0,0,0.6)] relative overflow-hidden p-8 border-[12px] flex flex-col"
-                    style={{ borderColor: "rgba(192,170,138,0.2)" }}
-                  >
-                    <div className="relative h-full flex flex-col">
-                      <div className="flex-1 flex items-center justify-between px-20 relative">
-                        <div className="absolute top-1/2 left-0 right-0 h-[2px] border-t-2 border-dashed border-ink/10 -translate-y-1/2 mx-32" />
-
-                        {(selectedExp.status === "active" ||
-                          selectedExp.status === "in_progress") && (
-                          <motion.div
-                            animate={{ left: ["20%", "80%"] }}
-                            transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-                            className="absolute top-1/2 -translate-y-1/2 z-10"
-                          >
-                            <Footprints className="h-5 w-5 text-ink/30 -rotate-90" />
-                          </motion.div>
-                        )}
-
-                        {/* Origin node */}
-                        <div className="flex flex-col items-center gap-4 z-20">
-                          <div className="p-1.5 bg-bg-paper border-2 border-ink/30 rotate-2 shadow-lg">
-                            <Radio className="h-6 w-6 text-ink/60" />
-                          </div>
-                          <div className="text-center">
-                            <span className="text-sm font-mono font-black text-ink/30 uppercase block mb-1">
-                              Origen_Nudo
-                            </span>
-                            <span className="text-sm font-typewriter font-black text-ink uppercase border-b border-ink/10">
-                              {baseCampId}
-                            </span>
-                          </div>
+                {/* Paper map & Dossier visualization */}
+                <div className="flex-1 p-5 flex flex-col overflow-hidden items-center justify-center relative bg-black/25">
+                  <div className="tm-paper tm-paper-texture w-full h-full max-w-4xl relative overflow-hidden p-6 flex flex-col shadow-2xl">
+                    <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-8 min-height-0 overflow-hidden">
+                      
+                      {/* Left: Logística y Ruta */}
+                      <div className="flex flex-col gap-6 overflow-y-auto pr-1 custom-scrollbar h-full">
+                        <div className="border-b-2 border-dashed border-ink/20 pb-2.5">
+                          <span className="text-[10px] font-mono text-ink-soft uppercase tracking-widest font-black block mb-1">
+                            HOJA DE LOGÍSTICA
+                          </span>
+                          <h4 className="font-typewriter text-base font-black text-ink uppercase">
+                            RUTA: {baseCampId} ➔ {selectedExp.destination_description}
+                          </h4>
                         </div>
 
-                        {/* Destination node */}
-                        <div className="flex flex-col items-center gap-4 z-20">
-                          <div className="p-1.5 bg-bg-paper border-2 border-bg-paper-shadow -rotate-2 shadow-lg">
-                            <Target className="h-6 w-6 text-ink/60" />
+                        <div className="space-y-4">
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="bg-[#f5ecd7] p-3 border border-[#d4c4a8]/50 rounded-sm">
+                              <span className="text-[9px] font-mono text-ink-soft uppercase tracking-wider block mb-1 font-bold">
+                                Salida Programada
+                              </span>
+                              <span className="text-xs font-mono font-black text-ink">
+                                {new Date(selectedExp.departure_date).toLocaleDateString()}
+                              </span>
+                            </div>
+                            <div className="bg-[#f5ecd7] p-3 border border-[#d4c4a8]/50 rounded-sm">
+                              <span className="text-[9px] font-mono text-ink-soft uppercase tracking-wider block mb-1 font-bold">
+                                Tiempo Estimado
+                              </span>
+                              <span className="text-xs font-mono font-black text-ink">
+                                {selectedExp.estimated_days} DÍAS {selectedExp.grace_days > 0 ? `(+${selectedExp.grace_days} G)` : ""}
+                              </span>
+                            </div>
+                            {selectedExp.real_return_date && (
+                              <div className="bg-[#f5ecd7] p-3 border border-[#d4c4a8]/50 rounded-sm col-span-2">
+                                <span className="text-[9px] font-mono text-[#4c6351] uppercase tracking-wider block mb-1 font-bold">
+                                  Retorno Registrado
+                                </span>
+                                <span className="text-xs font-mono font-black text-[#4c6351]">
+                                  {new Date(selectedExp.real_return_date).toLocaleDateString()}
+                                </span>
+                              </div>
+                            )}
                           </div>
-                          <div className="text-center">
-                            <span className="text-sm font-mono font-black text-ink/30 uppercase block mb-1">
-                              Coordenada_Fin
-                            </span>
-                            <span className="text-sm font-typewriter font-black text-ink uppercase border-b border-ink/10 max-w-[120px] block truncate">
-                              {selectedExp.destination_description}
+
+                          {selectedExp.notes && (
+                            <div className="bg-[#f5ecd7] p-3.5 border border-[#d4c4a8]/50 rounded-sm">
+                              <span className="text-[9px] font-mono text-ink-soft uppercase tracking-wider block mb-1 font-bold">
+                                Bitácora de Observaciones
+                              </span>
+                              <p className="text-xs font-mono text-ink/80 leading-relaxed whitespace-pre-wrap">
+                                {selectedExp.notes}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Compact Visual Map */}
+                        <div className="mt-auto bg-[#faf4e6]/50 p-4 border border-dashed border-ink/20 rounded-sm relative overflow-hidden h-24 flex items-center justify-between">
+                          <div className="absolute top-1/2 left-0 right-0 h-[2px] border-t border-dashed border-ink/10 -translate-y-1/2 mx-12" />
+
+                          {(selectedExp.status === "active" || selectedExp.status === "in_progress") && (
+                            <motion.div
+                              animate={{ left: ["15%", "85%"] }}
+                              transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+                              className="absolute top-1/2 -translate-y-1/2 z-10"
+                            >
+                              <Footprints className="h-4 w-4 text-ink/30 -rotate-90" />
+                            </motion.div>
+                          )}
+
+                          <div className="flex flex-col items-center z-20">
+                            <Radio className="h-5 w-5 text-[#df8120]" />
+                            <span className="text-[8px] font-mono text-ink-soft mt-1 uppercase font-bold">{baseCampId}</span>
+                          </div>
+                          
+                          <div className="flex flex-col items-center z-20">
+                            <Target className="h-5 w-5 text-[#9c2720]" />
+                            <span className="text-[8px] font-mono text-ink-soft mt-1 uppercase font-bold max-w-[80px] truncate">
+                              {selectedExp.destination_description?.split(" ")[0]}
                             </span>
                           </div>
                         </div>
                       </div>
 
-                      {/* Bottom info strip */}
-                      <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end border-t border-ink/15 pt-4">
-                        <div className="flex gap-10">
-                          <div className="flex flex-col gap-0.5">
-                            <span className="text-sm font-mono text-ink/40 font-black uppercase leading-none opacity-60">
-                              Salida_Protocolo
+                      {/* Right: Manifiesto de Carga */}
+                      <div className="flex flex-col gap-6 overflow-y-auto pr-1 custom-scrollbar h-full justify-between">
+                        <div className="flex flex-col gap-5">
+                          <div className="border-b-2 border-dashed border-ink/20 pb-2.5">
+                            <span className="text-[10px] font-mono text-ink-soft uppercase tracking-widest font-black block mb-1">
+                              MANIFIESTO DE CARGA
                             </span>
-                            <span className="text-sm font-mono font-black text-ink whitespace-nowrap">
-                              {new Date(selectedExp.departure_date).toLocaleDateString()}
-                            </span>
+                            <h4 className="font-typewriter text-base font-black text-ink uppercase">
+                              RECURSOS Y EQUIPAMIENTO
+                            </h4>
                           </div>
-                          <div className="flex flex-col gap-0.5">
-                            <span className="text-sm font-mono text-ink/40 font-black uppercase leading-none opacity-60">
-                              Días Estimados
-                            </span>
-                            <span className="text-sm font-mono font-black text-ink whitespace-nowrap">
-                              {selectedExp.estimated_days} días{" "}
-                              {selectedExp.grace_days > 0 ? "(+1 Gracia)" : ""}
-                            </span>
+
+                          {/* Resources Taken */}
+                          <div className="space-y-2">
+                            <h5 className="text-[10px] font-mono font-black text-ink uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                              <Package className="h-3.5 w-3.5 text-ink-soft" />
+                              Suministros de Salida
+                            </h5>
+                            <div className="space-y-1.5">
+                              {selectedExp.explorationResources.filter(r => r.flow === 'out').length > 0 ? (
+                                selectedExp.explorationResources
+                                  .filter(r => r.flow === 'out')
+                                  .map((er) => (
+                                    <div
+                                      key={er.resource_id}
+                                      className="flex justify-between items-center bg-[#f5ecd7] px-3.5 py-2 border border-[#d4c4a8]/50 rounded-sm"
+                                    >
+                                      <span className="text-xs font-mono font-bold text-ink uppercase">
+                                        {er.resource?.name || `Recurso #${er.resource_id}`}
+                                      </span>
+                                      <span className="text-xs font-mono font-black text-[#df8120] bg-[#df8120]/10 border border-[#df8120]/25 px-2 py-0.5 rounded-sm">
+                                        {er.quantity} {er.resource?.unit || "uds"}
+                                      </span>
+                                    </div>
+                                  ))
+                              ) : (
+                                <p className="text-[10px] font-mono text-ink-soft/40 uppercase italic pl-1">
+                                  Ningún suministro asignado para la salida.
+                                </p>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                        <div className="inline-block px-4 py-2.5 border-2 border-bg-paper-shadow/40 rotate-1 bg-bg-paper text-bg-paper-shadow font-mono font-black text-xs uppercase shadow-sm">
-                          ARCHIVO_B3_DESPLIEGUE
+
+                          {/* Resources Recovered / Return */}
+                          <div className="space-y-2">
+                            <h5 className="text-[10px] font-mono font-black text-ink uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                              <Package className="h-3.5 w-3.5 text-ink-soft" />
+                              Suministros de Retorno / Recuperados
+                            </h5>
+                            <div className="space-y-1.5">
+                              {selectedExp.explorationResources.filter(r => r.flow === 'in').length > 0 ? (
+                                selectedExp.explorationResources
+                                  .filter(r => r.flow === 'in')
+                                  .map((er) => (
+                                    <div
+                                      key={er.resource_id}
+                                      className="flex justify-between items-center bg-[#e2eed8] px-3.5 py-2 border border-[#b8cfa8]/50 rounded-sm"
+                                    >
+                                      <span className="text-xs font-mono font-bold text-[#2d4a22] uppercase">
+                                        {er.resource?.name || `Recurso #${er.resource_id}`}
+                                      </span>
+                                      <span className="text-xs font-mono font-black text-[#2d4a22] bg-[#2d4a22]/10 border border-[#2d4a22]/25 px-2 py-0.5 rounded-sm">
+                                        {er.quantity} {er.resource?.unit || "uds"}
+                                      </span>
+                                    </div>
+                                  ))
+                              ) : (
+                                <p className="text-[10px] font-mono text-ink-soft/40 uppercase italic pl-1">
+                                  Ningún recurso reportado al retorno.
+                                </p>
+                              )}
+                            </div>
+                          </div>
+
                         </div>
                       </div>
+                    </div>
+
+                    {/* Bottom strip details */}
+                    <div className="border-t border-ink/15 pt-3 mt-4 flex justify-between items-center text-ink-soft/70 font-mono text-[9px] uppercase tracking-wider">
+                      <span>Ref: REF-{selectedExp.id.slice(0, 8).toUpperCase()}</span>
+                      <span className="border border-dashed border-ink/30 px-2 py-0.5 rotate-1">
+                        CÓDIGO OPERATIVO CENTRAL DE LOGÍSTICA
+                      </span>
                     </div>
                   </div>
                 </div>
 
                 {/* Timeline */}
-                <div className="h-28 bg-black/40 border-t border-[#d4a373]/10 p-4 flex flex-col shrink-0 relative overflow-hidden">
+                <div className="h-24 bg-black/20 border-t border-[#d4a373]/15 p-4 flex flex-col shrink-0 relative overflow-hidden">
                   <div className="flex items-center justify-between px-16 relative flex-1">
                     <div className="absolute top-1/2 left-0 right-0 h-[1px] bg-[#d4a373]/10 -translate-y-1/2 mx-20" />
                     {timelineSteps.map((step, i) => {
@@ -784,19 +821,19 @@ export default function TravelExplorations() {
                           <div
                             className={`h-8 w-8 rounded-full border-2 flex items-center justify-center transition-all shadow-lg ${
                               step.status === "completed"
-                                ? "bg-[#1a0f05] border-[#d4a373]/30 text-[#d4a373]"
+                                ? "bg-[#4c6351] border-none text-white"
                                 : step.status === "current"
-                                  ? "bg-[#c27c2f] border-[#c27c2f] text-black animate-pulse"
-                                  : "bg-black/80 border-[#d4a373]/10 text-[#d4a373]/20"
+                                  ? "bg-[#df8120] border-none text-white animate-pulse"
+                                  : "bg-[#1c1208] border-[#d4a373]/15 text-[#d4a373]/25"
                             }`}
                           >
                             <StepIcon className="h-3.5 w-3.5" />
                           </div>
                           <span
-                            className={`absolute top-full mt-2 text-sm font-mono font-black tracking-widest whitespace-nowrap ${
+                            className={`absolute top-full mt-2 text-[10px] font-mono font-black tracking-widest whitespace-nowrap ${
                               step.status !== "pending"
-                                ? "text-[#d4a373] opacity-80"
-                                : "text-[#d4a373]/10"
+                                ? "text-[#df8120] opacity-80"
+                                : "text-white/20"
                             }`}
                           >
                             {step.label}
@@ -808,56 +845,71 @@ export default function TravelExplorations() {
                 </div>
 
                 {/* Action buttons */}
-                <div className="p-4 border-t border-[#d4a373]/10 flex gap-3 shrink-0 bg-black/20">
+                <div className="p-4 border-t border-[#d4a373]/15 flex gap-3 shrink-0 bg-black/40">
                   {selectedExp.status === "scheduled" && (
                     <>
                       <button
+                        type="button"
                         onClick={() => handleMarkDeparture(selectedExp.id)}
                         disabled={departMutation.isPending}
-                        className="flex items-center gap-2 px-6 py-2.5 bg-[#c27c2f] text-black text-sm font-mono font-black uppercase hover:bg-[#df8120] transition-all disabled:opacity-50 shadow-md tracking-wider"
+                        className="tm-action-btn tm-action-btn-primary"
+                        style={{ padding: "8px 16px", borderRadius: "4px" }}
                       >
-                        {departMutation.isPending ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Zap className="h-4 w-4" />
-                        )}
-                        Marcar Salida
+                        <span className="tm-action-label flex items-center gap-2">
+                          {departMutation.isPending ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Zap className="h-4 w-4" />
+                          )}
+                          Marcar Salida
+                        </span>
+                        <span className="tm-action-sub">Despliegue operativo</span>
                       </button>
                       <button
+                        type="button"
                         onClick={() => handleCancelExploration(selectedExp.id)}
                         disabled={cancelMutation.isPending}
-                        className="flex items-center gap-2 px-5 py-2.5 bg-accent-critical/10 border border-accent-critical/40 text-accent-critical text-sm font-mono font-semibold uppercase hover:bg-accent-critical hover:text-white transition-all disabled:opacity-50 tracking-wider"
+                        className="tm-action-btn"
+                        style={{ padding: "8px 16px", borderRadius: "4px" }}
                       >
-                        <X className="h-4 w-4" />
-                        Cancelar
+                        <span className="tm-action-label flex items-center gap-2">
+                          <X className="h-4 w-4" />
+                          Cancelar
+                        </span>
+                        <span className="tm-action-sub">Abortar misión</span>
                       </button>
                     </>
                   )}
                   {(selectedExp.status === "active" || selectedExp.status === "in_progress") && (
                     <button
+                      type="button"
                       onClick={() => setIsReturnModalOpen(true)}
-                      className="flex items-center gap-2 px-6 py-2.5 bg-[#4c6351] text-white text-sm font-mono font-black uppercase hover:opacity-90 transition-all shadow-md tracking-wider"
+                      className="tm-action-btn tm-action-btn-primary"
+                      style={{ padding: "8px 16px", borderRadius: "4px", backgroundColor: "var(--tm-approved)" }}
                     >
-                      <CheckCircle2 className="h-4 w-4" />
-                      Registrar Retorno
+                      <span className="tm-action-label flex items-center gap-2">
+                        <CheckCircle2 className="h-4 w-4" />
+                        Registrar Retorno
+                      </span>
+                      <span className="tm-action-sub">Cierre de bitácora</span>
                     </button>
                   )}
                   {(selectedExp.status === "completed" || selectedExp.status === "cancelled") && (
-                    <span className="text-xs font-mono text-white/30 uppercase tracking-widest flex items-center gap-1.5">
-                      <Shield className="h-3.5 w-3.5" />
-                      Expedición archivada
+                    <span className="text-[10px] font-mono text-white/30 uppercase tracking-widest flex items-center gap-1.5 pl-2">
+                      <Shield className="h-3.5 w-3.5 text-white/30" />
+                      Expedición archivada en histórico
                     </span>
                   )}
                 </div>
               </div>
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-center p-12 text-center">
-                <Compass className="h-16 w-16 mb-6 text-[#d4a373] opacity-20" />
-                <h3 className="text-base font-typewriter font-bold text-white/40 uppercase mb-2">
+              <div className="flex-1 flex flex-col items-center justify-center p-12 text-center bg-black/15">
+                <Compass className="h-20 w-20 mb-6 text-[#c27c2f] opacity-20 animate-spin" />
+                <p className="font-typewriter text-2xl text-white/20 font-black uppercase mb-3">
                   Seleccione una Expedición
-                </h3>
-                <p className="text-xs font-mono text-white/25 max-w-xs leading-relaxed">
-                  Elige una expedición del fichero o crea una nueva.
+                </p>
+                <p className="font-mono text-sm text-white/20 uppercase tracking-widest">
+                  o cree una nueva para comenzar
                 </p>
               </div>
             )}
@@ -865,32 +917,27 @@ export default function TravelExplorations() {
 
           {/* RIGHT: Team panel */}
           {selectedExp && (
-            <div className="w-60 flex flex-col gap-3 shrink-0 overflow-hidden bg-[#12110f] p-3 border border-[#d4a373]/15">
-              <div className="border-b border-[#d4a373]/10 pb-2">
-                <div className="flex items-center gap-1.5 min-w-[70px]">
-                  <Users className="w-3.5 h-3.5 text-[#d4a373]/60" />
-                  <span className="text-xs font-mono font-black text-[#d4a373] uppercase tracking-widest">
-                    Equipo Asignado
-                  </span>
-                  <span className="text-sm font-mono text-[#d4a373] uppercase ml-auto">
-                    {selectedExp.explorationPersons.length}
-                  </span>
-                </div>
+            <div className="w-[240px] flex flex-col gap-3 shrink-0 overflow-hidden bg-[#1c1208] p-4 border border-[#d4a373]/20 rounded-md shadow-lg">
+              <div className="tm-folder-header-row mb-1">
+                <h4 className="tm-folder-title">EQUIPO ASIGNADO</h4>
+                <span className="text-[10px] font-mono font-medium text-[#df8120] uppercase tracking-wider">
+                  {selectedExp.explorationPersons.length}
+                </span>
               </div>
-              <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2">
+              <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar space-y-2">
                 {selectedExp.explorationPersons.map((ep, i) => (
                   <div
                     key={i}
-                    className="flex items-center gap-3 bg-black/40 p-2 rounded border border-white/5"
+                    className="flex items-center gap-3 bg-[#f5ecd7] p-2.5 border border-[#d4c4a8]/35 rounded-sm shadow-sm"
                   >
-                    <div className="w-8 h-8 bg-[#2a3026] rounded-full border border-[#43523d] flex items-center justify-center shrink-0">
-                      <Users className="w-4 h-4 text-[#43523d]" />
+                    <div className="w-8 h-8 bg-black/10 rounded-full border border-ink/10 flex items-center justify-center shrink-0">
+                      <Users className="w-4 h-4 text-ink-soft" />
                     </div>
                     <div className="flex flex-col min-w-0 flex-1">
-                      <span className="text-sm font-mono font-black text-white uppercase truncate">
+                      <span className="text-xs font-mono font-bold text-ink uppercase truncate">
                         {ep.person?.first_name || "Desconocido"} {ep.person?.last_name || ""}
                       </span>
-                      <span className="text-sm font-mono text-white/40 uppercase">
+                      <span className="text-[9px] font-mono text-ink-soft uppercase leading-none mt-1">
                         {ep.person?.profession?.name || "OPERARIO"} {"//"} COD-
                         {String(ep.person_id).substring(0, 4)}
                       </span>
@@ -916,22 +963,23 @@ export default function TravelExplorations() {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-[#141414] border-4 border-double border-[#d4a373]/40 w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl"
+              className="tm-paper tm-paper-texture w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl relative p-0 border-4 border-double border-ink/40"
             >
               {/* Modal header */}
-              <div className="flex items-center justify-between p-6 border-b-2 border-[#c27c2f]/30 bg-black/50">
+              <div className="flex items-center justify-between p-6 border-b-2 border-dashed border-ink/20 bg-black/5">
                 <div className="flex items-center gap-4">
-                  <Compass className="h-8 w-8 text-[#c27c2f] animate-pulse" />
-                  <h3 className="font-typewriter font-black text-white uppercase text-xl md:text-2xl tracking-widest">
+                  <Compass className="h-8 w-8 text-[#df8120] animate-pulse" />
+                  <h3 className="font-typewriter font-black text-ink uppercase text-xl md:text-2xl tracking-widest leading-none">
                     Nueva Expedición
                   </h3>
                 </div>
                 <button
+                  type="button"
                   onClick={() => {
                     setIsNewModalOpen(false)
                     resetNewForm()
                   }}
-                  className="text-white/40 hover:text-[#fca311] transition-colors"
+                  className="text-ink-soft hover:text-ink transition-colors"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -942,51 +990,53 @@ export default function TravelExplorations() {
                 onSubmit={handleCreateExploration}
                 className="flex-1 overflow-y-auto custom-scrollbar"
               >
-                <div className="p-8 space-y-8">
+                <div className="p-8 space-y-6">
                   {/* Basic info */}
-                  <div className="grid grid-grid-cols-1 gap-6">
+                  <div className="grid grid-cols-1 gap-5">
                     <div>
                       <label
                         htmlFor="te-name"
-                        className="text-sm md:text-base font-mono font-black text-[#c27c2f] uppercase tracking-widest block mb-2"
+                        className="text-xs font-mono font-black text-ink uppercase tracking-widest block mb-2"
                       >
                         Nombre de la Expedición *
                       </label>
                       <input
+                        id="te-name"
                         type="text"
                         value={newName}
                         onChange={(e) => setNewName(e.target.value)}
                         placeholder="Ej: EXPEDICIÓN NORTE-7"
-                        className="vintage-input w-full p-4 text-base md:text-lg"
+                        className="vintage-input w-full p-3 text-base"
                       />
                     </div>
                     <div>
                       <label
                         htmlFor="te-dest"
-                        className="text-sm md:text-base font-mono font-black text-[#c27c2f] uppercase tracking-widest block mb-2"
+                        className="text-xs font-mono font-black text-ink uppercase tracking-widest block mb-2"
                       >
                         Descripción del Destino *
                       </label>
                       <input
+                        id="te-dest"
                         type="text"
                         value={newDestination}
                         onChange={(e) => setNewDestination(e.target.value)}
                         placeholder="Ej: Sector norte, cuadrícula B-7"
-                        className="vintage-input w-full p-4 text-base md:text-lg"
+                        className="vintage-input w-full p-3 text-base"
                       />
                     </div>
                   </div>
 
                   {/* Map coord picker */}
                   <div>
-                    <div className="text-sm md:text-base font-mono font-black text-[#c27c2f] uppercase tracking-widest block mb-2 flex items-center gap-2">
-                      <MapPin className="h-4 w-4" />
+                    <div className="text-xs font-mono font-black text-ink uppercase tracking-widest block mb-2 flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-ink-soft" />
                       Zona de Destino en el Mapa
-                      <span className="text-white/30 font-normal normal-case tracking-normal text-xs">
+                      <span className="text-ink-soft/50 font-normal normal-case tracking-normal text-[11px]">
                         — haz clic para marcar coordenadas
                       </span>
                     </div>
-                    <div className="border border-[#c27c2f]/30 overflow-hidden">
+                    <div className="border-2 border-dashed border-ink/20 overflow-hidden rounded-sm">
                       <MapCoordPicker
                         lat={destLat}
                         lng={destLng}
@@ -997,16 +1047,16 @@ export default function TravelExplorations() {
                       />
                     </div>
                     {destLat !== null && destLng !== null && (
-                      <p className="mt-1 text-xs font-mono text-[#c27c2f]/70 flex items-center gap-2">
-                        <span className="inline-block w-2 h-2 rounded-full bg-[#c27c2f] animate-pulse" />
-                        COORDENADAS: {destLat.toFixed(5)}, {destLng.toFixed(5)}
+                      <p className="mt-1 text-[11px] font-mono text-ink-soft/70 flex items-center gap-2">
+                        <span className="inline-block w-2 h-2 rounded-full bg-ink animate-pulse" />
+                        COORDENADAS REGISTRADAS: {destLat.toFixed(5)}, {destLng.toFixed(5)}
                         <button
                           type="button"
                           onClick={() => {
                             setDestLat(null)
                             setDestLng(null)
                           }}
-                          className="text-white/30 hover:text-white/70 ml-2 underline"
+                          className="text-ink-soft hover:text-ink ml-2 underline"
                         >
                           limpiar
                         </button>
@@ -1015,41 +1065,66 @@ export default function TravelExplorations() {
                   </div>
 
                   {/* Dates and duration */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                     <div>
                       <label
                         htmlFor="te-departure"
-                        className="text-sm md:text-base font-mono font-black text-[#c27c2f] uppercase tracking-widest block mb-2"
+                        className="text-xs font-mono font-black text-ink uppercase tracking-widest block mb-2"
                       >
                         Fecha de Salida *
                       </label>
                       <input
+                        id="te-departure"
                         type="datetime-local"
                         value={newDepartureDate}
                         onChange={(e) => setNewDepartureDate(e.target.value)}
-                        className="vintage-input w-full text-base p-4"
+                        className="vintage-input w-full p-3"
                       />
                     </div>
                     <div>
                       <label
                         htmlFor="te-days"
-                        className="text-sm md:text-base font-mono font-black text-[#c27c2f] uppercase tracking-widest block mb-2"
+                        className="text-xs font-mono font-black text-ink uppercase tracking-widest block mb-2"
                       >
                         Días Estimados *
                       </label>
                       <input
+                        id="te-days"
                         type="number"
                         min={1}
                         value={newEstimatedDays}
                         onChange={(e) => setNewEstimatedDays(Number(e.target.value))}
-                        className="vintage-input w-full text-base p-4"
+                        className="vintage-input w-full p-3"
                       />
                     </div>
                     <div>
+                      <label
+                        htmlFor="te-grace-days"
+                        className="text-xs font-mono font-black text-ink uppercase tracking-widest block mb-2"
+                      >
+                        Días de Gracia
+                      </label>
+                      <input
+                        id="te-grace-days"
+                        type="number"
+                        min={0}
+                        value={newGraceDays}
+                        onChange={(e) => setNewGraceDays(Number(e.target.value))}
+                        className="vintage-input w-full p-3"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Personnel selection */}
+                  <div>
+                    <div className="text-xs font-mono font-black text-ink uppercase tracking-widest block mb-2">
+                      Personal Asignado *
+                    </div>
+                    <div className="max-h-40 overflow-y-auto custom-scrollbar space-y-1 border border-ink/20 p-2 bg-black/5 rounded-sm">
                       {(() => {
                         if (persons.length === 0) {
                           return (
-                            <p className="text-xs font-mono text-white/30 uppercase text-center py-4">
+                            <p className="text-xs font-mono text-ink-soft/40 uppercase text-center py-4">
                               Cargando personas disponibles...
                             </p>
                           )
@@ -1070,11 +1145,11 @@ export default function TravelExplorations() {
                         if (availableExplorers.length === 0) {
                           return (
                             <div className="flex flex-col items-center justify-center py-6 text-center opacity-80">
-                              <AlertCircle className="h-6 w-6 text-[#c27c2f] mb-2" />
-                              <p className="text-xs font-mono text-[#c27c2f] uppercase font-bold">
+                              <AlertCircle className="h-6 w-6 text-[#df8120] mb-2" />
+                              <p className="text-xs font-mono text-[#df8120] uppercase font-bold">
                                 Sin personal capacitado
                               </p>
-                              <p className="text-[10px] font-mono text-white/50 mt-1 uppercase">
+                              <p className="text-[10px] font-mono text-ink-soft mt-1 uppercase">
                                 No hay Exploradores ni Recolectores activos.
                               </p>
                             </div>
@@ -1089,10 +1164,10 @@ export default function TravelExplorations() {
                               key={person.id}
                               role="button"
                               tabIndex={0}
-                              className={`flex items-center justify-between p-2 border transition-all cursor-pointer ${
+                              className={`flex items-center justify-between p-2 border transition-all cursor-pointer rounded-sm ${
                                 isSelected
-                                  ? "bg-[#c27c2f]/10 border-[#c27c2f]/30"
-                                  : "bg-black/20 border-white/5 hover:border-[#c27c2f]/20"
+                                  ? "bg-ink/5 border-ink/40"
+                                  : "bg-transparent border-dashed border-ink/15 hover:border-ink/30"
                               }`}
                               onClick={() => handleTogglePersonSelect(person.id)}
                               onKeyDown={(e) =>
@@ -1101,20 +1176,20 @@ export default function TravelExplorations() {
                             >
                               <div className="flex items-center gap-2">
                                 <div
-                                  className={`h-3 w-3 border flex items-center justify-center shrink-0 ${
+                                  className={`h-3.5 w-3.5 border flex items-center justify-center shrink-0 rounded-sm ${
                                     isSelected
-                                      ? "border-[#c27c2f] bg-[#c27c2f]/20"
-                                      : "border-white/20"
+                                      ? "border-ink bg-ink/10"
+                                      : "border-ink/20"
                                   }`}
                                 >
-                                  {isSelected && <Check className="h-2 w-2 text-[#c27c2f]" />}
+                                  {isSelected && <Check className="h-2.5 w-2.5 text-ink" />}
                                 </div>
-                                <span className="text-sm font-mono text-white/80 uppercase">
+                                <span className="text-xs font-mono font-bold text-ink uppercase">
                                   {person.first_name} {person.last_name}
                                 </span>
                                 {person.profession && (
-                                  <span className="text-sm font-mono text-white/30">
-                                    [{person.profession.name}]
+                                  <span className="text-[10px] font-mono text-ink-soft/60">
+                                    [{person.profession.name.toUpperCase()}]
                                   </span>
                                 )}
                               </div>
@@ -1125,10 +1200,10 @@ export default function TravelExplorations() {
                                     ev.stopPropagation()
                                     handleSetLeader(person.id)
                                   }}
-                                  className={`text-sm font-mono font-black uppercase px-2 py-0.5 border transition-all ${
+                                  className={`text-[10px] font-mono font-black uppercase px-2 py-0.5 border transition-all rounded-sm ${
                                     sel?.is_leader
-                                      ? "bg-[#c27c2f] text-black hover:bg-[#fca311] border-[#c27c2f]"
-                                      : "border-[#c27c2f]/30 text-[#c27c2f]/60 hover:bg-[#c27c2f]/10"
+                                      ? "bg-[#df8120] text-black border-[#df8120]"
+                                      : "border-ink/20 text-ink-soft hover:bg-ink/5"
                                   }`}
                                 >
                                   {sel?.is_leader ? "LÍDER ✓" : "Líder?"}
@@ -1144,10 +1219,10 @@ export default function TravelExplorations() {
                   {/* Resource selection */}
                   {inventory.length > 0 && (
                     <div>
-                      <div className="text-xs font-mono font-black text-[#c27c2f] uppercase tracking-widest block mb-2">
+                      <div className="text-xs font-mono font-black text-ink uppercase tracking-widest block mb-2">
                         Recursos para la Expedición (opcional)
                       </div>
-                      <div className="max-h-40 overflow-y-auto custom-scrollbar space-y-1 border border-[#c27c2f]/10 p-2 bg-black/20">
+                      <div className="max-h-40 overflow-y-auto custom-scrollbar space-y-1 border border-ink/20 p-2 bg-black/5 rounded-sm">
                         {inventory.map((item) => {
                           const sel = newSelectedResources.find(
                             (r) => r.resource_id === item.resource_id,
@@ -1156,10 +1231,10 @@ export default function TravelExplorations() {
                           return (
                             <div
                               key={item.resource_id}
-                              className={`flex items-center justify-between p-2 border transition-all ${
+                              className={`flex items-center justify-between p-2 border transition-all rounded-sm ${
                                 isSelected
-                                  ? "bg-[#c27c2f]/10 border-[#c27c2f]/30"
-                                  : "bg-black/20 border-white/5"
+                                  ? "bg-ink/5 border-ink/40"
+                                  : "bg-transparent border-dashed border-ink/15"
                               }`}
                             >
                               <div
@@ -1172,18 +1247,18 @@ export default function TravelExplorations() {
                                 }
                               >
                                 <div
-                                  className={`h-3 w-3 border flex items-center justify-center shrink-0 ${
+                                  className={`h-3.5 w-3.5 border flex items-center justify-center shrink-0 rounded-sm ${
                                     isSelected
-                                      ? "border-[#c27c2f] bg-[#c27c2f]/20"
-                                      : "border-white/20"
+                                      ? "border-ink bg-ink/10"
+                                      : "border-ink/20"
                                   }`}
                                 >
-                                  {isSelected && <Check className="h-2 w-2 text-[#c27c2f]" />}
+                                  {isSelected && <Check className="h-2.5 w-2.5 text-ink" />}
                                 </div>
-                                <span className="text-sm font-mono font-black text-white/80 uppercase">
+                                <span className="text-xs font-mono font-bold text-ink uppercase">
                                   {item.resource!.name}
                                 </span>
-                                <span className="text-sm font-mono text-white/40 uppercase">
+                                <span className="text-[10px] font-mono text-ink-soft/60 uppercase">
                                   {item.resource!.category} {"//"} {item.current_quantity}{" "}
                                   {item.resource!.unit}
                                 </span>
@@ -1201,7 +1276,7 @@ export default function TravelExplorations() {
                                       Number(e.target.value),
                                     )
                                   }
-                                  className="vintage-input w-16 text-sm ml-2"
+                                  className="vintage-input w-16 text-sm ml-2 p-1"
                                 />
                               )}
                             </div>
@@ -1213,7 +1288,7 @@ export default function TravelExplorations() {
 
                   {/* Error display */}
                   {formError && (
-                    <div className="flex items-center gap-2 text-accent-critical text-sm font-mono uppercase bg-accent-critical/10 border border-accent-critical/30 p-2">
+                    <div className="flex items-center gap-2 text-[#9c2720] text-xs font-mono uppercase bg-[#9c2720]/15 border border-[#9c2720]/30 p-3 rounded-sm">
                       <AlertCircle className="h-3.5 w-3.5 shrink-0" />
                       {formError}
                     </div>
@@ -1221,14 +1296,15 @@ export default function TravelExplorations() {
                 </div>
 
                 {/* Modal footer */}
-                <div className="p-8 border-t-2 border-[#c27c2f]/30 flex justify-end gap-6 bg-black/40">
+                <div className="p-6 border-t-2 border-dashed border-ink/20 flex justify-end gap-6 bg-black/5">
                   <button
                     type="button"
                     onClick={() => {
                       setIsNewModalOpen(false)
                       resetNewForm()
                     }}
-                    className="px-6 py-4 text-lg font-mono font-black text-white uppercase border-2 border-white/30 hover:border-white/70 hover:bg-white/10 transition-all shadow-md"
+                    className="tm-btn"
+                    style={{ padding: "8px 16px", borderRadius: "4px" }}
                   >
                     Cancelar
                   </button>
@@ -1264,45 +1340,49 @@ export default function TravelExplorations() {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-[#141414] border border-[#d4a373]/30 w-full max-w-md shadow-2xl"
+              className="tm-paper tm-paper-texture w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden shadow-2xl relative p-0 border-4 border-double border-ink/40"
             >
-              <div className="flex items-center justify-between p-4 border-b border-[#c27c2f]/20 bg-black/30">
+              {/* Modal header */}
+              <div className="flex items-center justify-between p-6 border-b-2 border-dashed border-ink/20 bg-black/5">
                 <div className="flex items-center gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-[#d4a373]" />
-                  <h3 className="font-typewriter font-black text-white uppercase">
+                  <CheckCircle2 className="h-6 w-6 text-[#4c6351]" />
+                  <h3 className="font-typewriter font-black text-ink uppercase text-lg md:text-xl tracking-widest leading-none">
                     Registrar Retorno
                   </h3>
                 </div>
                 <button
+                  type="button"
                   onClick={() => setIsReturnModalOpen(false)}
-                  className="text-white/40 hover:text-[#fca311] transition-colors"
+                  className="text-ink-soft hover:text-ink transition-colors"
                 >
                   <X className="h-5 w-5" />
                 </button>
               </div>
 
-              <div className="p-6 space-y-4">
-                <p className="text-sm font-mono text-white/50 uppercase">
-                  Expedición: <span className="text-[#c27c2f] font-black">{selectedExp.name}</span>
+              {/* Modal body */}
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-5">
+                <p className="text-xs font-mono text-ink-soft uppercase font-black">
+                  Expedición: <span className="text-[#df8120] font-black">{selectedExp.name}</span>
                 </p>
                 <div>
                   <label
                     htmlFor="te-return-date"
-                    className="text-xs font-mono font-black text-[#c27c2f] uppercase tracking-widest block mb-1"
+                    className="text-xs font-mono font-black text-ink uppercase tracking-widest block mb-2"
                   >
                     Fecha Real de Retorno *
                   </label>
                   <input
+                    id="te-return-date"
                     type="date"
                     value={returnDate}
                     onChange={(e) => setReturnDate(e.target.value)}
-                    className="vintage-input w-full"
+                    className="vintage-input w-full p-2.5 text-sm"
                   />
                 </div>
                 <div>
                   <label
                     htmlFor="te-return-notes"
-                    className="text-xs font-mono font-black text-[#c27c2f] uppercase tracking-widest block mb-1"
+                    className="text-xs font-mono font-black text-ink uppercase tracking-widest block mb-2"
                   >
                     Notas del Retorno
                   </label>
@@ -1312,50 +1392,50 @@ export default function TravelExplorations() {
                     onChange={(e) => setReturnNotes(e.target.value)}
                     placeholder="Condiciones del retorno, hallazgos, incidentes..."
                     rows={3}
-                    className="vintage-input w-full resize-none"
+                    className="vintage-input w-full resize-none p-2.5 text-sm"
                   />
                 </div>
                 {inventory.length > 0 && (
                   <div>
-                    <div className="text-xs font-mono font-black text-[#c27c2f] uppercase tracking-widest block mb-1">
+                    <div className="text-xs font-mono font-black text-ink uppercase tracking-widest block mb-2">
                       Recursos Recuperados / Encontrados
                     </div>
-                    <div className="max-h-40 overflow-y-auto custom-scrollbar space-y-1 border border-[#c27c2f]/10 p-2 bg-black/20">
+                    <div className="max-h-40 overflow-y-auto custom-scrollbar space-y-1 border border-ink/20 p-2 bg-black/5 rounded-sm">
                       {inventory.map((item) => {
-                        const sel = returnFoundResources.find(
-                          (r) => r.resource_id === String(item.resource_id),
-                        )
+                        const sel = returnFoundResources.find((r) => r.resource_id === String(item.resource_id))
                         const isSelected = !!sel
                         return (
                           <div
                             key={item.resource_id}
-                            className={`flex items-center justify-between p-2 border transition-all ${
+                            className={`flex items-center justify-between p-2 border transition-all rounded-sm ${
                               isSelected
-                                ? "bg-[#c27c2f]/10 border-[#c27c2f]/30"
-                                : "bg-black/20 border-white/5"
+                                ? "bg-ink/5 border-ink/40"
+                                : "bg-transparent border-dashed border-ink/15 hover:border-ink/30"
                             }`}
                           >
                             <div
                               role="button"
                               tabIndex={0}
                               className="flex items-center gap-2 cursor-pointer flex-1"
-                              onClick={() =>
-                                handleToggleReturnResourceSelect(String(item.resource_id))
-                              }
+                              onClick={() => handleToggleReturnResourceSelect(String(item.resource_id))}
                               onKeyDown={(e) =>
                                 e.key === "Enter" &&
                                 handleToggleReturnResourceSelect(String(item.resource_id))
                               }
                             >
                               <div
-                                className={`h-3 w-3 border flex items-center justify-center shrink-0 ${isSelected ? "border-[#c27c2f] bg-[#c27c2f]/20" : "border-white/20"}`}
+                                className={`h-3.5 w-3.5 border flex items-center justify-center shrink-0 rounded-sm ${
+                                  isSelected
+                                    ? "border-ink bg-ink/10"
+                                    : "border-ink/20"
+                                }`}
                               >
-                                {isSelected && <Check className="h-2 w-2 text-[#c27c2f]" />}
+                                {isSelected && <Check className="h-2.5 w-2.5 text-ink" />}
                               </div>
-                              <span className="text-sm font-mono font-black text-white/80 uppercase">
+                              <span className="text-xs font-mono font-bold text-ink uppercase">
                                 {item.resource!.name}
                               </span>
-                              <span className="text-sm font-mono text-white/40 uppercase">
+                              <span className="text-[10px] font-mono text-ink-soft/60 uppercase">
                                 [{item.resource!.unit}]
                               </span>
                             </div>
@@ -1371,7 +1451,7 @@ export default function TravelExplorations() {
                                     Number(e.target.value),
                                   )
                                 }
-                                className="vintage-input w-16 text-sm ml-2"
+                                className="vintage-input w-16 text-sm ml-2 p-1"
                               />
                             )}
                           </div>
@@ -1382,22 +1462,26 @@ export default function TravelExplorations() {
                 )}
               </div>
 
-              <div className="p-4 border-t border-[#c27c2f]/20 flex justify-end gap-3 bg-black/20">
+              {/* Modal footer */}
+              <div className="p-6 border-t-2 border-dashed border-ink/20 flex justify-end gap-4 bg-black/5">
                 <button
+                  type="button"
                   onClick={() => setIsReturnModalOpen(false)}
-                  className="px-4 py-2 text-sm font-mono font-black text-white/50 uppercase border border-white/10 hover:border-white/30 transition-all"
+                  className="tm-btn"
+                  style={{ padding: "8px 16px", borderRadius: "4px" }}
                 >
                   Cancelar
                 </button>
                 <button
+                  type="button"
                   onClick={handleRegisterReturn}
                   disabled={returnMutation.isPending}
-                  className="px-6 py-2 bg-[#4c6351] text-white text-sm font-mono font-black uppercase hover:opacity-90 transition-all disabled:opacity-50 flex items-center gap-2"
+                  className="px-6 py-2.5 bg-[#4c6351] text-white hover:bg-[#3d5041] text-sm font-mono font-black uppercase transition-all disabled:opacity-50 flex items-center gap-2 shadow-md border-2 border-ink active:translate-y-0.5"
                 >
                   {returnMutation.isPending ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    <CheckCircle2 className="h-4 w-4" />
                   )}
                   Confirmar Retorno
                 </button>
@@ -1420,67 +1504,71 @@ export default function TravelExplorations() {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-bg-paper border-4 border-bg-paper-shadow w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden shadow-[8px_8px_0px_rgba(0,0,0,0.9)] relative"
+              className="tm-paper tm-paper-texture w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl relative p-0 border-4 border-double border-ink/40"
             >
               {/* Tape decoration */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/3 w-24 h-6 bg-accent-tape/80 rotate-1 z-10 border-l-2 border-r-2 border-dashed border-ink/20" />
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-28 h-6 bg-[#df8120]/40 rotate-1 z-10 border-l border-r border-dashed border-ink/30 shadow-sm" />
 
-              <div className="flex items-center justify-between p-6 border-b-2 border-dashed border-ink/20">
+              <div className="flex items-center justify-between p-6 border-b-2 border-dashed border-ink/20 bg-black/5">
                 <div>
-                  <p className="text-sm font-mono text-ink/40 uppercase tracking-widest mb-1">
+                  <p className="text-[10px] font-mono text-ink-soft uppercase tracking-widest mb-1 font-black">
                     Expediente Clasificado // Acceso Autorizado
                   </p>
-                  <h3 className="font-typewriter text-2xl font-black text-ink uppercase">
+                  <h3 className="font-typewriter text-xl md:text-2xl font-black text-ink uppercase">
                     {selectedExp.name}
                   </h3>
                 </div>
                 <button
+                  type="button"
                   onClick={() => setIsDetailOpen(false)}
-                  className="text-ink/40 hover:text-ink transition-colors"
+                  className="text-ink-soft hover:text-ink transition-colors"
                 >
                   <X className="h-5 w-5" />
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                <div className="grid grid-cols-2 gap-6">
-                  <div>
-                    <p className="text-sm font-mono text-ink/40 uppercase tracking-widest mb-1">
+              <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+                <div className="grid grid-cols-2 gap-5">
+                  <div className="bg-[#f5ecd7] p-3 border border-[#d4c4a8]/35 rounded-sm">
+                    <p className="text-[10px] font-mono text-ink-soft uppercase tracking-widest mb-1 font-black">
                       Destino
                     </p>
                     <p className="font-typewriter text-ink font-black uppercase text-sm">
                       {selectedExp.destination_description}
                     </p>
                   </div>
-                  <div>
-                    <p className="text-sm font-mono text-ink/40 uppercase tracking-widest mb-1">
+                  <div className="bg-[#f5ecd7] p-3 border border-[#d4c4a8]/35 rounded-sm">
+                    <p className="text-[10px] font-mono text-ink-soft uppercase tracking-widest mb-1 font-black">
                       Estado
                     </p>
                     <p
-                      className={`font-mono font-black uppercase text-sm ${getStatusColorClass(selectedExp.status)}`}
+                      className={`font-mono font-black uppercase text-sm ${getStatusColorClass(
+                        selectedExp.status,
+                      )}`}
                     >
                       {getStatusLabel(selectedExp.status)}
                     </p>
                   </div>
-                  <div>
-                    <p className="text-sm font-mono text-ink/40 uppercase tracking-widest mb-1">
+                  <div className="bg-[#f5ecd7] p-3 border border-[#d4c4a8]/35 rounded-sm">
+                    <p className="text-[10px] font-mono text-ink-soft uppercase tracking-widest mb-1 font-black">
                       Salida Programada
                     </p>
                     <p className="font-mono text-ink font-black text-sm">
                       {new Date(selectedExp.departure_date).toLocaleString()}
                     </p>
                   </div>
-                  <div>
-                    <p className="text-sm font-mono text-ink/40 uppercase tracking-widest mb-1">
+                  <div className="bg-[#f5ecd7] p-3 border border-[#d4c4a8]/35 rounded-sm">
+                    <p className="text-[10px] font-mono text-ink-soft uppercase tracking-widest mb-1 font-black">
                       Duración
                     </p>
                     <p className="font-mono text-ink font-black text-sm">
-                      {selectedExp.estimated_days} días (+{selectedExp.grace_days} gracia)
+                      {selectedExp.estimated_days} días{" "}
+                      {selectedExp.grace_days > 0 ? `(+${selectedExp.grace_days} gracia)` : ""}
                     </p>
                   </div>
                   {selectedExp.real_return_date && (
-                    <div>
-                      <p className="text-sm font-mono text-ink/40 uppercase tracking-widest mb-1">
+                    <div className="bg-[#f5ecd7] p-3 border border-[#d4c4a8]/35 rounded-sm">
+                      <p className="text-[10px] font-mono text-ink-soft uppercase tracking-widest mb-1 font-black">
                         Retorno Real
                       </p>
                       <p className="font-mono text-ink font-black text-sm">
@@ -1489,11 +1577,11 @@ export default function TravelExplorations() {
                     </div>
                   )}
                   {selectedExp.notes && (
-                    <div className="col-span-2">
-                      <p className="text-sm font-mono text-ink/40 uppercase tracking-widest mb-1">
-                        Notas
+                    <div className="col-span-2 bg-[#f5ecd7] p-3 border border-[#d4c4a8]/35 rounded-sm">
+                      <p className="text-[10px] font-mono text-ink-soft uppercase tracking-widest mb-1 font-black">
+                        Notas de Retorno
                       </p>
-                      <p className="font-mono text-ink/80 text-sm">{selectedExp.notes}</p>
+                      <p className="font-mono text-ink/80 text-sm whitespace-pre-wrap">{selectedExp.notes}</p>
                     </div>
                   )}
                 </div>
@@ -1501,17 +1589,19 @@ export default function TravelExplorations() {
                 {/* Team list in detail */}
                 {selectedExp.explorationPersons.length > 0 && (
                   <div>
-                    <p className="text-xs font-mono text-ink/40 uppercase tracking-widest mb-3 border-t border-dashed border-ink/20 pt-4">
+                    <p className="text-[10px] font-mono text-ink uppercase tracking-widest mb-3 border-t-2 border-dashed border-ink/20 pt-4 font-black">
                       Integrantes del Equipo
                     </p>
                     <div className="space-y-2">
                       {selectedExp.explorationPersons.map((ep) => (
                         <div
                           key={ep.person_id}
-                          className="flex items-center gap-3 bg-ink/5 px-3 py-2"
+                          className="flex items-center gap-3 bg-[#f5ecd7] p-2.5 border border-[#d4c4a8]/35 rounded-sm shadow-sm"
                         >
                           <div
-                            className={`h-2 w-2 rounded-full ${ep.is_leader ? "bg-[#c27c2f]" : "bg-ink/20"}`}
+                            className={`h-2.5 w-2.5 rounded-full ${
+                              ep.is_leader ? "bg-[#df8120]" : "bg-ink/20"
+                            }`}
                           />
                           <span className="font-mono text-ink text-sm font-black uppercase">
                             {ep.person
@@ -1519,7 +1609,7 @@ export default function TravelExplorations() {
                               : ep.person_id}
                           </span>
                           {ep.is_leader && (
-                            <span className="ml-auto text-sm font-mono bg-[#c27c2f] text-black hover:bg-[#fca311] px-1.5 font-black uppercase">
+                            <span className="ml-auto text-[10px] font-mono bg-[#df8120] text-black px-2 py-0.5 font-black uppercase border border-ink/25">
                               LÍDER
                             </span>
                           )}

@@ -1,56 +1,38 @@
-/* ════════════════════════════════════════════════════════════════════════════
-   TRAVEL MANAGER VIEWS — ESTILO CAMPO · TONOS CAFÉ · TEXTURA PAPEL
-   Archivo CSS general del módulo TravelManager.
-   Importar únicamente desde TravelManagerLayout.tsx.
-   Paleta: café oscuro · ámbar cobre · papel envejecido · tinta
-   ════════════════════════════════════════════════════════════════════════════ */
-
-/* ── CSS Custom Properties ─────────────────────────────────────────────────── */
 .travel-manager-root {
-  /* Backgrounds */
-  --tm-cork: #2e1e0e; /* tablero de corcho oscuro */
-  --tm-panel: #1c1208; /* panel oscuro café */
-  --tm-panel-alt: #160e05; /* panel más oscuro */
-  --tm-paper: #e8dcc8; /* papel crema envejecido */
-  --tm-paper-dark: #d4c4a8; /* papel más oscuro */
-  --tm-paper-shadow: #c0aa8a; /* sombra de papel */
+  --tm-cork:          #2e1e0e;
+  --tm-panel:         #1c1208;
+  --tm-panel-alt:     #160e05;
+  --tm-paper:         #e8dcc8;
+  --tm-paper-dark:    #d4c4a8;
+  --tm-paper-shadow:  #c0aa8a;
 
-  /* Borders */
-  --tm-border: rgba(179, 133, 54, 0.3);
-  --tm-border-hi: rgba(179, 133, 54, 0.6);
-  --tm-border-paper: rgba(0, 0, 0, 0.18);
+  --tm-border:        rgba(179, 133, 54, 0.30);
+  --tm-border-hi:     rgba(179, 133, 54, 0.60);
+  --tm-border-paper:  rgba(0, 0, 0, 0.18);
 
-  /* Text */
-  --tm-ink: #1a0f05; /* tinta oscura (sobre papel) */
-  --tm-ink-soft: rgba(26, 15, 5, 0.55);
-  --tm-text: rgba(212, 190, 140, 0.9); /* texto sobre fondo oscuro */
-  --tm-text-sec: rgba(154, 130, 90, 0.6);
-  --tm-text-dim: rgba(130, 105, 65, 0.35);
+  --tm-ink:           #1a0f05;
+  --tm-ink-soft:      rgba(26, 15, 5, 0.55);
+  --tm-text:          rgba(212, 190, 140, 0.90);
+  --tm-text-sec:      rgba(154, 130, 90, 0.60);
+  --tm-text-dim:      rgba(130, 105, 65, 0.35);
 
-  /* Accents */
-  --tm-amber: #df8120;
-  --tm-amber-dim: #c27c2f;
-  --tm-warning: #c27c2f;
-  --tm-critical: #9c2720;
-  --tm-approved: #4c6351;
+  --tm-amber:         #df8120;
+  --tm-amber-dim:     #c27c2f;
+  --tm-warning:       #c27c2f;
+  --tm-critical:      #9c2720;
+  --tm-approved:      #4c6351;
 
-  /* Typography */
   --ff-typer: "Special Elite", monospace;
-  --ff-mono: "JetBrains Mono", monospace;
+  --ff-mono:  "JetBrains Mono", monospace;
 }
 
-/* ── Noise / paper texture SVG ────────────────────────────────────────────── */
 .tm-paper-texture {
   background-color: var(--tm-paper);
   background-image: url("data:image/svg+xml,%3Csvg width='200' height='200' viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.07'/%3E%3C/svg%3E");
   color: var(--tm-ink);
 }
 
-/* ════════════════════════════════════════════════════════════════════════════
-   DASHBOARD — CORK BOARD (SIN SCROLL)
-   ════════════════════════════════════════════════════════════════════════════ */
-
-/* Outer cork board — fill available space, no overflow */
+.tm-container,
 .tm-dashboard {
   position: absolute;
   inset: 16px;
@@ -58,14 +40,13 @@
   flex-direction: column;
   overflow: hidden;
   background: #121110;
-  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.5);
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.50);
   padding: 20px 24px;
   gap: 14px;
   box-sizing: border-box;
   border-radius: 4px;
 }
 
-/* ── Board Header ────────────────────────────────────────────────────────── */
 .tm-board-header {
   flex-shrink: 0;
   display: flex;
@@ -96,13 +77,8 @@
 }
 
 @keyframes tm-online-pulse {
-  0%,
-  100% {
-    box-shadow: 0 0 5px var(--tm-approved);
-  }
-  50% {
-    box-shadow: 0 0 14px var(--tm-approved);
-  }
+  0%, 100% { box-shadow: 0 0 5px var(--tm-approved); }
+  50%       { box-shadow: 0 0 14px var(--tm-approved); }
 }
 
 .tm-board-title {
@@ -126,11 +102,10 @@
 .tm-board-time {
   font-family: var(--ff-mono);
   font-size: 0.76rem;
-  color: rgba(179, 133, 54, 0.5);
+  color: rgba(179, 133, 54, 0.50);
   letter-spacing: 1px;
 }
 
-/* ── Alert banner ────────────────────────────────────────────────────────── */
 .tm-alert {
   flex-shrink: 0;
   background: rgba(156, 39, 32, 0.18);
@@ -140,14 +115,13 @@
   letter-spacing: 1.5px;
   text-transform: uppercase;
   padding: 8px 14px;
-  border: 1px solid rgba(156, 39, 32, 0.5);
+  border: 1px solid rgba(156, 39, 32, 0.50);
   border-left: 3px solid var(--tm-critical);
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-/* ── Cork Grid — pinned metric cards ─────────────────────────────────────── */
 .tm-cork-grid {
   flex-shrink: 0;
   display: grid;
@@ -155,7 +129,6 @@
   gap: 18px;
 }
 
-/* Pinned card — paper texture */
 .tm-pinned {
   background-color: var(--tm-paper);
   background-image: url("data:image/svg+xml,%3Csvg width='200' height='200' viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
@@ -165,12 +138,10 @@
     0 1px 3px rgba(0, 0, 0, 0.45),
     -3px 6px 14px rgba(0, 0, 0, 0.55);
   border-radius: 1px;
-  border: 1px solid rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(0, 0, 0, 0.20);
   color: var(--tm-ink);
   transform: rotate(-1.2deg);
-  transition:
-    transform 0.2s,
-    box-shadow 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s;
   cursor: default;
 }
 
@@ -181,7 +152,6 @@
     3px 6px 14px rgba(0, 0, 0, 0.55);
 }
 
-/* Pin dot */
 .tm-pin {
   width: 14px;
   height: 14px;
@@ -191,31 +161,29 @@
   left: 50%;
   transform: translateX(-50%);
   box-shadow:
-    inset -1px -2px 5px rgba(0, 0, 0, 0.5),
-    inset 1px 2px 3px rgba(255, 255, 255, 0.5),
-    1px 4px 8px rgba(0, 0, 0, 0.45);
+    inset -1px -2px 5px rgba(0,0,0,0.5),
+    inset 1px 2px 3px rgba(255,255,255,0.5),
+    1px 4px 8px rgba(0,0,0,0.45);
   z-index: 5;
 }
 
 .tm-pin::before {
   content: "";
   position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 4px;
-  height: 3px;
-  background: rgba(255, 255, 255, 0.85);
+  top: 3px; left: 3px;
+  width: 4px; height: 3px;
+  background: rgba(255,255,255,0.85);
   border-radius: 50%;
   filter: blur(0.5px);
 }
 
-.tm-pin-amber {
+.tm-pin-amber  {
   background: radial-gradient(circle at 35% 30%, #e8c870 0%, #b38536 45%, #7a5918 100%);
 }
-.tm-pin-red {
+.tm-pin-red    {
   background: radial-gradient(circle at 35% 30%, #ff8c8c 0%, #c42020 45%, #7a0f0f 100%);
 }
-.tm-pin-green {
+.tm-pin-green  {
   background: radial-gradient(circle at 35% 30%, #88bb98 0%, #4c6351 45%, #2a3d2f 100%);
 }
 .tm-pin-orange {
@@ -229,7 +197,7 @@
   letter-spacing: 2px;
   margin: 0 0 10px;
   padding-bottom: 6px;
-  border-bottom: 1px dashed rgba(0, 0, 0, 0.2);
+  border-bottom: 1px dashed rgba(0,0,0,0.20);
   color: rgba(26, 15, 5, 0.55);
 }
 
@@ -247,10 +215,9 @@
   text-transform: uppercase;
   letter-spacing: 1px;
   margin-top: 5px;
-  color: rgba(26, 15, 5, 0.4);
+  color: rgba(26, 15, 5, 0.40);
 }
 
-/* ── Operations section — fills remaining viewport height ────────────────── */
 .tm-operations {
   flex: 1;
   min-height: 0;
@@ -260,7 +227,6 @@
   overflow: hidden;
 }
 
-/* Single column inside operations */
 .tm-op-col {
   display: flex;
   flex-direction: column;
@@ -269,14 +235,13 @@
   overflow: hidden;
 }
 
-/* ── Folder Header Row & Title ───────────────────────────────────────────── */
 .tm-folder-header-row {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 10px;
-  margin-bottom: -2px; /* Pulls up to align with folder */
+  margin-bottom: -2px;
   position: relative;
   z-index: 10;
 }
@@ -292,7 +257,6 @@
   margin: 0;
 }
 
-/* ── Folder Tabs ────────────────────────────────────────────────────────── */
 .tm-folder-tabs {
   display: flex;
   gap: 6px;
@@ -306,7 +270,7 @@
   letter-spacing: 1px;
   padding: 6px 12px;
   border: 2px solid var(--tm-ink);
-  border-bottom: none; /* Connects with folder header */
+  border-bottom: none;
   background: var(--tm-paper-dark);
   color: rgba(26, 15, 5, 0.65);
   cursor: pointer;
@@ -327,12 +291,11 @@
   background: var(--tm-paper) !important;
   color: var(--tm-ink) !important;
   top: 0;
-  padding-top: 8px; /* Slightly taller to overlay the folder border */
+  padding-top: 8px;
   z-index: 12;
-  box-shadow: 0 -2px 0 var(--tm-paper); /* seamless overlap */
+  box-shadow: 0 -2px 0 var(--tm-paper);
 }
 
-/* ── Paper panels (detail sections) ─────────────────────────────────────── */
 .tm-paper {
   display: flex;
   flex-direction: column;
@@ -342,7 +305,7 @@
   background-image: url("data:image/svg+xml,%3Csvg width='200' height='200' viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
   color: var(--tm-ink);
   border: 2px solid var(--tm-ink);
-  box-shadow: 5px 5px 0px rgba(26, 15, 5, 0.9);
+  box-shadow: 5px 5px 0px rgba(26, 15, 5, 0.90);
   border-radius: 2px;
   padding: 16px 18px;
   position: relative;
@@ -358,7 +321,7 @@
   background-image: url("data:image/svg+xml,%3Csvg width='200' height='200' viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
   color: var(--tm-ink);
   border: 2px solid var(--tm-ink);
-  box-shadow: 5px 5px 0px rgba(26, 15, 5, 0.9);
+  box-shadow: 5px 5px 0px rgba(26, 15, 5, 0.90);
   border-radius: 2px;
   padding: 16px 18px;
   position: relative;
@@ -397,7 +360,6 @@
   text-transform: uppercase;
 }
 
-/* Scrollable body inside a section */
 .tm-op-list {
   flex: 1;
   min-height: 0;
@@ -408,20 +370,10 @@
   padding-right: 4px;
 }
 
-/* Custom scrollbars for paper panels */
-.tm-op-list::-webkit-scrollbar {
-  width: 4px;
-}
-.tm-op-list::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.04);
-}
-.tm-op-list::-webkit-scrollbar-thumb {
-  background: rgba(26, 15, 5, 0.22);
-  border-radius: 2px;
-}
-.tm-op-list::-webkit-scrollbar-thumb:hover {
-  background: rgba(26, 15, 5, 0.45);
-}
+.tm-op-list::-webkit-scrollbar { width: 4px; }
+.tm-op-list::-webkit-scrollbar-track { background: rgba(0,0,0,0.04); }
+.tm-op-list::-webkit-scrollbar-thumb { background: rgba(26,15,5,0.22); border-radius: 2px; }
+.tm-op-list::-webkit-scrollbar-thumb:hover { background: rgba(26,15,5,0.45); }
 
 .tm-paper .tm-op-meta,
 .tm-paper-dark .tm-op-meta {
@@ -431,7 +383,7 @@
 .tm-paper .tm-op-btn,
 .tm-paper-dark .tm-op-btn {
   color: var(--tm-ink);
-  border-color: rgba(26, 15, 5, 0.4);
+  border-color: rgba(26, 15, 5, 0.40);
   background: transparent;
 }
 
@@ -444,10 +396,9 @@
 
 .tm-paper .tm-empty,
 .tm-paper-dark .tm-empty {
-  color: rgba(26, 15, 5, 0.5);
+  color: rgba(26, 15, 5, 0.50);
 }
 
-/* Action stamp buttons on paper */
 .tm-action-btn {
   font-family: var(--ff-typer);
   border: 2px solid var(--tm-ink);
@@ -498,7 +449,6 @@
   margin-top: 2px;
 }
 
-/* Resource Bar overrides for paper */
 .tm-paper .tm-res-header,
 .tm-paper-dark .tm-res-header {
   color: var(--tm-ink);
@@ -508,59 +458,112 @@
 .tm-paper .tm-res-track,
 .tm-paper-dark .tm-res-track {
   background: rgba(0, 0, 0, 0.06);
-  border: 1px solid rgba(26, 15, 5, 0.2);
+  border: 1px solid rgba(26, 15, 5, 0.20);
 }
 
-/* Fixed-height variant (no flex-1) */
 .tm-section-fixed {
   flex-shrink: 0;
 }
 
-/* ── Operation rows (designed as physical record cards) ─────────────────────── */
 .tm-op-row {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 10px 14px;
-  background: #f5ecd7; /* Warm sand-cream paper card background */
-  border: 2px solid rgba(26, 15, 5, 0.18);
-  border-left: 5px solid var(--tm-ink); /* Accent status line */
-  box-shadow: 1px 2px 2px rgba(26, 15, 5, 0.08);
-  margin-bottom: 8px;
-  border-radius: 2px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  padding: 8px 10px;
+  background: #121110;
+  border: 1px solid rgba(212, 190, 140, 0.12);
+  border-left: 3px solid #6e5f4d;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.20);
+  margin-bottom: 6px;
+  border-radius: 3px;
   transition: all 0.15s ease-in-out;
+  text-align: left;
 }
 
-.tm-op-row:hover {
-  transform: translateY(-2px);
-  box-shadow: 1px 4px 6px rgba(26, 15, 5, 0.15);
-  background: #faf4e6; /* Soft highlight warm cream background */
-  border-color: rgba(26, 15, 5, 0.35);
+/* Dashboard Roster Cards (Beige/Cream) */
+.tm-dashboard .tm-op-row {
+  background: #f5ecd7 !important;
+  border: 1px solid rgba(26, 15, 5, 0.22) !important;
+  border-left: 4px solid var(--tm-ink) !important;
+  box-shadow: 2px 2px 0px rgba(26, 15, 5, 0.15) !important;
+  color: var(--tm-ink) !important;
 }
 
-/* Status-specific left border accents */
-.tm-row-pending {
+.tm-dashboard .tm-op-row:hover {
+  background: #faf4e6 !important;
+  border-color: var(--tm-ink) !important;
+  transform: translateY(-1px);
+}
+
+.tm-dashboard .tm-op-row .tm-op-label {
+  color: var(--tm-ink) !important;
+}
+
+.tm-dashboard .tm-op-row .tm-op-meta-sub {
+  color: var(--tm-ink-soft) !important;
+}
+
+.tm-dashboard .tm-row-pending {
   border-left-color: var(--tm-critical) !important;
 }
 
-.tm-row-transit {
+.tm-dashboard .tm-row-transit {
   border-left-color: var(--tm-warning) !important;
 }
 
-.tm-row-active {
+/* Sub-views Roster Cards (Dark Brown/Charcoal) */
+.tm-container .tm-op-row {
+  background: #141312 !important;
+  border: 1px solid rgba(212, 190, 140, 0.10) !important;
+  border-left: 3px solid #6e5f4d !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35) !important;
+  color: #e8dcc8 !important;
+  padding: 6px 10px !important;
+}
+
+.tm-container .tm-op-row:hover {
+  background: #1a1918 !important;
+  border-color: rgba(223, 129, 32, 0.25) !important;
+  transform: translateY(-1px);
+}
+
+.tm-container .tm-op-row .tm-op-label {
+  color: #ffffff !important;
+}
+
+.tm-container .tm-op-row .tm-op-meta-sub {
+  color: #c8bfae !important;
+}
+
+.tm-container .tm-row-pending {
+  border-left-color: var(--tm-critical) !important;
+}
+
+.tm-container .tm-row-transit {
+  border-left-color: var(--tm-warning) !important;
+}
+
+.tm-container .tm-row-active {
   border-left-color: var(--tm-approved) !important;
 }
 
-.tm-row-sched {
+.tm-container .tm-row-sched {
   border-left-color: #6e5f4d !important;
 }
 
-/* Status chips on rows — enhanced legibility on paper */
-.tm-chip,
-.tm-op-chip {
+/* Custom font utilities */
+.font-typewriter {
+  font-family: var(--ff-typer), Courier, monospace !important;
+}
+
+.font-mono-custom {
+  font-family: var(--ff-mono), monospace !important;
+}
+
+.tm-chip, .tm-op-chip {
   font-family: var(--ff-mono);
-  font-size: 0.6rem;
+  font-size: 0.60rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -572,34 +575,26 @@
   justify-content: center;
 }
 
-.tm-chip-pending,
-.tm-paper .tm-chip-pending,
-.tm-paper-dark .tm-chip-pending {
-  background: var(--tm-critical) !important; /* solid dark red #9c2720 */
+.tm-chip-pending, .tm-paper .tm-chip-pending, .tm-paper-dark .tm-chip-pending {
+  background: var(--tm-critical) !important;
   color: #ffffff !important;
   border: 1px solid rgba(0, 0, 0, 0.15);
 }
 
-.tm-chip-active,
-.tm-paper .tm-chip-active,
-.tm-paper-dark .tm-chip-active {
-  background: var(--tm-approved) !important; /* solid dark green #4c6351 */
+.tm-chip-active, .tm-paper .tm-chip-active, .tm-paper-dark .tm-chip-active {
+  background: var(--tm-approved) !important;
   color: #ffffff !important;
   border: 1px solid rgba(0, 0, 0, 0.15);
 }
 
-.tm-chip-transit,
-.tm-paper .tm-chip-transit,
-.tm-paper-dark .tm-chip-transit {
-  background: var(--tm-warning) !important; /* solid dark orange/brown #c27c2f */
+.tm-chip-transit, .tm-paper .tm-chip-transit, .tm-paper-dark .tm-chip-transit {
+  background: var(--tm-warning) !important;
   color: #ffffff !important;
   border: 1px solid rgba(0, 0, 0, 0.15);
 }
 
-.tm-chip-sched,
-.tm-paper .tm-chip-sched,
-.tm-paper-dark .tm-chip-sched {
-  background: #6e5f4d !important; /* solid neutral dark brown */
+.tm-chip-sched, .tm-paper .tm-chip-sched, .tm-paper-dark .tm-chip-sched {
+  background: #6e5f4d !important;
   color: #ffffff !important;
   border: 1px solid rgba(0, 0, 0, 0.15);
 }
@@ -639,7 +634,6 @@
   border-color: var(--tm-ink) !important;
 }
 
-/* Empty state */
 .tm-empty {
   font-family: var(--ff-mono);
   color: var(--tm-text-dim);
@@ -654,14 +648,13 @@
   justify-content: center;
 }
 
-/* ── Action buttons ───────────────────────────────────────────────────────── */
 .tm-btn {
   font-family: var(--ff-typer);
   padding: 9px 14px;
   cursor: pointer;
   transition: all 0.15s;
   border: 1px solid var(--tm-border);
-  background: rgba(0, 0, 0, 0.25);
+  background: rgba(0,0,0,0.25);
   color: var(--tm-amber);
   text-align: left;
   display: flex;
@@ -676,7 +669,7 @@
 
 .tm-btn:hover {
   border-color: var(--tm-border-hi);
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0,0,0,0.40);
 }
 
 .tm-btn-primary {
@@ -689,7 +682,6 @@
   background: #df8120;
 }
 
-/* ── Status badges ────────────────────────────────────────────────────────── */
 .tm-badge {
   display: inline-block;
   font-family: var(--ff-mono);
@@ -700,20 +692,10 @@
   padding: 2px 7px;
   border: 1px solid currentColor;
 }
-.tm-badge-ok {
-  color: var(--tm-approved);
-  background: rgba(76, 99, 81, 0.12);
-}
-.tm-badge-warning {
-  color: var(--tm-warning);
-  background: rgba(194, 124, 47, 0.12);
-}
-.tm-badge-critical {
-  color: var(--tm-critical);
-  background: rgba(156, 39, 32, 0.15);
-}
+.tm-badge-ok       { color: var(--tm-approved); background: rgba(76,99,81,0.12); }
+.tm-badge-warning  { color: var(--tm-warning);  background: rgba(194,124,47,0.12); }
+.tm-badge-critical { color: var(--tm-critical); background: rgba(156,39,32,0.15); }
 
-/* ── Resource bars ────────────────────────────────────────────────────────── */
 .tm-res-row {
   display: flex;
   flex-direction: column;
@@ -734,320 +716,101 @@
 
 .tm-res-track {
   height: 5px;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.50);
   border: 1px solid rgba(179, 133, 54, 0.12);
   overflow: hidden;
 }
 
-.tm-res-fill {
-  height: 100%;
-}
-.tm-fill-ok {
-  background: var(--tm-approved);
-  box-shadow: 0 0 5px var(--tm-approved);
-}
-.tm-fill-warning {
-  background: var(--tm-warning);
-  box-shadow: 0 0 5px var(--tm-warning);
-}
-.tm-fill-critical {
-  background: var(--tm-critical);
-  box-shadow: 0 0 6px var(--tm-critical);
+.tm-res-fill       { height: 100%; }
+.tm-fill-ok        { background: var(--tm-approved); box-shadow: 0 0 5px var(--tm-approved); }
+.tm-fill-warning   { background: var(--tm-warning);  box-shadow: 0 0 5px var(--tm-warning); }
+.tm-fill-critical  { background: var(--tm-critical); box-shadow: 0 0 6px var(--tm-critical); }
+
+.tm-section-body::-webkit-scrollbar { width: 4px; }
+.tm-section-body::-webkit-scrollbar-track { background: rgba(0,0,0,0.20); }
+.tm-section-body::-webkit-scrollbar-thumb { background: rgba(179,133,54,0.28); border-radius: 2px; }
+.tm-section-body::-webkit-scrollbar-thumb:hover { background: rgba(179,133,54,0.50); }
+
+.tm-paper .vintage-input,
+.tm-paper-dark .vintage-input {
+  background: #faf4e6 !important;
+  border: 2px solid var(--tm-ink) !important;
+  color: var(--tm-ink) !important;
+  border-radius: 2px !important;
 }
 
-/* ── Custom scrollbar (panel interno) ────────────────────────────────────── */
-.tm-section-body::-webkit-scrollbar {
-  width: 4px;
-}
-.tm-section-body::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.2);
-}
-.tm-section-body::-webkit-scrollbar-thumb {
-  background: rgba(179, 133, 54, 0.28);
-  border-radius: 2px;
-}
-.tm-section-body::-webkit-scrollbar-thumb:hover {
-  background: rgba(179, 133, 54, 0.5);
+.tm-paper .vintage-input:focus,
+.tm-paper-dark .vintage-input:focus {
+  border-color: var(--tm-amber) !important;
+  box-shadow: none !important;
 }
 
-/* ════════════════════════════════════════════════════════════════════════════
-   RESPONSIVE
-   ════════════════════════════════════════════════════════════════════════════ */
+.tm-paper select.vintage-input,
+.tm-paper-dark select.vintage-input {
+  color: var(--tm-ink) !important;
+}
+
+.tm-paper select.vintage-input option,
+.tm-paper-dark select.vintage-input option {
+  background: #faf4e6 !important;
+  color: var(--tm-ink) !important;
+}
+
+.tm-paper .vintage-input::placeholder,
+.tm-paper-dark .vintage-input::placeholder {
+  color: var(--tm-ink-soft) !important;
+  opacity: 0.7;
+}
+
 @media (max-width: 1280px) {
   .tm-cork-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-  .tm-big-number {
-    font-size: 2.4rem;
-  }
+  .tm-big-number { font-size: 2.4rem; }
 }
 
 @media (max-width: 900px) {
-  .tm-dashboard {
-    position: relative;
-    inset: auto;
-    height: auto;
-    min-height: 100%;
-    padding: 14px 16px;
-    overflow-y: auto;
-  }
-  .tm-cork-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .tm-operations {
-    grid-template-columns: 1fr;
-    overflow: visible;
-  }
-  .tm-op-col {
-    overflow: visible;
-  }
-  .tm-paper,
-  .tm-paper-dark {
-    flex-shrink: 0;
-    min-height: 220px;
-  }
+  .tm-dashboard    { position: relative; inset: auto; height: auto; min-height: 100%; padding: 14px 16px; overflow-y: auto; }
+  .tm-cork-grid    { grid-template-columns: repeat(2, 1fr); }
+  .tm-operations   { grid-template-columns: 1fr; overflow: visible; }
+  .tm-op-col       { overflow: visible; }
+  .tm-paper, .tm-paper-dark { flex-shrink: 0; min-height: 220px; }
 }
 
-/* ════════════════════════════════════════════════════════════════════════════
-   UTILITY CLASSES — used by TravelManager sub-views
-   All classes that Tailwind's @theme doesn't generate automatically but the
-   sub-views (TravelExplorations, TravelTransfers, TravelTeam, TravelResources)
-   require. Scoped under .travel-manager-root to avoid global side-effects.
-   ════════════════════════════════════════════════════════════════════════════ */
+/* ── Custom Ink Color & Border Utilities for Tailwind Compatibility ── */
+.text-ink { color: var(--tm-ink) !important; }
+.text-ink-soft { color: var(--tm-ink-soft) !important; }
+.text-ink\/80 { color: rgba(26, 15, 5, 0.80) !important; }
+.text-ink-soft\/85 { color: rgba(26, 15, 5, 0.85) !important; }
+.text-ink-soft\/75 { color: rgba(26, 15, 5, 0.75) !important; }
+.text-ink-soft\/70 { color: rgba(26, 15, 5, 0.70) !important; }
+.text-ink-soft\/60 { color: rgba(26, 15, 5, 0.60) !important; }
+.text-ink-soft\/50 { color: rgba(26, 15, 5, 0.50) !important; }
+.text-ink-soft\/40 { color: rgba(26, 15, 5, 0.40) !important; }
+.text-ink\/40 { color: rgba(26, 15, 5, 0.40) !important; }
+.text-ink\/30 { color: rgba(26, 15, 5, 0.30) !important; }
 
-/* ── Layout backgrounds ─────────────────────────────────────────────────── */
-.travel-manager-root .bg-bunker-bg {
-  background-color: #0a0a0a;
-}
+.border-ink { border-color: var(--tm-ink) !important; }
+.border-ink\/10 { border-color: rgba(26, 15, 5, 0.10) !important; }
+.border-ink\/15 { border-color: rgba(26, 15, 5, 0.15) !important; }
+.border-ink\/20 { border-color: rgba(26, 15, 5, 0.20) !important; }
+.border-ink\/25 { border-color: rgba(26, 15, 5, 0.25) !important; }
+.border-ink\/30 { border-color: rgba(26, 15, 5, 0.30) !important; }
+.border-ink\/35 { border-color: rgba(26, 15, 5, 0.35) !important; }
+.border-ink\/40 { border-color: rgba(26, 15, 5, 0.40) !important; }
 
-.travel-manager-root .bg-industrial-metal {
-  background-color: #141414;
-}
+.bg-ink { background-color: var(--tm-ink) !important; }
+.bg-ink\/5 { background-color: rgba(26, 15, 5, 0.05) !important; }
+.bg-ink\/10 { background-color: rgba(26, 15, 5, 0.10) !important; }
+.bg-ink\/20 { background-color: rgba(26, 15, 5, 0.20) !important; }
 
-/* ── Archive panel (TravelTeam, TravelResources) ─────────────────────────── */
-.travel-manager-root .archive-panel {
-  background: #12110f;
-  border: 1px solid rgba(212, 163, 115, 0.18);
-  box-shadow:
-    0 4px 20px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(212, 163, 115, 0.06);
-}
-
-/* ── Paper texture overlay ──────────────────────────────────────────────── */
-.travel-manager-root .paper-texture {
-  background-color: var(--tm-paper);
-  background-image: url("data:image/svg+xml,%3Csvg width='200' height='200' viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.07'/%3E%3C/svg%3E");
-  color: var(--tm-ink);
-}
-
-/* ── bg-bg-paper / text-ink aliases ────────────────────────────────────── */
-.travel-manager-root .bg-bg-paper {
-  background-color: var(--tm-paper) !important;
-  color: var(--tm-ink) !important;
-}
-
-/* ── text-ink / text-ink-soft aliases ──────────────────────────────────── */
-.travel-manager-root .text-ink {
-  color: var(--tm-ink) !important;
-}
-
-/* Opacity variants — Tailwind v4 can't generate these without @theme entry */
-.travel-manager-root .text-ink\/10 {
-  color: rgba(26, 15, 5, 0.1) !important;
-}
-.travel-manager-root .text-ink\/20 {
-  color: rgba(26, 15, 5, 0.2) !important;
-}
-.travel-manager-root .text-ink\/30 {
-  color: rgba(26, 15, 5, 0.3) !important;
-}
-.travel-manager-root .text-ink\/40 {
-  color: rgba(26, 15, 5, 0.4) !important;
-}
-.travel-manager-root .text-ink\/50 {
-  color: rgba(26, 15, 5, 0.5) !important;
-}
-.travel-manager-root .text-ink\/60 {
-  color: rgba(26, 15, 5, 0.6) !important;
-}
-.travel-manager-root .text-ink\/70 {
-  color: rgba(26, 15, 5, 0.7) !important;
-}
-.travel-manager-root .text-ink\/80 {
-  color: rgba(26, 15, 5, 0.8) !important;
-}
-
-.travel-manager-root .text-ink-soft {
-  color: var(--tm-ink-soft) !important;
-}
-
-/* text-ink-soft with opacity */
-.travel-manager-root .text-ink-soft\/50 {
-  color: rgba(26, 15, 5, 0.275) !important;
-}
-
-.travel-manager-root .text-ink-black {
-  color: #000000 !important;
-}
-
-.travel-manager-root .border-ink {
-  border-color: var(--tm-ink) !important;
-}
-
-/* border-ink opacity variants */
-.travel-manager-root .border-ink\/5 {
-  border-color: rgba(26, 15, 5, 0.05) !important;
-}
-.travel-manager-root .border-ink\/10 {
-  border-color: rgba(26, 15, 5, 0.1) !important;
-}
-.travel-manager-root .border-ink\/15 {
-  border-color: rgba(26, 15, 5, 0.15) !important;
-}
-.travel-manager-root .border-ink\/20 {
-  border-color: rgba(26, 15, 5, 0.2) !important;
-}
-.travel-manager-root .border-ink\/30 {
-  border-color: rgba(26, 15, 5, 0.3) !important;
-}
-.travel-manager-root .border-ink\/40 {
-  border-color: rgba(26, 15, 5, 0.4) !important;
-}
-.travel-manager-root .border-t-ink\/10 {
-  border-top-color: rgba(26, 15, 5, 0.1) !important;
-}
-
-/* bg-ink opacity variants */
-.travel-manager-root .bg-ink\/5 {
-  background-color: rgba(26, 15, 5, 0.05) !important;
-}
-.travel-manager-root .bg-ink\/10 {
-  background-color: rgba(26, 15, 5, 0.1) !important;
-}
-.travel-manager-root .bg-ink\/20 {
-  background-color: rgba(26, 15, 5, 0.2) !important;
-}
-
-.travel-manager-root .text-paper-dark {
-  color: var(--tm-paper-dark) !important;
-}
-
-/* ── text-accent-* / bg-accent-* / border-accent-* aliases ─────────────── */
-.travel-manager-root .text-accent-approved {
-  color: var(--tm-approved) !important;
-}
-
-.travel-manager-root .text-accent-critical {
-  color: var(--tm-critical) !important;
-}
-
-.travel-manager-root .text-accent-warning {
-  color: var(--tm-warning) !important;
-}
-
-.travel-manager-root .text-accent-mil {
-  color: #3b4d3e !important;
-}
-
-.travel-manager-root .bg-accent-approved {
-  background-color: var(--tm-approved) !important;
-}
-
-.travel-manager-root .bg-accent-critical {
-  background-color: var(--tm-critical) !important;
-}
-
-.travel-manager-root .bg-accent-mil {
-  background-color: #3b4d3e !important;
-}
-
-.travel-manager-root .border-accent-approved {
-  border-color: var(--tm-approved) !important;
-}
-
-.travel-manager-root .border-accent-critical {
-  border-color: var(--tm-critical) !important;
-}
-
-.travel-manager-root .border-accent-warning {
-  border-color: var(--tm-warning) !important;
-}
-
-.travel-manager-root .border-l-accent-warning\/40 {
-  border-left-color: rgba(194, 124, 47, 0.4) !important;
-}
-
-/* ── Custom scrollbar ───────────────────────────────────────────────────── */
-.travel-manager-root .custom-scrollbar::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
-}
-
-.travel-manager-root .custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.2);
-}
-
-.travel-manager-root .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(179, 133, 54, 0.28);
-  border-radius: 2px;
-}
-
-.travel-manager-root .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(179, 133, 54, 0.5);
-}
-
-/* ── Vintage input for dark sub-view panels ─────────────────────────────── */
-.travel-manager-root .vintage-input {
-  background: rgba(0, 0, 0, 0.45);
-  border: 1px solid rgba(194, 124, 47, 0.3);
-  color: #e0d8cc;
-  font-family: var(--ff-mono);
-  padding: 0.45rem 0.75rem;
-  font-size: 0.85rem;
-  border-radius: 2px;
-  outline: none;
-  transition: border-color 0.15s;
-}
-
-.travel-manager-root .vintage-input:focus {
-  border-color: rgba(194, 124, 47, 0.65);
-  box-shadow: 0 0 0 2px rgba(194, 124, 47, 0.1);
-}
-
-.travel-manager-root .vintage-input::placeholder {
-  color: rgba(224, 216, 204, 0.2);
-}
-
-/* ── font-typewriter alias ──────────────────────────────────────────────── */
-.travel-manager-root .font-typewriter {
-  font-family: var(--ff-typer) !important;
-}
-
-/* ── glass-panel for sub-view dark panels ───────────────────────────────── */
-.travel-manager-root .glass-panel {
-  background: rgba(18, 18, 18, 0.9);
-  border: 1px solid rgba(194, 124, 47, 0.15);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
-  border-radius: 2px;
-}
-
-/* ── Animate fade-in ────────────────────────────────────────────────────── */
-.travel-manager-root .animate-fade-in {
-  animation: tm-fade-in 0.22s ease-out;
-}
-
-@keyframes tm-fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* ── Shadow on dark panel accent highlight ──────────────────────────────── */
-.travel-manager-root .shadow-\[0_-2px_0_0_rgba\(212\,163\,115\,0\.4\)\] {
-  box-shadow: 0 -2px 0 0 rgba(212, 163, 115, 0.4);
+/* ── Selected card highlight in Left Column ── */
+.tm-op-row.selected {
+  background: #22160a !important; /* Rich dark amber-brown */
+  border-color: var(--tm-amber) !important;
+  box-shadow: 
+    0 4px 10px rgba(0, 0, 0, 0.30),
+    inset 0 0 0 1px rgba(223, 129, 32, 0.10) !important;
+  transform: scale(1.01);
+  z-index: 10;
 }
