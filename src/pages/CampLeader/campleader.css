@@ -161,7 +161,7 @@
   background-size: 100% 4px;
   z-index: 9999;
   pointer-events: none;
-  opacity: 0.4;
+  opacity: 0.08;
 }
 
 .crt-overlay::after {

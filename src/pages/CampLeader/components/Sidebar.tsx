@@ -3,9 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { LayoutDashboard, Compass, Truck, Boxes, User as UserIcon, Shield } from "lucide-react"
-
-import { useAuthStore } from "@/store/useAuthStore"
+import { LayoutDashboard, Compass, Truck, Boxes, User as UserIcon } from "lucide-react"
 
 interface SidebarProps {
   activeTab: string
@@ -13,7 +11,6 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
-  const { user } = useAuthStore()
   const tabs = [
     { id: "dashboard", label: "TABLERO", icon: LayoutDashboard },
     { id: "explorations", label: "EXPLORACIONES", icon: Compass },
@@ -24,118 +21,82 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
 
   return (
     <aside
-      id="system-sidebar"
-      className="w-20 md:w-[260px] md:min-w-[260px] flex flex-col items-center pt-5 pb-4 h-screen sticky top-0 z-40 shrink-0 border-r select-none"
-      style={{
-        backgroundColor: "#111111",
-        borderColor: "#3b4d3e",
-      }}
+      className="w-full md:w-72 border-b-2 md:border-b-0 md:border-r-2 border-black p-4 flex flex-col justify-between shrink-0 z-20 select-none font-mono"
+      style={{ backgroundColor: "#121110" }}
     >
-      {/* Cabecera / Brand Header */}
-      <div className="mb-8 px-4 text-center hidden md:block shrink-0">
-        <div className="flex items-center justify-center gap-2 mb-1">
-          <Shield className="w-5 h-5" style={{ color: "#c27c2f" }} />
-          <h2
-            className="font-typewriter text-xl tracking-wider font-bold"
-            style={{ color: "#fca311" }}
-          >
-            DOOMSDAY
-          </h2>
+      <div>
+        {/* BRAND HEADER */}
+        <div className="mb-6 pb-4 border-b-2 border-black">
+          <div className="flex items-center gap-4">
+            <span style={{ color: "#9c2720", fontSize: "1.25rem", animation: "pulse 2s infinite", fontWeight: "bold" }}>★</span>
+            <span style={{ fontSize: "1.125rem", fontWeight: "900", color: "#df8120", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+              LÍDER CENTRAL
+            </span>
+          </div>
+          <p style={{ fontSize: "0.875rem", color: "#71717a", letterSpacing: "0.05em", fontWeight: "800", textTransform: "uppercase", marginTop: "0.125rem", paddingLeft: "0.125rem" }}>
+            SISTEMA DEL CAMPAMENTO
+          </p>
         </div>
-        <span
-          className="text-[10px] font-mono opacity-80 block tracking-widest uppercase"
-          style={{ color: "#fca311" }}
-        >
-          REGISTRO DE REFUGIO
-        </span>
-        <div className="mt-2 h-px w-3/4 mx-auto" style={{ backgroundColor: "#c27c2f40" }} />
-      </div>
 
-      {/* Cabecera para Móviles */}
-      <div className="md:hidden mb-4 flex justify-center shrink-0">
-        <Shield className="w-8 h-8" style={{ color: "#fca311" }} />
-      </div>
+        {/* NAVIGATION MENU */}
+        <nav className="flex flex-row md:flex-col overflow-x-auto md:overflow-x-visible pb-2 md:pb-0 scrollbar-none shrink-0">
+          {tabs.map((tab) => {
+            const Icon = tab.icon
+            const isActive = activeTab === tab.id
 
-      {/* Menú de Opciones en formato Carpetas Verticales */}
-      <nav className="flex-1 w-full px-4 overflow-y-auto flex flex-col gap-3">
-        {tabs.map((tab) => {
-          const isActive = activeTab === tab.id
-          const Icon = tab.icon
-
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              aria-label={tab.label}
-              aria-pressed={isActive}
-              className="w-full text-left relative flex items-center gap-3 rounded transition-all duration-150 group border cursor-pointer shrink-0 hover:translate-x-0.5 active:translate-y-px"
-              style={{
-                backgroundColor: isActive
-                  ? "rgba(194, 124, 47, 0.15)"
-                  : "rgba(154, 144, 128, 0.08)",
-                borderColor: isActive ? "rgba(194, 124, 47, 0.5)" : "rgba(0, 0, 0, 0.6)",
-                borderWidth: "2px",
-                color: isActive ? "#fca311" : "rgba(154, 144, 128, 0.7)",
-                boxShadow: isActive ? "2px 2px 0px rgba(0,0,0,0.8)" : "2px 2px 0px rgba(0,0,0,0.6)",
-                padding: "12px 16px",
-                minHeight: "52px",
-              }}
-            >
-              <Icon
-                className="w-5 h-5 shrink-0"
-                style={{ color: isActive ? "#fca311" : "rgba(154,144,128,0.6)" }}
-              />
-
-              <span className="hidden md:inline font-typewriter text-sm tracking-wider uppercase font-bold select-none">
-                {tab.label}
-              </span>
-
-              {/* Active pulse indicator */}
-              {isActive && (
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-[#fca311] animate-pulse shadow-[0_0_6px_rgba(252,163,17,0.6)]" />
-              )}
-
-              {/* Distintivo de Alerta de Suministro */}
-              {tab.id === "explorations" && !isActive && (
-                <span
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-mono px-1.5 py-0.5 rounded hidden md:inline uppercase font-bold"
-                  style={{
-                    backgroundColor: "#9c2720",
-                    color: "#ffffff",
-                    border: "1px solid rgba(0,0,0,0.4)",
-                  }}
-                >
-                  ALT
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                aria-label={tab.label}
+                aria-pressed={isActive}
+                style={{
+                  width: "100%",
+                  textAlign: "left",
+                  position: "relative",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "flex-start",
+                  gap: "1rem",
+                  borderRadius: "0.75rem",
+                  transition: "all 150ms ease",
+                  border: "2px solid #000000",
+                  cursor: "pointer",
+                  flexShrink: 0,
+                  minWidth: 0,
+                  marginBottom: "16px",
+                  backgroundColor: isActive ? "#c27c2f" : "#9a9080",
+                  color: "#000000",
+                  boxShadow: "3px 3px 0px #000000",
+                  padding: "20px 20px",
+                  fontFamily: '"Special Elite", monospace',
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.transform = "translateX(4px)"
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateX(0px)"
+                }}
+                onMouseDown={(e) => {
+                  e.currentTarget.style.transform = "translateY(2px)"
+                }}
+                onMouseUp={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.transform = "translateX(4px)"
+                  }
+                }}
+              >
+                <Icon style={{ width: "1.5rem", height: "1.5rem", flexShrink: 0, color: "#000000" }} />
+                <span style={{ fontFamily: '"Special Elite", monospace', fontSize: "0.875rem", letterSpacing: "0.05em", textTransform: "uppercase", color: "#000000", fontWeight: "800", userSelect: "none", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {tab.label}
                 </span>
-              )}
-            </button>
-          )
-        })}
-      </nav>
-
-      {/* Placa de Identificación Militar (Dashed Stamp) */}
-      <div className="mt-auto px-4 w-full hidden md:block shrink-0">
-        <div
-          className="border border-dashed p-3 rounded text-left"
-          style={{
-            borderColor: "rgba(194, 124, 47, 0.4)",
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-          }}
-        >
-          <p className="text-[10px] font-mono leading-4" style={{ color: "#fca311" }}>
-            COMANDANTE:{" "}
-            <span className="text-white font-bold uppercase">{user?.username ?? "—"}</span>
-          </p>
-          <p className="text-[10px] font-mono leading-4 mt-1" style={{ color: "#fca311" }}>
-            CAMPAMENTO: <span className="text-white font-bold">#{user?.camp_id ?? "?"}</span>
-          </p>
-          <p
-            className="text-[10px] font-mono leading-5 mt-1 font-extrabold animate-pulse"
-            style={{ color: "#ef4444" }}
-          >
-            SITUACIÓN: OPERATIVO
-          </p>
-        </div>
+              </button>
+            )
+          })}
+        </nav>
       </div>
     </aside>
   )
