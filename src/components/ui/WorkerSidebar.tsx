@@ -1,8 +1,6 @@
 import { motion } from "framer-motion"
 import { LayoutDashboard, FileText, Users, Package, Compass } from "lucide-react"
 
-import { useMyBadges } from "@/features/worker/hooks/useWorkerAPI"
-
 interface WorkerSidebarProps {
   activeTab: string
   setActiveTab: (tab: string) => void
@@ -18,59 +16,59 @@ const NAV_ITEMS = [
   { id: "expeditions", label: "EXPEDICIONES", icon: Compass },
 ]
 
-function getRankLabel(n: number) {
-  if (n >= 10) return "LEYENDA"
-  if (n >= 7) return "ELITE"
-  if (n >= 4) return "VETERANO"
-  if (n >= 2) return "SOLDADO"
-  return "RECLUTA"
-}
-
 export default function WorkerSidebar({
   activeTab,
   setActiveTab,
   userName = "WORKER",
   campName,
 }: WorkerSidebarProps) {
-  const { data: badges } = useMyBadges()
-  const badgeCount = badges?.length ?? 0
-
   return (
-    <aside className="worker-sidebar">
-      <div className="worker-sidebar-header">
-        <div className="worker-sidebar-title">GESTIÓN DEL FIN</div>
-        <div className="worker-sidebar-subtitle">TERMINAL PERSONAL</div>
-        {campName ? <div className="worker-sidebar-camp">{campName}</div> : null}
-      </div>
-
-      <nav className="worker-sidebar-nav">
-        {NAV_ITEMS.map((item) => {
-          const active = activeTab === item.id
-          const Icon = item.icon
-
-          return (
-            <motion.button
-              key={item.id}
-              type="button"
-              onClick={() => setActiveTab(item.id)}
-              whileTap={{ scale: 0.98 }}
-              className={`worker-sidebar-tab ${active ? "active" : ""}`}
-            >
-              <Icon className="worker-sidebar-icon" aria-hidden="true" />
-              <span>{item.label}</span>
-            </motion.button>
-          )
-        })}
-      </nav>
-
-      <div className="worker-sidebar-footer">
-        <div className="worker-sidebar-id">
-          <div className="worker-sidebar-status">ACTIVO EN SECTOR</div>
-          <div className="worker-sidebar-user">{String(userName).toUpperCase()}</div>
-          <div className="worker-sidebar-rank">
-            {getRankLabel(badgeCount)} / {badgeCount} INSIGNIAS
+    <aside className="w-full md:w-72 bg-[#121110] border-b-2 md:border-b-0 md:border-r-2 border-black p-4 flex flex-col justify-between shrink-0 z-20 select-none font-mono h-full overflow-y-auto">
+      <div>
+        {/* BRAND HEADER */}
+        <div className="mb-6 pb-4 border-b-2 border-black">
+          <div className="flex items-center gap-4">
+            <span className="text-[#9a9080] text-xl animate-pulse font-bold">★</span>
+            <span className="text-lg font-black text-[#df8120] tracking-widest uppercase">
+              GESTIÓN DEL FIN
+            </span>
           </div>
+          <p className="text-sm text-zinc-500 tracking-wider font-extrabold uppercase mt-0.5 pl-0.5">
+            TERMINAL PERSONAL
+          </p>
+          {campName && <div className="text-xs text-[#9a9080] font-bold uppercase mt-2 border border-[#9a9080]/30 inline-block px-2 py-1">{campName}</div>}
         </div>
+
+        <nav className="flex flex-row md:flex-col overflow-x-auto md:overflow-x-visible pb-2 md:pb-0 scrollbar-none shrink-0 font-mono">
+          {NAV_ITEMS.map((item) => {
+            const active = activeTab === item.id
+            const Icon = item.icon
+
+            return (
+              <motion.button
+                key={item.id}
+                type="button"
+                onClick={() => setActiveTab(item.id)}
+                className={`w-full text-left relative flex items-center justify-center md:justify-start gap-3 md:gap-4 py-4 px-4 md:px-5 rounded-xl transition-all duration-150 group border cursor-pointer shrink-0 hover:translate-x-1 active:translate-y-0.5 min-w-[140px] md:min-w-0 mx-1 md:mx-0 ${
+                  active ? "bg-[#c27c2f]" : "bg-[#9a9080]"
+                }`}
+                style={{
+                  borderColor: "#000000",
+                  borderWidth: "2px",
+                  color: "#000000",
+                  boxShadow: "3px 3px 0px #000000",
+                  padding: "20px 20px",
+                  marginBottom: "16px",
+                }}
+              >
+                <Icon className="w-6 h-6 shrink-0 text-black font-extrabold" />
+                <span className="font-mono text-sm md:text-xs lg:text-sm tracking-wider uppercase text-black font-extrabold select-none truncate">
+                  {item.label}
+                </span>
+              </motion.button>
+            )
+          })}
+        </nav>
       </div>
     </aside>
   )
