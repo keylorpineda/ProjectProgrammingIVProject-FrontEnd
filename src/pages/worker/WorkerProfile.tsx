@@ -7,6 +7,7 @@ import {
   useMyBadges,
   useCamp,
   useMyProfile,
+  useMyAchievements,
 } from "@/features/worker/hooks/useWorkerAPI"
 import { useAuth } from "@/pages/Admin/context/AuthContext"
 import "./WorkerViews.css"
@@ -200,6 +201,7 @@ export default function WorkerProfile() {
   const { data: badges, isLoading: badgesLoading } = useMyBadges()
   const { data: campData } = useCamp(user?.camp_id)
   const { data: profile } = useMyProfile()
+  const { data: achievements } = useMyAchievements()
 
   const camp = campData?.camp
   const person = profile?.person
@@ -215,12 +217,18 @@ export default function WorkerProfile() {
     .padStart(4, "0")
   const idCode = `GDF-${prefix}-${suffix}`
 
-  // Synthetic "first login" badge from localStorage
+  // First-login achievement: check from the back, fall back to localStorage as cache
   const firstLoginKey = `gdf_first_login_${user?.id}`
-  const hasFirstLogin = typeof window !== "undefined" && !!localStorage.getItem(firstLoginKey)
+  const hasFirstLoginRemote = useMemo(
+    () => achievements?.some((a) => a.achievement_name === "PRIMER_TRABAJO") ?? false,
+    [achievements],
+  )
+  const hasFirstLoginLocal = typeof window !== "undefined" && !!localStorage.getItem(firstLoginKey)
+  const hasFirstLogin = hasFirstLoginRemote || hasFirstLoginLocal
 
   const localBadge = useMemo(() => {
     if (!hasFirstLogin) return null
+    const remote = achievements?.find((a) => a.achievement_name === "PRIMER_TRABAJO")
     return {
       id: -1,
       isLocal: true,
@@ -228,9 +236,9 @@ export default function WorkerProfile() {
       description: "Primera vez que iniciaste sesión en el sistema.",
       rarity: 1,
       stars: "★☆☆☆☆",
-      acquiredAt: null,
+      acquiredAt: remote?.obtained_at ?? null,
     }
-  }, [hasFirstLogin])
+  }, [hasFirstLogin, achievements])
 
   return (
     <div className="wv-page wv-profile-page">

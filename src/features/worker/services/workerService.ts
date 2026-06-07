@@ -238,6 +238,22 @@ export const workerService = {
       throw handleApiError(error)
     }
   },
+
+  /**
+   * GET /users/me/achievements
+   */
+  async getMyAchievements(): Promise<{ achievement_name: string; obtained_at: string | null }[]> {
+    try {
+      const response =
+        await api.get<{ achievement_name: string; obtained_at: string | null }[]>(
+          "/users/me/achievements",
+        )
+      return Array.isArray(response.data) ? response.data : []
+    } catch (error) {
+      console.error("Error fetching achievements:", error)
+      throw handleApiError(error)
+    }
+  },
 }
 
 export default workerService
