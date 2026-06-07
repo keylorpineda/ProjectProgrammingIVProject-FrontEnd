@@ -29,7 +29,7 @@ const STATUS_COLORS: Record<string, string> = {
 }
 
 const RARITY_LABELS: Record<number, string> = {
-  1: "COMÃšN",
+  1: "COM\u00daN",
   2: "INFRECUENTE",
   3: "RARO",
   4: "Ã‰PICO",
@@ -47,7 +47,7 @@ const RANK_TIERS = [
   { min: 0, label: "RECLUTA", color: "rgba(154,144,128,0.6)", next: 2 },
   { min: 2, label: "SOLDADO", color: "#3b82f6", next: 4 },
   { min: 4, label: "VETERANO", color: "#4c6351", next: 7 },
-  { min: 7, label: "Ã‰LITE", color: "#8b5cf6", next: 10 },
+  { min: 7, label: "\u00c9LITE", color: "#8b5cf6", next: 10 },
   { min: 10, label: "LEYENDA", color: "#c8a84b", next: 10 },
 ]
 
@@ -68,7 +68,7 @@ function XPBar({ count }: { count: number }) {
       <div className="wv-xp-bar-header">
         <span style={{ color: rank.color }}>{rank.label}</span>
         <span className="wv-xp-bar-next">
-          {next ? `â†’ ${next.label} (${count}/${next.min})` : "RANGO MÃX."}
+          {next ? `-> ${next.label} (${count}/${next.min})` : "RANGO M\u00c1X."}
         </span>
       </div>
       <div className="wv-xp-track">
@@ -121,7 +121,7 @@ function BadgeMedal({ imageUrl, name }: { imageUrl?: string | null; name: string
       <circle cx="60" cy="88" r="33" fill="#c8a84b" />
       <circle cx="60" cy="88" r="25" fill="none" stroke="rgba(255,220,100,0.3)" />
       <text x="60" y="98" textAnchor="middle" fontSize="30" fontFamily="serif" fill="#ffe080">
-        â˜…
+        {"\u2605"}
       </text>
     </svg>
   )
@@ -173,12 +173,12 @@ function BadgeAchievementModal({
             </motion.div>
             <div className="wv-achievement-title">{badge.name}</div>
             <div className="wv-achievement-stars">
-              {"â˜…".repeat(Math.min(badge.rarity, 5))}
-              <span>{"â˜†".repeat(Math.max(5 - badge.rarity, 0))}</span>
+              {"\u2605".repeat(Math.min(badge.rarity, 5))}
+              <span>{"\u2606".repeat(Math.max(5 - badge.rarity, 0))}</span>
             </div>
             <div className="wv-achievement-description">{badge.description}</div>
             <div className="wv-achievement-meta">
-              {RARITY_LABELS[badge.rarity] ?? "COMÃšN"}
+              {RARITY_LABELS[badge.rarity] ?? "COM\u00daN"}
               {badge.tag ? ` / ${badge.tag}` : ""}
               {badge.acquiredAt ? ` / ${String(badge.acquiredAt).split("T")[0]}` : ""}
             </div>
@@ -232,9 +232,9 @@ export default function WorkerProfile() {
       id: -1,
       isLocal: true,
       name: "PRIMER TRABAJO",
-      description: "Primera vez que iniciaste sesiÃ³n en el sistema.",
+      description: "Primera vez que iniciaste sesi\u00f3n en el sistema.",
       rarity: 1,
-      stars: "â˜…â˜†â˜†â˜†â˜†",
+      stars: "\u2605\u2606\u2606\u2606\u2606",
       acquiredAt: remote?.obtained_at ?? null,
     }
   }, [hasFirstLogin, achievements])
@@ -249,7 +249,7 @@ export default function WorkerProfile() {
           className="wv-header-action"
           onClick={() => navigate("/worker/dashboard")}
         >
-          â†’ TABLERO
+          -&gt; TABLERO
         </button>
       </div>
 
@@ -287,7 +287,7 @@ export default function WorkerProfile() {
                   transition={{ delay: 0.3 + i * 0.08, type: "spring", stiffness: 200 }}
                   style={{ color: rank.color }}
                 >
-                  â˜…
+                  {"\u2605"}
                 </motion.span>
               ),
             )}
@@ -412,13 +412,14 @@ export default function WorkerProfile() {
               >
                 <div className="wv-badge-rarity-corner wv-rarity-1" />
                 <div className="wv-badge-img-wrap">
-                  <div className="wv-badge-icon-placeholder">ðŸ…</div>
+                  <BadgeMedal name="PRIMER TRABAJO" />
                 </div>
                 <div className="wv-badge-name">PRIMER TRABAJO</div>
                 <div className="wv-badge-stars">
-                  â˜…<span className="wv-badge-stars-empty">â˜†â˜†â˜†â˜†</span>
+                  {"\u2605"}
+                  <span className="wv-badge-stars-empty">{"\u2606\u2606\u2606\u2606"}</span>
                 </div>
-                <div className="wv-badge-rarity-label">COMÃšN</div>
+                <div className="wv-badge-rarity-label">COM{"\u00da"}N</div>
                 <div className="wv-badge-displayed-tag">DEBUT</div>
               </motion.div>
             ) : null}
@@ -445,7 +446,7 @@ export default function WorkerProfile() {
                         badge.asset?.description ?? "Insignia obtenida por el trabajador.",
                       rarity,
                       acquiredAt: badge.acquired_at,
-                      tag: badge.is_displayed ? "EN EXHIBICIÃ“N" : undefined,
+                      tag: badge.is_displayed ? "EN EXHIBICI\u00d3N" : undefined,
                       imageUrl: imgUrl,
                     })
                   }
@@ -457,7 +458,7 @@ export default function WorkerProfile() {
                           badge.asset?.description ?? "Insignia obtenida por el trabajador.",
                         rarity,
                         acquiredAt: badge.acquired_at,
-                        tag: badge.is_displayed ? "EN EXHIBICIÃ“N" : undefined,
+                        tag: badge.is_displayed ? "EN EXHIBICI\u00d3N" : undefined,
                         imageUrl: imgUrl,
                       })
                     }
@@ -477,22 +478,24 @@ export default function WorkerProfile() {
                         }}
                       />
                     ) : (
-                      <div className="wv-badge-icon-placeholder">â˜…</div>
+                      <BadgeMedal name={badge.asset?.name ?? "Insignia"} />
                     )}
                   </div>
                   <div className="wv-badge-name">{badge.asset?.name ?? "Insignia"}</div>
                   <div className="wv-badge-stars">
-                    {"â˜…".repeat(Math.min(rarity, 5))}
+                    {"\u2605".repeat(Math.min(rarity, 5))}
                     <span className="wv-badge-stars-empty">
-                      {"â˜†".repeat(Math.max(5 - rarity, 0))}
+                      {"\u2606".repeat(Math.max(5 - rarity, 0))}
                     </span>
                   </div>
-                  <div className="wv-badge-rarity-label">{RARITY_LABELS[rarity] ?? "COMÃšN"}</div>
+                  <div className="wv-badge-rarity-label">
+                    {RARITY_LABELS[rarity] ?? "COM\u00daN"}
+                  </div>
                   {badge.acquired_at ? (
                     <div className="wv-badge-date">{String(badge.acquired_at).split("T")[0]}</div>
                   ) : null}
                   {badge.is_displayed ? (
-                    <div className="wv-badge-displayed-tag">EN EXHIBICIÃ“N</div>
+                    <div className="wv-badge-displayed-tag">EN EXHIBICI{"\u00d3"}N</div>
                   ) : null}
                 </motion.div>
               )
@@ -505,7 +508,7 @@ export default function WorkerProfile() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
             >
-              <div className="wv-empty-badge-icon">â˜</div>
+              <div className="wv-empty-badge-icon">{"\u2610"}</div>
               <div>AÃšN SIN INSIGNIAS</div>
               <div className="wv-empty-badge-sub">
                 COMPLETE MISIONES Y EXPEDICIONES PARA OBTENER INSIGNIAS
@@ -577,7 +580,9 @@ export default function WorkerProfile() {
                   <div className="wv-equip-meta">
                     <span className="wv-equip-cat">{cat.toUpperCase()}</span>
                     {rarity != null ? (
-                      <span className="wv-equip-rarity">{"â˜…".repeat(Math.min(rarity, 5))}</span>
+                      <span className="wv-equip-rarity">
+                        {"\u2605".repeat(Math.min(rarity, 5))}
+                      </span>
                     ) : null}
                   </div>
                 </motion.div>
