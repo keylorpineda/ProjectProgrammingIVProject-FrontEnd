@@ -80,12 +80,13 @@ export const CampProvider = ({ children }: { children: ReactNode }) => {
       throw new Error("Invalid camp id")
     }
     const response = await switchCampService({ camp_id: numericId })
+    // Update token & user in-memory — do NOT do a full page reload.
+    // A hard reload clears the in-memory token store which causes a black
+    // screen because RequireAdmin checks the role before the refresh interceptor
+    // has a chance to restore the session.
     useAuthStore.getState().setAuth(response.access_token, response.user, response.refresh_token)
-    if (typeof window !== "undefined") {
-      localStorage.setItem("active-camp-id", id)
-      window.location.assign("/admin/dashboard")
-    }
-  }, [])
+    setActiveCampId(id)
+  }, [setActiveCampId])
 
   const value = useMemo(
     () => ({
