@@ -28,12 +28,39 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
         {/* BRAND HEADER */}
         <div className="mb-6 pb-4 border-b-2 border-black">
           <div className="flex items-center gap-4">
-            <span style={{ color: "#9c2720", fontSize: "1.25rem", animation: "pulse 2s infinite", fontWeight: "bold" }}>★</span>
-            <span style={{ fontSize: "1.125rem", fontWeight: "900", color: "#df8120", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+            <span
+              style={{
+                color: "#9c2720",
+                fontSize: "1.25rem",
+                animation: "pulse 2s infinite",
+                fontWeight: "bold",
+              }}
+            >
+              ★
+            </span>
+            <span
+              style={{
+                fontSize: "1.125rem",
+                fontWeight: "900",
+                color: "#df8120",
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+              }}
+            >
               LÍDER CENTRAL
             </span>
           </div>
-          <p style={{ fontSize: "0.875rem", color: "#71717a", letterSpacing: "0.05em", fontWeight: "800", textTransform: "uppercase", marginTop: "0.125rem", paddingLeft: "0.125rem" }}>
+          <p
+            style={{
+              fontSize: "0.875rem",
+              color: "#71717a",
+              letterSpacing: "0.05em",
+              fontWeight: "800",
+              textTransform: "uppercase",
+              marginTop: "0.125rem",
+              paddingLeft: "0.125rem",
+            }}
+          >
             SISTEMA DEL CAMPAMENTO
           </p>
         </div>
@@ -89,8 +116,23 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
                   }
                 }}
               >
-                <Icon style={{ width: "1.5rem", height: "1.5rem", flexShrink: 0, color: "#000000" }} />
-                <span style={{ fontFamily: '"Special Elite", monospace', fontSize: "0.875rem", letterSpacing: "0.05em", textTransform: "uppercase", color: "#000000", fontWeight: "800", userSelect: "none", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                <Icon
+                  style={{ width: "1.5rem", height: "1.5rem", flexShrink: 0, color: "#000000" }}
+                />
+                <span
+                  style={{
+                    fontFamily: '"Special Elite", monospace',
+                    fontSize: "0.875rem",
+                    letterSpacing: "0.05em",
+                    textTransform: "uppercase",
+                    color: "#000000",
+                    fontWeight: "800",
+                    userSelect: "none",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
                   {tab.label}
                 </span>
               </button>

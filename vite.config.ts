@@ -4,7 +4,6 @@ import tailwindcss from "@tailwindcss/vite"
 import react from "@vitejs/plugin-react"
 import { defineConfig } from "vite"
 
-
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
@@ -14,5 +13,12 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+  },
+  test: {
+    globals: true,
+    environment: "jsdom",
+    setupFiles: ["./src/test/setup.ts"],
+    include: ["src/**/*.{test,spec}.{ts,tsx}"],
+    css: false,
   },
 })

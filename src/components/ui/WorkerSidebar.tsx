@@ -16,10 +16,7 @@ const NAV_ITEMS = [
   { id: "expeditions", label: "EXPEDICIONES", icon: Compass },
 ]
 
-export default function WorkerSidebar({
-  activeTab,
-  setActiveTab,
-}: WorkerSidebarProps) {
+export default function WorkerSidebar({ activeTab, setActiveTab }: WorkerSidebarProps) {
   return (
     <aside className="w-full md:w-72 bg-[#121110] border-b-2 md:border-b-0 md:border-r-2 border-black p-4 flex flex-col justify-between shrink-0 z-20 select-none font-mono h-full overflow-y-auto">
       <div>
@@ -46,7 +43,9 @@ export default function WorkerSidebar({
                 key={item.id}
                 type="button"
                 onClick={() => setActiveTab(item.id)}
-                className={`w-full text-left relative flex items-center justify-center md:justify-start gap-3 md:gap-4 rounded-xl transition-all duration-150 group cursor-pointer shrink-0 hover:translate-x-1 active:translate-y-0.5 min-w-[140px] md:min-w-0 mx-1 md:mx-0`}
+                className={
+                  "w-full text-left relative flex items-center justify-center md:justify-start gap-3 md:gap-4 rounded-xl transition-all duration-150 group cursor-pointer shrink-0 hover:translate-x-1 active:translate-y-0.5 min-w-[140px] md:min-w-0 mx-1 md:mx-0"
+                }
                 style={{
                   backgroundColor: active ? "#c27c2f" : "#9a9080",
                   borderColor: "#000000",

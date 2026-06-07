@@ -9,6 +9,8 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "format": "prettier --write .",
     "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "test:e2e": "playwright test",
     "spell": "cspell \"src/**/*.{ts,tsx}\" --config cspell.json",
     "prepare": "husky"
@@ -42,6 +44,9 @@
     "@cspell/dict-es-es": "^3.0.8",
     "@playwright/test": "^1.45.0",
     "@tailwindcss/vite": "^4.2.3",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/leaflet": "^1.9.21",
     "@types/node": "^20.14.9",
     "@types/react": "^18.3.3",
@@ -49,6 +54,7 @@
     "@typescript-eslint/eslint-plugin": "^7.15.0",
     "@typescript-eslint/parser": "^7.15.0",
     "@vitejs/plugin-react": "^4.3.1",
+    "@vitest/coverage-v8": "^4.1.8",
     "cspell": "^10.0.0",
     "eslint": "^8.57.0",
     "eslint-import-resolver-typescript": "^4.4.4",
@@ -58,10 +64,12 @@
     "eslint-plugin-react-hooks": "^4.6.2",
     "eslint-plugin-react-refresh": "^0.4.7",
     "husky": "^9.1.7",
+    "jsdom": "^29.1.1",
     "lint-staged": "^17.0.6",
     "prettier": "^3.3.2",
     "tailwindcss": "^4.2.3",
     "typescript": "^5.5.3",
-    "vite": "^5.3.3"
+    "vite": "^5.3.3",
+    "vitest": "^4.1.8"
   }
 }

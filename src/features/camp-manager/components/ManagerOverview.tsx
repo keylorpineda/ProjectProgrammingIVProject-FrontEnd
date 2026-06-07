@@ -156,10 +156,11 @@ export default function ManagerOverview({ campId, refreshTrigger }: ManagerOverv
       initial={{ opacity: 0, y: 5 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
-      className="space-y-6"
+      className="space-y-10"
+      style={{ maxWidth: "64rem", margin: "1.5rem auto", padding: "1rem 0" }}
     >
       {/* ROW 1: Food & Water balance */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
         {/* CARD: FOOD */}
         <motion.div
           initial={{ scale: 0.95, opacity: 0, rotate: -1 }}
@@ -399,7 +400,7 @@ export default function ManagerOverview({ campId, refreshTrigger }: ManagerOverv
       </div>
 
       {/* ROW 2: Logistics + Medical */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
         {/* CARD: LOGISTICS */}
         <motion.div
           initial={{ scale: 0.95, opacity: 0, rotate: 1.2 }}

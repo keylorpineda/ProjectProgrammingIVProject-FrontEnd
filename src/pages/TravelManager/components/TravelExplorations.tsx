@@ -43,7 +43,9 @@ import { useAuthStore } from "@/store/useAuthStore"
 // ── Status helpers ──────────────────────────────────────────────────────────
 
 function getStatusLabel(rawStatus: string): string {
-  const status = String(rawStatus ?? "").toLowerCase().replace(/\s+/g, "_")
+  const status = String(rawStatus ?? "")
+    .toLowerCase()
+    .replace(/\s+/g, "_")
   switch (status) {
     case "active":
     case "in_progress":
@@ -61,7 +63,9 @@ function getStatusLabel(rawStatus: string): string {
 }
 
 function getStatusColorClass(rawStatus: string): string {
-  const status = String(rawStatus ?? "").toLowerCase().replace(/\s+/g, "_")
+  const status = String(rawStatus ?? "")
+    .toLowerCase()
+    .replace(/\s+/g, "_")
   switch (status) {
     case "active":
     case "in_progress":
@@ -163,7 +167,7 @@ export default function TravelExplorations() {
     },
     onError: (error: any) => {
       const msg = error.response?.data?.message || error.message
-      setFormError(Array.isArray(msg) ? msg.join(", ") : (msg || "Error al crear la expedición."))
+      setFormError(Array.isArray(msg) ? msg.join(", ") : msg || "Error al crear la expedición.")
     },
   })
 
@@ -177,7 +181,7 @@ export default function TravelExplorations() {
       returnExploration(id, {
         real_return_date: body.real_return_date,
         notes: body.notes,
-        found_resources: body.found_resources
+        found_resources: body.found_resources,
       }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["explorations", baseCampId] })
@@ -201,8 +205,11 @@ export default function TravelExplorations() {
         String(exp.destination_description || "")
           .toLowerCase()
           .includes(q)
-      const expStatus = String(exp.status ?? "").toLowerCase().replace(/\s+/g, "_")
-      const matchesStatus = filterStatus === "" || expStatus === String(filterStatus).toLowerCase().replace(/\s+/g, "_")
+      const expStatus = String(exp.status ?? "")
+        .toLowerCase()
+        .replace(/\s+/g, "_")
+      const matchesStatus =
+        filterStatus === "" || expStatus === String(filterStatus).toLowerCase().replace(/\s+/g, "_")
       return matchesSearch && matchesStatus
     })
   }, [explorations, search, filterStatus])
@@ -341,11 +348,11 @@ export default function TravelExplorations() {
       body: {
         real_return_date: new Date(returnDate).toISOString(),
         notes: returnNotes,
-        found_resources: returnFoundResources.map(r => ({
+        found_resources: returnFoundResources.map((r) => ({
           resource_id: Number(r.resource_id),
           flow: "in",
-          quantity: r.quantity
-        }))
+          quantity: r.quantity,
+        })),
       },
     })
   }
@@ -353,9 +360,14 @@ export default function TravelExplorations() {
   function handleToggleReturnResourceSelect(resourceId: string) {
     const exists = returnFoundResources.find((r) => r.resource_id === String(resourceId))
     if (exists) {
-      setReturnFoundResources(returnFoundResources.filter((r) => r.resource_id !== String(resourceId)))
+      setReturnFoundResources(
+        returnFoundResources.filter((r) => r.resource_id !== String(resourceId)),
+      )
     } else {
-      setReturnFoundResources([...returnFoundResources, { resource_id: String(resourceId), quantity: 1 }])
+      setReturnFoundResources([
+        ...returnFoundResources,
+        { resource_id: String(resourceId), quantity: 1 },
+      ])
     }
   }
 
@@ -429,7 +441,9 @@ export default function TravelExplorations() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   const getRowClass = (status: string) => {
-    const s = String(status ?? "").toLowerCase().replace(/\s+/g, "_")
+    const s = String(status ?? "")
+      .toLowerCase()
+      .replace(/\s+/g, "_")
     if (s === "active" || s === "in_progress") return "tm-row-active"
     if (s === "scheduled") return "tm-row-transit"
     if (s === "cancelled") return "tm-row-pending"
@@ -437,7 +451,9 @@ export default function TravelExplorations() {
   }
 
   const getChipClass = (status: string) => {
-    const s = String(status ?? "").toLowerCase().replace(/\s+/g, "_")
+    const s = String(status ?? "")
+      .toLowerCase()
+      .replace(/\s+/g, "_")
     if (s === "active" || s === "in_progress") return "tm-chip-active"
     if (s === "scheduled") return "tm-chip-transit"
     if (s === "cancelled") return "tm-chip-pending"
@@ -541,28 +557,35 @@ export default function TravelExplorations() {
                     key={exp.id}
                     whileHover={{ x: 2 }}
                     onClick={() => setSelectedId(exp.id)}
-                    className={`tm-op-row cursor-pointer transition-all ${getRowClass(exp.status)} ${selectedExp?.id === exp.id ? "selected" : ""
-                      }`}
+                    className={`tm-op-row cursor-pointer transition-all ${getRowClass(exp.status)} ${
+                      selectedExp?.id === exp.id ? "selected" : ""
+                    }`}
                   >
                     {/* Header: ID + Status */}
                     <div className="flex items-center justify-between w-full">
                       <span className="px-2 py-0.5 bg-white/10 text-[8px] font-mono text-[#e8dcc8] font-bold tracking-wider rounded-sm">
                         REF-{exp.id.slice(0, 4).toUpperCase()}
                       </span>
-                      <span className={`text-[9px] font-mono font-bold uppercase tracking-wider ${getStatusColorClass(exp.status)}`}>
+                      <span
+                        className={`text-[9px] font-mono font-bold uppercase tracking-wider ${getStatusColorClass(exp.status)}`}
+                      >
                         {getStatusLabel(exp.status)}
                       </span>
                     </div>
 
                     {/* Name: Crisp and Bolder */}
-                    <h5 className={`text-[12px] font-mono font-bold uppercase tracking-tight truncate mt-0.5 w-full ${selectedExp?.id === exp.id ? "text-[#df8120]" : "text-white"
-                      }`}>
+                    <h5
+                      className={`text-[12px] font-mono font-bold uppercase tracking-tight truncate mt-0.5 w-full ${
+                        selectedExp?.id === exp.id ? "text-[#df8120]" : "text-white"
+                      }`}
+                    >
                       {exp.name}
                     </h5>
 
                     {/* Destination Description */}
                     <p className="text-[10px] font-mono text-[#faf4e6]/90 truncate flex items-center gap-1 w-full">
-                      <span className="text-[#df8120] font-bold">➔</span> {exp.destination_description}
+                      <span className="text-[#df8120] font-bold">➔</span>{" "}
+                      {exp.destination_description}
                     </p>
 
                     {/* Footer: Crew + Duration */}
@@ -599,11 +622,7 @@ export default function TravelExplorations() {
                   <p className="text-xs font-mono text-white/30 uppercase leading-relaxed font-black mb-3">
                     Sin expediciones registradas
                   </p>
-                  <button
-                    type="button"
-                    onClick={() => setIsNewModalOpen(true)}
-                    className="tm-btn"
-                  >
+                  <button type="button" onClick={() => setIsNewModalOpen(true)} className="tm-btn">
                     <Plus className="h-3.5 w-3.5" /> Nueva Exploración
                   </button>
                 </div>
@@ -629,7 +648,9 @@ export default function TravelExplorations() {
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
-                    <span className={`tm-op-chip ${getChipClass(selectedExp.status)} text-xs px-3 py-1`}>
+                    <span
+                      className={`tm-op-chip ${getChipClass(selectedExp.status)} text-xs px-3 py-1`}
+                    >
                       {getStatusLabel(selectedExp.status).toUpperCase()}
                     </span>
                   </div>
@@ -639,7 +660,6 @@ export default function TravelExplorations() {
                 <div className="flex-1 p-5 flex flex-col overflow-hidden items-center justify-center relative bg-black/25">
                   <div className="tm-paper tm-paper-texture w-full h-full max-w-4xl relative overflow-hidden p-6 flex flex-col shadow-2xl">
                     <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-8 min-height-0 overflow-hidden">
-
                       {/* Left: Logística y Ruta */}
                       <div className="flex flex-col gap-6 overflow-y-auto pr-1 custom-scrollbar h-full">
                         <div className="border-b-2 border-dashed border-ink/20 pb-2.5">
@@ -666,7 +686,8 @@ export default function TravelExplorations() {
                                 Tiempo Estimado
                               </span>
                               <span className="text-xs font-mono font-black text-ink">
-                                {selectedExp.estimated_days} DÍAS {selectedExp.grace_days > 0 ? `(+${selectedExp.grace_days} G)` : ""}
+                                {selectedExp.estimated_days} DÍAS{" "}
+                                {selectedExp.grace_days > 0 ? `(+${selectedExp.grace_days} G)` : ""}
                               </span>
                             </div>
                             {selectedExp.real_return_date && (
@@ -697,7 +718,8 @@ export default function TravelExplorations() {
                         <div className="mt-auto bg-[#faf4e6]/50 p-4 border border-dashed border-ink/20 rounded-sm relative overflow-hidden h-24 flex items-center justify-between">
                           <div className="absolute top-1/2 left-0 right-0 h-[2px] border-t border-dashed border-ink/10 -translate-y-1/2 mx-12" />
 
-                          {(selectedExp.status === "active" || selectedExp.status === "in_progress") && (
+                          {(selectedExp.status === "active" ||
+                            selectedExp.status === "in_progress") && (
                             <motion.div
                               animate={{ left: ["15%", "85%"] }}
                               transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
@@ -709,7 +731,9 @@ export default function TravelExplorations() {
 
                           <div className="flex flex-col items-center z-20">
                             <Radio className="h-5 w-5 text-[#df8120]" />
-                            <span className="text-[8px] font-mono text-ink-soft mt-1 uppercase font-bold">{baseCampId}</span>
+                            <span className="text-[8px] font-mono text-ink-soft mt-1 uppercase font-bold">
+                              {baseCampId}
+                            </span>
                           </div>
 
                           <div className="flex flex-col items-center z-20">
@@ -740,9 +764,10 @@ export default function TravelExplorations() {
                               Suministros de Salida
                             </h5>
                             <div className="space-y-1.5">
-                              {selectedExp.explorationResources.filter(r => r.flow === 'out').length > 0 ? (
+                              {selectedExp.explorationResources.filter((r) => r.flow === "out")
+                                .length > 0 ? (
                                 selectedExp.explorationResources
-                                  .filter(r => r.flow === 'out')
+                                  .filter((r) => r.flow === "out")
                                   .map((er) => (
                                     <div
                                       key={er.resource_id}
@@ -771,9 +796,10 @@ export default function TravelExplorations() {
                               Suministros de Retorno / Recuperados
                             </h5>
                             <div className="space-y-1.5">
-                              {selectedExp.explorationResources.filter(r => r.flow === 'in').length > 0 ? (
+                              {selectedExp.explorationResources.filter((r) => r.flow === "in")
+                                .length > 0 ? (
                                 selectedExp.explorationResources
-                                  .filter(r => r.flow === 'in')
+                                  .filter((r) => r.flow === "in")
                                   .map((er) => (
                                     <div
                                       key={er.resource_id}
@@ -794,7 +820,6 @@ export default function TravelExplorations() {
                               )}
                             </div>
                           </div>
-
                         </div>
                       </div>
                     </div>
@@ -818,20 +843,22 @@ export default function TravelExplorations() {
                       return (
                         <div key={i} className="relative z-10 flex flex-col items-center">
                           <div
-                            className={`h-8 w-8 rounded-full border-2 flex items-center justify-center transition-all shadow-lg ${step.status === "completed"
+                            className={`h-8 w-8 rounded-full border-2 flex items-center justify-center transition-all shadow-lg ${
+                              step.status === "completed"
                                 ? "bg-[#4c6351] border-none text-white"
                                 : step.status === "current"
                                   ? "bg-[#df8120] border-none text-white animate-pulse"
                                   : "bg-[#1c1208] border-[#d4a373]/15 text-[#d4a373]/25"
-                              }`}
+                            }`}
                           >
                             <StepIcon className="h-3.5 w-3.5" />
                           </div>
                           <span
-                            className={`absolute top-full mt-2 text-[10px] font-mono font-black tracking-widest whitespace-nowrap ${step.status !== "pending"
+                            className={`absolute top-full mt-2 text-[10px] font-mono font-black tracking-widest whitespace-nowrap ${
+                              step.status !== "pending"
                                 ? "text-[#df8120] opacity-80"
                                 : "text-white/20"
-                              }`}
+                            }`}
                           >
                             {step.label}
                           </span>
@@ -882,7 +909,11 @@ export default function TravelExplorations() {
                       type="button"
                       onClick={() => setIsReturnModalOpen(true)}
                       className="tm-action-btn tm-action-btn-primary"
-                      style={{ padding: "8px 16px", borderRadius: "4px", backgroundColor: "var(--tm-approved)" }}
+                      style={{
+                        padding: "8px 16px",
+                        borderRadius: "4px",
+                        backgroundColor: "var(--tm-approved)",
+                      }}
                     >
                       <span className="tm-action-label flex items-center gap-2">
                         <CheckCircle2 className="h-4 w-4" />
@@ -1161,10 +1192,11 @@ export default function TravelExplorations() {
                               key={person.id}
                               role="button"
                               tabIndex={0}
-                              className={`flex items-center justify-between p-2 border transition-all cursor-pointer rounded-sm ${isSelected
+                              className={`flex items-center justify-between p-2 border transition-all cursor-pointer rounded-sm ${
+                                isSelected
                                   ? "bg-ink/5 border-ink/40"
                                   : "bg-transparent border-dashed border-ink/15 hover:border-ink/30"
-                                }`}
+                              }`}
                               onClick={() => handleTogglePersonSelect(person.id)}
                               onKeyDown={(e) =>
                                 e.key === "Enter" && handleTogglePersonSelect(person.id)
@@ -1172,10 +1204,9 @@ export default function TravelExplorations() {
                             >
                               <div className="flex items-center gap-2">
                                 <div
-                                  className={`h-3.5 w-3.5 border flex items-center justify-center shrink-0 rounded-sm ${isSelected
-                                      ? "border-ink bg-ink/10"
-                                      : "border-ink/20"
-                                    }`}
+                                  className={`h-3.5 w-3.5 border flex items-center justify-center shrink-0 rounded-sm ${
+                                    isSelected ? "border-ink bg-ink/10" : "border-ink/20"
+                                  }`}
                                 >
                                   {isSelected && <Check className="h-2.5 w-2.5 text-ink" />}
                                 </div>
@@ -1195,10 +1226,11 @@ export default function TravelExplorations() {
                                     ev.stopPropagation()
                                     handleSetLeader(person.id)
                                   }}
-                                  className={`text-[10px] font-mono font-black uppercase px-2 py-0.5 border transition-all rounded-sm ${sel?.is_leader
+                                  className={`text-[10px] font-mono font-black uppercase px-2 py-0.5 border transition-all rounded-sm ${
+                                    sel?.is_leader
                                       ? "bg-[#df8120] text-black border-[#df8120]"
                                       : "border-ink/20 text-ink-soft hover:bg-ink/5"
-                                    }`}
+                                  }`}
                                 >
                                   {sel?.is_leader ? "LÍDER ✓" : "Líder?"}
                                 </button>
@@ -1225,10 +1257,11 @@ export default function TravelExplorations() {
                           return (
                             <div
                               key={item.resource_id}
-                              className={`flex items-center justify-between p-2 border transition-all rounded-sm ${isSelected
+                              className={`flex items-center justify-between p-2 border transition-all rounded-sm ${
+                                isSelected
                                   ? "bg-ink/5 border-ink/40"
                                   : "bg-transparent border-dashed border-ink/15"
-                                }`}
+                              }`}
                             >
                               <div
                                 role="button"
@@ -1240,10 +1273,9 @@ export default function TravelExplorations() {
                                 }
                               >
                                 <div
-                                  className={`h-3.5 w-3.5 border flex items-center justify-center shrink-0 rounded-sm ${isSelected
-                                      ? "border-ink bg-ink/10"
-                                      : "border-ink/20"
-                                    }`}
+                                  className={`h-3.5 w-3.5 border flex items-center justify-center shrink-0 rounded-sm ${
+                                    isSelected ? "border-ink bg-ink/10" : "border-ink/20"
+                                  }`}
                                 >
                                   {isSelected && <Check className="h-2.5 w-2.5 text-ink" />}
                                 </div>
@@ -1394,31 +1426,35 @@ export default function TravelExplorations() {
                     </div>
                     <div className="max-h-40 overflow-y-auto custom-scrollbar space-y-1 border border-ink/20 p-2 bg-black/5 rounded-sm">
                       {inventory.map((item) => {
-                        const sel = returnFoundResources.find((r) => r.resource_id === String(item.resource_id))
+                        const sel = returnFoundResources.find(
+                          (r) => r.resource_id === String(item.resource_id),
+                        )
                         const isSelected = !!sel
                         return (
                           <div
                             key={item.resource_id}
-                            className={`flex items-center justify-between p-2 border transition-all rounded-sm ${isSelected
+                            className={`flex items-center justify-between p-2 border transition-all rounded-sm ${
+                              isSelected
                                 ? "bg-ink/5 border-ink/40"
                                 : "bg-transparent border-dashed border-ink/15 hover:border-ink/30"
-                              }`}
+                            }`}
                           >
                             <div
                               role="button"
                               tabIndex={0}
                               className="flex items-center gap-2 cursor-pointer flex-1"
-                              onClick={() => handleToggleReturnResourceSelect(String(item.resource_id))}
+                              onClick={() =>
+                                handleToggleReturnResourceSelect(String(item.resource_id))
+                              }
                               onKeyDown={(e) =>
                                 e.key === "Enter" &&
                                 handleToggleReturnResourceSelect(String(item.resource_id))
                               }
                             >
                               <div
-                                className={`h-3.5 w-3.5 border flex items-center justify-center shrink-0 rounded-sm ${isSelected
-                                    ? "border-ink bg-ink/10"
-                                    : "border-ink/20"
-                                  }`}
+                                className={`h-3.5 w-3.5 border flex items-center justify-center shrink-0 rounded-sm ${
+                                  isSelected ? "border-ink bg-ink/10" : "border-ink/20"
+                                }`}
                               >
                                 {isSelected && <Check className="h-2.5 w-2.5 text-ink" />}
                               </div>

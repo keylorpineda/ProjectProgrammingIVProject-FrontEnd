@@ -135,7 +135,8 @@
     "Csvg",
     "TRÁNS",
     "Intercampal",
-    "intercampal"
+    "intercampal",
+    "INSUF"
   ],
   "ignorePaths": [
     "node_modules",

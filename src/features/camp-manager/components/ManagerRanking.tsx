@@ -87,6 +87,7 @@ export default function ManagerRanking({ campId, refreshTrigger }: ManagerRankin
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
       className="space-y-6"
+      style={{ maxWidth: "52rem", margin: "1.5rem auto", padding: "1rem 0" }}
     >
       {error && (
         <div className="border-2 border-black bg-[#9c2720]/20 text-red-200 font-mono text-xs p-3.5 flex items-start gap-4">

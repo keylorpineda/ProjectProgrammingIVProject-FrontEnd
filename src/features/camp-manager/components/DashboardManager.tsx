@@ -348,7 +348,7 @@ export default function DashboardManager() {
 
             {/* MAIN PAGE ROUTE INJECTION ADAPTER */}
             <main
-              className="flex-1 px-6 py-6 md:px-10 md:py-8 lg:px-14 overflow-y-auto space-y-6 relative"
+              className="flex-1 px-6 py-6 md:px-10 md:py-8 overflow-y-auto space-y-6 relative"
               style={{
                 backgroundColor: "#2b2218",
                 backgroundImage:

@@ -56,7 +56,9 @@ const CATEGORY_MAP: Record<string, { label: string; icon: string }> = {
 }
 
 function getCategoryInfo(rawCategory: string | undefined | null) {
-  const clean = String(rawCategory ?? "").toLowerCase().trim()
+  const clean = String(rawCategory ?? "")
+    .toLowerCase()
+    .trim()
   return CATEGORY_MAP[clean] || { label: rawCategory || "Otros", icon: "📦" }
 }
 
@@ -232,41 +234,86 @@ export default function TravelResources() {
     }
   }
 
-  const campResources = useMemo(() => resources.filter((r) => r.campId === baseCampId), [resources, baseCampId])
-  const okCount = useMemo(() => campResources.filter((r) => r.status === "sufficient").length, [campResources])
-  const warningCount = useMemo(() => campResources.filter((r) => r.status === "low").length, [campResources])
-  const insufficientCount = useMemo(() => campResources.filter((r) => r.status === "insufficient").length, [campResources])
-  const criticalCount = useMemo(() => campResources.filter((r) => r.status === "critical" || r.status === "none").length, [campResources])
+  const campResources = useMemo(
+    () => resources.filter((r) => r.campId === baseCampId),
+    [resources, baseCampId],
+  )
+  const okCount = useMemo(
+    () => campResources.filter((r) => r.status === "sufficient").length,
+    [campResources],
+  )
+  const warningCount = useMemo(
+    () => campResources.filter((r) => r.status === "low").length,
+    [campResources],
+  )
+  const insufficientCount = useMemo(
+    () => campResources.filter((r) => r.status === "insufficient").length,
+    [campResources],
+  )
+  const criticalCount = useMemo(
+    () => campResources.filter((r) => r.status === "critical" || r.status === "none").length,
+    [campResources],
+  )
   const totalCount = campResources.length
 
-  const waterItems = useMemo(() => campResources.filter(r => getCategoryInfo(r.category).label === "Agua"), [campResources])
+  const waterItems = useMemo(
+    () => campResources.filter((r) => getCategoryInfo(r.category).label === "Agua"),
+    [campResources],
+  )
   const waterStatus = useMemo(() => {
-    return waterItems.some(r => r.status === "critical" || r.status === "none" || r.status === "insufficient") ? "CRÍTICA"
-      : waterItems.some(r => r.status === "low") ? "LIMITADA"
-        : waterItems.length > 0 ? "ÓPTIMA" : "SIN STOCK"
+    return waterItems.some(
+      (r) => r.status === "critical" || r.status === "none" || r.status === "insufficient",
+    )
+      ? "CRÍTICA"
+      : waterItems.some((r) => r.status === "low")
+        ? "LIMITADA"
+        : waterItems.length > 0
+          ? "ÓPTIMA"
+          : "SIN STOCK"
   }, [waterItems])
 
-  const foodItems = useMemo(() => campResources.filter(r => getCategoryInfo(r.category).label === "Comida"), [campResources])
+  const foodItems = useMemo(
+    () => campResources.filter((r) => getCategoryInfo(r.category).label === "Comida"),
+    [campResources],
+  )
   const foodStatus = useMemo(() => {
-    return foodItems.some(r => r.status === "critical" || r.status === "none" || r.status === "insufficient") ? "CRÍTICA"
-      : foodItems.some(r => r.status === "low") ? "LIMITADA"
-        : foodItems.length > 0 ? "ÓPTIMA" : "SIN STOCK"
+    return foodItems.some(
+      (r) => r.status === "critical" || r.status === "none" || r.status === "insufficient",
+    )
+      ? "CRÍTICA"
+      : foodItems.some((r) => r.status === "low")
+        ? "LIMITADA"
+        : foodItems.length > 0
+          ? "ÓPTIMA"
+          : "SIN STOCK"
   }, [foodItems])
 
-  const medicineItems = useMemo(() => campResources.filter(r => getCategoryInfo(r.category).label === "Medicina"), [campResources])
+  const medicineItems = useMemo(
+    () => campResources.filter((r) => getCategoryInfo(r.category).label === "Medicina"),
+    [campResources],
+  )
   const medicineStatus = useMemo(() => {
-    return medicineItems.some(r => r.status === "critical" || r.status === "none" || r.status === "insufficient") ? "CRÍTICA"
-      : medicineItems.some(r => r.status === "low") ? "LIMITADA"
-        : medicineItems.length > 0 ? "ÓPTIMA" : "SIN STOCK"
+    return medicineItems.some(
+      (r) => r.status === "critical" || r.status === "none" || r.status === "insufficient",
+    )
+      ? "CRÍTICA"
+      : medicineItems.some((r) => r.status === "low")
+        ? "LIMITADA"
+        : medicineItems.length > 0
+          ? "ÓPTIMA"
+          : "SIN STOCK"
   }, [medicineItems])
 
   const criticalShortages = useMemo(
-    () => campResources.filter((r) => r.status === "critical" || r.status === "insufficient" || r.status === "none"),
+    () =>
+      campResources.filter(
+        (r) => r.status === "critical" || r.status === "insufficient" || r.status === "none",
+      ),
     [campResources],
   )
   const isTripReady = useMemo(
     () => criticalShortages.length === 0 && campResources.length > 0,
-    [criticalShortages, campResources]
+    [criticalShortages, campResources],
   )
 
   const persons = useMemo(() => {
@@ -277,29 +324,36 @@ export default function TravelResources() {
   }, [personsResponse, baseCampId])
 
   const exploringCount = useMemo(() => {
-    return persons.filter(p => {
+    return persons.filter((p) => {
       const st = String(p.status ?? "").toLowerCase()
       return st === "exploring" || st === "explorando" || st === "traveling" || st === "viajando"
     }).length
   }, [persons])
 
   const sickCount = useMemo(() => {
-    return persons.filter(p => {
+    return persons.filter((p) => {
       const st = String(p.status ?? "").toLowerCase()
       return st === "sick" || st === "injured" || st === "enfermo" || st === "herido"
     }).length
   }, [persons])
 
   const availableExplorersCount = useMemo(() => {
-    return persons.filter(p => {
+    return persons.filter((p) => {
       const st = String(p.status ?? "").toLowerCase()
-      const isAvailableStatus = st === "active" || st === "activo" || st === "idle" || st === "inactivo" || st === "resting" || st === "available" || !p.status
+      const isAvailableStatus =
+        st === "active" ||
+        st === "activo" ||
+        st === "idle" ||
+        st === "inactivo" ||
+        st === "resting" ||
+        st === "available" ||
+        !p.status
       return isAvailableStatus && p.profession?.can_explore === true
     }).length
   }, [persons])
 
   const totalCampPersonnel = useMemo(() => {
-    return persons.filter(p => {
+    return persons.filter((p) => {
       const st = String(p.status ?? "").toLowerCase()
       return st !== "deceased" && st !== "fallecido"
     }).length
@@ -310,9 +364,9 @@ export default function TravelResources() {
     let score = 100
 
     // Penalización por recursos críticos/insuficientes
-    score -= (criticalCount * 20)
-    score -= (insufficientCount * 10)
-    score -= (warningCount * 5)
+    score -= criticalCount * 20
+    score -= insufficientCount * 10
+    score -= warningCount * 5
 
     // Penalización por falta de exploradores disponibles
     if (availableExplorersCount === 0 && exploringCount === 0) {
@@ -328,7 +382,16 @@ export default function TravelResources() {
     }
 
     return Math.max(0, Math.min(100, score))
-  }, [campResources, criticalCount, insufficientCount, warningCount, availableExplorersCount, exploringCount, sickCount, totalCampPersonnel])
+  }, [
+    campResources,
+    criticalCount,
+    insufficientCount,
+    warningCount,
+    availableExplorersCount,
+    exploringCount,
+    sickCount,
+    totalCampPersonnel,
+  ])
 
   return (
     <div className="tm-container">
@@ -338,7 +401,9 @@ export default function TravelResources() {
           <div className="tm-online-dot" />
           <div>
             <h2 className="tm-board-title leading-none">Recursos de Viaje</h2>
-            <p className="tm-board-sub mt-1">Base: {baseCamp?.name.toUpperCase() ?? baseCampId.toUpperCase()}</p>
+            <p className="tm-board-sub mt-1">
+              Base: {baseCamp?.name.toUpperCase() ?? baseCampId.toUpperCase()}
+            </p>
           </div>
         </div>
 
@@ -354,7 +419,9 @@ export default function TravelResources() {
               <button
                 type="button"
                 key={s.id}
-                onClick={() => setActiveStatus(activeStatus === s.id ? "all" : (s.id as ResourceStatus))}
+                onClick={() =>
+                  setActiveStatus(activeStatus === s.id ? "all" : (s.id as ResourceStatus))
+                }
                 className={`tm-tab ${activeStatus === s.id ? "tm-tab-active" : ""}`}
               >
                 {s.label.toUpperCase()} ({s.count})
@@ -376,7 +443,7 @@ export default function TravelResources() {
 
       {/* ── CRITICAL ALERT BANNER ───────────────────────────────── */}
       <AnimatePresence>
-        {(criticalCount + insufficientCount) > 0 && (
+        {criticalCount + insufficientCount > 0 && (
           <motion.div
             className="flex items-center gap-2 text-[#9c2720] text-xs font-mono uppercase bg-[#9c2720]/15 border border-[#9c2720]/30 p-3.5 rounded-sm shrink-0"
             initial={{ opacity: 0, y: -10 }}
@@ -384,7 +451,10 @@ export default function TravelResources() {
             exit={{ opacity: 0 }}
           >
             <AlertTriangle className="h-4 w-4 shrink-0" />
-            <span>⚠ ALERTA — {criticalCount + insufficientCount} RECURSO(S) EN ESTADO CRÍTICO O INSUFICIENTE REQUIEREN ATENCIÓN INMEDIATA</span>
+            <span>
+              ⚠ ALERTA — {criticalCount + insufficientCount} RECURSO(S) EN ESTADO CRÍTICO O
+              INSUFICIENTE REQUIEREN ATENCIÓN INMEDIATA
+            </span>
           </motion.div>
         )}
       </AnimatePresence>
@@ -397,9 +467,7 @@ export default function TravelResources() {
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.05, type: "spring", stiffness: 160 }}
         >
-          <div className="text-3xl font-mono font-bold leading-none text-[#4c6351]">
-            {okCount}
-          </div>
+          <div className="text-3xl font-mono font-bold leading-none text-[#4c6351]">{okCount}</div>
           <div className="text-[10px] font-mono font-black text-white/40 tracking-wider uppercase">
             SUFICIENTES
           </div>
@@ -433,8 +501,10 @@ export default function TravelResources() {
         >
           <motion.div
             className="text-3xl font-mono font-bold leading-none text-[#9c2720]"
-            animate={(criticalCount + insufficientCount) > 0 ? { opacity: [1, 0.4, 1] } : {}}
-            transition={(criticalCount + insufficientCount) > 0 ? { duration: 1.2, repeat: Infinity } : {}}
+            animate={criticalCount + insufficientCount > 0 ? { opacity: [1, 0.4, 1] } : {}}
+            transition={
+              criticalCount + insufficientCount > 0 ? { duration: 1.2, repeat: Infinity } : {}
+            }
           >
             {criticalCount + insufficientCount}
           </motion.div>
@@ -512,22 +582,32 @@ export default function TravelResources() {
               <table className="w-full border-collapse font-mono text-xs">
                 <thead>
                   <tr className="border-b border-ink/20">
-                    <th className="text-left font-typewriter font-bold text-ink-soft py-3 px-2 uppercase tracking-wider">REF ID</th>
-                    <th className="text-left font-typewriter font-bold text-ink-soft py-3 px-2 uppercase tracking-wider">DESCRIPCIÓN</th>
-                    <th className="text-left font-typewriter font-bold text-ink-soft py-3 px-2 uppercase tracking-wider">STOCK ACTUAL / MÍN</th>
-                    <th className="text-left font-typewriter font-bold text-ink-soft py-3 px-2 uppercase tracking-wider">ESTADO</th>
-                    <th className="text-right font-typewriter font-bold text-ink-soft py-3 px-2 uppercase tracking-wider">DETALLE</th>
+                    <th className="text-left font-typewriter font-bold text-ink-soft py-3 px-2 uppercase tracking-wider">
+                      REF ID
+                    </th>
+                    <th className="text-left font-typewriter font-bold text-ink-soft py-3 px-2 uppercase tracking-wider">
+                      DESCRIPCIÓN
+                    </th>
+                    <th className="text-left font-typewriter font-bold text-ink-soft py-3 px-2 uppercase tracking-wider">
+                      STOCK ACTUAL / MÍN
+                    </th>
+                    <th className="text-left font-typewriter font-bold text-ink-soft py-3 px-2 uppercase tracking-wider">
+                      ESTADO
+                    </th>
+                    <th className="text-right font-typewriter font-bold text-ink-soft py-3 px-2 uppercase tracking-wider">
+                      DETALLE
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredResources.length > 0 ? (
                     filteredResources.map((resource) => {
-                      const statusLabel = getStatusLabel(resource.status).toUpperCase();
-                      const statusColorClass = getStatusColor(resource.status);
-                      const levelColorClass = getLevelColor(resource.status);
-                      const max = Math.max((resource.minThreshold || 100) * 2, resource.quantity, 1);
-                      const pct = Math.min((resource.quantity / max) * 100, 100);
-                      const minPct = ((resource.minThreshold || 0) / max) * 100;
+                      const statusLabel = getStatusLabel(resource.status).toUpperCase()
+                      const statusColorClass = getStatusColor(resource.status)
+                      const levelColorClass = getLevelColor(resource.status)
+                      const max = Math.max((resource.minThreshold || 100) * 2, resource.quantity, 1)
+                      const pct = Math.min((resource.quantity / max) * 100, 100)
+                      const minPct = ((resource.minThreshold || 0) / max) * 100
 
                       return (
                         <motion.tr
@@ -575,7 +655,11 @@ export default function TravelResources() {
                               <div className="h-1.5 w-full bg-ink/5 border border-ink/10 relative rounded-sm overflow-hidden">
                                 <div
                                   className="absolute top-0 bottom-0 z-10"
-                                  style={{ left: `${minPct}%`, width: "2px", backgroundColor: "rgba(26, 15, 5, 0.25)" }}
+                                  style={{
+                                    left: `${minPct}%`,
+                                    width: "2px",
+                                    backgroundColor: "rgba(26, 15, 5, 0.25)",
+                                  }}
                                   title="Stock Mínimo"
                                 />
                                 <motion.div
@@ -590,9 +674,15 @@ export default function TravelResources() {
 
                           {/* ESTADO */}
                           <td className="py-3.5 px-2">
-                            <span className={`tm-op-chip ${resource.status === "sufficient" ? "tm-chip-active" :
-                                resource.status === "low" ? "tm-chip-transit" : "tm-chip-pending"
-                              } text-[9px] px-2 py-0.5 font-bold uppercase`}>
+                            <span
+                              className={`tm-op-chip ${
+                                resource.status === "sufficient"
+                                  ? "tm-chip-active"
+                                  : resource.status === "low"
+                                    ? "tm-chip-transit"
+                                    : "tm-chip-pending"
+                              } text-[9px] px-2 py-0.5 font-bold uppercase`}
+                            >
                               {statusLabel}
                             </span>
                           </td>
@@ -603,19 +693,22 @@ export default function TravelResources() {
                               type="button"
                               className="tm-op-btn text-[10px]"
                               onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedId(resource.id);
+                                e.stopPropagation()
+                                setSelectedId(resource.id)
                               }}
                             >
                               Ver Ficha
                             </button>
                           </td>
                         </motion.tr>
-                      );
+                      )
                     })
                   ) : (
                     <tr>
-                      <td colSpan={5} className="py-12 text-center text-ink-soft/40 font-mono uppercase tracking-widest italic">
+                      <td
+                        colSpan={5}
+                        className="py-12 text-center text-ink-soft/40 font-mono uppercase tracking-widest italic"
+                      >
                         Sin recursos registrados
                       </td>
                     </tr>
@@ -640,21 +733,25 @@ export default function TravelResources() {
                   <span className="text-xs font-mono text-white/40 tracking-wider uppercase font-bold">
                     Viabilidad de Salida
                   </span>
-                  <span className={`text-3xl font-mono font-black ${viabilityScore >= 70 ? 'text-accent-approved' : viabilityScore >= 40 ? 'text-[#c27c2f]' : 'text-accent-critical'}`}>
+                  <span
+                    className={`text-3xl font-mono font-black ${viabilityScore >= 70 ? "text-accent-approved" : viabilityScore >= 40 ? "text-[#c27c2f]" : "text-accent-critical"}`}
+                  >
                     {viabilityScore}%
                   </span>
                 </div>
                 <div className="h-2.5 w-full bg-black/50 border border-[#d4a373]/10 relative rounded-full overflow-hidden">
                   <motion.div
-                    className={`h-full rounded-full ${viabilityScore >= 70 ? 'bg-[#4c6351]' : viabilityScore >= 40 ? 'bg-[#c27c2f]' : 'bg-[#9c2720]'}`}
+                    className={`h-full rounded-full ${viabilityScore >= 70 ? "bg-[#4c6351]" : viabilityScore >= 40 ? "bg-[#c27c2f]" : "bg-[#9c2720]"}`}
                     initial={{ width: 0 }}
                     animate={{ width: `${viabilityScore}%` }}
                     transition={{ duration: 0.8, ease: "easeOut" }}
                   />
                 </div>
                 <span className="text-[11px] font-mono text-white/50 leading-relaxed uppercase">
-                  {viabilityScore >= 80 ? "✓ CONDICIONES ÓPTIMAS PARA INICIAR VIAJE."
-                    : viabilityScore >= 50 ? "⚠ ATENCIÓN — VIABILIDAD REDUCIDA. EVALUAR RIESGOS."
+                  {viabilityScore >= 80
+                    ? "✓ CONDICIONES ÓPTIMAS PARA INICIAR VIAJE."
+                    : viabilityScore >= 50
+                      ? "⚠ ATENCIÓN — VIABILIDAD REDUCIDA. EVALUAR RIESGOS."
                       : "☠ PELIGRO — RECURSOS CRÍTICOS. SALIDA NO AUTORIZADA."}
                 </span>
               </div>
@@ -668,15 +765,21 @@ export default function TravelResources() {
                 <div className="grid grid-cols-3 gap-2">
                   <div className="flex flex-col items-center justify-center p-2.5 bg-black/30 rounded-sm border border-white/5">
                     <span className="text-xl font-black text-white">{availableExplorersCount}</span>
-                    <span className="text-[10px] text-white/40 uppercase text-center mt-0.5 leading-none font-bold">Listos</span>
+                    <span className="text-[10px] text-white/40 uppercase text-center mt-0.5 leading-none font-bold">
+                      Listos
+                    </span>
                   </div>
                   <div className="flex flex-col items-center justify-center p-2.5 bg-black/30 rounded-sm border border-white/5">
                     <span className="text-xl font-black text-[#df8120]">{exploringCount}</span>
-                    <span className="text-[10px] text-white/40 uppercase text-center mt-0.5 leading-none font-bold">En Campo</span>
+                    <span className="text-[10px] text-white/40 uppercase text-center mt-0.5 leading-none font-bold">
+                      En Campo
+                    </span>
                   </div>
                   <div className="flex flex-col items-center justify-center p-2.5 bg-[#9c2720]/15 rounded-sm border border-[#9c2720]/20">
                     <span className="text-xl font-black text-accent-critical">{sickCount}</span>
-                    <span className="text-[10px] text-white/40 uppercase text-center mt-0.5 leading-none font-bold">Bajas</span>
+                    <span className="text-[10px] text-white/40 uppercase text-center mt-0.5 leading-none font-bold">
+                      Bajas
+                    </span>
                   </div>
                 </div>
 
@@ -696,23 +799,41 @@ export default function TravelResources() {
                   {
                     label: "Suministro de Agua",
                     status: waterStatus,
-                    color: waterStatus === "ÓPTIMA" ? "text-accent-approved bg-accent-approved/5 border-accent-approved/15" : waterStatus === "LIMITADA" ? "text-[#c27c2f] bg-[#c27c2f]/5 border-[#c27c2f]/15" : "text-accent-critical bg-accent-critical/5 border-accent-critical/15",
-                    badge: waterStatus === "ÓPTIMA" ? "✓" : "⚠"
+                    color:
+                      waterStatus === "ÓPTIMA"
+                        ? "text-accent-approved bg-accent-approved/5 border-accent-approved/15"
+                        : waterStatus === "LIMITADA"
+                          ? "text-[#c27c2f] bg-[#c27c2f]/5 border-[#c27c2f]/15"
+                          : "text-accent-critical bg-accent-critical/5 border-accent-critical/15",
+                    badge: waterStatus === "ÓPTIMA" ? "✓" : "⚠",
                   },
                   {
                     label: "Víveres / Raciones",
                     status: foodStatus,
-                    color: foodStatus === "ÓPTIMA" ? "text-accent-approved bg-accent-approved/5 border-accent-approved/15" : foodStatus === "LIMITADA" ? "text-[#c27c2f] bg-[#c27c2f]/5 border-[#c27c2f]/15" : "text-accent-critical bg-accent-critical/5 border-accent-critical/15",
-                    badge: foodStatus === "ÓPTIMA" ? "✓" : "⚠"
+                    color:
+                      foodStatus === "ÓPTIMA"
+                        ? "text-accent-approved bg-accent-approved/5 border-accent-approved/15"
+                        : foodStatus === "LIMITADA"
+                          ? "text-[#c27c2f] bg-[#c27c2f]/5 border-[#c27c2f]/15"
+                          : "text-accent-critical bg-accent-critical/5 border-accent-critical/15",
+                    badge: foodStatus === "ÓPTIMA" ? "✓" : "⚠",
                   },
                   {
                     label: "Kits de Medicina",
                     status: medicineStatus,
-                    color: medicineStatus === "ÓPTIMA" ? "text-accent-approved bg-accent-approved/5 border-accent-approved/15" : medicineStatus === "LIMITADA" ? "text-[#c27c2f] bg-[#c27c2f]/5 border-[#c27c2f]/15" : "text-accent-critical bg-accent-critical/5 border-accent-critical/15",
-                    badge: medicineStatus === "ÓPTIMA" ? "✓" : "⚠"
+                    color:
+                      medicineStatus === "ÓPTIMA"
+                        ? "text-accent-approved bg-accent-approved/5 border-accent-approved/15"
+                        : medicineStatus === "LIMITADA"
+                          ? "text-[#c27c2f] bg-[#c27c2f]/5 border-[#c27c2f]/15"
+                          : "text-accent-critical bg-accent-critical/5 border-accent-critical/15",
+                    badge: medicineStatus === "ÓPTIMA" ? "✓" : "⚠",
                   },
                 ].map((item) => (
-                  <div key={item.label} className={`flex justify-between items-center px-2.5 py-2 rounded-sm border ${item.color}`}>
+                  <div
+                    key={item.label}
+                    className={`flex justify-between items-center px-2.5 py-2 rounded-sm border ${item.color}`}
+                  >
                     <span className="uppercase font-bold flex items-center gap-1.5">
                       <span>{item.badge}</span> {item.label}
                     </span>
@@ -753,7 +874,9 @@ export default function TravelResources() {
           <div className="space-y-2">
             <button
               type="button"
-              onClick={() => navigate("/travel-manager/expeditions", { state: { openNewExploration: true } })}
+              onClick={() =>
+                navigate("/travel-manager/expeditions", { state: { openNewExploration: true } })
+              }
               disabled={availableExplorersCount === 0 || viabilityScore < 35}
               className="tm-action-btn tm-action-btn-primary w-full hover:brightness-110 disabled:opacity-40 disabled:brightness-100 disabled:cursor-not-allowed transition-all cursor-pointer"
               style={{ padding: "10px 12px", borderRadius: "4px" }}
@@ -763,7 +886,9 @@ export default function TravelResources() {
             </button>
             <button
               type="button"
-              onClick={() => navigate("/travel-manager/transfers", { state: { openNewTransfer: true } })}
+              onClick={() =>
+                navigate("/travel-manager/transfers", { state: { openNewTransfer: true } })
+              }
               className="tm-btn w-full text-center hover:bg-[#c27c2f]/20 hover:text-white transition-all font-mono font-bold uppercase text-xs tracking-wider cursor-pointer border border-[#d4a373]/30"
               style={{ padding: "10px 12px", borderRadius: "4px" }}
             >
@@ -868,7 +993,9 @@ export default function TravelResources() {
                 <div className="mt-6 space-y-4">
                   <div className="bg-[#faf4e6]/50 p-4 border border-dashed border-ink/20 rounded-sm">
                     <div className="flex justify-between items-center text-xs font-mono mb-2">
-                      <span className="text-ink-soft uppercase font-bold">Umbral Crítico Mínimo</span>
+                      <span className="text-ink-soft uppercase font-bold">
+                        Umbral Crítico Mínimo
+                      </span>
                       <span className="font-bold text-ink">
                         {selectedResource.minThreshold || 0} {selectedResource.unit.toUpperCase()}
                       </span>
@@ -876,7 +1003,9 @@ export default function TravelResources() {
                     <div className="h-4 w-full bg-ink/5 border border-ink/20 relative rounded-sm overflow-hidden">
                       <div
                         className={`h-full ${getLevelColor(selectedResource.status)} opacity-60 shadow-inner`}
-                        style={{ width: `${Math.min((selectedResource.quantity / (selectedResource.minThreshold || 1)) * 50, 100)}%` }}
+                        style={{
+                          width: `${Math.min((selectedResource.quantity / (selectedResource.minThreshold || 1)) * 50, 100)}%`,
+                        }}
                       />
                       <div className="absolute inset-0 flex items-center justify-center">
                         <span className="text-[8px] font-mono font-black text-ink-soft uppercase tracking-widest">
@@ -891,7 +1020,8 @@ export default function TravelResources() {
                       Recomendación de Uso y Observaciones
                     </span>
                     <div className="p-4 bg-white/40 border border-ink/10 rounded-sm italic font-typewriter text-xs text-ink/80 leading-relaxed min-h-[60px]">
-                      {selectedResource.usageNotes || selectedResource.description ||
+                      {selectedResource.usageNotes ||
+                        selectedResource.description ||
                         "Sin instrucciones adicionales de uso operativo registrado para este recurso."}
                     </div>
                   </div>
@@ -899,7 +1029,9 @@ export default function TravelResources() {
 
                 <div className="border-t border-ink/15 pt-3 mt-6 flex justify-between items-center text-ink-soft/70 font-mono text-[9px] uppercase tracking-wider">
                   <span>Actualizado: {new Date().toLocaleDateString("es-CR")}</span>
-                  <span className="border border-dashed border-ink/30 px-2 py-0.5">Ref. {selectedResource.id}</span>
+                  <span className="border border-dashed border-ink/30 px-2 py-0.5">
+                    Ref. {selectedResource.id}
+                  </span>
                 </div>
               </div>
             </motion.div>
@@ -907,5 +1039,5 @@ export default function TravelResources() {
         )}
       </AnimatePresence>
     </div>
-  );
+  )
 }

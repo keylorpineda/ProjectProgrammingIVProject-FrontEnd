@@ -90,6 +90,7 @@ export default function ManagerWorkforce({
   const [selectedProfession, setSelectedProfession] = useState<string>("")
   const [submittingAssignment, setSubmittingAssignment] = useState<boolean>(false)
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleOpenAssignModal = (person: Person) => {
     setAssigningPerson(person)
     setSelectedProfession(professionsList.length > 0 ? professionsList[0].id.toString() : "1")
@@ -134,6 +135,7 @@ export default function ManagerWorkforce({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
       className="space-y-4"
+      style={{ maxWidth: "72rem", margin: "1.5rem auto", padding: "1rem 0" }}
     >
       {/* IA ALERTS — paper bulletin board notice */}
       <div className="w-full space-y-4">
@@ -519,15 +521,6 @@ export default function ManagerWorkforce({
                   >
                     ESTADO FÍSICO
                   </th>
-                  <th
-                    style={{
-                      padding: "12px 20px",
-                      textAlign: "center" as const,
-                      fontFamily: "monospace",
-                    }}
-                  >
-                    ACCIONES
-                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -728,35 +721,6 @@ export default function ManagerWorkforce({
                             </span>
                           )
                         })()}
-                      </td>
-                      <td style={{ padding: "16px 20px", textAlign: "center" }}>
-                        <button
-                          type="button"
-                          onClick={() => handleOpenAssignModal(person)}
-                          style={{
-                            width: "100%",
-                            backgroundColor: "transparent",
-                            border: "1px solid #6a4a1a",
-                            color: "#3a2a0a",
-                            padding: "6px 14px",
-                            fontFamily: "monospace",
-                            fontSize: "0.75rem",
-                            fontWeight: 900,
-                            textTransform: "uppercase",
-                            cursor: "pointer",
-                            letterSpacing: "1px",
-                          }}
-                          onMouseEnter={(e) => {
-                            ;(e.target as HTMLButtonElement).style.backgroundColor = "#6a4a1a"
-                            ;(e.target as HTMLButtonElement).style.color = "#e8d8b8"
-                          }}
-                          onMouseLeave={(e) => {
-                            ;(e.target as HTMLButtonElement).style.backgroundColor = "transparent"
-                            ;(e.target as HTMLButtonElement).style.color = "#3a2a0a"
-                          }}
-                        >
-                          ORDEN ROL
-                        </button>
                       </td>
                     </tr>
                   )

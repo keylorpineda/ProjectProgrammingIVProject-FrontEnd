@@ -260,6 +260,7 @@ export default function ManagerInventory({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
       className="space-y-6"
+      style={{ maxWidth: "72rem", margin: "1.5rem auto", padding: "1rem 0" }}
     >
       {/* ACTION BUTTONS */}
       <div
@@ -295,7 +296,7 @@ export default function ManagerInventory({
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
           gap: "28px",
         }}
       >
@@ -790,7 +791,7 @@ export default function ManagerInventory({
                   min="0"
                   value={newMinStock}
                   onChange={(e) => setNewMinStock(Math.max(0, parseInt(e.target.value) || 0))}
-                  className="w-full bg-[#2a2824] border-2 border-black p-3 bg-transparent text-[#e0d8cc] outline-none text-base font-bold font-mono transition"
+                  className="w-full bg-[#2a2824] border-2 border-black p-4 bg-transparent text-[#e0d8cc] outline-none text-lg font-bold font-mono transition"
                   required
                 />
               </div>
@@ -844,7 +845,7 @@ export default function ManagerInventory({
                   id="resourceSelect"
                   value={movResourceId}
                   onChange={(e) => setMovResourceId(e.target.value)}
-                  className="w-full bg-[#2a2824] border-2 border-black p-3 text-[#e0d8cc] outline-none text-base font-bold font-mono uppercase"
+                  className="w-full bg-[#2a2824] border-2 border-black p-4 text-[#e0d8cc] outline-none text-lg font-bold font-mono uppercase"
                   required
                 >
                   {inventory.map((item) => (
@@ -866,7 +867,7 @@ export default function ManagerInventory({
                   id="operationTypeSelect"
                   value={movType}
                   onChange={(e) => setMovType(e.target.value)}
-                  className="w-full bg-[#2a2824] border-2 border-black p-3 text-[#e0d8cc] outline-none text-base font-bold font-mono uppercase"
+                  className="w-full bg-[#2a2824] border-2 border-black p-4 text-[#e0d8cc] outline-none text-lg font-bold font-mono uppercase"
                 >
                   {MOVEMENT_TYPES.map((t) => (
                     <option key={t.value} value={t.value}>
@@ -890,7 +891,7 @@ export default function ManagerInventory({
                   step="0.001"
                   value={movQuantity || ""}
                   onChange={(e) => setMovQuantity(parseFloat(e.target.value) || 0)}
-                  className="w-full bg-[#2a2824] border-2 border-black p-3 text-[#e0d8cc] outline-none text-base font-bold font-mono"
+                  className="w-full bg-[#2a2824] border-2 border-black p-4 text-[#e0d8cc] outline-none text-lg font-bold font-mono"
                   placeholder="0.000"
                   required
                 />
@@ -909,7 +910,7 @@ export default function ManagerInventory({
                   onChange={(e) => setMovDescription(e.target.value)}
                   maxLength={200}
                   rows={3}
-                  className="w-full bg-[#2a2824] border-2 border-black p-3 text-[#e0d8cc] outline-none text-base font-mono resize-none"
+                  className="w-full bg-[#2a2824] border-2 border-black p-4 text-[#e0d8cc] outline-none text-base font-mono resize-none"
                   placeholder="Ej: Recepción convoy norte..."
                 />
               </div>
