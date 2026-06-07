@@ -1,6 +1,8 @@
 import { motion, AnimatePresence } from "framer-motion"
 import { useState, useEffect } from "react"
 
+import api from "@/config/api"
+
 interface Props {
   userId: string | number
   userName?: string
@@ -78,6 +80,9 @@ export default function FirstLoginAchievement({ userId, userName }: Props) {
   const dismiss = () => {
     localStorage.setItem(storageKey, "1")
     setVisible(false)
+    api.post("/users/me/achievements/first-login").catch(() => {
+      // silently ignore — localStorage already ensures the modal won't reappear
+    })
   }
 
   return (

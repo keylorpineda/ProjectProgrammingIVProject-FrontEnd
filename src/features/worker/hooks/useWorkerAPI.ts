@@ -358,6 +358,31 @@ export const useCampExplorations = (
   })
 }
 
+/**
+ * Hook to fetch the current user's achievements
+ * GET /users/me/achievements
+ */
+export const useMyAchievements = (): UseQueryResult<
+  { achievement_name: string; obtained_at: string | null }[],
+  ApiError
+> => {
+  const token = useTokenStore((s) => s.token)
+
+  useEffect(() => {
+    setAuthToken(token)
+  }, [token])
+
+  return useQuery({
+    queryKey: ["worker", "achievements"] as const,
+    queryFn: () => workerService.getMyAchievements(),
+    enabled: !!token,
+    placeholderData: [],
+    retry: 1,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
+  })
+}
+
 // Re-export service helpers for direct use
 export { workerService, setAuthToken }
 
