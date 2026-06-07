@@ -326,11 +326,11 @@ export default function TravelDashboard() {
           {/* PANEL: EN MOVIMIENTO */}
           <div className="archive-panel p-4 rounded-lg flex-1 flex flex-col overflow-hidden bg-[#110e0c]">
             <h2 className="text-xs font-mono font-semibold text-[#d4a373] uppercase tracking-widest mb-3 border-b border-[#d4a373]/20 pb-2 flex items-center gap-2 shrink-0">
-              <Target className="h-3.5 w-3.5" /> Transferencias Activas
+              <Target className="h-3.5 w-3.5" /> Transferencias Pendientes
             </h2>
 
             <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar space-y-2 cursor-default flex flex-col">
-              {transitTransfers.map((t) => (
+              {pendingRequests.map((t) => (
                 <div
                   key={t.id}
                   className="bg-black/60 border border-[#d4a373]/10 p-3 rounded flex items-center justify-between hover:border-[#d4a373]/40 transition-all group"
@@ -340,7 +340,7 @@ export default function TravelDashboard() {
                       {getCampName(t.camp_origin_id)} → {getCampName(t.camp_destination_id)}
                     </span>
                     <span className="text-sm font-mono text-accent-approved uppercase font-black tracking-widest">
-                      En Tránsito
+                      Pendiente
                     </span>
                   </div>
                   <div className="flex gap-2">
@@ -348,7 +348,7 @@ export default function TravelDashboard() {
                       onClick={() => navigate("/travel-manager/transfers")}
                       className="bg-[#d4a373] text-black px-4 py-2.5 rounded text-xs font-mono font-black uppercase hover:bg-white transition-all shadow-lg active:scale-95"
                     >
-                      LLEGADA
+                      VER SOLICITUD
                     </button>
                     <button
                       aria-label="Contactar por radio"
@@ -359,11 +359,11 @@ export default function TravelDashboard() {
                   </div>
                 </div>
               ))}
-              {transitTransfers.length === 0 && (
+              {pendingRequests.length === 0 && (
                 <div className="flex-1 flex flex-col items-center justify-center py-10 border border-dashed border-[#d4a373]/10 rounded bg-black/20">
                   <Target className="h-8 w-8 text-white/5 mb-3" />
                   <span className="text-sm font-mono font-black text-white/10 uppercase tracking-[0.2em]">
-                    Sin transferencias activas
+                    Sin transferencias pendientes
                   </span>
                   <button
                     onClick={() => navigate("/travel-manager/transfers")}
