@@ -1,23 +1,19 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { AnimatePresence, motion } from "framer-motion"
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 
 import { useCamp } from "../context/CampContext"
 
 import type {
   ApprovalBody,
-  CreateTransferBody,
 } from "@/features/transfers/services/transfers.service"
-import type { IntercampRequest, Person, Resource } from "@/types/api.types"
+import type { IntercampRequest } from "@/types/api.types"
 
-import { getResources } from "@/features/inventory/services/inventory.service"
 import { TransferRouteMap } from "@/features/map-test/components/TransferRouteMap"
-import { getPersons } from "@/features/persons/services/persons.service"
 import {
   approveOrRejectTransfer,
   cancelTransfer,
   confirmTransferArrival,
-  createTransferRequest,
   getCampTransfers,
 } from "@/features/transfers/services/transfers.service"
 import "./Transfers.css"
@@ -69,37 +65,14 @@ const formatDate = (value?: string) => {
 
 type ModalType = "detail" | "create" | "approve" | "reject" | null
 
-interface ResourceRow {
-  resource_id: string
-  requested_quantity: string
-}
-
-interface PersonRow {
-  person_id: string
-  is_leader: boolean
-}
-
 export default function Transfers() {
   const { activeCampId, camps } = useCamp()
 
-  const [availableResources, setAvailableResources] = useState<Resource[]>([])
-  const [availablePersons, setAvailablePersons] = useState<Person[]>([])
   const [filterStatus, setFilterStatus] = useState("")
   const [selectedTransfer, setSelectedTransfer] = useState<TransferView | null>(null)
   const [activeModal, setActiveModal] = useState<ModalType>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [formError, setFormError] = useState("")
-
-  const [formDestId, setFormDestId] = useState("")
-  const [formType, setFormType] = useState<"resources" | "people" | "both">("resources")
-  const [formNotes, setFormNotes] = useState("")
-  const [formTravelDays, setFormTravelDays] = useState("")
-  const [formResourceRows, setFormResourceRows] = useState<ResourceRow[]>([
-    { resource_id: "", requested_quantity: "" },
-  ])
-  const [formPersonRows, setFormPersonRows] = useState<PersonRow[]>([
-    { person_id: "", is_leader: false },
-  ])
   const [formApprovalNotes, setFormApprovalNotes] = useState("")
 
   const campById = useMemo(() => new Map(camps.map((c) => [c.id, c.name])), [camps])
@@ -123,23 +96,6 @@ export default function Transfers() {
 
   const queryClient = useQueryClient()
   const reload = () => queryClient.invalidateQueries({ queryKey: ["adminTransfers", activeCampId] })
-
-  useEffect(() => {
-    let isMounted = true
-    void Promise.all([
-      getResources({ limit: 100 }),
-      getPersons({ campId: activeCampId, limit: 100 }),
-    ])
-      .then(([resources, persons]) => {
-        if (!isMounted) return
-        setAvailableResources(resources)
-        setAvailablePersons(persons.data)
-      })
-      .catch(() => {})
-    return () => {
-      isMounted = false
-    }
-  }, [activeCampId])
 
   const mappedTransfers = useMemo<TransferView[]>(
     () =>
@@ -181,17 +137,6 @@ export default function Transfers() {
     return true
   })
 
-  const openCreate = () => {
-    setFormDestId("")
-    setFormType("resources")
-    setFormNotes("")
-    setFormTravelDays("")
-    setFormResourceRows([{ resource_id: "", requested_quantity: "" }])
-    setFormPersonRows([{ person_id: "", is_leader: false }])
-    setFormError("")
-    setActiveModal("create")
-  }
-
   const openDetail = (transfer: TransferView) => {
     setSelectedTransfer(transfer)
     setFormApprovalNotes("")
@@ -203,81 +148,6 @@ export default function Transfers() {
     setActiveModal(null)
     setSelectedTransfer(null)
     setFormError("")
-  }
-
-  const addResourceRow = () =>
-    setFormResourceRows((prev) => [...prev, { resource_id: "", requested_quantity: "" }])
-
-  const removeResourceRow = (index: number) =>
-    setFormResourceRows((prev) => prev.filter((_, i) => i !== index))
-
-  const updateResourceRow = (index: number, field: keyof ResourceRow, value: string) =>
-    setFormResourceRows((prev) =>
-      prev.map((row, i) => (i === index ? { ...row, [field]: value } : row)),
-    )
-
-  const addPersonRow = () =>
-    setFormPersonRows((prev) => [...prev, { person_id: "", is_leader: false }])
-
-  const removePersonRow = (index: number) =>
-    setFormPersonRows((prev) => prev.filter((_, i) => i !== index))
-
-  const updatePersonRow = (index: number, field: keyof PersonRow, value: string | boolean) =>
-    setFormPersonRows((prev) =>
-      prev.map((row, i) => (i === index ? { ...row, [field]: value } : row)),
-    )
-
-  const handleCreate = async () => {
-    if (!formDestId) {
-      setFormError("Selecciona el campamento de destino.")
-      return
-    }
-    setIsSaving(true)
-    setFormError("")
-    try {
-      const body: CreateTransferBody = {
-        camp_origin_id: Number(activeCampId),
-        camp_destination_id: Number(formDestId),
-        type: formType,
-        notes: formNotes.trim() || undefined,
-        travel_days: formTravelDays ? Number(formTravelDays) : undefined,
-      }
-      if (formType === "resources" || formType === "both") {
-        const validRows = formResourceRows.filter((r) => r.resource_id && r.requested_quantity)
-        if (validRows.length === 0) {
-          setFormError("Agrega al menos un recurso para transferir.")
-          setIsSaving(false)
-          return
-        }
-        body.resource_details = validRows.map((r) => ({
-          resource_id: Number(r.resource_id),
-          requested_quantity: Number(r.requested_quantity),
-        }))
-      }
-      if (formType === "people" || formType === "both") {
-        const validPeople = formPersonRows.filter((p) => p.person_id)
-        if (validPeople.length === 0) {
-          setFormError("Agrega al menos una persona para trasladar.")
-          setIsSaving(false)
-          return
-        }
-        body.person_details = validPeople.map((p) => ({
-          person_id: Number(p.person_id),
-          is_leader: p.is_leader,
-        }))
-      }
-      await createTransferRequest(body)
-      closeAll()
-      reload()
-    } catch (err: any) {
-      // Surface the real backend error so the user knows why it failed
-      const serverMsg = err?.response?.data?.message || err?.response?.data?.error || err?.message
-      const display = Array.isArray(serverMsg) ? serverMsg.join(", ") : serverMsg
-      console.error("[Transfers] createTransferRequest failed:", err?.response?.data ?? err)
-      setFormError(display ?? "No se pudo crear la solicitud de traslado.")
-    } finally {
-      setIsSaving(false)
-    }
   }
 
   const handleApprove = async () => {
@@ -347,8 +217,6 @@ export default function Transfers() {
       setIsSaving(false)
     }
   }
-
-  const otherCamps = camps.filter((c) => c.id !== activeCampId)
 
   return (
     <div className="generic-container transfers-page">

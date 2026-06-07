@@ -19,8 +19,6 @@ const NAV_ITEMS = [
 export default function WorkerSidebar({
   activeTab,
   setActiveTab,
-  userName = "WORKER",
-  campName,
 }: WorkerSidebarProps) {
   return (
     <aside className="w-full md:w-72 bg-[#121110] border-b-2 md:border-b-0 md:border-r-2 border-black p-4 flex flex-col justify-between shrink-0 z-20 select-none font-mono h-full overflow-y-auto">

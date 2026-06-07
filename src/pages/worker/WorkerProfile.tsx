@@ -1,4 +1,4 @@
-﻿import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import { useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
 
@@ -12,11 +12,12 @@ import {
 import { useAuth } from "@/pages/Admin/context/AuthContext"
 import "./WorkerViews.css"
 
-// â”€â”€ Constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ──── Constants ─────────────────────────────────────────────────────────────
 const ROLE_LABELS: Record<string, string> = {
   worker: "TRABAJADOR",
-  camp_leader: "LÃDER DE CAMPAMENTO",
+  camp_leader: "LÍDER DE CAMPAMENTO",
   admin: "ADMINISTRADOR",
+  camp_manager: "GESTOR DE CAMPAMENTO",
   resource_manager: "GESTOR DE RECURSOS",
   travel_manager: "GESTOR DE TRASLADOS",
 }
