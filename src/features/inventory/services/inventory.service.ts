@@ -74,8 +74,8 @@ export const runDailyProduction = async (
 }
 
 export const getResources = async (params?: ResourcesParams): Promise<Resource[]> => {
-  const { data } = await api.get<Resource[]>("/resources", { params })
-  return data
+  const { data } = await api.get<any>("/resources", { params })
+  return Array.isArray(data) ? data : (data?.data ?? [])
 }
 
 export const getResourceById = async (id: string): Promise<Resource> => {

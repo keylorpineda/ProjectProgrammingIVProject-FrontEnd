@@ -132,7 +132,8 @@
     "gestión",
     "información",
     "distribución",
-    "Csvg"
+    "Csvg",
+    "TRÁNS"
   ],
   "ignorePaths": [
     "node_modules",

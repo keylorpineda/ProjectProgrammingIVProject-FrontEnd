@@ -3,18 +3,14 @@ import { motion } from "framer-motion"
 import {
   Compass,
   AlertTriangle,
-  ShieldCheck,
-  Target,
-  History,
-  MessageSquare,
-  Radio,
-  ChevronRight,
-  Users,
   AlertCircle,
+  ArrowRightLeft,
+  Radio,
+  Users,
+  Package,
 } from "lucide-react"
+import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-
-import type { Variants } from "framer-motion"
 
 import { getCamps } from "@/features/camps/services/camps.service"
 import { getExplorations } from "@/features/explorations/services/explorations.service"
@@ -23,31 +19,46 @@ import { getPersons } from "@/features/persons/services/persons.service"
 import { getCampTransfers } from "@/features/transfers/services/transfers.service"
 import { useAuthStore } from "@/store/useAuthStore"
 
-const containerVariants: Variants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-    },
-  },
+// ── Resource fill class ──────────────────────────────────────────────────────
+function resFillClass(level: number) {
+  if (level < 30) return "tm-fill-critical"
+  if (level < 60) return "tm-fill-warning"
+  return "tm-fill-ok"
 }
 
-const itemVariants: Variants = {
-  hidden: { y: 20, opacity: 0 },
-  visible: {
-    y: 0,
-    opacity: 1,
-    transition: { type: "spring" as const, stiffness: 100 },
-  },
+// ── Animated resource bar ────────────────────────────────────────────────────
+function ResourceBar({ name, level, isLow }: { name: string; level: number; isLow: boolean }) {
+  return (
+    <div className="tm-res-row">
+      <div className="tm-res-header">
+        <span>{name}</span>
+        <span className={`tm-badge ${isLow ? "tm-badge-critical" : "tm-badge-ok"}`}>
+          {isLow ? "Bajo" : "OK"}
+        </span>
+      </div>
+      <div className="tm-res-track">
+        <motion.div
+          className={`tm-res-fill ${resFillClass(level)}`}
+          initial={{ width: 0 }}
+          animate={{ width: `${level}%` }}
+          transition={{ duration: 1.2, ease: "easeOut" }}
+        />
+      </div>
+    </div>
+  )
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 export default function TravelDashboard() {
   const navigate = useNavigate()
   const { user } = useAuthStore()
+  const [leftTab, setLeftTab] = useState<"pending" | "transit">("pending")
+  const [rightTab, setRightTab] = useState<"explorations" | "resources">("explorations")
 
   const baseCampId = user?.camp_id ? String(user.camp_id) : ""
 
+  // ── Data queries ───────────────────────────────────────────────────────────
   const { data: camps = [], isError: campsError } = useQuery({
     queryKey: ["camps"],
     queryFn: getCamps,
@@ -78,38 +89,52 @@ export default function TravelDashboard() {
   })
   const persons = personsResponse?.data ?? []
 
+  // ── Computed values ────────────────────────────────────────────────────────
   const inBaseCount = persons.filter((p) => {
-    const key = String(p.status ?? "").toLowerCase().replace(/\s+/g, "_")
+    const key = String(p.status ?? "")
+      .toLowerCase()
+      .replace(/\s+/g, "_")
     return key === "active" || key === "idle"
   }).length
 
   const inFieldCount = persons.filter((p) => {
-    const key = String(p.status ?? "").toLowerCase().replace(/\s+/g, "_")
+    const key = String(p.status ?? "")
+      .toLowerCase()
+      .replace(/\s+/g, "_")
     return key === "exploring"
   }).length
 
   const hasError = campsError || expError || transfersError || invError
 
   const baseCamp = camps.find((c) => String(c.id) === baseCampId)
-  const consultedCamp = baseCamp
 
   const activeExplorations = explorations.filter((e) => {
-    const key = String(e.status ?? "").toLowerCase().replace(/\s+/g, "_")
+    const key = String(e.status ?? "")
+      .toLowerCase()
+      .replace(/\s+/g, "_")
     return key === "active" || key === "in_progress"
   })
   const scheduledExplorations = explorations.filter((e) => {
-    const key = String(e.status ?? "").toLowerCase().replace(/\s+/g, "_")
+    const key = String(e.status ?? "")
+      .toLowerCase()
+      .replace(/\s+/g, "_")
     return key === "scheduled"
   })
 
   const transitTransfers = transfers.filter((t) => {
-    const key = String(t.status ?? "").toLowerCase().replace(/\s+/g, "_")
+    const key = String(t.status ?? "")
+      .toLowerCase()
+      .replace(/\s+/g, "_")
     return key === "in_transit" || key === "approved"
   })
   const pendingRequests = transfers.filter((t) => {
-    const key = String(t.status ?? "").toLowerCase().replace(/\s+/g, "_")
+    const key = String(t.status ?? "")
+      .toLowerCase()
+      .replace(/\s+/g, "_")
     return key === "pending"
   })
+
+  const lowResourcesCount = inventory.filter((r) => r.alert_active).length
 
   const expeditionSupplies = inventory
     .map((item) => ({
@@ -118,458 +143,380 @@ export default function TravelDashboard() {
         (item.current_quantity / Math.max(item.minimum_stock_required, 1)) * 100,
         100,
       ),
-      status: item.alert_active ? "Bajo" : "Suficiente",
-      color: item.alert_active ? "bg-[#89633e] text-white" : "bg-[#43523d] text-white",
+      isLow: item.alert_active,
     }))
-    .slice(0, 5)
-
-  const lowResourcesCount = inventory.filter((r) => r.alert_active).length
+    .slice(0, 6)
 
   const getCampName = (id: string | number) =>
-    camps.find((c) => String(c.id) === String(id))?.name || String(id)
+    camps.find((c) => String(c.id) === String(id))?.name || `Base #${id}`
+
+  // ── Pinned metric cards ────────────────────────────────────────────────────
+  const metricCards = [
+    {
+      title: "Exploraciones en curso",
+      value: activeExplorations.length,
+      label: "equipos desplegados",
+      pin: "tm-pin-amber",
+      rotate: -1.5,
+    },
+    {
+      title: "Solicitudes pendientes",
+      value: pendingRequests.length,
+      label: "requieren aprobación",
+      pin: pendingRequests.length > 0 ? "tm-pin-red" : "tm-pin-green",
+      rotate: -2,
+    },
+    {
+      title: "Recursos bajos",
+      value: lowResourcesCount,
+      label: "bajo el mínimo",
+      pin: lowResourcesCount > 0 ? "tm-pin-red" : "tm-pin-green",
+      rotate: -0.5,
+    },
+    {
+      title: "Equipo en campo",
+      value: inFieldCount,
+      label: `de ${inBaseCount + inFieldCount} en base`,
+      pin: "tm-pin-amber",
+      rotate: 2,
+    },
+  ]
 
   return (
-    <motion.div
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      className="h-full flex-1 flex flex-col gap-3 w-full overflow-y-auto bg-[#0a0a0a] p-3 custom-scrollbar"
-    >
-      {/* 1. MASTER HUD - CONTROL DE EXPEDICIONES */}
-      <motion.div
-        variants={itemVariants}
-        className="archive-panel p-4 rounded-lg shrink-0 border border-[#d4a373]/25 bg-[#12110f] shadow-[0_-2px_0_0_rgba(212,163,115,0.4)]"
-      >
-        <div className="flex justify-between items-center mb-2 border-b border-[#d4a373]/10 pb-2">
-          <span className="font-mono text-[10px] text-white/30 uppercase tracking-wider">
-            Panel de Coordinación · Gestión de Viajes
-          </span>
-          <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1.5 font-mono text-[10px] text-accent-approved uppercase tracking-wider">
-              <span className="w-1.5 h-1.5 rounded-full bg-accent-approved animate-pulse inline-block" />
-              Enlace activo
-            </span>
-            <span className="font-mono text-xs text-[#d4a373] font-semibold border border-[#d4a373]/25 px-2.5 py-0.5 bg-black/40 rounded-sm tracking-widest">
-              {baseCamp?.name?.toUpperCase() ?? baseCampId}
-            </span>
+    <div className="tm-dashboard">
+      {/* ── BOARD HEADER ───────────────────────────────────────────────── */}
+      <div className="tm-board-header">
+        <div className="tm-board-left">
+          <div className="tm-online-dot" />
+          <div>
+            <h2 className="tm-board-title">
+              TABLERO — {baseCamp?.name?.toUpperCase() ?? `BASE ${baseCampId}`}
+            </h2>
           </div>
         </div>
+      </div>
 
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-3">
-            <div className="bg-[#d4a373]/15 p-2 border border-[#d4a373]/25 rounded-sm">
-              <Radio className="h-5 w-5 text-[#d4a373]" />
-            </div>
-            <div>
-              <h1 className="font-typewriter text-xl lg:text-2xl text-white font-black uppercase tracking-tight leading-none">
-                {consultedCamp?.name ?? baseCampId}
-              </h1>
-              <p className="text-[11px] font-mono text-[#d4a373]/70 uppercase tracking-[0.18em] font-medium mt-1">
-                Gestión de Movilidad
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-4 gap-3 w-full md:w-auto">
-            <div
-              className="bg-[#d4a373]/10 border border-[#d4a373]/30 px-4 py-3 rounded text-center min-w-[90px] cursor-help transition-all hover:bg-[#d4a373]/20"
-              title="Expediciones activas sin retorno registrado."
-            >
-              <span className="text-3xl font-mono font-black text-white leading-none block mb-1">
-                {activeExplorations.length}
-              </span>
-              <span className="text-[10px] font-mono text-[#d4a373]/70 uppercase tracking-wider font-medium block leading-snug">
-                Exploraciones<br />en curso
-              </span>
-            </div>
-            <div
-              className="bg-accent-critical/10 border border-accent-critical/30 px-4 py-3 rounded text-center min-w-[90px] cursor-help transition-all hover:bg-accent-critical/20"
-              title="Solicitudes intercampamento esperando aprobación."
-            >
-              <span className="text-3xl font-mono font-black text-white leading-none block mb-1">
-                {pendingRequests.length}
-              </span>
-              <span className="text-[10px] font-mono text-accent-critical/70 uppercase tracking-wider font-medium block leading-snug">
-                Solicitudes<br />pendientes
-              </span>
-            </div>
-            <div
-              className="bg-[#c27c2f]/10 border border-[#c27c2f]/30 px-4 py-3 rounded text-center min-w-[90px] cursor-help transition-all hover:bg-[#c27c2f]/20"
-              title="Solicitudes aprobadas que aún no registran llegada."
-            >
-              <span className="text-3xl font-mono font-black text-white leading-none block mb-1">
-                {transitTransfers.length}
-              </span>
-              <span className="text-[10px] font-mono text-[#c27c2f]/70 uppercase tracking-wider font-medium block leading-snug">
-                Transferencias<br />en tránsito
-              </span>
-            </div>
-            <div
-              className="bg-bg-paper border border-[#8b7355]/30 px-4 py-3 rounded text-center min-w-[90px] cursor-help transition-all hover:bg-bg-paper-shadow/20"
-              title="Insumos para viaje por debajo del mínimo recomendado."
-            >
-              <span className="text-3xl font-mono font-black text-ink leading-none block mb-1">
-                {lowResourcesCount}
-              </span>
-              <span className="text-[10px] font-mono text-ink/50 uppercase tracking-wider font-medium block leading-snug">
-                Recursos<br />bajos
-              </span>
-            </div>
-          </div>
-        </div>
-      </motion.div>
-
+      {/* ── ERROR BANNER ───────────────────────────────────────────────── */}
       {hasError && (
-        <div className="bg-red-950/40 border border-red-500/50 p-3 font-mono text-sm text-red-400 uppercase flex items-center gap-2 shadow-lg mb-2">
-          <AlertCircle className="w-4 h-4 shrink-0" />
-          <span>
-            Error de conexión con la central. Modo fuera de línea activo. No se pudieron cargar los
-            datos recientes.
-          </span>
+        <div className="tm-alert">
+          <AlertCircle style={{ width: 16, height: 16, flexShrink: 0 }} />
+          <span>Error de conexión. Modo fuera de línea — datos recientes no disponibles.</span>
         </div>
       )}
 
-      {/* 2. OPERATIONAL GRID - 3 COLUMNS */}
-      <div className="flex-1 grid grid-cols-1 md:grid-cols-12 gap-5 overflow-hidden">
-        {/* COL 1: OPERACIONES DE CAMPO (EXPLORACIONES) */}
-        <section className="md:col-span-4 flex flex-col gap-4 overflow-hidden h-full">
-          <div className="archive-panel p-4 rounded-lg flex-1 flex flex-col overflow-hidden shadow-2xl bg-[#12100d]">
-            <div className="flex items-center justify-between mb-4 border-b border-[#d4a373]/20 pb-2 shrink-0">
-              <h2 className="text-xs font-mono font-semibold text-[#d4a373] uppercase tracking-widest flex items-center gap-2">
-                <Compass className="h-3.5 w-3.5" /> Operaciones de Campo
-              </h2>
-            </div>
+      {/* ── CORK GRID — metric cards ────────────────────────────────────── */}
+      <div className="tm-cork-grid">
+        {metricCards.map((card, i) => (
+          <motion.div
+            key={card.title}
+            className="tm-pinned"
+            initial={{ scale: 0, rotate: -20, opacity: 0 }}
+            animate={{ scale: 1, rotate: card.rotate, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 120, delay: i * 0.08 }}
+            whileHover={{ scale: 1.05, rotate: 0, zIndex: 10 }}
+          >
+            <div className={`tm-pin ${card.pin}`} />
+            <h3 className="tm-card-title">{card.title}</h3>
+            <div className="tm-big-number">{card.value}</div>
+            <div className="tm-small-label">{card.label}</div>
+          </motion.div>
+        ))}
+      </div>
 
-            <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar space-y-2">
-              {[...activeExplorations, ...scheduledExplorations].map((exp) => {
-                const expKey = String(exp.status ?? "").toLowerCase().replace(/\s+/g, "_")
-                const isActive = expKey === "active" || expKey === "in_progress"
-                return (
-                <div
-                  key={exp.id}
-                  className="flex items-center justify-between p-3 bg-bg-paper paper-texture border-2 border-[#8b7355]/20 rounded-sm shadow-lg group relative overflow-hidden"
-                >
-                  <div className="absolute top-0 bottom-0 left-0 w-1 bg-[#8b7355]/30" />
-                  <div className="flex flex-col min-w-0 flex-1 mr-4">
-                    <span className="text-sm font-mono font-black text-ink truncate uppercase">
-                      {exp.name}
-                    </span>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <div
-                        className={`h-1 w-1 rounded-full ${isActive ? "bg-[#43523d]" : "bg-[#89633e]"}`}
-                      />
-                      <span
-                        className={`text-sm font-black uppercase tracking-widest ${isActive ? "text-[#43523d]" : "text-[#89633e]"}`}
-                      >
-                        {isActive ? "EN CURSO" : "PROGRAMADA"}
-                      </span>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => navigate("/travel-manager/expeditions")}
-                    className="text-xs font-mono font-semibold text-ink/40 border border-ink/10 px-2.5 py-1 rounded-sm hover:bg-black/5 transition-all shrink-0 uppercase"
-                  >
-                    Ver
-                  </button>
-                </div>
-                )
-              })}
-              {activeExplorations.length === 0 && scheduledExplorations.length === 0 && (
-                <p className="text-center py-10 text-sm font-mono text-white/20 uppercase tracking-widest">
-                  Sin operaciones registradas
-                </p>
-              )}
+      {/* ── OPERATIONS DETAIL — two columns ───────────────────────────── */}
+      <motion.div
+        className="tm-operations"
+        initial={{ y: 30, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.55, type: "spring", stiffness: 100 }}
+      >
+        {/* LEFT COLUMN: Mobility and Transfers Tabs */}
+        <div className="tm-op-col">
+          <div className="tm-folder-header-row">
+            <h4 className="tm-folder-title">LOGÍSTICA DE TRASLADOS</h4>
+            <div className="tm-folder-tabs">
+              <button
+                type="button"
+                className={`tm-tab ${leftTab === "pending" ? "tm-tab-active" : ""}`}
+                onClick={() => setLeftTab("pending")}
+              >
+                📥 PENDIENTES ({pendingRequests.length})
+              </button>
+              <button
+                type="button"
+                className={`tm-tab ${leftTab === "transit" ? "tm-tab-active" : ""}`}
+                onClick={() => setLeftTab("transit")}
+              >
+                🚚 EN TRÁNSITO ({transitTransfers.length})
+              </button>
             </div>
-
-            <button
-              onClick={() => navigate("/travel-manager/expeditions")}
-              className="mt-4 w-full py-2 border border-dashed border-[#d4a373]/30 text-sm font-mono font-black text-[#d4a373]/60 hover:text-[#d4a373] hover:border-[#d4a373] transition-all uppercase rounded shrink-0"
-            >
-              Ver todas las exploraciones
-            </button>
           </div>
 
-          {/* EQUIPO DISPONIBLE */}
-          <div className="archive-panel p-4 rounded-lg h-[35%] shrink-0 flex flex-col overflow-hidden bg-[#15120e]">
-            <h2 className="text-xs font-mono font-semibold text-[#d4a373] uppercase tracking-widest mb-3 flex items-center gap-2 border-b border-[#d4a373]/20 pb-2 shrink-0">
-              <Users className="h-3.5 w-3.5" /> Resumen de Equipo
-            </h2>
-            <div className="flex-1 flex flex-col justify-center gap-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-bg-paper paper-texture border-2 border-[#8b7355]/20 p-3 rounded-sm text-center shadow-md">
-                  <span className="text-2xl font-mono font-black text-ink leading-none block mb-1">{inBaseCount}</span>
-                  <span className="block text-[10px] font-mono text-ink/50 uppercase tracking-wider font-medium">
-                    En Base
-                  </span>
-                </div>
-                <div className="bg-bg-paper paper-texture border-2 border-[#8b7355]/20 p-3 rounded-sm text-center shadow-md">
-                  <span className="text-2xl font-mono font-black text-[#89633e] leading-none block mb-1">{inFieldCount}</span>
-                  <span className="block text-[10px] font-mono text-ink/50 uppercase tracking-wider font-medium">
-                    En Campo
-                  </span>
-                </div>
+          {leftTab === "pending" ? (
+            <div className="tm-paper animate-fade-in" key="pending-panel">
+              <div className="tm-section-row">
+                <h3 className="tm-section-title">
+                  <AlertTriangle style={{ width: 14, height: 14 }} />
+                  Solicitudes Pendientes
+                </h3>
+                <span className="tm-section-count">{pendingRequests.length} PARA REVISAR</span>
               </div>
 
-              <button
-                onClick={() => navigate("/travel-manager/personnel")}
-                className="w-full py-3 bg-[#b69e7e]/5 border border-[#b69e7e]/20 rounded-sm text-sm font-mono font-black text-white/60 hover:text-[#d4a373] hover:bg-[#b69e7e]/10 transition-all uppercase flex items-center justify-center gap-2 group"
-              >
-                Ver equipo y personas
-                <ChevronRight className="h-3 w-3 group-hover:translate-x-1 transition-transform" />
-              </button>
-            </div>
-          </div>
-        </section>
-
-        {/* COL 2: TRANSFERENCIAS Y SOLICITUDES */}
-        <section className="md:col-span-4 flex flex-col gap-4 overflow-hidden h-full">
-          {/* PANEL: EN MOVIMIENTO */}
-          <div className="archive-panel p-4 rounded-lg flex-1 flex flex-col overflow-hidden bg-[#110e0c]">
-            <h2 className="text-xs font-mono font-semibold text-[#d4a373] uppercase tracking-widest mb-3 border-b border-[#d4a373]/20 pb-2 flex items-center gap-2 shrink-0">
-              <Target className="h-3.5 w-3.5" /> Transferencias Pendientes
-            </h2>
-
-            <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar space-y-2 cursor-default flex flex-col">
-              {pendingRequests.map((t) => (
-                <div
-                  key={t.id}
-                  className="bg-black/60 border border-[#d4a373]/10 p-3 rounded flex items-center justify-between hover:border-[#d4a373]/40 transition-all group"
-                >
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-sm font-mono font-bold text-white/90 uppercase tracking-tight truncate">
-                      {getCampName(t.camp_origin_id)} → {getCampName(t.camp_destination_id)}
-                    </span>
-                    <span className="text-sm font-mono text-accent-approved uppercase font-black tracking-widest">
-                      Pendiente
-                    </span>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => navigate("/travel-manager/transfers")}
-                      className="bg-[#d4a373] text-black px-4 py-2.5 rounded text-xs font-mono font-black uppercase hover:bg-white transition-all shadow-lg active:scale-95"
-                    >
-                      VER SOLICITUD
-                    </button>
-                    <button
-                      aria-label="Contactar por radio"
-                      className="text-[#d4a373]/40 hover:text-[#d4a373] transition-colors p-1"
-                    >
-                      <Radio className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-              {pendingRequests.length === 0 && (
-                <div className="flex-1 flex flex-col items-center justify-center py-10 border border-dashed border-[#d4a373]/10 rounded bg-black/20">
-                  <Target className="h-8 w-8 text-white/5 mb-3" />
-                  <span className="text-sm font-mono font-black text-white/10 uppercase tracking-[0.2em]">
-                    Sin transferencias pendientes
-                  </span>
-                  <button
-                    onClick={() => navigate("/travel-manager/transfers")}
-                    className="mt-4 text-sm font-mono font-black text-[#d4a373] hover:text-[#fca311] uppercase border border-[#d4a373]/40 px-4 py-2.5 rounded transition-all bg-[#d4a373]/5"
-                  >
-                    Nueva solicitud
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* PANEL: APROBACIONES PENDIENTES */}
-          <div className="archive-panel p-4 rounded-lg h-[45%] shrink-0 flex flex-col overflow-hidden bg-[#15120e]">
-            <h2 className="text-xs font-mono font-semibold text-accent-critical uppercase tracking-widest mb-3 border-b border-accent-critical/30 pb-2 flex items-center gap-2 shrink-0">
-              <AlertTriangle className="h-3.5 w-3.5" /> Aprobaciones pendientes
-            </h2>
-            <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar space-y-3">
-              {pendingRequests.map((p) => (
-                <div
-                  key={p.id}
-                  className="bg-bg-paper paper-texture border-2 border-[#8b7355]/20 p-4 rounded-sm shadow-xl relative overflow-hidden group"
-                >
-                  <div className="absolute -top-1 -right-1 opacity-10">
-                    <AlertTriangle className="h-10 w-10 text-accent-critical" />
-                  </div>
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="flex flex-col min-w-0 flex-1 mr-2">
-                      <span className="text-sm font-mono font-black text-ink uppercase truncate leading-tight">
-                        {getCampName(p.camp_origin_id)} → {getCampName(p.camp_destination_id)}
-                      </span>
-                      <span className="text-[10px] font-mono text-ink/40 font-medium uppercase mt-0.5 tracking-wider">
-                        {p.type === "resources" ? "Recursos" : p.type === "people" ? "Personal" : "Mixto"} · Solicitud pendiente
-                      </span>
+              <div className="tm-op-list">
+                {pendingRequests.length === 0 ? (
+                  <p className="tm-empty">Sin solicitudes pendientes</p>
+                ) : (
+                  pendingRequests.map((t) => (
+                    <div key={t.id} className="tm-op-row tm-row-pending">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <span className="tm-op-chip tm-chip-pending">PEND.</span>
+                          <span className="tm-op-label font-mono font-bold text-xs uppercase tracking-wide">
+                            {getCampName(t.camp_origin_id)} → {getCampName(t.camp_destination_id)}
+                          </span>
+                        </div>
+                        <div className="text-[10px] tm-op-meta-sub font-mono uppercase tracking-wider pl-1">
+                          Tipo:{" "}
+                          {t.type === "resources"
+                            ? "Recursos"
+                            : t.type === "people"
+                              ? "Personal"
+                              : "Mixto"}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        className="tm-op-btn"
+                        onClick={() => navigate("/travel-manager/transfers")}
+                      >
+                        Revisar
+                      </button>
                     </div>
-                    <div className="px-2 py-0.5 border border-[#632a2a]/40 bg-[#632a2a]/15 rounded-sm shrink-0">
-                      <span className="text-[10px] font-mono font-black text-[#c84040] uppercase leading-none tracking-widest">
-                        ALTA
-                      </span>
-                    </div>
-                  </div>
+                  ))
+                )}
+              </div>
 
-                  <div className="flex gap-2 mt-3">
-                    <button
-                      onClick={() => navigate("/travel-manager/transfers")}
-                      className="flex-1 bg-[#43523d] text-white py-2.5 text-xs font-mono font-bold uppercase rounded shadow-md hover:bg-white hover:text-[#43523d] transition-all active:scale-95 tracking-wider"
-                    >
-                      Aprobar
-                    </button>
-                    <button
-                      onClick={() => navigate("/travel-manager/transfers")}
-                      className="flex-1 bg-ink/5 text-ink/50 border border-ink/10 py-2.5 text-xs font-mono font-bold uppercase rounded hover:bg-ink hover:text-[#fca311] transition-all tracking-wider"
-                    >
-                      Rechazar
-                    </button>
-                  </div>
-                </div>
-              ))}
-              {pendingRequests.length === 0 && (
-                <div className="flex-1 flex flex-col items-center justify-center py-8 text-center bg-black/10 rounded border border-dashed border-white/5">
-                  <ShieldCheck className="h-10 w-10 mb-2 text-accent-approved opacity-20" />
-                  <p className="text-sm font-mono font-black uppercase tracking-[0.2em] text-white/20 leading-tight">
-                    Canal de solicitudes <br /> sin actividad
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
-
-        {/* COL 3: INSUMOS, ACCIONES Y LOG (25%) */}
-        <section className="md:col-span-4 flex flex-col gap-4 overflow-hidden h-full">
-          {/* ESTADO DE INSUMOS */}
-          <div className="archive-panel p-4 rounded-lg flex-1 flex flex-col overflow-hidden bg-[#12110f]">
-            <h2 className="text-xs font-mono font-semibold text-[#d4a373] uppercase tracking-widest mb-4 border-b border-[#d4a373]/20 pb-2 flex items-center gap-2 shrink-0">
-              <AlertTriangle className="h-3.5 w-3.5 text-[#c27c2f]" /> Recursos críticos
-            </h2>
-            <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3.5">
-              {expeditionSupplies.map((res, i) => (
-                <div key={i} className="space-y-1.5">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-mono font-black text-white uppercase tracking-tight">
-                      {res.name}
-                    </span>
-                    <span
-                      className={`text-sm font-black uppercase ${res.color} px-2 py-0.5 rounded-sm border border-white/10 shadow-md rotate-1`}
-                    >
-                      {res.status}
-                    </span>
-                  </div>
-                  <div className="h-2 w-full bg-black/40 border border-white/10 rounded-full overflow-hidden p-[1px] shadow-inner">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${res.level}%` }}
-                      transition={{ duration: 1.5, ease: "easeOut" }}
-                      className={`h-full rounded-full shadow-[0_0_10px_rgba(212,163,115,0.1)] ${
-                        res.level < 30
-                          ? "bg-accent-critical"
-                          : res.level < 60
-                            ? "bg-[#c27c2f]"
-                            : "bg-[#d4a373]"
-                      }`}
-                    />
-                  </div>
-                </div>
-              ))}
-              {expeditionSupplies.length === 0 && (
-                <p className="text-center py-4 text-sm font-mono text-white/20 uppercase tracking-widest">
-                  Sin recursos registrados
-                </p>
-              )}
-
-              <button
-                onClick={() => navigate("/travel-manager/inventory")}
-                className="w-full mt-3 py-2 border border-[#d4a373]/20 text-xs font-mono font-black text-[#d4a373]/60 hover:text-[#d4a373] hover:border-[#d4a373]/40 transition-all uppercase rounded bg-black/20"
-              >
-                Revisar todos los recursos
-              </button>
-            </div>
-          </div>
-
-          {/* ACCIONES RÁPIDAS - Tácticas */}
-          <div className="shrink-0 grid grid-cols-1 gap-2">
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => navigate("/travel-manager/expeditions")}
-                className="group text-black p-4 rounded flex flex-col justify-between hover:bg-white transition-all shadow-xl active:scale-95 h-24"
-                style={{ backgroundColor: "#c27c2f" }}
-              >
-                <Compass className="h-5 w-5 group-hover:rotate-180 transition-transform duration-700" />
-                <div className="text-left">
-                  <span className="font-typewriter font-black uppercase text-sm block leading-tight">
-                    Preparar Exploración
-                  </span>
-                  <span className="text-sm font-mono font-black uppercase opacity-60 block tracking-widest mt-0.5">
-                    Protocolo POST
-                  </span>
-                </div>
-              </button>
-              <button
-                onClick={() => navigate("/travel-manager/transfers")}
-                className="archive-panel group text-[#d4a373] p-4 rounded flex flex-col justify-between hover:border-white/40 transition-all shadow-md active:scale-95 h-24"
-                style={{ backgroundColor: "#1f1d19" }}
-              >
-                <MessageSquare className="h-5 w-5" />
-                <div className="text-left">
-                  <span className="font-typewriter font-black uppercase text-sm block leading-tight">
-                    Nueva Solicitud
-                  </span>
-                  <span className="text-sm font-mono font-black uppercase text-[#d4a373]/50 block tracking-widest mt-0.5">
-                    Enlace Logístico
-                  </span>
-                </div>
-              </button>
-            </div>
-
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                onClick={() => navigate("/travel-manager/transfers")}
-                className="bg-black/40 border border-[#d4a373]/20 py-2.5 rounded text-sm font-mono font-black text-white/80 hover:text-[#d4a373] hover:border-[#d4a373]/40 transition-all uppercase"
-              >
-                Ver Pendientes
-              </button>
-              <button
-                onClick={() => navigate("/travel-manager/transfers")}
-                className="bg-black/40 border border-[#d4a373]/20 py-2.5 rounded text-sm font-mono font-black text-white/80 hover:text-[#d4a373] hover:border-[#d4a373]/40 transition-all uppercase"
-              >
-                Registrar Llegada
-              </button>
-              <button
-                onClick={() => navigate("/travel-manager/inventory")}
-                className="bg-black/40 border border-[#d4a373]/20 py-2.5 rounded text-sm font-mono font-black text-white/80 hover:text-[#d4a373] hover:border-[#d4a373]/40 transition-all uppercase"
-              >
-                Revisar Recursos
-              </button>
-            </div>
-          </div>
-
-          {/* SYSTEM LOGS */}
-          <div className="archive-panel p-4 rounded-lg h-[22%] shrink-0 flex flex-col overflow-hidden bg-[#1a1815]">
-            <h3 className="text-xs font-mono font-black uppercase opacity-40 mb-3 flex items-center gap-2 shrink-0 text-[#d4a373]">
-              <History className="h-3 w-3" /> Bitácora
-            </h3>
-            <div className="flex-1 overflow-hidden space-y-2">
-              {[
-                { time: "14:22", log: "Exploración confirmada" },
-                { time: "13:58", log: "Llegada registrada" },
-                { time: "12:40", log: "Solicitud aprobada" },
-              ].map((log, i) => (
-                <div
-                  key={i}
-                  className="flex gap-4 items-center border-b border-white/5 pb-1.5 last:border-0"
+              <div style={{ marginTop: 16, display: "flex", gap: 12 }}>
+                <button
+                  type="button"
+                  className="tm-action-btn tm-action-btn-primary"
+                  style={{ flex: 1, padding: "10px 14px" }}
+                  onClick={() => navigate("/travel-manager/transfers")}
                 >
-                  <span className="text-sm font-mono text-white/40 shrink-0">{log.time}</span>
-                  <p className="text-sm font-mono font-bold text-white/80 uppercase truncate">
-                    {log.log}
-                  </p>
-                </div>
-              ))}
-              <button className="w-full text-center text-sm font-mono font-black text-white/20 hover:text-[#d4a373] transition-colors mt-1 uppercase">
-                Ver historial
+                  <span className="tm-action-label">Gestionar traslados</span>
+                  <span className="tm-action-sub">Aprobar · Rechazar · Registrar</span>
+                </button>
+                <button
+                  type="button"
+                  className="tm-action-btn"
+                  style={{ flex: 1, padding: "10px 14px" }}
+                  onClick={() =>
+                    navigate("/travel-manager/transfers", { state: { openNewTransfer: true } })
+                  }
+                >
+                  <Radio style={{ width: 14, height: 14 }} />
+                  <span className="tm-action-label">Nueva solicitud</span>
+                  <span className="tm-action-sub">Enlace logístico</span>
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="tm-paper tm-paper-dark animate-fade-in" key="transit-panel">
+              <div className="tm-section-row">
+                <h3 className="tm-section-title">
+                  <ArrowRightLeft style={{ width: 14, height: 14 }} />
+                  Traslados en Tránsito
+                </h3>
+                <span className="tm-section-count">{transitTransfers.length} ACTIVOS</span>
+              </div>
+
+              <div className="tm-op-list">
+                {transitTransfers.length === 0 ? (
+                  <p className="tm-empty">Sin movimientos activos</p>
+                ) : (
+                  transitTransfers.map((t) => (
+                    <div key={t.id} className="tm-op-row tm-row-transit">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <span className="tm-op-chip tm-chip-transit">TRÁNS.</span>
+                          <span className="tm-op-label font-mono font-bold text-xs uppercase tracking-wide">
+                            {getCampName(t.camp_origin_id)} → {getCampName(t.camp_destination_id)}
+                          </span>
+                        </div>
+                        <div className="text-[10px] tm-op-meta-sub font-mono uppercase tracking-wider pl-1">
+                          Tipo:{" "}
+                          {t.type === "resources"
+                            ? "Recursos"
+                            : t.type === "people"
+                              ? "Personal"
+                              : "Mixto"}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        className="tm-op-btn"
+                        onClick={() => navigate("/travel-manager/transfers")}
+                      >
+                        Ver
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <div style={{ marginTop: 16, display: "flex", gap: 12 }}>
+                <button
+                  type="button"
+                  className="tm-action-btn tm-action-btn-primary"
+                  style={{ flex: 1, padding: "10px 14px" }}
+                  onClick={() => navigate("/travel-manager/transfers")}
+                >
+                  <span className="tm-action-label">Ver Enlace de Traslados</span>
+                  <span className="tm-action-sub">Monitorear mapa e historial</span>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* RIGHT COLUMN: Operations and Resources Tabs */}
+        <div className="tm-op-col">
+          <div className="tm-folder-header-row">
+            <h4 className="tm-folder-title">OPERACIONES Y RECURSOS</h4>
+            <div className="tm-folder-tabs">
+              <button
+                type="button"
+                className={`tm-tab ${rightTab === "explorations" ? "tm-tab-active" : ""}`}
+                onClick={() => setRightTab("explorations")}
+              >
+                🧭 EXPLORACIONES ({activeExplorations.length + scheduledExplorations.length})
+              </button>
+              <button
+                type="button"
+                className={`tm-tab ${rightTab === "resources" ? "tm-tab-active" : ""}`}
+                onClick={() => setRightTab("resources")}
+              >
+                📦 RECURSOS ({lowResourcesCount > 0 ? `${lowResourcesCount} BAJOS` : "OK"})
               </button>
             </div>
           </div>
-        </section>
-      </div>
-    </motion.div>
+
+          {rightTab === "explorations" ? (
+            <div className="tm-paper animate-fade-in" key="explorations-panel">
+              <div className="tm-section-row">
+                <h3 className="tm-section-title">
+                  <Compass style={{ width: 14, height: 14 }} />
+                  Operaciones de Campo
+                </h3>
+                <span className="tm-section-count">
+                  {activeExplorations.length + scheduledExplorations.length} TOTAL
+                </span>
+              </div>
+
+              <div className="tm-op-list">
+                {activeExplorations.length === 0 && scheduledExplorations.length === 0 ? (
+                  <p className="tm-empty">Sin operaciones registradas</p>
+                ) : (
+                  [...activeExplorations, ...scheduledExplorations].map((exp) => {
+                    const key = String(exp.status ?? "")
+                      .toLowerCase()
+                      .replace(/\s+/g, "_")
+                    const isActive = key === "active" || key === "in_progress"
+                    return (
+                      <div
+                        key={exp.id}
+                        className={`tm-op-row ${isActive ? "tm-row-active" : "tm-row-sched"}`}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
+                            <span
+                              className={`tm-op-chip ${isActive ? "tm-chip-active" : "tm-chip-sched"}`}
+                            >
+                              {isActive ? "Activa" : "Prog."}
+                            </span>
+                            <span className="tm-op-label font-mono font-bold text-xs uppercase tracking-wide">
+                              {exp.name}
+                            </span>
+                          </div>
+                          <div className="text-[10px] tm-op-meta-sub font-mono uppercase tracking-wider pl-1">
+                            Campamento: {getCampName(exp.camp_id)}
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          className="tm-op-btn"
+                          onClick={() => navigate("/travel-manager/expeditions")}
+                        >
+                          Ver
+                        </button>
+                      </div>
+                    )
+                  })
+                )}
+              </div>
+
+              <div style={{ marginTop: 16, display: "flex", gap: 12 }}>
+                <button
+                  type="button"
+                  className="tm-action-btn"
+                  style={{ flex: 1, padding: "10px 14px" }}
+                  onClick={() => navigate("/travel-manager/expeditions")}
+                >
+                  <Compass style={{ width: 14, height: 14 }} />
+                  <span className="tm-action-label">Preparar exploración</span>
+                  <span className="tm-action-sub">Protocolo de salida</span>
+                </button>
+                <button
+                  type="button"
+                  className="tm-action-btn"
+                  style={{ flex: 1, padding: "10px 14px" }}
+                  onClick={() => navigate("/travel-manager/personnel")}
+                >
+                  <Users style={{ width: 14, height: 14 }} />
+                  <span className="tm-action-label">Ver equipo</span>
+                  <span className="tm-action-sub">
+                    {inBaseCount} en base · {inFieldCount} en campo
+                  </span>
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="tm-paper tm-paper-dark animate-fade-in" key="resources-panel">
+              <div className="tm-section-row">
+                <h3 className="tm-section-title">
+                  <Package style={{ width: 14, height: 14 }} />
+                  Estado de Recursos
+                </h3>
+                <span className="tm-section-count">
+                  {lowResourcesCount > 0 ? `${lowResourcesCount} BAJOS` : "NIVELES OK"}
+                </span>
+              </div>
+
+              <div className="tm-op-list">
+                {expeditionSupplies.length === 0 ? (
+                  <p className="tm-empty">Sin recursos registrados</p>
+                ) : (
+                  expeditionSupplies.map((res, i) => (
+                    <ResourceBar key={i} name={res.name} level={res.level} isLow={res.isLow} />
+                  ))
+                )}
+              </div>
+
+              <div style={{ marginTop: 16, display: "flex", gap: 12 }}>
+                <button
+                  type="button"
+                  className="tm-action-btn tm-action-btn-primary"
+                  style={{ flex: 1, padding: "10px 14px" }}
+                  onClick={() => navigate("/travel-manager/inventory")}
+                >
+                  <span className="tm-action-label">Revisar inventario completo</span>
+                  <span className="tm-action-sub">Verificar stocks de base</span>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </motion.div>
+    </div>
   )
 }

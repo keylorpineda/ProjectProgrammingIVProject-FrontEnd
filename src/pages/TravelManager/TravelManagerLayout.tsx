@@ -130,7 +130,7 @@ export default function TravelManagerLayout() {
 
   return (
     <InactivityGuard isAuthenticated={!!user} onLogout={handleLogout}>
-      <div className="h-screen max-h-screen bg-[#0d0c0b] text-[#e0d8cc] relative overflow-hidden font-mono flex flex-col">
+      <div className="h-screen max-h-screen bg-[#0d0c0b] text-[#e0d8cc] relative overflow-hidden font-mono flex flex-col travel-manager-root">
         {/* SCANLINE OVERLAY */}
         <div
           className="absolute inset-0 pointer-events-none z-50 opacity-[0.035]"
@@ -176,10 +176,10 @@ export default function TravelManagerLayout() {
                 </div>
                 <div>
                   <h2 className="text-xs md:text-sm font-black text-[#e0d8cc] hover:text-[#df8120] transition uppercase tracking-widest">
-                    OPERACIONES DE CAMPO
+                    COORDINACIÓN DE MOVILIDAD
                   </h2>
                   <div className="text-sm text-zinc-500 uppercase font-bold mt-0.5 flex items-center gap-2">
-                    <span>COORD. LOGÍSTICA</span>
+                    <span>TRAVEL MANAGER</span>
                   </div>
                 </div>
               </div>
@@ -197,7 +197,7 @@ export default function TravelManagerLayout() {
                   <div className="relative h-14 w-14 bg-black border-2 border-[#c27c2f] flex items-center justify-center">
                     <div className="absolute inset-0 bg-[#c27c2f]/20 animate-pulse" />
                     <span className="font-black text-[#c27c2f] text-2xl font-typewriter z-10">
-                      {user?.name?.[0]?.toUpperCase() || user?.id?.[0]?.toUpperCase() || "T"}
+                      {user?.username?.[0]?.toUpperCase() || user?.id?.[0]?.toUpperCase() || "T"}
                     </span>
                     <div
                       className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-emerald-500 border-2 border-black rounded-full"
@@ -210,7 +210,7 @@ export default function TravelManagerLayout() {
                       ID-AUTH: VALIDADO
                     </div>
                     <div className="font-black text-lg text-[#e0d8cc] uppercase tracking-widest leading-none mb-2">
-                      {user?.name?.toUpperCase() || user?.id?.toUpperCase() || "TRAVEL MGR"}
+                      {user?.username?.toUpperCase() || user?.id?.toUpperCase() || "TRAVEL MGR"}
                     </div>
                     <span className="inline-block bg-[#3b4d3e] text-white text-xs font-bold px-2 py-1 uppercase tracking-widest">
                       RANGO: TRAVEL MANAGER
