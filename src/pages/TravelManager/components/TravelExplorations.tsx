@@ -41,7 +41,9 @@ import { useAuthStore } from "@/store/useAuthStore"
 // ── Status helpers ──────────────────────────────────────────────────────────
 
 function getStatusLabel(rawStatus: string): string {
-  const status = String(rawStatus ?? "").toLowerCase().replace(/\s+/g, "_")
+  const status = String(rawStatus ?? "")
+    .toLowerCase()
+    .replace(/\s+/g, "_")
   switch (status) {
     case "active":
     case "in_progress":
@@ -59,7 +61,9 @@ function getStatusLabel(rawStatus: string): string {
 }
 
 function getStatusColorClass(rawStatus: string): string {
-  const status = String(rawStatus ?? "").toLowerCase().replace(/\s+/g, "_")
+  const status = String(rawStatus ?? "")
+    .toLowerCase()
+    .replace(/\s+/g, "_")
   switch (status) {
     case "active":
     case "in_progress":
@@ -151,9 +155,10 @@ export default function TravelExplorations() {
       resetNewForm()
       setIsNewModalOpen(false)
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
       const msg = error.response?.data?.message || error.message
-      setFormError(Array.isArray(msg) ? msg.join(", ") : (msg || "Error al crear la expedición."))
+      setFormError(Array.isArray(msg) ? msg.join(", ") : msg || "Error al crear la expedición.")
     },
   })
 
@@ -167,7 +172,7 @@ export default function TravelExplorations() {
       returnExploration(id, {
         real_return_date: body.real_return_date,
         notes: body.notes,
-        found_resources: body.found_resources
+        found_resources: body.found_resources,
       }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["explorations", baseCampId] })
@@ -191,8 +196,11 @@ export default function TravelExplorations() {
         String(exp.destination_description || "")
           .toLowerCase()
           .includes(q)
-      const expStatus = String(exp.status ?? "").toLowerCase().replace(/\s+/g, "_")
-      const matchesStatus = filterStatus === "" || expStatus === String(filterStatus).toLowerCase().replace(/\s+/g, "_")
+      const expStatus = String(exp.status ?? "")
+        .toLowerCase()
+        .replace(/\s+/g, "_")
+      const matchesStatus =
+        filterStatus === "" || expStatus === String(filterStatus).toLowerCase().replace(/\s+/g, "_")
       return matchesSearch && matchesStatus
     })
   }, [explorations, search, filterStatus])
@@ -331,11 +339,11 @@ export default function TravelExplorations() {
       body: {
         real_return_date: new Date(returnDate).toISOString(),
         notes: returnNotes,
-        found_resources: returnFoundResources.map(r => ({
+        found_resources: returnFoundResources.map((r) => ({
           resource_id: Number(r.resource_id),
           flow: "in",
-          quantity: r.quantity
-        }))
+          quantity: r.quantity,
+        })),
       },
     })
   }
@@ -343,9 +351,14 @@ export default function TravelExplorations() {
   function handleToggleReturnResourceSelect(resourceId: string) {
     const exists = returnFoundResources.find((r) => r.resource_id === String(resourceId))
     if (exists) {
-      setReturnFoundResources(returnFoundResources.filter((r) => r.resource_id !== String(resourceId)))
+      setReturnFoundResources(
+        returnFoundResources.filter((r) => r.resource_id !== String(resourceId)),
+      )
     } else {
-      setReturnFoundResources([...returnFoundResources, { resource_id: String(resourceId), quantity: 1 }])
+      setReturnFoundResources([
+        ...returnFoundResources,
+        { resource_id: String(resourceId), quantity: 1 },
+      ])
     }
   }
 
@@ -419,9 +432,9 @@ export default function TravelExplorations() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="h-full flex flex-col gap-3 overflow-hidden bg-bunker-bg">
+    <div className="flex-1 h-full flex flex-col gap-3 overflow-hidden bg-bunker-bg min-h-0">
       {/* ── Vista Header ── */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-industrial-metal py-4 pl-4 pr-8 md:pr-16 border-b border-b-[#c27c2f]/20 shrink-0 shadow-lg relative overflow-hidden">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-industrial-metal py-4 px-4 border-b border-b-[#c27c2f]/20 shrink-0 shadow-lg relative overflow-hidden">
         <div className="flex items-center gap-4 relative z-10">
           <div className="bg-[#c27c2f]/10 p-2 border border-[#c27c2f]/25 rounded-sm">
             <Compass className="h-5 w-5 text-[#c27c2f]" />
@@ -442,10 +455,11 @@ export default function TravelExplorations() {
               <button
                 key={s.id}
                 onClick={() => setFilterStatus(filterStatus === s.id ? "" : s.id)}
-                className={`flex flex-col items-center transition-all px-2 md:px-4 py-2 border border-transparent ${filterStatus === s.id
-                  ? "bg-[#c27c2f]/10 border-[#c27c2f]/20 shadow-inner"
-                  : "hover:bg-[#d4a373]/20"
-                  }`}
+                className={`flex flex-col items-center transition-all px-2 md:px-4 py-2 border border-transparent ${
+                  filterStatus === s.id
+                    ? "bg-[#c27c2f]/10 border-[#c27c2f]/20 shadow-inner"
+                    : "hover:bg-[#d4a373]/20"
+                }`}
               >
                 <span className="text-base md:text-lg font-mono font-black text-[#c27c2f]">
                   {s.count}
@@ -526,26 +540,30 @@ export default function TravelExplorations() {
                     key={exp.id}
                     whileHover={{ x: 2 }}
                     onClick={() => setSelectedId(exp.id)}
-                    className={`w-full text-left p-3 relative transition-all border border-[#c27c2f]/10 ${selectedExp?.id === exp.id
-                      ? "bg-bg-paper shadow-xl scale-[1.02] z-10"
-                      : "bg-[#c27c2f]/5 hover:bg-[#c27c2f]/10 opacity-70 hover:opacity-100"
-                      }`}
+                    className={`w-full text-left p-3 relative transition-all border border-[#c27c2f]/10 ${
+                      selectedExp?.id === exp.id
+                        ? "tm-paper-texture shadow-xl scale-[1.02] z-10"
+                        : "bg-[#c27c2f]/5 hover:bg-[#c27c2f]/10 opacity-70 hover:opacity-100"
+                    }`}
                   >
                     <div
-                      className={`absolute top-2 right-3 font-mono text-sm font-black tracking-tighter ${selectedExp?.id === exp.id ? "text-ink-soft/50" : "text-[#c27c2f]/30"
-                        }`}
+                      className={`absolute top-2 right-3 font-mono text-sm font-black tracking-tighter ${
+                        selectedExp?.id === exp.id ? "text-ink-soft/50" : "text-[#c27c2f]/30"
+                      }`}
                     >
                       REF-{exp.id.slice(0, 4).toUpperCase()}
                     </div>
                     <h5
-                      className={`text-[12px] font-typewriter font-black uppercase leading-tight mb-1 ${selectedExp?.id === exp.id ? "text-ink" : "text-[#c27c2f]"
-                        }`}
+                      className={`text-[12px] font-typewriter font-black uppercase leading-tight mb-1 ${
+                        selectedExp?.id === exp.id ? "text-ink" : "text-[#c27c2f]"
+                      }`}
                     >
                       {exp.name}
                     </h5>
                     <p
-                      className={`text-[10px] font-mono uppercase tracking-wide font-normal truncate mt-0.5 ${selectedExp?.id === exp.id ? "text-ink/60" : "text-white/30"
-                        }`}
+                      className={`text-[10px] font-mono uppercase tracking-wide font-normal truncate mt-0.5 ${
+                        selectedExp?.id === exp.id ? "text-ink/60" : "text-white/30"
+                      }`}
                     >
                       {exp.destination_description}
                     </p>
@@ -572,20 +590,22 @@ export default function TravelExplorations() {
                       </div>
                       <div className="flex items-center gap-1.5">
                         <div
-                          className={`h-2 w-2 rounded-full border border-black/10 ${exp.status === "active" || exp.status === "in_progress"
-                            ? "bg-accent-approved animate-pulse"
-                            : exp.status === "scheduled"
-                              ? "bg-[#c27c2f]"
-                              : exp.status === "cancelled"
-                                ? "bg-accent-critical"
-                                : "bg-black/20"
-                            }`}
+                          className={`h-2 w-2 rounded-full border border-black/10 ${
+                            exp.status === "active" || exp.status === "in_progress"
+                              ? "bg-accent-approved animate-pulse"
+                              : exp.status === "scheduled"
+                                ? "bg-[#c27c2f]"
+                                : exp.status === "cancelled"
+                                  ? "bg-accent-critical"
+                                  : "bg-black/20"
+                          }`}
                         />
                         <span
-                          className={`text-sm font-mono font-black uppercase tracking-widest ${selectedExp?.id === exp.id
-                            ? getStatusColorClass(exp.status)
-                            : "text-white/20"
-                            }`}
+                          className={`text-sm font-mono font-black uppercase tracking-widest ${
+                            selectedExp?.id === exp.id
+                              ? getStatusColorClass(exp.status)
+                              : "text-white/20"
+                          }`}
                         >
                           {getStatusLabel(exp.status)}
                         </span>
@@ -634,20 +654,22 @@ export default function TravelExplorations() {
                   </div>
                   <div className="flex items-center gap-4">
                     <div
-                      className={`px-2 py-0.5 border inline-flex items-center gap-1.5 ${selectedExp.status === "active" || selectedExp.status === "in_progress"
-                        ? "bg-accent-mil/10 border-accent-mil/20 text-accent-approved"
-                        : selectedExp.status === "scheduled"
-                          ? "bg-[#c27c2f]/10 border-[#c27c2f]/20 text-[#c27c2f]"
-                          : "bg-white/5 border-white/10 text-white/40"
-                        }`}
+                      className={`px-2 py-0.5 border inline-flex items-center gap-1.5 ${
+                        selectedExp.status === "active" || selectedExp.status === "in_progress"
+                          ? "bg-accent-mil/10 border-accent-mil/20 text-accent-approved"
+                          : selectedExp.status === "scheduled"
+                            ? "bg-[#c27c2f]/10 border-[#c27c2f]/20 text-[#c27c2f]"
+                            : "bg-white/5 border-white/10 text-white/40"
+                      }`}
                     >
                       <div
-                        className={`h-1 w-1 rounded-full ${selectedExp.status === "active" || selectedExp.status === "in_progress"
-                          ? "bg-accent-approved animate-pulse"
-                          : selectedExp.status === "scheduled"
-                            ? "bg-[#c27c2f]"
-                            : "bg-white/40"
-                          }`}
+                        className={`h-1 w-1 rounded-full ${
+                          selectedExp.status === "active" || selectedExp.status === "in_progress"
+                            ? "bg-accent-approved animate-pulse"
+                            : selectedExp.status === "scheduled"
+                              ? "bg-[#c27c2f]"
+                              : "bg-white/40"
+                        }`}
                       />
                       <span className="text-sm font-mono font-black uppercase tracking-widest leading-none">
                         {getStatusLabel(selectedExp.status)}
@@ -664,21 +686,24 @@ export default function TravelExplorations() {
 
                 {/* Paper map visualization */}
                 <div className="flex-1 p-6 flex flex-col overflow-hidden bg-black/40 items-center justify-center relative">
-                  <div className="w-full h-full max-w-4xl bg-bg-paper shadow-[0_0_40px_rgba(0,0,0,0.6)] relative overflow-hidden p-8 border-[12px] border-bg-paper-shadow/20 flex flex-col">
+                  <div
+                    className="w-full h-full max-w-4xl tm-paper-texture shadow-[0_0_40px_rgba(0,0,0,0.6)] relative overflow-hidden p-8 border-[12px] flex flex-col"
+                    style={{ borderColor: "rgba(192,170,138,0.2)" }}
+                  >
                     <div className="relative h-full flex flex-col">
                       <div className="flex-1 flex items-center justify-between px-20 relative">
                         <div className="absolute top-1/2 left-0 right-0 h-[2px] border-t-2 border-dashed border-ink/10 -translate-y-1/2 mx-32" />
 
                         {(selectedExp.status === "active" ||
                           selectedExp.status === "in_progress") && (
-                            <motion.div
-                              animate={{ left: ["20%", "80%"] }}
-                              transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-                              className="absolute top-1/2 -translate-y-1/2 z-10"
-                            >
-                              <Footprints className="h-5 w-5 text-ink/30 -rotate-90" />
-                            </motion.div>
-                          )}
+                          <motion.div
+                            animate={{ left: ["20%", "80%"] }}
+                            transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+                            className="absolute top-1/2 -translate-y-1/2 z-10"
+                          >
+                            <Footprints className="h-5 w-5 text-ink/30 -rotate-90" />
+                          </motion.div>
+                        )}
 
                         {/* Origin node */}
                         <div className="flex flex-col items-center gap-4 z-20">
@@ -749,20 +774,22 @@ export default function TravelExplorations() {
                       return (
                         <div key={i} className="relative z-10 flex flex-col items-center">
                           <div
-                            className={`h-8 w-8 rounded-full border-2 flex items-center justify-center transition-all shadow-lg ${step.status === "completed"
-                              ? "bg-paper-dark border-white/20 text-white"
-                              : step.status === "current"
-                                ? "bg-accent-mil border-[#c27c2f] text-white animate-pulse"
-                                : "bg-black/80 border-[#c27c2f]/10 text-[#c27c2f]/20"
-                              }`}
+                            className={`h-8 w-8 rounded-full border-2 flex items-center justify-center transition-all shadow-lg ${
+                              step.status === "completed"
+                                ? "bg-paper-dark border-white/20 text-white"
+                                : step.status === "current"
+                                  ? "bg-accent-mil border-[#c27c2f] text-white animate-pulse"
+                                  : "bg-black/80 border-[#c27c2f]/10 text-[#c27c2f]/20"
+                            }`}
                           >
                             <StepIcon className="h-3.5 w-3.5" />
                           </div>
                           <span
-                            className={`absolute top-full mt-2 text-sm font-mono font-black tracking-widest whitespace-nowrap ${step.status !== "pending"
-                              ? "text-[#c27c2f] opacity-80"
-                              : "text-[#c27c2f]/10"
-                              }`}
+                            className={`absolute top-full mt-2 text-sm font-mono font-black tracking-widest whitespace-nowrap ${
+                              step.status !== "pending"
+                                ? "text-[#c27c2f] opacity-80"
+                                : "text-[#c27c2f]/10"
+                            }`}
                           >
                             {step.label}
                           </span>
@@ -1054,10 +1081,11 @@ export default function TravelExplorations() {
                               key={person.id}
                               role="button"
                               tabIndex={0}
-                              className={`flex items-center justify-between p-2 border transition-all cursor-pointer ${isSelected
-                                ? "bg-[#c27c2f]/10 border-[#c27c2f]/30"
-                                : "bg-black/20 border-white/5 hover:border-[#c27c2f]/20"
-                                }`}
+                              className={`flex items-center justify-between p-2 border transition-all cursor-pointer ${
+                                isSelected
+                                  ? "bg-[#c27c2f]/10 border-[#c27c2f]/30"
+                                  : "bg-black/20 border-white/5 hover:border-[#c27c2f]/20"
+                              }`}
                               onClick={() => handleTogglePersonSelect(person.id)}
                               onKeyDown={(e) =>
                                 e.key === "Enter" && handleTogglePersonSelect(person.id)
@@ -1065,10 +1093,11 @@ export default function TravelExplorations() {
                             >
                               <div className="flex items-center gap-2">
                                 <div
-                                  className={`h-3 w-3 border flex items-center justify-center shrink-0 ${isSelected
-                                    ? "border-[#c27c2f] bg-[#c27c2f]/20"
-                                    : "border-white/20"
-                                    }`}
+                                  className={`h-3 w-3 border flex items-center justify-center shrink-0 ${
+                                    isSelected
+                                      ? "border-[#c27c2f] bg-[#c27c2f]/20"
+                                      : "border-white/20"
+                                  }`}
                                 >
                                   {isSelected && <Check className="h-2 w-2 text-[#c27c2f]" />}
                                 </div>
@@ -1088,10 +1117,11 @@ export default function TravelExplorations() {
                                     ev.stopPropagation()
                                     handleSetLeader(person.id)
                                   }}
-                                  className={`text-sm font-mono font-black uppercase px-2 py-0.5 border transition-all ${sel?.is_leader
-                                    ? "bg-[#c27c2f] text-black hover:bg-[#fca311] border-[#c27c2f]"
-                                    : "border-[#c27c2f]/30 text-[#c27c2f]/60 hover:bg-[#c27c2f]/10"
-                                    }`}
+                                  className={`text-sm font-mono font-black uppercase px-2 py-0.5 border transition-all ${
+                                    sel?.is_leader
+                                      ? "bg-[#c27c2f] text-black hover:bg-[#fca311] border-[#c27c2f]"
+                                      : "border-[#c27c2f]/30 text-[#c27c2f]/60 hover:bg-[#c27c2f]/10"
+                                  }`}
                                 >
                                   {sel?.is_leader ? "LÍDER ✓" : "Líder?"}
                                 </button>
@@ -1118,10 +1148,11 @@ export default function TravelExplorations() {
                           return (
                             <div
                               key={item.resource_id}
-                              className={`flex items-center justify-between p-2 border transition-all ${isSelected
-                                ? "bg-[#c27c2f]/10 border-[#c27c2f]/30"
-                                : "bg-black/20 border-white/5"
-                                }`}
+                              className={`flex items-center justify-between p-2 border transition-all ${
+                                isSelected
+                                  ? "bg-[#c27c2f]/10 border-[#c27c2f]/30"
+                                  : "bg-black/20 border-white/5"
+                              }`}
                             >
                               <div
                                 role="button"
@@ -1133,10 +1164,11 @@ export default function TravelExplorations() {
                                 }
                               >
                                 <div
-                                  className={`h-3 w-3 border flex items-center justify-center shrink-0 ${isSelected
-                                    ? "border-[#c27c2f] bg-[#c27c2f]/20"
-                                    : "border-white/20"
-                                    }`}
+                                  className={`h-3 w-3 border flex items-center justify-center shrink-0 ${
+                                    isSelected
+                                      ? "border-[#c27c2f] bg-[#c27c2f]/20"
+                                      : "border-white/20"
+                                  }`}
                                 >
                                   {isSelected && <Check className="h-2 w-2 text-[#c27c2f]" />}
                                 </div>
@@ -1282,26 +1314,42 @@ export default function TravelExplorations() {
                     </div>
                     <div className="max-h-40 overflow-y-auto custom-scrollbar space-y-1 border border-[#c27c2f]/10 p-2 bg-black/20">
                       {inventory.map((item) => {
-                        const sel = returnFoundResources.find((r) => r.resource_id === String(item.resource_id))
+                        const sel = returnFoundResources.find(
+                          (r) => r.resource_id === String(item.resource_id),
+                        )
                         const isSelected = !!sel
                         return (
                           <div
                             key={item.resource_id}
-                            className={`flex items-center justify-between p-2 border transition-all ${isSelected ? "bg-[#c27c2f]/10 border-[#c27c2f]/30" : "bg-black/20 border-white/5"
-                              }`}
+                            className={`flex items-center justify-between p-2 border transition-all ${
+                              isSelected
+                                ? "bg-[#c27c2f]/10 border-[#c27c2f]/30"
+                                : "bg-black/20 border-white/5"
+                            }`}
                           >
                             <div
                               role="button"
                               tabIndex={0}
                               className="flex items-center gap-2 cursor-pointer flex-1"
-                              onClick={() => handleToggleReturnResourceSelect(String(item.resource_id))}
-                              onKeyDown={(e) => e.key === "Enter" && handleToggleReturnResourceSelect(String(item.resource_id))}
+                              onClick={() =>
+                                handleToggleReturnResourceSelect(String(item.resource_id))
+                              }
+                              onKeyDown={(e) =>
+                                e.key === "Enter" &&
+                                handleToggleReturnResourceSelect(String(item.resource_id))
+                              }
                             >
-                              <div className={`h-3 w-3 border flex items-center justify-center shrink-0 ${isSelected ? "border-[#c27c2f] bg-[#c27c2f]/20" : "border-white/20"}`}>
+                              <div
+                                className={`h-3 w-3 border flex items-center justify-center shrink-0 ${isSelected ? "border-[#c27c2f] bg-[#c27c2f]/20" : "border-white/20"}`}
+                              >
                                 {isSelected && <Check className="h-2 w-2 text-[#c27c2f]" />}
                               </div>
-                              <span className="text-sm font-mono font-black text-white/80 uppercase">{item.resource!.name}</span>
-                              <span className="text-sm font-mono text-white/40 uppercase">[{item.resource!.unit}]</span>
+                              <span className="text-sm font-mono font-black text-white/80 uppercase">
+                                {item.resource!.name}
+                              </span>
+                              <span className="text-sm font-mono text-white/40 uppercase">
+                                [{item.resource!.unit}]
+                              </span>
                             </div>
                             {isSelected && (
                               <input
@@ -1309,7 +1357,12 @@ export default function TravelExplorations() {
                                 min={1}
                                 value={sel.quantity}
                                 onClick={(ev) => ev.stopPropagation()}
-                                onChange={(e) => handleReturnResourceQuantityChange(String(item.resource_id), Number(e.target.value))}
+                                onChange={(e) =>
+                                  handleReturnResourceQuantityChange(
+                                    String(item.resource_id),
+                                    Number(e.target.value),
+                                  )
+                                }
                                 className="vintage-input w-16 text-sm ml-2"
                               />
                             )}

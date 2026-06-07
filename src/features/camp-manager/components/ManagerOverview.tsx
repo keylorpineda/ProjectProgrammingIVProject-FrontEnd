@@ -18,24 +18,63 @@ interface ManagerOverviewProps {
   refreshTrigger: number
 }
 
+const P =
+  "url(\"data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23n)' opacity='0.07'/%3E%3C/svg%3E\")"
+
 function StatBlock({
   label,
   value,
   sub,
-  color = "text-[#c27c2f]",
+  valueColor = "#1a1208",
   alert = false,
 }: {
   label: string
   value: string | number
   sub?: string
-  color?: string
+  valueColor?: string
   alert?: boolean
 }) {
   return (
-    <div className={`space-y-1 ${alert ? "animate-pulse" : ""}`}>
-      <div className="text-xs text-zinc-500 uppercase tracking-widest font-bold">{label}</div>
-      <div className={`text-2xl font-black font-mono ${color}`}>{value}</div>
-      {sub && <div className="text-xs text-zinc-600 uppercase">{sub}</div>}
+    <div
+      className={alert ? "animate-pulse" : ""}
+      style={{ display: "flex", flexDirection: "column", gap: 2 }}
+    >
+      <div
+        style={{
+          fontSize: "0.65rem",
+          color: "#7a6a4a",
+          textTransform: "uppercase",
+          letterSpacing: "2px",
+          fontFamily: "monospace",
+          fontWeight: 700,
+        }}
+      >
+        {label}
+      </div>
+      <div
+        style={{
+          fontSize: "1.6rem",
+          fontWeight: 900,
+          fontFamily: "monospace",
+          color: valueColor,
+          lineHeight: 1,
+        }}
+      >
+        {value}
+      </div>
+      {sub && (
+        <div
+          style={{
+            fontSize: "0.62rem",
+            color: "#9a8a6a",
+            textTransform: "uppercase",
+            letterSpacing: "1px",
+            fontFamily: "monospace",
+          }}
+        >
+          {sub}
+        </div>
+      )}
     </div>
   )
 }
@@ -119,194 +158,462 @@ export default function ManagerOverview({ campId, refreshTrigger }: ManagerOverv
       transition={{ duration: 0.2 }}
       className="space-y-6"
     >
-      {/* ROW 1: Food & Water balance — 2 wide cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* ROW 1: Food & Water balance */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* CARD: FOOD */}
-        <div
-          className={`p-8 font-mono border-2 border-black ${isFoodDeficit ? "bg-[#9c2720]/20 border-[#9c2720]" : "bg-[#1a1a1a]"}`}
+        <motion.div
+          initial={{ scale: 0.95, opacity: 0, rotate: -1 }}
+          animate={{ scale: 1, opacity: 1, rotate: -1 }}
+          whileHover={{ rotate: 0, scale: 1.02, zIndex: 10 }}
+          style={{
+            backgroundColor: isFoodDeficit ? "#e8d4c8" : "#d8d2bf",
+            backgroundImage: P,
+            padding: "32px 28px 28px",
+            position: "relative",
+            border: isFoodDeficit ? "1px solid rgba(156,39,32,0.4)" : "1px solid rgba(0,0,0,0.18)",
+            borderLeft: isFoodDeficit ? "4px solid #9c2720" : "4px solid #7a3a1a",
+            boxShadow: "-3px 10px 28px rgba(0,0,0,0.7)",
+            color: "#1a1208",
+          }}
         >
-          <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-black">
+          <div
+            style={{
+              position: "absolute",
+              top: 10,
+              left: "50%",
+              transform: "translateX(-50%)",
+              width: 16,
+              height: 16,
+              borderRadius: "50%",
+              background: isFoodDeficit
+                ? "radial-gradient(circle at 35% 30%,#ff8c8c 0%,#d31a1a 45%,#660000 100%)"
+                : "radial-gradient(circle at 35% 30%,#e8e8e8 0%,#999 45%,#444 100%)",
+              boxShadow: "inset -1px -2px 5px rgba(0,0,0,0.55),2px 4px 8px rgba(0,0,0,0.5)",
+              zIndex: 5,
+            }}
+          />
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              marginBottom: 16,
+              paddingBottom: 14,
+              borderBottom: "1px dashed rgba(0,0,0,0.3)",
+            }}
+          >
             <Flame
-              className={`h-5 w-5 ${isFoodDeficit ? "text-[#9c2720] animate-bounce" : "text-[#c27c2f]"}`}
+              style={{
+                width: 18,
+                height: 18,
+                color: isFoodDeficit ? "#9c2720" : "#7a3a1a",
+                flexShrink: 0,
+              }}
             />
-            <span className="text-sm font-black uppercase tracking-widest text-[#c27c2f]">
+            <span
+              style={{
+                fontFamily: "monospace",
+                fontSize: "0.8rem",
+                fontWeight: 900,
+                letterSpacing: "2px",
+                textTransform: "uppercase",
+                color: "#2a1a08",
+              }}
+            >
               BALANCE ALIMENTARIO
             </span>
             {isFoodDeficit && (
-              <span className="ml-auto text-xs font-black text-white bg-[#9c2720] px-2 py-0.5 animate-pulse">
+              <span
+                style={{
+                  marginLeft: "auto",
+                  fontSize: "0.6rem",
+                  fontWeight: 900,
+                  color: "#fff",
+                  backgroundColor: "#9c2720",
+                  padding: "2px 8px",
+                  letterSpacing: "2px",
+                  textTransform: "uppercase",
+                  fontFamily: "monospace",
+                }}
+                className="animate-pulse"
+              >
                 DÉFICIT
               </span>
             )}
           </div>
-
-          <div className="grid grid-cols-2 gap-8 mb-6">
+          <div
+            style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginBottom: 20 }}
+          >
             <StatBlock
               label="Producción diaria"
               value={`+${foodProd}`}
               sub="MRE / DÍA"
-              color="text-emerald-400"
+              valueColor="#2a4a35"
             />
             <StatBlock
               label="Consumo población"
               value={`-${foodCons}`}
               sub="MRE / DÍA"
-              color={isFoodDeficit ? "text-[#9c2720]" : "text-zinc-400"}
+              valueColor={isFoodDeficit ? "#9c2720" : "#5a4a2a"}
             />
           </div>
-
           <div>
-            <div className="flex justify-between text-xs text-zinc-500 uppercase mb-2 font-bold">
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                fontSize: "0.65rem",
+                color: "#7a6a4a",
+                textTransform: "uppercase",
+                marginBottom: 6,
+                fontFamily: "monospace",
+                fontWeight: 700,
+              }}
+            >
               <span>Eficiencia de producción</span>
-              <span className={foodPct >= 100 ? "text-emerald-400" : "text-[#9c2720]"}>
-                {foodPct}%
-              </span>
+              <span style={{ color: foodPct >= 100 ? "#2a4a35" : "#9c2720" }}>{foodPct}%</span>
             </div>
-            <div className="w-full h-4 bg-black border border-black overflow-hidden">
+            <div
+              style={{
+                width: "100%",
+                height: 10,
+                backgroundColor: "rgba(0,0,0,0.15)",
+                border: "1px solid rgba(0,0,0,0.25)",
+                overflow: "hidden",
+              }}
+            >
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${foodPct}%` }}
                 transition={{ duration: 1.5, ease: "easeOut" }}
-                className={`h-full ${isFoodDeficit ? "bg-[#9c2720]" : "bg-emerald-500"}`}
+                style={{ height: "100%", backgroundColor: isFoodDeficit ? "#9c2720" : "#2a4a35" }}
               />
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* CARD: WATER */}
-        <div className="p-8 font-mono border-2 border-black bg-[#1a1a1a]">
-          <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-black">
-            <Droplet className="h-5 w-5 text-cyan-400" />
-            <span className="text-sm font-black uppercase tracking-widest text-cyan-400">
+        <motion.div
+          initial={{ scale: 0.95, opacity: 0, rotate: 1 }}
+          animate={{ scale: 1, opacity: 1, rotate: 1 }}
+          whileHover={{ rotate: 0, scale: 1.02, zIndex: 10 }}
+          style={{
+            backgroundColor: "#d4d8dc",
+            backgroundImage: P,
+            padding: "32px 28px 28px",
+            position: "relative",
+            border: "1px solid rgba(0,0,0,0.18)",
+            borderLeft: "4px solid #2a5a6a",
+            boxShadow: "-3px 10px 28px rgba(0,0,0,0.7)",
+            color: "#1a1208",
+          }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              top: 10,
+              left: "50%",
+              transform: "translateX(-50%)",
+              width: 16,
+              height: 16,
+              borderRadius: "50%",
+              background: "radial-gradient(circle at 35% 30%,#8cc8e8 0%,#1a6a9a 45%,#00336a 100%)",
+              boxShadow: "inset -1px -2px 5px rgba(0,0,0,0.55),2px 4px 8px rgba(0,0,0,0.5)",
+              zIndex: 5,
+            }}
+          />
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              marginBottom: 16,
+              paddingBottom: 14,
+              borderBottom: "1px dashed rgba(0,0,0,0.3)",
+            }}
+          >
+            <Droplet style={{ width: 18, height: 18, color: "#2a5a6a", flexShrink: 0 }} />
+            <span
+              style={{
+                fontFamily: "monospace",
+                fontSize: "0.8rem",
+                fontWeight: 900,
+                letterSpacing: "2px",
+                textTransform: "uppercase",
+                color: "#1a2a2a",
+              }}
+            >
               SUMINISTRO HÍDRICO
             </span>
           </div>
-
-          <div className="grid grid-cols-2 gap-8 mb-6">
+          <div
+            style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginBottom: 20 }}
+          >
             <StatBlock
               label="Producción diaria"
               value={`+${waterProd}`}
               sub="LITROS / DÍA"
-              color="text-cyan-400"
+              valueColor="#1a5a7a"
             />
             <StatBlock
               label="Consumo hidratación"
               value={`-${waterCons}`}
               sub="LITROS / DÍA"
-              color="text-zinc-400"
+              valueColor="#5a4a2a"
             />
           </div>
-
           <div>
-            <div className="flex justify-between text-xs text-zinc-500 uppercase mb-2 font-bold">
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                fontSize: "0.65rem",
+                color: "#5a6a7a",
+                textTransform: "uppercase",
+                marginBottom: 6,
+                fontFamily: "monospace",
+                fontWeight: 700,
+              }}
+            >
               <span>Eficiencia hídrica</span>
-              <span className={waterPct >= 100 ? "text-cyan-400" : "text-[#9c2720]"}>
-                {waterPct}%
-              </span>
+              <span style={{ color: waterPct >= 100 ? "#1a5a7a" : "#9c2720" }}>{waterPct}%</span>
             </div>
-            <div className="w-full h-4 bg-black border border-black overflow-hidden">
+            <div
+              style={{
+                width: "100%",
+                height: 10,
+                backgroundColor: "rgba(0,0,0,0.15)",
+                border: "1px solid rgba(0,0,0,0.25)",
+                overflow: "hidden",
+              }}
+            >
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${waterPct}%` }}
                 transition={{ duration: 1.5, delay: 0.2, ease: "easeOut" }}
-                className={`h-full ${waterPct >= 100 ? "bg-cyan-500" : "bg-[#9c2720]"}`}
+                style={{ height: "100%", backgroundColor: waterPct >= 100 ? "#1a5a7a" : "#9c2720" }}
               />
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
 
-      {/* ROW 2: Logistics + Medical — 2 cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* ROW 2: Logistics + Medical */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* CARD: LOGISTICS */}
-        <div className="p-8 font-mono border-2 border-black bg-[#1a1a1a]">
-          <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-black">
-            <Truck className="h-5 w-5 text-[#c27c2f]" />
-            <span className="text-sm font-black uppercase tracking-widest text-[#c27c2f]">
+        <motion.div
+          initial={{ scale: 0.95, opacity: 0, rotate: 1.2 }}
+          animate={{ scale: 1, opacity: 1, rotate: 1.2 }}
+          whileHover={{ rotate: 0, scale: 1.02, zIndex: 10 }}
+          style={{
+            backgroundColor: "#ccc8b4",
+            backgroundImage: P,
+            padding: "32px 28px 28px",
+            position: "relative",
+            border: "1px solid rgba(0,0,0,0.18)",
+            borderLeft: "4px solid #6a4a1a",
+            boxShadow: "-3px 10px 28px rgba(0,0,0,0.7)",
+            color: "#1a1208",
+          }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              top: 10,
+              left: "50%",
+              transform: "translateX(-50%)",
+              width: 16,
+              height: 16,
+              borderRadius: "50%",
+              background: "radial-gradient(circle at 35% 30%,#e8e8e8 0%,#999 45%,#444 100%)",
+              boxShadow: "inset -1px -2px 5px rgba(0,0,0,0.55),2px 4px 8px rgba(0,0,0,0.5)",
+              zIndex: 5,
+            }}
+          />
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              marginBottom: 16,
+              paddingBottom: 14,
+              borderBottom: "1px dashed rgba(0,0,0,0.3)",
+            }}
+          >
+            <Truck style={{ width: 18, height: 18, color: "#6a4a1a", flexShrink: 0 }} />
+            <span
+              style={{
+                fontFamily: "monospace",
+                fontSize: "0.8rem",
+                fontWeight: 900,
+                letterSpacing: "2px",
+                textTransform: "uppercase",
+                color: "#2a1a08",
+              }}
+            >
               LOGÍSTICA Y TRÁNSITOS
             </span>
           </div>
-
-          <div className="grid grid-cols-2 gap-8">
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
             <StatBlock
               label="Expediciones enviadas"
               value={sentCount}
               sub="DESPACHOS"
-              color="text-[#e0d8cc]"
+              valueColor="#1a1208"
             />
             <StatBlock
               label="Cargamentos recibidos"
               value={receivedCount}
               sub="ENTREGAS"
-              color="text-[#e0d8cc]"
+              valueColor="#1a1208"
             />
             <StatBlock
               label="Total transferido"
               value={totalTransferred}
               sub="UNIDADES"
-              color="text-[#e0d8cc]"
+              valueColor="#1a1208"
             />
             <StatBlock
               label="Pedidos pendientes"
               value={pendingIncoming}
               sub="ENTRANTES"
-              color={pendingIncoming > 0 ? "text-[#9c2720]" : "text-zinc-500"}
+              valueColor={pendingIncoming > 0 ? "#9c2720" : "#5a7a5a"}
               alert={pendingIncoming > 0}
             />
           </div>
-        </div>
+        </motion.div>
 
         {/* CARD: MEDICAL & SECURITY */}
-        <div className="p-8 font-mono border-2 border-black bg-[#1a1a1a]">
-          <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-black">
-            <Database className="h-5 w-5 text-[#c27c2f]" />
-            <span className="text-sm font-black uppercase tracking-widest text-[#c27c2f]">
+        <motion.div
+          initial={{ scale: 0.95, opacity: 0, rotate: -0.8 }}
+          animate={{ scale: 1, opacity: 1, rotate: -0.8 }}
+          whileHover={{ rotate: 0, scale: 1.02, zIndex: 10 }}
+          style={{
+            backgroundColor: alarmCount > 0 ? "#e8d4c8" : "#d8d2bf",
+            backgroundImage: P,
+            padding: "32px 28px 28px",
+            position: "relative",
+            border: alarmCount > 0 ? "1px solid rgba(156,39,32,0.4)" : "1px solid rgba(0,0,0,0.18)",
+            borderLeft: alarmCount > 0 ? "4px solid #9c2720" : "4px solid #2a4a35",
+            boxShadow: "-3px 10px 28px rgba(0,0,0,0.7)",
+            color: "#1a1208",
+          }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              top: 10,
+              left: "50%",
+              transform: "translateX(-50%)",
+              width: 16,
+              height: 16,
+              borderRadius: "50%",
+              background:
+                alarmCount > 0
+                  ? "radial-gradient(circle at 35% 30%,#ff8c8c 0%,#d31a1a 45%,#660000 100%)"
+                  : "radial-gradient(circle at 35% 30%,#e8e8e8 0%,#999 45%,#444 100%)",
+              boxShadow: "inset -1px -2px 5px rgba(0,0,0,0.55),2px 4px 8px rgba(0,0,0,0.5)",
+              zIndex: 5,
+            }}
+          />
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              marginBottom: 16,
+              paddingBottom: 14,
+              borderBottom: "1px dashed rgba(0,0,0,0.3)",
+            }}
+          >
+            <Database style={{ width: 18, height: 18, color: "#2a4a35", flexShrink: 0 }} />
+            <span
+              style={{
+                fontFamily: "monospace",
+                fontSize: "0.8rem",
+                fontWeight: 900,
+                letterSpacing: "2px",
+                textTransform: "uppercase",
+                color: "#2a1a08",
+              }}
+            >
               BIOMETRÍA Y SEGURIDAD
             </span>
           </div>
-
-          <div className="grid grid-cols-2 gap-8">
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
             <StatBlock
               label="Apoyo médico req."
               value={medNeeded}
               sub="DOSIS"
-              color="text-[#c27c2f]"
+              valueColor="#6a4a1a"
             />
             <StatBlock
               label="Alarmas activas"
               value={alarmCount}
               sub="SECTOR"
-              color={alarmCount > 0 ? "text-[#9c2720]" : "text-emerald-400"}
+              valueColor={alarmCount > 0 ? "#9c2720" : "#2a4a35"}
               alert={alarmCount > 0}
             />
-            <StatBlock
-              label="Seguridad búnker"
-              value="NIVEL 4"
-              sub="MÁXIMO"
-              color="text-emerald-400"
-            />
+            <StatBlock label="Seguridad búnker" value="NIVEL 4" sub="MÁXIMO" valueColor="#2a4a35" />
             <StatBlock
               label="Detección intrusiones"
               value="ACTIVA"
               sub="ONLINE"
-              color="text-emerald-400"
+              valueColor="#2a4a35"
             />
           </div>
-        </div>
+        </motion.div>
       </div>
 
       {/* ALARM PANEL */}
       {alarmCount > 0 && (
-        <div className="border-2 border-[#9c2720] bg-[#9c2720]/10 font-mono">
-          <div className="bg-[#9c2720] px-5 py-3 text-sm font-black uppercase tracking-widest text-white flex items-center gap-3">
-            <AlertTriangle className="h-4 w-4" />
+        <div
+          style={{
+            backgroundColor: "#e8d0c4",
+            backgroundImage: P,
+            border: "1px solid rgba(156,39,32,0.4)",
+            borderLeft: "4px solid #9c2720",
+            boxShadow: "-3px 8px 24px rgba(0,0,0,0.65)",
+            color: "#1a1208",
+            position: "relative",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              padding: "14px 24px",
+              backgroundColor: "#9c2720",
+              color: "#fff",
+              fontFamily: "monospace",
+              fontSize: "0.8rem",
+              fontWeight: 900,
+              textTransform: "uppercase",
+              letterSpacing: "2px",
+            }}
+          >
+            <AlertTriangle style={{ width: 16, height: 16 }} />
             <span>ALARMAS ACTIVAS ({alarmCount})</span>
-            <span className="ml-auto animate-pulse">● EN VIVO</span>
+            <span style={{ marginLeft: "auto" }} className="animate-pulse">
+              ● EN VIVO
+            </span>
           </div>
-          <div className="p-5 space-y-3">
+          <div style={{ padding: "16px 24px", display: "flex", flexDirection: "column", gap: 10 }}>
             {alarmList.map((alarm, index) => (
               <div
                 key={index}
-                className="flex items-center gap-4 border-l-4 border-[#9c2720] bg-black/30 px-4 py-3 text-sm text-[#e0d8cc]"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  borderLeft: "3px solid #9c2720",
+                  backgroundColor: "rgba(156,39,32,0.08)",
+                  padding: "10px 14px",
+                  fontFamily: "monospace",
+                  fontSize: "0.8rem",
+                  color: "#2a1208",
+                }}
               >
                 <div className="h-2 w-2 rounded-full bg-[#9c2720] animate-ping shrink-0" />
                 <span>{alarm}</span>
@@ -317,12 +624,42 @@ export default function ManagerOverview({ campId, refreshTrigger }: ManagerOverv
       )}
 
       {alarmCount === 0 && (
-        <div className="border-2 border-black bg-[#1a1a1a] font-mono px-6 py-4 flex items-center gap-4 text-sm text-emerald-400">
-          <Activity className="h-4 w-4 shrink-0" />
-          <span className="uppercase font-bold tracking-wider">
+        <div
+          style={{
+            backgroundColor: "#d0d8cc",
+            backgroundImage: P,
+            border: "1px solid rgba(0,0,0,0.2)",
+            borderLeft: "4px solid #2a4a35",
+            boxShadow: "-3px 8px 24px rgba(0,0,0,0.6)",
+            padding: "18px 24px",
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            fontFamily: "monospace",
+            color: "#1a2a1a",
+          }}
+        >
+          <Activity style={{ width: 16, height: 16, color: "#2a4a35", flexShrink: 0 }} />
+          <span
+            style={{
+              fontSize: "0.78rem",
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: "1px",
+            }}
+          >
             Todo en orden — Sensores de inventario y personal en márgenes permitidos.
           </span>
-          <span className="ml-auto text-zinc-600 text-xs uppercase">● Monitoreo directo</span>
+          <span
+            style={{
+              marginLeft: "auto",
+              fontSize: "0.65rem",
+              color: "#6a8a6a",
+              textTransform: "uppercase",
+            }}
+          >
+            ● Monitoreo directo
+          </span>
         </div>
       )}
     </motion.div>

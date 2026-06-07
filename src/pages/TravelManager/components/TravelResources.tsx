@@ -226,7 +226,7 @@ export default function TravelResources() {
   const isTripReady = criticalShortages.length === 0 && filteredResources.length > 0
 
   return (
-    <div className="h-full flex flex-col gap-3 overflow-hidden bg-[#0a0a0a] p-4">
+    <div className="flex-1 h-full flex flex-col gap-3 overflow-hidden bg-[#0a0a0a] p-4 min-h-0">
       {/* 1. Header de la vista */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-[#12110f] p-4 rounded-lg border border-[#d4a373]/20 border-t-2 border-t-[#d4a373]/60 shrink-0 shadow-lg relative overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-32 bg-[#d4a373]/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl pointer-events-none" />
@@ -354,7 +354,7 @@ export default function TravelResources() {
                     onClick={() => setSelectedId(resource.id)}
                     className={`w-full text-left p-3 relative transition-all border border-[#d4a373]/10 rounded group shadow-md ${
                       selectedId === resource.id
-                        ? "bg-bg-paper paper-texture scale-[1.02] z-10"
+                        ? "tm-paper-texture scale-[1.02] z-10"
                         : "bg-[#b69e7e]/5 hover:bg-[#b69e7e]/10 opacity-70 hover:opacity-100"
                     }`}
                   >
@@ -462,7 +462,7 @@ export default function TravelResources() {
 
                 {/* Content - Old Paper Manifest */}
                 <div className="flex-1 p-6 flex flex-col overflow-hidden bg-[#0c0c0c] items-center justify-center">
-                  <div className="w-full h-full max-w-2xl bg-bg-paper paper-texture shadow-[0_0_50px_rgba(0,0,0,0.8)] relative overflow-hidden p-12 border-[8px] border-[#8b7355]/10 flex flex-col">
+                  <div className="w-full h-full max-w-2xl tm-paper-texture shadow-[0_0_50px_rgba(0,0,0,0.8)] relative overflow-hidden p-12 border-[8px] border-[#8b7355]/10 flex flex-col">
                     <div className="absolute top-10 right-10 flex flex-col items-center rotate-6 select-none opacity-40">
                       <div className="border-4 border-ink p-1 mb-1">
                         <span className="text-lg font-black font-mono px-2">REGISTRADO</span>

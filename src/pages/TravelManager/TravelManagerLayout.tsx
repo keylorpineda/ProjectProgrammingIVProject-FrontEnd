@@ -13,6 +13,7 @@ import { Outlet, useNavigate, NavLink } from "react-router-dom"
 
 import InactivityGuard from "@/components/ui/InactivityGuard"
 import { useAuthStore } from "@/store/useAuthStore"
+import "./TravelManagerViews.css"
 
 export default function TravelManagerLayout() {
   const { user, logout } = useAuthStore()
@@ -233,10 +234,7 @@ export default function TravelManagerLayout() {
               </div>
             </header>
 
-            <main
-              className="flex-1 overflow-y-auto bg-[#0d0c0b] relative admin-route-container"
-              style={{ padding: "16px" }}
-            >
+            <main className="flex-1 flex flex-col overflow-hidden bg-[#0d0c0b] relative min-h-0">
               <Outlet />
             </main>
           </div>

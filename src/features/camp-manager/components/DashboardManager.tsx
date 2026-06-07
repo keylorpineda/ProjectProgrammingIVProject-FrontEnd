@@ -4,7 +4,6 @@
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { AnimatePresence } from "framer-motion"
 import {
   Terminal,
   Database,
@@ -156,7 +155,7 @@ export default function DashboardManager() {
         {/* SIDEBAR OR CONTENT SHELL CONTAINER */}
         <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
           {/* DOOMSDAY STYLE LEFT SIDEBAR - RESPONSIVE */}
-          <aside className="w-full md:w-72 bg-[#121110] border-b-2 md:border-b-0 md:border-r-2 border-black p-4 flex flex-col justify-between shrink-0 z-20 select-none font-mono">
+          <aside className="w-full md:w-72 bg-[#121110] border-b-2 md:border-b-0 md:border-r-2 border-black px-5 py-4 flex flex-col justify-between shrink-0 z-30 select-none font-mono">
             <div>
               {/* BRAND HEADER & SKULL LOGO */}
               {/* ==========================================
@@ -252,9 +251,12 @@ export default function DashboardManager() {
           </aside>
 
           {/* RIGHT DISPLAY CANVAS */}
-          <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+          <div
+            className="flex-1 flex flex-col overflow-hidden min-w-0"
+            style={{ isolation: "isolate" }}
+          >
             {/* THREE COLUMN DOOMSDAY TOPBAR PANEL */}
-            <header className="bg-[#121110] border-b-2 border-black flex flex-col sm:flex-row justify-between items-center px-4 md:px-6 py-3 gap-4 shrink-0 font-mono select-none z-10 shadow-md">
+            <header className="bg-[#121110] border-b-2 border-black flex flex-col sm:flex-row justify-between items-center px-6 md:px-10 lg:px-14 py-3 gap-4 shrink-0 font-mono select-none z-10 shadow-md">
               {/* Left Portal Badges */}
               <div className="flex items-center gap-3.5 w-full sm:w-auto">
                 <div className="relative flex h-3 w-3 shrink-0">
@@ -345,9 +347,19 @@ export default function DashboardManager() {
             </header>
 
             {/* MAIN PAGE ROUTE INJECTION ADAPTER */}
-            <main className="flex-1 p-4 md:p-6 overflow-y-auto bg-[#0d0c0b] space-y-6 relative">
+            <main
+              className="flex-1 px-6 py-6 md:px-10 md:py-8 lg:px-14 overflow-y-auto space-y-6 relative"
+              style={{
+                backgroundColor: "#2b2218",
+                backgroundImage:
+                  "radial-gradient(#1a1209 18%, transparent 19%), radial-gradient(#1a1209 18%, transparent 19%)",
+                backgroundSize: "9px 9px",
+                backgroundPosition: "0 0, 4.5px 4.5px",
+                boxShadow: "inset 0 0 120px rgba(0,0,0,0.6)",
+              }}
+            >
               {/* VIEW TITLE BAR */}
-              <div className="flex items-center justify-between gap-4 pb-4 border-b-2 border-black font-mono">
+              <div className="flex items-center justify-between gap-4 pb-5 mb-2 border-b-2 border-black/60 font-mono">
                 <div>
                   <h3 className="text-lg md:text-xl font-black uppercase tracking-widest text-[#df8120]">
                     {activeTab === "overview" && "TABLERO DE COMBATE"}
@@ -389,54 +401,40 @@ export default function DashboardManager() {
                 </div>
               </div>
 
-              {/* NESTED DYNAMIC MODULE RENDER PANEL */}
+              {/* NESTED DYNAMIC MODULE RENDER PANEL — all tabs stay mounted to avoid refetch on switch */}
               <div className="min-h-[450px]">
-                <AnimatePresence mode="wait">
-                  {activeTab === "overview" && (
-                    <div key="overview">
-                      <ManagerOverview campId={campId} refreshTrigger={refreshTrigger} />
-                    </div>
-                  )}
-                  {activeTab === "inventory" && (
-                    <div key="inventory">
-                      <ManagerInventory
-                        campId={campId}
-                        onDataChanged={triggerRefresh}
-                        refreshTrigger={refreshTrigger}
-                      />
-                    </div>
-                  )}
-                  {activeTab === "catalog" && (
-                    <div key="catalog">
-                      <ManagerCatalog campId={campId} onDataChanged={triggerRefresh} />
-                    </div>
-                  )}
-                  {activeTab === "ranking" && (
-                    <div key="ranking">
-                      <ManagerRanking campId={campId} refreshTrigger={refreshTrigger} />
-                    </div>
-                  )}
-                  {activeTab === "workforce" && (
-                    <div key="workforce">
-                      <ManagerWorkforce
-                        campId={campId}
-                        onDataChanged={triggerRefresh}
-                        refreshTrigger={refreshTrigger}
-                      />
-                    </div>
-                  )}
-                  {activeTab === "logistics" && (
-                    <div key="logistics">
-                      <ManagerLogistics
-                        campId={campId}
-                        onDataChanged={triggerRefresh}
-                        refreshTrigger={refreshTrigger}
-                        showModal={showLogisticsModal}
-                        onModalClose={() => setShowLogisticsModal(false)}
-                      />
-                    </div>
-                  )}
-                </AnimatePresence>
+                <div className={activeTab === "overview" ? "block" : "hidden"}>
+                  <ManagerOverview campId={campId} refreshTrigger={refreshTrigger} />
+                </div>
+                <div className={activeTab === "inventory" ? "block" : "hidden"}>
+                  <ManagerInventory
+                    campId={campId}
+                    onDataChanged={triggerRefresh}
+                    refreshTrigger={refreshTrigger}
+                  />
+                </div>
+                <div className={activeTab === "catalog" ? "block" : "hidden"}>
+                  <ManagerCatalog campId={campId} onDataChanged={triggerRefresh} />
+                </div>
+                <div className={activeTab === "ranking" ? "block" : "hidden"}>
+                  <ManagerRanking campId={campId} refreshTrigger={refreshTrigger} />
+                </div>
+                <div className={activeTab === "workforce" ? "block" : "hidden"}>
+                  <ManagerWorkforce
+                    campId={campId}
+                    onDataChanged={triggerRefresh}
+                    refreshTrigger={refreshTrigger}
+                  />
+                </div>
+                <div className={activeTab === "logistics" ? "block" : "hidden"}>
+                  <ManagerLogistics
+                    campId={campId}
+                    onDataChanged={triggerRefresh}
+                    refreshTrigger={refreshTrigger}
+                    showModal={showLogisticsModal}
+                    onModalClose={() => setShowLogisticsModal(false)}
+                  />
+                </div>
               </div>
             </main>
           </div>

@@ -6,7 +6,7 @@
 
 import { useQuery } from "@tanstack/react-query"
 import { motion } from "framer-motion"
-import { Trophy, RefreshCw, ShieldAlert, Flame, Droplet } from "lucide-react"
+import { RefreshCw, ShieldAlert, Flame, Droplet } from "lucide-react"
 import { useEffect } from "react"
 
 import { api } from "../config/api"
@@ -88,18 +88,6 @@ export default function ManagerRanking({ campId, refreshTrigger }: ManagerRankin
       transition={{ duration: 0.2 }}
       className="space-y-6"
     >
-      {/* HEADER */}
-      <div className="flex items-start gap-6 bg-[#1a1a1a] border-2 border-black p-6 md:p-10 font-mono">
-        <div>
-          <h3 className="text-lg md:text-xl font-black text-[#c27c2f] uppercase tracking-wider flex items-center gap-3">
-            <Trophy className="h-6 w-6" /> RANKING DE PRODUCTIVIDAD
-          </h3>
-          <p className="text-sm text-zinc-500 mt-1 uppercase">
-            Clasificación por producción diaria estimada.
-          </p>
-        </div>
-      </div>
-
       {error && (
         <div className="border-2 border-black bg-[#9c2720]/20 text-red-200 font-mono text-xs p-3.5 flex items-start gap-4">
           <ShieldAlert className="h-4 w-4 shrink-0 text-red-500 mt-0.5" />
@@ -110,90 +98,240 @@ export default function ManagerRanking({ campId, refreshTrigger }: ManagerRankin
       )}
 
       {ranking.length === 0 ? (
-        <div className="border-2 border-black bg-[#161513] p-10 text-center text-zinc-600 font-mono uppercase text-xs tracking-widest">
+        <div
+          style={{
+            backgroundColor: "#cec8b6",
+            border: "1px solid rgba(0,0,0,0.2)",
+            padding: "40px",
+            textAlign: "center",
+            fontFamily: "monospace",
+            fontSize: "0.75rem",
+            color: "#9a8a6a",
+            textTransform: "uppercase",
+            letterSpacing: "2px",
+          }}
+        >
           SIN TRABAJADORES ACTIVOS EN EL CAMPAMENTO
         </div>
       ) : (
-        <div className="space-y-3">
-          {ranking.map((entry) => {
+        <div className="space-y-5">
+          {ranking.map((entry, idx) => {
             const medal = MEDAL[entry.rank]
             const maxTotal = ranking[0]?.total_production || 1
             const barPct = Math.round((entry.total_production / maxTotal) * 100)
+            const paperBg =
+              entry.rank === 1
+                ? "#e8e0c0"
+                : entry.rank === 2
+                  ? "#dcdcd8"
+                  : entry.rank === 3
+                    ? "#e0d4c0"
+                    : "#d8d2bf"
+            const rotation = idx % 2 === 0 ? -0.8 : 0.6
+            const accentColor = medal?.color ?? "#6a4a1a"
 
             return (
               <motion.div
                 key={entry.person_id}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: entry.rank * 0.04 }}
-                className="border-2 border-black bg-[#161513] font-mono overflow-hidden"
+                initial={{ opacity: 0, x: -20, rotate: rotation - 2 }}
+                animate={{ opacity: 1, x: 0, rotate: rotation }}
+                whileHover={{ rotate: 0, scale: 1.02, zIndex: 10 }}
+                transition={{ delay: entry.rank * 0.05, type: "spring", stiffness: 120 }}
+                style={{
+                  backgroundColor: paperBg,
+                  backgroundImage:
+                    "url(\"data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23n)' opacity='0.07'/%3E%3C/svg%3E\")",
+                  border: "1px solid rgba(0,0,0,0.18)",
+                  borderLeft: `4px solid ${accentColor}`,
+                  boxShadow: "-3px 8px 24px rgba(0,0,0,0.7)",
+                  position: "relative",
+                  overflow: "hidden",
+                  color: "#1a1208",
+                  padding: "20px 24px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 20,
+                }}
               >
-                <div className="flex items-center gap-4 p-5 md:p-6">
-                  {/* Rank */}
+                {/* Rank badge */}
+                <div
+                  style={{
+                    flexShrink: 0,
+                    width: 52,
+                    height: 52,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    border: `2px solid ${accentColor}`,
+                    fontFamily: "monospace",
+                    fontWeight: 900,
+                    fontSize: medal ? "1.4rem" : "1rem",
+                    color: accentColor,
+                    backgroundColor: `${accentColor}18`,
+                  }}
+                >
+                  {medal ? "★" : `#${entry.rank}`}
+                </div>
+
+                {/* Info */}
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div
-                    className="shrink-0 w-12 h-12 flex items-center justify-center border-2 border-black font-black text-xl"
                     style={{
-                      backgroundColor: medal ? medal.color + "22" : "#2a2824",
-                      color: medal ? medal.color : "#9a8a7a",
-                      borderColor: medal ? medal.color : "#2a2824",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                      flexWrap: "wrap",
+                      marginBottom: 4,
                     }}
                   >
-                    {medal ? "★" : `#${entry.rank}`}
-                  </div>
-
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 flex-wrap">
-                      <span className="text-xl">{getProfEmoji(entry.profession)}</span>
-                      <span className="font-black text-[#e0d8cc] uppercase text-base">
-                        {entry.name.toUpperCase()}
+                    <span style={{ fontSize: "1.4rem", lineHeight: 1 }}>
+                      {getProfEmoji(entry.profession)}
+                    </span>
+                    <span
+                      style={{
+                        fontFamily: "monospace",
+                        fontWeight: 900,
+                        fontSize: "1rem",
+                        textTransform: "uppercase",
+                        color: "#0d0a04",
+                        letterSpacing: "1px",
+                      }}
+                    >
+                      {entry.name.toUpperCase()}
+                    </span>
+                    {medal && (
+                      <span
+                        style={{
+                          fontFamily: "monospace",
+                          fontSize: "0.65rem",
+                          fontWeight: 900,
+                          textTransform: "uppercase",
+                          color: accentColor,
+                          border: `1px solid ${accentColor}`,
+                          padding: "2px 8px",
+                          letterSpacing: "1px",
+                        }}
+                      >
+                        {medal.label}
                       </span>
-                      {medal && (
-                        <span
-                          className="text-xs border px-2 py-0.5 font-black uppercase"
-                          style={{ color: medal.color, borderColor: medal.color }}
-                        >
-                          {medal.label}
-                        </span>
-                      )}
-                      <span className="text-xs text-zinc-600 uppercase border border-zinc-700 px-2 py-0.5">
-                        NVL {entry.experience_level}
-                      </span>
-                    </div>
-                    <div className="text-xs text-zinc-500 uppercase mt-1">{entry.profession}</div>
-                    {/* Bar */}
-                    <div className="mt-2 w-full bg-[#121110] border border-black h-2 overflow-hidden">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${barPct}%` }}
-                        transition={{ duration: 0.8, ease: "easeOut" }}
-                        className="h-full"
-                        style={{ backgroundColor: medal ? medal.color : "#c27c2f" }}
-                      />
-                    </div>
+                    )}
+                    <span
+                      style={{
+                        fontFamily: "monospace",
+                        fontSize: "0.65rem",
+                        color: "#7a6a4a",
+                        border: "1px solid rgba(0,0,0,0.2)",
+                        padding: "2px 7px",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      NVL {entry.experience_level}
+                    </span>
                   </div>
+                  <div
+                    style={{
+                      fontFamily: "monospace",
+                      fontSize: "0.7rem",
+                      color: "#7a6a4a",
+                      textTransform: "uppercase",
+                      letterSpacing: "1px",
+                      marginBottom: 8,
+                    }}
+                  >
+                    {entry.profession}
+                  </div>
+                  <div
+                    style={{
+                      width: "100%",
+                      height: 6,
+                      backgroundColor: "rgba(0,0,0,0.15)",
+                      border: "1px solid rgba(0,0,0,0.2)",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${barPct}%` }}
+                      transition={{ duration: 0.8, ease: "easeOut" }}
+                      style={{ height: "100%", backgroundColor: accentColor }}
+                    />
+                  </div>
+                </div>
 
-                  {/* Stats */}
-                  <div className="shrink-0 text-right space-y-1.5 w-24">
-                    <div className="flex items-center justify-end gap-1.5 text-emerald-400 font-black text-sm">
-                      <Flame className="h-3.5 w-3.5 shrink-0" />
-                      <span>+{entry.food_production}</span>
+                {/* Stats */}
+                <div style={{ flexShrink: 0, textAlign: "right", width: 100 }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "flex-end",
+                      gap: 6,
+                      fontFamily: "monospace",
+                      fontWeight: 900,
+                      fontSize: "0.9rem",
+                      color: "#2a4a35",
+                      marginBottom: 4,
+                    }}
+                  >
+                    <Flame style={{ width: 14, height: 14 }} />
+                    <span>+{entry.food_production}</span>
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "flex-end",
+                      gap: 6,
+                      fontFamily: "monospace",
+                      fontWeight: 900,
+                      fontSize: "0.9rem",
+                      color: "#1a4a6a",
+                      marginBottom: 8,
+                    }}
+                  >
+                    <Droplet style={{ width: 14, height: 14 }} />
+                    <span>+{entry.water_production}</span>
+                  </div>
+                  <div style={{ borderTop: "1px dashed rgba(0,0,0,0.25)", paddingTop: 8 }}>
+                    <div
+                      style={{
+                        fontFamily: "monospace",
+                        fontWeight: 900,
+                        fontSize: "2rem",
+                        color: accentColor,
+                        lineHeight: 1,
+                      }}
+                    >
+                      {entry.total_production}
                     </div>
-                    <div className="flex items-center justify-end gap-1.5 text-blue-400 font-black text-sm">
-                      <Droplet className="h-3.5 w-3.5 shrink-0" />
-                      <span>+{entry.water_production}</span>
-                    </div>
-                    <div className="border-t border-zinc-800 pt-1.5">
-                      <div className="text-xl font-black text-[#c27c2f]">
-                        {entry.total_production}
-                      </div>
-                      <div className="text-xs text-zinc-600 uppercase tracking-wide">TOTAL/DÍA</div>
+                    <div
+                      style={{
+                        fontFamily: "monospace",
+                        fontSize: "0.6rem",
+                        color: "#9a8a6a",
+                        textTransform: "uppercase",
+                        letterSpacing: "1px",
+                      }}
+                    >
+                      TOTAL/DÍA
                     </div>
                   </div>
                 </div>
 
-                {/* Bottom accent for top 3 */}
-                {medal && <div className="h-0.5 w-full" style={{ backgroundColor: medal.color }} />}
+                {/* Bottom accent strip for top 3 */}
+                {medal && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      height: 2,
+                      backgroundColor: accentColor,
+                      opacity: 0.5,
+                    }}
+                  />
+                )}
               </motion.div>
             )
           })}

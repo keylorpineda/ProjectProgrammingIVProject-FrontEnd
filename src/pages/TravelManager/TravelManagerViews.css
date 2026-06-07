@@ -807,3 +807,247 @@
     min-height: 220px;
   }
 }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   UTILITY CLASSES — used by TravelManager sub-views
+   All classes that Tailwind's @theme doesn't generate automatically but the
+   sub-views (TravelExplorations, TravelTransfers, TravelTeam, TravelResources)
+   require. Scoped under .travel-manager-root to avoid global side-effects.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Layout backgrounds ─────────────────────────────────────────────────── */
+.travel-manager-root .bg-bunker-bg {
+  background-color: #0a0a0a;
+}
+
+.travel-manager-root .bg-industrial-metal {
+  background-color: #141414;
+}
+
+/* ── Archive panel (TravelTeam, TravelResources) ─────────────────────────── */
+.travel-manager-root .archive-panel {
+  background: #12110f;
+  border: 1px solid rgba(212, 163, 115, 0.18);
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(212, 163, 115, 0.06);
+}
+
+/* ── Paper texture overlay ──────────────────────────────────────────────── */
+.travel-manager-root .paper-texture {
+  background-color: var(--tm-paper);
+  background-image: url("data:image/svg+xml,%3Csvg width='200' height='200' viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.07'/%3E%3C/svg%3E");
+  color: var(--tm-ink);
+}
+
+/* ── bg-bg-paper / text-ink aliases ────────────────────────────────────── */
+.travel-manager-root .bg-bg-paper {
+  background-color: var(--tm-paper) !important;
+  color: var(--tm-ink) !important;
+}
+
+/* ── text-ink / text-ink-soft aliases ──────────────────────────────────── */
+.travel-manager-root .text-ink {
+  color: var(--tm-ink) !important;
+}
+
+/* Opacity variants — Tailwind v4 can't generate these without @theme entry */
+.travel-manager-root .text-ink\/10 {
+  color: rgba(26, 15, 5, 0.1) !important;
+}
+.travel-manager-root .text-ink\/20 {
+  color: rgba(26, 15, 5, 0.2) !important;
+}
+.travel-manager-root .text-ink\/30 {
+  color: rgba(26, 15, 5, 0.3) !important;
+}
+.travel-manager-root .text-ink\/40 {
+  color: rgba(26, 15, 5, 0.4) !important;
+}
+.travel-manager-root .text-ink\/50 {
+  color: rgba(26, 15, 5, 0.5) !important;
+}
+.travel-manager-root .text-ink\/60 {
+  color: rgba(26, 15, 5, 0.6) !important;
+}
+.travel-manager-root .text-ink\/70 {
+  color: rgba(26, 15, 5, 0.7) !important;
+}
+.travel-manager-root .text-ink\/80 {
+  color: rgba(26, 15, 5, 0.8) !important;
+}
+
+.travel-manager-root .text-ink-soft {
+  color: var(--tm-ink-soft) !important;
+}
+
+/* text-ink-soft with opacity */
+.travel-manager-root .text-ink-soft\/50 {
+  color: rgba(26, 15, 5, 0.275) !important;
+}
+
+.travel-manager-root .text-ink-black {
+  color: #000000 !important;
+}
+
+.travel-manager-root .border-ink {
+  border-color: var(--tm-ink) !important;
+}
+
+/* border-ink opacity variants */
+.travel-manager-root .border-ink\/5 {
+  border-color: rgba(26, 15, 5, 0.05) !important;
+}
+.travel-manager-root .border-ink\/10 {
+  border-color: rgba(26, 15, 5, 0.1) !important;
+}
+.travel-manager-root .border-ink\/15 {
+  border-color: rgba(26, 15, 5, 0.15) !important;
+}
+.travel-manager-root .border-ink\/20 {
+  border-color: rgba(26, 15, 5, 0.2) !important;
+}
+.travel-manager-root .border-ink\/30 {
+  border-color: rgba(26, 15, 5, 0.3) !important;
+}
+.travel-manager-root .border-ink\/40 {
+  border-color: rgba(26, 15, 5, 0.4) !important;
+}
+.travel-manager-root .border-t-ink\/10 {
+  border-top-color: rgba(26, 15, 5, 0.1) !important;
+}
+
+/* bg-ink opacity variants */
+.travel-manager-root .bg-ink\/5 {
+  background-color: rgba(26, 15, 5, 0.05) !important;
+}
+.travel-manager-root .bg-ink\/10 {
+  background-color: rgba(26, 15, 5, 0.1) !important;
+}
+.travel-manager-root .bg-ink\/20 {
+  background-color: rgba(26, 15, 5, 0.2) !important;
+}
+
+.travel-manager-root .text-paper-dark {
+  color: var(--tm-paper-dark) !important;
+}
+
+/* ── text-accent-* / bg-accent-* / border-accent-* aliases ─────────────── */
+.travel-manager-root .text-accent-approved {
+  color: var(--tm-approved) !important;
+}
+
+.travel-manager-root .text-accent-critical {
+  color: var(--tm-critical) !important;
+}
+
+.travel-manager-root .text-accent-warning {
+  color: var(--tm-warning) !important;
+}
+
+.travel-manager-root .text-accent-mil {
+  color: #3b4d3e !important;
+}
+
+.travel-manager-root .bg-accent-approved {
+  background-color: var(--tm-approved) !important;
+}
+
+.travel-manager-root .bg-accent-critical {
+  background-color: var(--tm-critical) !important;
+}
+
+.travel-manager-root .bg-accent-mil {
+  background-color: #3b4d3e !important;
+}
+
+.travel-manager-root .border-accent-approved {
+  border-color: var(--tm-approved) !important;
+}
+
+.travel-manager-root .border-accent-critical {
+  border-color: var(--tm-critical) !important;
+}
+
+.travel-manager-root .border-accent-warning {
+  border-color: var(--tm-warning) !important;
+}
+
+.travel-manager-root .border-l-accent-warning\/40 {
+  border-left-color: rgba(194, 124, 47, 0.4) !important;
+}
+
+/* ── Custom scrollbar ───────────────────────────────────────────────────── */
+.travel-manager-root .custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.travel-manager-root .custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.travel-manager-root .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(179, 133, 54, 0.28);
+  border-radius: 2px;
+}
+
+.travel-manager-root .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(179, 133, 54, 0.5);
+}
+
+/* ── Vintage input for dark sub-view panels ─────────────────────────────── */
+.travel-manager-root .vintage-input {
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(194, 124, 47, 0.3);
+  color: #e0d8cc;
+  font-family: var(--ff-mono);
+  padding: 0.45rem 0.75rem;
+  font-size: 0.85rem;
+  border-radius: 2px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.travel-manager-root .vintage-input:focus {
+  border-color: rgba(194, 124, 47, 0.65);
+  box-shadow: 0 0 0 2px rgba(194, 124, 47, 0.1);
+}
+
+.travel-manager-root .vintage-input::placeholder {
+  color: rgba(224, 216, 204, 0.2);
+}
+
+/* ── font-typewriter alias ──────────────────────────────────────────────── */
+.travel-manager-root .font-typewriter {
+  font-family: var(--ff-typer) !important;
+}
+
+/* ── glass-panel for sub-view dark panels ───────────────────────────────── */
+.travel-manager-root .glass-panel {
+  background: rgba(18, 18, 18, 0.9);
+  border: 1px solid rgba(194, 124, 47, 0.15);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+  border-radius: 2px;
+}
+
+/* ── Animate fade-in ────────────────────────────────────────────────────── */
+.travel-manager-root .animate-fade-in {
+  animation: tm-fade-in 0.22s ease-out;
+}
+
+@keyframes tm-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Shadow on dark panel accent highlight ──────────────────────────────── */
+.travel-manager-root .shadow-\[0_-2px_0_0_rgba\(212\,163\,115\,0\.4\)\] {
+  box-shadow: 0 -2px 0 0 rgba(212, 163, 115, 0.4);
+}

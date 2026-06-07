@@ -6,7 +6,7 @@
 
 import { useQuery } from "@tanstack/react-query"
 import { motion } from "framer-motion"
-import { BookOpen, Plus, Pencil, Trash2, RefreshCw, ShieldAlert, PackageSearch } from "lucide-react"
+import { Plus, Pencil, Trash2, RefreshCw, ShieldAlert, PackageSearch } from "lucide-react"
 import { useState } from "react"
 
 import { api } from "../config/api"
@@ -170,34 +170,24 @@ export default function ManagerCatalog({ campId, onDataChanged }: ManagerCatalog
       transition={{ duration: 0.2 }}
       className="space-y-6"
     >
-      {/* HEADER */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 bg-[#1a1a1a] border-2 border-black p-6 md:p-10 font-mono">
-        <div>
-          <h3 className="text-lg md:text-xl font-black text-[#c27c2f] uppercase tracking-wider flex items-center gap-3">
-            <BookOpen className="h-6 w-6" /> CATÁLOGO DE RECURSOS
-          </h3>
-          <p className="text-sm text-zinc-500 mt-1 uppercase">
-            Registro global de recursos disponibles en el sector.
-          </p>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-3 shrink-0">
-          <button
-            type="button"
-            onClick={handleInitialize}
-            disabled={initializing}
-            className="cursor-pointer flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 border-2 border-zinc-600 text-zinc-300 px-5 py-3 text-sm font-black uppercase transition active:translate-y-0.5"
-          >
-            <PackageSearch className="h-4 w-4" />
-            {initDone ? "INVENTARIO LISTO" : initializing ? "INICIALIZANDO..." : "INIT INVENTARIO"}
-          </button>
-          <button
-            type="button"
-            onClick={openCreate}
-            className="cursor-pointer flex items-center gap-2 bg-[#c27c2f]/10 hover:bg-[#c27c2f] hover:text-black border-2 border-[#c27c2f] text-[#c27c2f] px-5 py-3 text-sm font-black uppercase transition active:translate-y-0.5"
-          >
-            <Plus className="h-4 w-4" /> NUEVO RECURSO
-          </button>
-        </div>
+      {/* ACTION BUTTONS */}
+      <div className="flex flex-wrap gap-3 justify-end">
+        <button
+          type="button"
+          onClick={handleInitialize}
+          disabled={initializing}
+          className="cursor-pointer flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 border-2 border-zinc-600 text-zinc-300 px-5 py-3 text-sm font-black uppercase transition active:translate-y-0.5"
+        >
+          <PackageSearch className="h-4 w-4" />
+          {initDone ? "INVENTARIO LISTO" : initializing ? "INICIALIZANDO..." : "INIT INVENTARIO"}
+        </button>
+        <button
+          type="button"
+          onClick={openCreate}
+          className="cursor-pointer flex items-center gap-2 bg-[#c27c2f]/10 hover:bg-[#c27c2f] hover:text-black border-2 border-[#c27c2f] text-[#c27c2f] px-5 py-3 text-sm font-black uppercase transition active:translate-y-0.5"
+        >
+          <Plus className="h-4 w-4" /> NUEVO RECURSO
+        </button>
       </div>
 
       {error && (
@@ -209,62 +199,225 @@ export default function ManagerCatalog({ campId, onDataChanged }: ManagerCatalog
         </div>
       )}
 
-      {/* TABLE */}
-      <div className="overflow-hidden border-2 border-black bg-[#161513]">
-        <table className="table-auto w-full border-collapse font-mono text-xs">
-          <thead className="bg-[#121110] text-[#c27c2f] border-b border-black text-left uppercase text-xs tracking-wider">
+      {/* TABLE — ledger book style */}
+      <div
+        style={{
+          backgroundColor: "#cec8b6",
+          border: "1px solid rgba(0,0,0,0.25)",
+          borderLeft: "4px solid #6a4a1a",
+          boxShadow: "-3px 10px 32px rgba(0,0,0,0.75)",
+          overflow: "hidden",
+          color: "#1a1208",
+        }}
+      >
+        <table className="table-auto w-full border-collapse font-mono">
+          <thead style={{ backgroundColor: "#b8b29e" }}>
             <tr>
-              <th className="px-5 py-4 border-r border-black font-black">RECURSO</th>
-              <th className="px-5 py-4 border-r border-black font-black">CATEGORÍA</th>
-              <th className="px-5 py-4 border-r border-black font-black">UNIDAD</th>
-              <th className="px-5 py-4 border-r border-black font-black hidden md:table-cell">
+              <th
+                style={{
+                  padding: "20px 28px",
+                  borderRight: "1px solid rgba(0,0,0,0.2)",
+                  textAlign: "left",
+                  fontSize: "0.72rem",
+                  fontWeight: 900,
+                  letterSpacing: "2px",
+                  textTransform: "uppercase",
+                  color: "#2a1a08",
+                }}
+              >
+                RECURSO
+              </th>
+              <th
+                style={{
+                  padding: "20px 28px",
+                  borderRight: "1px solid rgba(0,0,0,0.2)",
+                  textAlign: "left",
+                  fontSize: "0.72rem",
+                  fontWeight: 900,
+                  letterSpacing: "2px",
+                  textTransform: "uppercase",
+                  color: "#2a1a08",
+                }}
+              >
+                CATEGORÍA
+              </th>
+              <th
+                style={{
+                  padding: "20px 28px",
+                  borderRight: "1px solid rgba(0,0,0,0.2)",
+                  textAlign: "left",
+                  fontSize: "0.72rem",
+                  fontWeight: 900,
+                  letterSpacing: "2px",
+                  textTransform: "uppercase",
+                  color: "#2a1a08",
+                }}
+              >
+                UNIDAD
+              </th>
+              <th
+                className="hidden md:table-cell"
+                style={{
+                  padding: "20px 28px",
+                  borderRight: "1px solid rgba(0,0,0,0.2)",
+                  textAlign: "left",
+                  fontSize: "0.72rem",
+                  fontWeight: 900,
+                  letterSpacing: "2px",
+                  textTransform: "uppercase",
+                  color: "#2a1a08",
+                }}
+              >
                 DESCRIPCIÓN
               </th>
-              <th className="px-5 py-4 text-center font-black">ACCIONES</th>
+              <th
+                style={{
+                  padding: "20px 28px",
+                  textAlign: "center",
+                  fontSize: "0.72rem",
+                  fontWeight: 900,
+                  letterSpacing: "2px",
+                  textTransform: "uppercase",
+                  color: "#2a1a08",
+                }}
+              >
+                ACCIONES
+              </th>
             </tr>
           </thead>
-          <tbody className="text-sm text-[#e0d8cc] tracking-wide">
+          <tbody>
             {resources.length === 0 && (
               <tr>
                 <td
                   colSpan={5}
-                  className="p-10 text-center text-zinc-600 uppercase text-xs tracking-widest"
+                  style={{
+                    padding: "48px",
+                    textAlign: "center",
+                    color: "#9a8a6a",
+                    fontSize: "0.75rem",
+                    textTransform: "uppercase",
+                    letterSpacing: "2px",
+                  }}
                 >
                   SIN RECURSOS REGISTRADOS
                 </td>
               </tr>
             )}
-            {resources.map((r) => (
+            {resources.map((r, idx) => (
               <tr
                 key={r.id}
-                className="border-b border-black hover:bg-[#2a2824]/40 transition-colors"
+                style={{
+                  backgroundColor: idx % 2 === 0 ? "#cec8b6" : "#d8d2bf",
+                  borderBottom: "1px solid rgba(0,0,0,0.12)",
+                  transition: "background 0.15s",
+                  cursor: "default",
+                }}
+                onMouseEnter={(e) =>
+                  ((e.currentTarget as HTMLTableRowElement).style.backgroundColor = "#c4bda8")
+                }
+                onMouseLeave={(e) =>
+                  ((e.currentTarget as HTMLTableRowElement).style.backgroundColor =
+                    idx % 2 === 0 ? "#cec8b6" : "#d8d2bf")
+                }
               >
-                <td className="px-5 py-4 border-r border-black">
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl leading-none shrink-0">{catIcon(r.category)}</span>
-                    <span className="font-black text-sm uppercase">{r.name}</span>
+                <td style={{ padding: "22px 28px", borderRight: "1px solid rgba(0,0,0,0.15)" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                    <span style={{ fontSize: "2.2rem", lineHeight: 1, flexShrink: 0 }}>
+                      {catIcon(r.category)}
+                    </span>
+                    <span
+                      style={{
+                        fontFamily: "monospace",
+                        fontWeight: 900,
+                        fontSize: "0.95rem",
+                        textTransform: "uppercase",
+                        color: "#0d0a04",
+                        lineHeight: 1.2,
+                      }}
+                    >
+                      {r.name}
+                    </span>
                   </div>
                 </td>
-                <td className="px-5 py-4 border-r border-black">
-                  <span className="text-xs border border-[#c27c2f]/40 text-[#c27c2f] px-2 py-1 uppercase font-bold">
+                <td style={{ padding: "22px 28px", borderRight: "1px solid rgba(0,0,0,0.15)" }}>
+                  <span
+                    style={{
+                      fontFamily: "monospace",
+                      fontSize: "0.78rem",
+                      fontWeight: 900,
+                      textTransform: "uppercase",
+                      color: "#6a3a0a",
+                      border: "1px solid rgba(106,58,10,0.5)",
+                      padding: "5px 12px",
+                      letterSpacing: "1px",
+                    }}
+                  >
                     {CATEGORIES.find((c) => c.value === r.category)?.label ??
                       r.category.toUpperCase()}
                   </span>
                 </td>
-                <td className="px-5 py-4 border-r border-black text-zinc-400 uppercase font-mono">
+                <td
+                  style={{
+                    padding: "22px 28px",
+                    borderRight: "1px solid rgba(0,0,0,0.15)",
+                    fontFamily: "monospace",
+                    fontWeight: 700,
+                    fontSize: "0.9rem",
+                    textTransform: "uppercase",
+                    color: "#3a2a0a",
+                  }}
+                >
                   {r.unit}
                 </td>
-                <td className="px-5 py-4 border-r border-black text-zinc-500 hidden md:table-cell text-xs max-w-xs truncate">
+                <td
+                  className="hidden md:table-cell"
+                  style={{
+                    padding: "22px 28px",
+                    borderRight: "1px solid rgba(0,0,0,0.15)",
+                    fontFamily: "monospace",
+                    fontSize: "0.82rem",
+                    color: "#6a5a3a",
+                    maxWidth: 300,
+                  }}
+                >
                   {r.description ?? "—"}
                 </td>
-                <td className="px-5 py-4 text-center">
-                  <div className="flex items-center justify-center gap-3">
+                <td style={{ padding: "22px 28px", textAlign: "center" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 10,
+                    }}
+                  >
                     <button
                       type="button"
                       onClick={() => openEdit(r)}
-                      className="cursor-pointer border-2 border-[#c27c2f] text-[#c27c2f] hover:bg-[#c27c2f] hover:text-black px-4 py-2 text-xs font-black uppercase transition flex items-center gap-1.5"
+                      style={{
+                        background: "transparent",
+                        border: "1px solid rgba(106,58,10,0.6)",
+                        color: "#6a3a0a",
+                        fontFamily: "monospace",
+                        fontSize: "0.75rem",
+                        fontWeight: 900,
+                        textTransform: "uppercase",
+                        padding: "8px 16px",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
+                      }}
+                      onMouseEnter={(e) =>
+                        ((e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                          "rgba(106,58,10,0.15)")
+                      }
+                      onMouseLeave={(e) =>
+                        ((e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                          "transparent")
+                      }
                     >
-                      <Pencil className="h-3.5 w-3.5" /> EDITAR
+                      <Pencil style={{ width: 14, height: 14 }} /> EDITAR
                     </button>
                     <button
                       type="button"
@@ -272,9 +425,30 @@ export default function ManagerCatalog({ campId, onDataChanged }: ManagerCatalog
                         setConfirmDelete(r)
                         setErrorState(null)
                       }}
-                      className="cursor-pointer border-2 border-[#9c2720] text-[#9c2720] hover:bg-[#9c2720] hover:text-white px-4 py-2 text-xs font-black uppercase transition flex items-center gap-1.5"
+                      style={{
+                        background: "transparent",
+                        border: "1px solid rgba(156,39,32,0.6)",
+                        color: "#9c2720",
+                        fontFamily: "monospace",
+                        fontSize: "0.75rem",
+                        fontWeight: 900,
+                        textTransform: "uppercase",
+                        padding: "8px 16px",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
+                      }}
+                      onMouseEnter={(e) =>
+                        ((e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                          "rgba(156,39,32,0.12)")
+                      }
+                      onMouseLeave={(e) =>
+                        ((e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                          "transparent")
+                      }
                     >
-                      <Trash2 className="h-3.5 w-3.5" /> BORRAR
+                      <Trash2 style={{ width: 14, height: 14 }} /> BORRAR
                     </button>
                   </div>
                 </td>

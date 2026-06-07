@@ -91,13 +91,6 @@ function movementIcon(type: string) {
   return ArrowLeftRight
 }
 
-function movementColor(type: string) {
-  if (type.includes("out") || type.includes("consumption")) return "text-[#9c2720]"
-  if (type.includes("in") || type.includes("income") || type.includes("production"))
-    return "text-emerald-400"
-  return "text-[#c27c2f]"
-}
-
 function formatDate(iso: string) {
   try {
     return new Date(iso).toLocaleString("es-CR", {
@@ -269,7 +262,10 @@ export default function ManagerInventory({
       className="space-y-6"
     >
       {/* ACTION BUTTONS */}
-      <div className="flex flex-wrap gap-3 justify-end">
+      <div
+        className="flex flex-wrap gap-3 justify-end"
+        style={{ position: "relative", zIndex: 10 }}
+      >
         <button
           type="button"
           onClick={openMovementModal}
@@ -295,126 +291,329 @@ export default function ManagerInventory({
         </div>
       )}
 
-      {/* INVENTORY TABLE */}
-      <div className="overflow-hidden border-2 border-black bg-[#161513]">
-        <table className="table-auto w-full border-collapse font-mono text-xs">
-          <thead className="bg-[#121110] text-[#c27c2f] border-b border-black text-left uppercase text-xs tracking-wider">
-            <tr>
-              <th className="px-6 py-4 border-r border-black font-black">Recurso</th>
-              <th className="px-6 py-4 border-r border-black font-black">Stock</th>
-              <th className="px-6 py-4 border-r border-black font-black text-center">Estado</th>
-              <th className="px-6 py-4 text-center font-black">Acciones</th>
-            </tr>
-          </thead>
-          <tbody className="text-sm text-[#e0d8cc] tracking-wide">
-            {inventory.map((item) => {
-              const warningStyle = item.is_below_minimum
-                ? "bg-[#2a1111] text-[#e0d8cc] border-b border-black"
-                : "border-b border-black hover:bg-[#2a2824]/40"
+      {/* INVENTORY CARDS — paper pinned to cork board */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))",
+          gap: "28px",
+        }}
+      >
+        {inventory.map((item, idx) => {
+          const isCritical = item.is_below_minimum
+          const maxCapacity = Math.max(item.current_stock, item.minimum_stock_required * 3) || 1
+          const fillPct = Math.min(100, Math.max(0, (item.current_stock / maxCapacity) * 100))
+          const barBg = isCritical ? "#9c2720" : fillPct < 50 ? "#c27c2f" : "#4c6351"
+          const rotation = idx % 3 === 0 ? -1.5 : idx % 3 === 1 ? 1.2 : -0.6
 
-              return (
-                <tr key={item.id} className={`${warningStyle} transition-colors`}>
-                  <td className="px-6 py-5 border-r border-black font-black">
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl leading-none shrink-0">
-                        {categoryIcon(item.category)}
-                      </span>
-                      <div>
-                        <div className="text-sm font-black uppercase">{item.name}</div>
-                        <div className="text-xs text-zinc-500 font-normal uppercase mt-0.5">
-                          {item.category}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-5 border-r border-black font-mono">
-                    <span className="font-black text-base">{item.current_stock}</span>{" "}
-                    <span className="text-xs font-normal text-zinc-500">
-                      {item.unit.toUpperCase()}
-                    </span>
-                    {item.minimum_stock_required > 0 && (
-                      <div className="text-xs text-zinc-600 mt-1 font-normal">
-                        mín. {item.minimum_stock_required} {item.unit.toUpperCase()}
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-6 py-5 border-r border-black text-center uppercase font-mono font-bold text-sm">
-                    {(() => {
-                      const maxCapacity =
-                        Math.max(item.current_stock, item.minimum_stock_required * 3) || 1
-                      const fillPercentage = Math.min(
-                        100,
-                        Math.max(0, (item.current_stock / maxCapacity) * 100),
-                      )
-                      const barColor = item.is_below_minimum
-                        ? "bg-[#9c2720]"
-                        : fillPercentage < 50
-                          ? "bg-[#df8120]"
-                          : "bg-emerald-500"
+          return (
+            <motion.div
+              key={item.id}
+              initial={{ scale: 0.88, opacity: 0, rotate: rotation - 5 }}
+              animate={{ scale: 1, opacity: 1, rotate: rotation }}
+              whileHover={{ scale: 1.04, rotate: 0, zIndex: 20 }}
+              transition={{ type: "spring", stiffness: 130, delay: idx * 0.04 }}
+              style={{
+                backgroundColor: "#d8d2bf",
+                backgroundImage:
+                  "url(\"data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23n)' opacity='0.07'/%3E%3C/svg%3E\")",
+                padding: "32px 20px 20px",
+                position: "relative",
+                borderRadius: "1px",
+                border: isCritical
+                  ? "1px solid rgba(156,39,32,0.45)"
+                  : "1px solid rgba(0,0,0,0.18)",
+                borderLeft: isCritical ? "4px solid #9c2720" : "1px solid rgba(0,0,0,0.18)",
+                boxShadow: isCritical
+                  ? "0 2px 4px rgba(0,0,0,0.45), -3px 10px 24px rgba(0,0,0,0.75)"
+                  : "0 2px 4px rgba(0,0,0,0.35), -3px 10px 24px rgba(0,0,0,0.65)",
+                color: "#1a1208",
+                cursor: "default",
+              }}
+            >
+              {/* Pin */}
+              <div
+                style={{
+                  width: 16,
+                  height: 16,
+                  background: isCritical
+                    ? "radial-gradient(circle at 35% 30%, #ff8c8c 0%, #d31a1a 45%, #660000 100%)"
+                    : "radial-gradient(circle at 35% 30%, #e8e8e8 0%, #999 45%, #444 100%)",
+                  borderRadius: "50%",
+                  position: "absolute",
+                  top: 10,
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  boxShadow:
+                    "inset -1px -2px 5px rgba(0,0,0,0.55), inset 1px 2px 3px rgba(255,255,255,0.7), 2px 4px 8px rgba(0,0,0,0.5)",
+                  zIndex: 5,
+                }}
+              />
 
-                      return (
-                        <div className="flex flex-col items-center justify-center gap-2 w-full max-w-[200px] mx-auto">
-                          {item.is_below_minimum ? (
-                            <span className="text-[#9c2720] font-black tracking-widest animate-pulse">
-                              [ALERTA_CRÍTICA]
-                            </span>
-                          ) : (
-                            <span className="text-emerald-500 tracking-wider">SEGURO</span>
-                          )}
-                          <div className="w-full bg-[#121110] border-2 border-black h-4 overflow-hidden relative shadow-[inset_0_0_5px_rgba(0,0,0,0.8)]">
-                            <motion.div
-                              initial={{ width: 0 }}
-                              animate={{ width: `${fillPercentage}%` }}
-                              transition={{ duration: 1, ease: "easeOut" }}
-                              className={`h-full ${barColor} ${item.is_below_minimum ? "animate-pulse" : ""}`}
-                            />
-                            <div
-                              className="absolute top-0 bottom-0 w-0.5 bg-white z-10 opacity-70"
-                              style={{
-                                left: `${(item.minimum_stock_required / maxCapacity) * 100}%`,
-                              }}
-                              title="Stock Mínimo Crítico"
-                            />
-                          </div>
-                        </div>
-                      )
-                    })()}
-                  </td>
-                  <td className="px-6 py-5 text-center">
-                    <button
-                      type="button"
-                      onClick={() => handleEditClick(item)}
-                      className="cursor-pointer bg-[#c27c2f]/10 hover:bg-[#c27c2f] hover:text-black border-2 border-[#c27c2f] text-[#c27c2f] px-4 py-2 text-xs font-black uppercase transition active:translate-y-0.5"
-                    >
-                      EDITAR RESERVA
-                    </button>
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
+              {/* Icon + Name */}
+              <div style={{ textAlign: "center", marginBottom: 10 }}>
+                <div style={{ fontSize: "2.8rem", lineHeight: 1, marginBottom: 8 }}>
+                  {categoryIcon(item.category)}
+                </div>
+                <div
+                  style={{
+                    fontFamily: "monospace",
+                    fontSize: "0.78rem",
+                    fontWeight: 900,
+                    letterSpacing: "2px",
+                    textTransform: "uppercase",
+                    color: "#0d0a04",
+                    lineHeight: 1.3,
+                  }}
+                >
+                  {item.name}
+                </div>
+                <div
+                  style={{
+                    fontSize: "0.65rem",
+                    color: "#7a6a4a",
+                    textTransform: "uppercase",
+                    letterSpacing: "1px",
+                    marginTop: 3,
+                  }}
+                >
+                  {item.category}
+                </div>
+              </div>
+
+              {/* Dashed divider */}
+              <div style={{ borderBottom: "1px dashed rgba(0,0,0,0.3)", marginBottom: 12 }} />
+
+              {/* Stock number */}
+              <div style={{ textAlign: "center", marginBottom: 10 }}>
+                <span
+                  style={{
+                    fontFamily: "monospace",
+                    fontSize: "1.8rem",
+                    fontWeight: 900,
+                    color: isCritical ? "#9c2720" : "#1a1208",
+                    lineHeight: 1,
+                  }}
+                >
+                  {item.current_stock}
+                </span>
+                <span
+                  style={{
+                    fontFamily: "monospace",
+                    fontSize: "0.7rem",
+                    color: "#8a7a5a",
+                    marginLeft: 4,
+                  }}
+                >
+                  {item.unit.toUpperCase()}
+                </span>
+                {item.minimum_stock_required > 0 && (
+                  <div
+                    style={{
+                      fontSize: "0.65rem",
+                      color: "#9a8a6a",
+                      marginTop: 3,
+                      fontFamily: "monospace",
+                    }}
+                  >
+                    mín. {item.minimum_stock_required} {item.unit.toUpperCase()}
+                  </div>
+                )}
+              </div>
+
+              {/* Progress bar */}
+              <div
+                style={{
+                  width: "100%",
+                  height: 8,
+                  backgroundColor: "rgba(0,0,0,0.15)",
+                  border: "1px solid rgba(0,0,0,0.2)",
+                  overflow: "hidden",
+                  marginBottom: 14,
+                  position: "relative",
+                }}
+              >
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${fillPct}%` }}
+                  transition={{ duration: 1, ease: "easeOut" }}
+                  style={{
+                    height: "100%",
+                    backgroundColor: barBg,
+                    opacity: isCritical ? undefined : 0.85,
+                  }}
+                  className={isCritical ? "animate-pulse" : ""}
+                />
+                {item.minimum_stock_required > 0 && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      bottom: 0,
+                      width: 1,
+                      backgroundColor: "rgba(0,0,0,0.5)",
+                      left: `${(item.minimum_stock_required / maxCapacity) * 100}%`,
+                    }}
+                  />
+                )}
+              </div>
+
+              {/* Footer: status + button */}
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                {isCritical ? (
+                  <span
+                    style={{
+                      fontSize: "0.62rem",
+                      color: "#9c2720",
+                      fontWeight: 900,
+                      letterSpacing: "1.5px",
+                      textTransform: "uppercase",
+                      fontFamily: "monospace",
+                    }}
+                    className="animate-pulse"
+                  >
+                    ⚠ CRÍTICO
+                  </span>
+                ) : (
+                  <span
+                    style={{
+                      fontSize: "0.62rem",
+                      color: "#4c6351",
+                      fontWeight: 700,
+                      letterSpacing: "1px",
+                      textTransform: "uppercase",
+                      fontFamily: "monospace",
+                    }}
+                  >
+                    ✓ SEGURO
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => handleEditClick(item)}
+                  style={{
+                    background: "transparent",
+                    border: "1px solid rgba(0,0,0,0.4)",
+                    color: "#1a1208",
+                    fontFamily: "monospace",
+                    fontSize: "0.62rem",
+                    fontWeight: 900,
+                    letterSpacing: "1px",
+                    padding: "4px 10px",
+                    cursor: "pointer",
+                    textTransform: "uppercase",
+                    transition: "background 0.15s",
+                  }}
+                  onMouseEnter={(e) =>
+                    ((e.target as HTMLButtonElement).style.background = "rgba(0,0,0,0.12)")
+                  }
+                  onMouseLeave={(e) =>
+                    ((e.target as HTMLButtonElement).style.background = "transparent")
+                  }
+                >
+                  EDITAR
+                </button>
+              </div>
+            </motion.div>
+          )
+        })}
       </div>
 
-      {/* MOVEMENT HISTORY */}
-      <div className="border-2 border-black bg-[#161513] font-mono">
-        <div className="flex items-center gap-3 px-6 md:px-8 py-5 border-b-2 border-black bg-[#121110]">
-          <Clock className="h-5 w-5 text-[#c27c2f]" />
-          <h4 className="font-black text-[#c27c2f] uppercase tracking-widest text-sm md:text-base">
+      {/* MOVEMENT HISTORY — paper logbook */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+        style={{
+          backgroundColor: "#cec8b6",
+          backgroundImage:
+            "url(\"data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23n)' opacity='0.07'/%3E%3C/svg%3E\")",
+          border: "1px solid rgba(0,0,0,0.25)",
+          borderLeft: "4px solid #9c2720",
+          boxShadow: "0 2px 4px rgba(0,0,0,0.4), -3px 10px 28px rgba(0,0,0,0.7)",
+          color: "#1a1208",
+          position: "relative",
+        }}
+      >
+        {/* Pin */}
+        <div
+          style={{
+            width: 16,
+            height: 16,
+            background: "radial-gradient(circle at 35% 30%, #ff8c8c 0%, #d31a1a 45%, #660000 100%)",
+            borderRadius: "50%",
+            position: "absolute",
+            top: 12,
+            left: "50%",
+            transform: "translateX(-50%)",
+            boxShadow:
+              "inset -1px -2px 5px rgba(0,0,0,0.55), inset 1px 2px 3px rgba(255,255,255,0.7), 2px 4px 8px rgba(0,0,0,0.5)",
+            zIndex: 5,
+          }}
+        />
+
+        {/* Header */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            padding: "24px 32px 16px",
+            borderBottom: "1px dashed rgba(0,0,0,0.3)",
+            marginBottom: 4,
+          }}
+        >
+          <Clock style={{ width: 18, height: 18, color: "#7a3a1a", flexShrink: 0 }} />
+          <span
+            style={{
+              fontFamily: "monospace",
+              fontSize: "0.8rem",
+              fontWeight: 900,
+              letterSpacing: "3px",
+              textTransform: "uppercase",
+              color: "#2a1a08",
+            }}
+          >
             REGISTRO DE OPERACIONES RECIENTES
-          </h4>
-          <span className="ml-auto text-xs text-zinc-500 uppercase">Últimos 10</span>
+          </span>
+          <span
+            style={{
+              marginLeft: "auto",
+              fontFamily: "monospace",
+              fontSize: "0.65rem",
+              color: "#9a8a6a",
+              textTransform: "uppercase",
+              letterSpacing: "1px",
+            }}
+          >
+            Últimos 10
+          </span>
         </div>
 
         {movements.length === 0 ? (
-          <div className="px-8 py-10 text-center text-zinc-600 uppercase text-xs tracking-widest">
+          <div
+            style={{
+              padding: "32px",
+              textAlign: "center",
+              fontFamily: "monospace",
+              fontSize: "0.75rem",
+              color: "#9a8a6a",
+              textTransform: "uppercase",
+              letterSpacing: "2px",
+            }}
+          >
             SIN MOVIMIENTOS REGISTRADOS
           </div>
         ) : (
-          <div className="divide-y divide-black">
-            {movements.map((mov) => {
+          <div>
+            {movements.map((mov, idx) => {
               const Icon = movementIcon(mov.type)
-              const color = movementColor(mov.type)
               const isOut = mov.type.includes("out") || mov.type.includes("consumption")
               const resourceName = mov.resource?.name ?? `Recurso #${mov.resource_id}`
               const unit = mov.resource?.unit ?? ""
@@ -422,45 +621,138 @@ export default function ManagerInventory({
                 (i) => String(i.resource_id) === String(mov.resource_id),
               )
               const catIcon = categoryIcon(inventoryMatch?.category ?? "")
+              const qtyColor = isOut ? "#9c2720" : "#4c6351"
 
               return (
                 <div
                   key={mov.id}
-                  className="flex items-center gap-5 px-6 py-5 hover:bg-[#1e1c1a] transition-colors"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 16,
+                    padding: "16px 32px",
+                    borderBottom:
+                      idx < movements.length - 1 ? "1px dashed rgba(0,0,0,0.2)" : "none",
+                  }}
                 >
+                  {/* Type icon */}
                   <div
-                    className={`shrink-0 w-10 h-10 flex items-center justify-center border-2 border-black ${isOut ? "bg-[#9c2720]/15" : "bg-emerald-900/20"}`}
+                    style={{
+                      flexShrink: 0,
+                      width: 36,
+                      height: 36,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      border: `1px solid ${isOut ? "rgba(156,39,32,0.4)" : "rgba(76,99,81,0.4)"}`,
+                      backgroundColor: isOut ? "rgba(156,39,32,0.08)" : "rgba(76,99,81,0.08)",
+                    }}
                   >
-                    <Icon className={`h-5 w-5 ${color}`} />
+                    <Icon
+                      style={{
+                        width: 16,
+                        height: 16,
+                        color: isOut ? "#9c2720" : "#4c6351",
+                      }}
+                    />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 flex-wrap">
-                      <span className="text-lg leading-none">{catIcon}</span>
-                      <span className="font-black text-[#e0d8cc] uppercase text-base">
+
+                  {/* Info */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <span style={{ fontSize: "1.1rem", lineHeight: 1 }}>{catIcon}</span>
+                      <span
+                        style={{
+                          fontFamily: "monospace",
+                          fontSize: "0.82rem",
+                          fontWeight: 900,
+                          textTransform: "uppercase",
+                          color: "#1a1208",
+                          letterSpacing: "1px",
+                        }}
+                      >
                         {resourceName}
                       </span>
-                      <span className="text-xs text-zinc-500 uppercase border border-zinc-700 px-2 py-0.5">
+                      <span
+                        style={{
+                          fontFamily: "monospace",
+                          fontSize: "0.6rem",
+                          textTransform: "uppercase",
+                          color: "#7a6a4a",
+                          border: "1px solid rgba(0,0,0,0.25)",
+                          padding: "2px 7px",
+                          letterSpacing: "0.5px",
+                        }}
+                      >
                         {mov.type.replace(/_/g, " ")}
                       </span>
                     </div>
                     {mov.description && (
-                      <p className="text-sm text-zinc-500 mt-1 truncate uppercase">
+                      <p
+                        style={{
+                          fontFamily: "monospace",
+                          fontSize: "0.7rem",
+                          color: "#7a6a4a",
+                          marginTop: 4,
+                          textTransform: "uppercase",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
                         {mov.description}
                       </p>
                     )}
-                    <div className="text-xs text-zinc-600 mt-1">{formatDate(mov.date)}</div>
+                    <div
+                      style={{
+                        fontFamily: "monospace",
+                        fontSize: "0.65rem",
+                        color: "#9a8a6a",
+                        marginTop: 3,
+                      }}
+                    >
+                      {formatDate(mov.date)}
+                    </div>
                   </div>
-                  <div className={`font-black text-xl shrink-0 ${color}`}>
+
+                  {/* Quantity */}
+                  <div
+                    style={{
+                      flexShrink: 0,
+                      textAlign: "right",
+                      fontFamily: "monospace",
+                      fontWeight: 900,
+                      fontSize: "1.4rem",
+                      color: qtyColor,
+                      lineHeight: 1,
+                    }}
+                  >
                     {isOut ? "−" : "+"}
                     {mov.quantity}
-                    <span className="text-sm font-normal text-zinc-500 ml-1">{unit}</span>
+                    <div
+                      style={{
+                        fontSize: "0.65rem",
+                        fontWeight: 400,
+                        color: "#9a8a6a",
+                        marginTop: 2,
+                      }}
+                    >
+                      {unit}
+                    </div>
                   </div>
                 </div>
               )
             })}
           </div>
         )}
-      </div>
+      </motion.div>
 
       {/* MODAL: EDIT MINIMUM STOCK */}
       {editingItem && (

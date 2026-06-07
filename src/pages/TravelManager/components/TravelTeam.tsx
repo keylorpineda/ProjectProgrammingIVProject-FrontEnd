@@ -79,8 +79,14 @@ export default function TravelTeam() {
   // ── Derived State ──────────────────────────────────────────────────────────
   const filteredTeam = useMemo(() => {
     return persons.filter((p) => {
-      const pStatus = String(p.status ?? "").toLowerCase().replace(/\s+/g, "_")
-      if (activeStatus !== "all" && pStatus !== String(activeStatus).toLowerCase().replace(/\s+/g, "_")) return false
+      const pStatus = String(p.status ?? "")
+        .toLowerCase()
+        .replace(/\s+/g, "_")
+      if (
+        activeStatus !== "all" &&
+        pStatus !== String(activeStatus).toLowerCase().replace(/\s+/g, "_")
+      )
+        return false
 
       const pProfession = p.profession?.name || "Desconocido"
       if (professionFilter !== "all" && pProfession !== professionFilter) return false
@@ -105,17 +111,23 @@ export default function TravelTeam() {
   }, [persons])
 
   const activeCount = persons.filter((p) => {
-    const key = String(p.status ?? "").toLowerCase().replace(/\s+/g, "_")
+    const key = String(p.status ?? "")
+      .toLowerCase()
+      .replace(/\s+/g, "_")
     return key === "active" || key === "idle"
   }).length
 
   const inFieldCount = persons.filter((p) => {
-    const key = String(p.status ?? "").toLowerCase().replace(/\s+/g, "_")
+    const key = String(p.status ?? "")
+      .toLowerCase()
+      .replace(/\s+/g, "_")
     return key === "exploring"
   }).length
 
   const injuredCount = persons.filter((p) => {
-    const key = String(p.status ?? "").toLowerCase().replace(/\s+/g, "_")
+    const key = String(p.status ?? "")
+      .toLowerCase()
+      .replace(/\s+/g, "_")
     return key === "injured"
   }).length
 
@@ -167,7 +179,7 @@ export default function TravelTeam() {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="h-full flex-1 flex flex-col gap-3 w-full overflow-y-auto bg-[#0a0a0a] p-4 custom-scrollbar"
+      className="flex-1 h-full flex flex-col gap-3 w-full overflow-y-auto bg-[#0a0a0a] p-4 custom-scrollbar min-h-0"
     >
       {/* 1. MASTER HUD - CONTROL DE EQUIPO */}
       <motion.div
@@ -211,9 +223,13 @@ export default function TravelTeam() {
               }
               className={`bg-[#d4a373]/10 border px-4 py-3 rounded text-center min-w-[90px] transition-all hover:bg-[#d4a373]/20 ${activeStatus === PersonStatus.Active ? "border-accent-approved shadow-inner shadow-accent-approved/20" : "border-[#d4a373]/30"}`}
             >
-              <span className="text-3xl font-mono font-black text-white leading-none block mb-1">{activeCount}</span>
+              <span className="text-3xl font-mono font-black text-white leading-none block mb-1">
+                {activeCount}
+              </span>
               <span className="text-[10px] font-mono text-accent-approved/70 uppercase tracking-wider font-medium block leading-snug">
-                Operativos<br />disponibles
+                Operativos
+                <br />
+                disponibles
               </span>
             </button>
             <button
@@ -224,9 +240,13 @@ export default function TravelTeam() {
               }
               className={`bg-[#d4a373]/10 border px-4 py-3 rounded text-center min-w-[90px] transition-all hover:bg-[#d4a373]/20 ${activeStatus === PersonStatus.Exploring ? "border-[#c27c2f] shadow-inner shadow-accent-warning/20" : "border-[#d4a373]/30"}`}
             >
-              <span className="text-3xl font-mono font-black text-white leading-none block mb-1">{inFieldCount}</span>
+              <span className="text-3xl font-mono font-black text-white leading-none block mb-1">
+                {inFieldCount}
+              </span>
               <span className="text-[10px] font-mono text-[#c27c2f]/70 uppercase tracking-wider font-medium block leading-snug">
-                Personal<br />en campo
+                Personal
+                <br />
+                en campo
               </span>
             </button>
             <button
@@ -237,9 +257,13 @@ export default function TravelTeam() {
               }
               className={`bg-[#d4a373]/10 border px-4 py-3 rounded text-center min-w-[90px] transition-all hover:bg-[#d4a373]/20 ${activeStatus === PersonStatus.Injured ? "border-accent-critical shadow-inner shadow-accent-critical/20" : "border-[#d4a373]/30"}`}
             >
-              <span className="text-3xl font-mono font-black text-white leading-none block mb-1">{injuredCount}</span>
+              <span className="text-3xl font-mono font-black text-white leading-none block mb-1">
+                {injuredCount}
+              </span>
               <span className="text-[10px] font-mono text-accent-critical/70 uppercase tracking-wider font-medium block leading-snug">
-                Bajas<br />heridos
+                Bajas
+                <br />
+                heridos
               </span>
             </button>
           </div>

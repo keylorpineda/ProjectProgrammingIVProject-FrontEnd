@@ -193,6 +193,7 @@ export default function TravelTransfers() {
       resetForm()
       setIsNewModalOpen(false)
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
       const msg = error?.response?.data?.message
       if (Array.isArray(msg) && msg.length > 0) {
@@ -380,9 +381,9 @@ export default function TravelTransfers() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="w-full flex-1 h-full flex flex-col gap-3 overflow-hidden bg-bunker-bg min-w-0">
+    <div className="flex-1 h-full flex flex-col gap-3 overflow-hidden bg-bunker-bg min-h-0 min-w-0">
       {/* ── Vista Header ── */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-industrial-metal py-4 pl-4 pr-8 md:pr-16 border-b border-b-accent-approved/20 shrink-0 shadow-lg">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-industrial-metal py-4 px-4 border-b border-b-accent-approved/20 shrink-0 shadow-lg">
         <div className="flex items-center gap-4">
           <div className="bg-accent-approved/10 p-2 border border-accent-approved/20 rounded-sm">
             <ArrowLeftRight className="h-5 w-5 text-accent-approved" />
