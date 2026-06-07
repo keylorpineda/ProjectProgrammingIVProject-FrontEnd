@@ -6,7 +6,17 @@
 
 import { useQuery } from "@tanstack/react-query"
 import { motion } from "framer-motion"
-import { Sliders, ShieldAlert, RefreshCw, Layers } from "lucide-react"
+import {
+  Sliders,
+  ShieldAlert,
+  RefreshCw,
+  Layers,
+  PlusCircle,
+  Clock,
+  ArrowUpCircle,
+  ArrowDownCircle,
+  ArrowLeftRight,
+} from "lucide-react"
 import { useEffect, useState } from "react"
 import { type FormEvent } from "react"
 
@@ -14,10 +24,55 @@ import { api } from "../config/api"
 
 import type { InventoryItem } from "../types/api.types"
 
+interface InventoryMovement {
+  id: string
+  resource_id: string
+  camp_id: string
+  quantity: number
+  type: string
+  description: string | null
+  date: string
+  resource?: { name: string; unit: string }
+}
+
 interface ManagerInventoryProps {
   campId: string
   onDataChanged: () => void
   refreshTrigger: number
+}
+
+const MOVEMENT_TYPES: { value: string; label: string }[] = [
+  { value: "income", label: "ENTRADA DE SUMINISTROS" },
+  { value: "transfer_in", label: "TRANSFERENCIA RECIBIDA" },
+  { value: "transfer_out", label: "TRANSFERENCIA ENVIADA" },
+]
+
+function movementIcon(type: string) {
+  if (type.includes("out") || type.includes("consumption")) return ArrowDownCircle
+  if (type.includes("in") || type.includes("income") || type.includes("production"))
+    return ArrowUpCircle
+  return ArrowLeftRight
+}
+
+function movementColor(type: string) {
+  if (type.includes("out") || type.includes("consumption")) return "text-[#9c2720]"
+  if (type.includes("in") || type.includes("income") || type.includes("production"))
+    return "text-emerald-400"
+  return "text-[#c27c2f]"
+}
+
+function formatDate(iso: string) {
+  try {
+    return new Date(iso).toLocaleString("es-CR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+  } catch {
+    return iso
+  }
 }
 
 export default function ManagerInventory({
@@ -34,8 +89,6 @@ export default function ManagerInventory({
     queryKey: ["managerInventory", campId],
     queryFn: async () => {
       const res = await api.get(`/resources/inventory/${campId}`)
-      // El backend devuelve filas con PK compuesta (camp_id, resource_id) y la
-      // relación .resource. Normalizamos al shape que consume la tabla local.
       const raw = Array.isArray(res.data) ? res.data : []
       return raw.map((item: any) => ({
         id: String(item.resource_id),
@@ -48,7 +101,19 @@ export default function ManagerInventory({
         is_below_minimum: Boolean(item.alert_active),
       })) as InventoryItem[]
     },
-    staleTime: 1000 * 60 * 2, // 2 minutes
+    staleTime: 1000 * 60 * 2,
+  })
+
+  const {
+    data: movements = [],
+    refetch: refetchMovements,
+  } = useQuery({
+    queryKey: ["managerMovements", campId],
+    queryFn: async () => {
+      const res = await api.get(`/resources/movements/${campId}?limit=30`)
+      return (Array.isArray(res.data) ? res.data : []) as InventoryMovement[]
+    },
+    staleTime: 1000 * 60,
   })
 
   const [errorState, setErrorState] = useState<string | null>(null)
@@ -57,18 +122,29 @@ export default function ManagerInventory({
     : errorState
 
   useEffect(() => {
-    if (refreshTrigger > 0) refetch()
-  }, [refreshTrigger, refetch])
+    if (refreshTrigger > 0) {
+      refetch()
+      refetchMovements()
+    }
+  }, [refreshTrigger, refetch, refetchMovements])
 
-  // Edit Modal State
+  // Edit min stock modal
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null)
   const [newMinStock, setNewMinStock] = useState<number>(0)
   const [submittingEdit, setSubmittingEdit] = useState<boolean>(false)
 
-  // Daily Process Confirmation Modal State
+  // Daily process modal
   const [showConfirmDaily, setShowConfirmDaily] = useState<boolean>(false)
   const [dailyProcessing, setDailyProcessing] = useState<boolean>(false)
   const [dailyResponse, setDailyResponse] = useState<any>(null)
+
+  // New movement modal
+  const [showMovementModal, setShowMovementModal] = useState<boolean>(false)
+  const [movResourceId, setMovResourceId] = useState<string>("")
+  const [movType, setMovType] = useState<string>("income")
+  const [movQuantity, setMovQuantity] = useState<number>(0)
+  const [movDescription, setMovDescription] = useState<string>("")
+  const [submittingMov, setSubmittingMov] = useState<boolean>(false)
 
   const handleEditClick = (item: InventoryItem) => {
     setEditingItem(item)
@@ -82,7 +158,6 @@ export default function ManagerInventory({
       setErrorState("El umbral de reserva mínimo no puede ser negativo.")
       return
     }
-
     setSubmittingEdit(true)
     setErrorState(null)
     try {
@@ -91,7 +166,7 @@ export default function ManagerInventory({
       })
       setEditingItem(null)
       refetch()
-      onDataChanged() // Refresh statistics and balance
+      onDataChanged()
     } catch (err: any) {
       setErrorState(err?.message || "Fallo de escritura en memoria del circuito.")
     } finally {
@@ -106,8 +181,8 @@ export default function ManagerInventory({
       const res = await api.post(`/resources/daily-process/${campId}`)
       setDailyResponse(res.data)
       refetch()
+      refetchMovements()
       onDataChanged()
-      // Auto close confirmation after showing result briefly
       setTimeout(() => {
         setShowConfirmDaily(false)
         setDailyResponse(null)
@@ -116,6 +191,42 @@ export default function ManagerInventory({
       setErrorState(err?.message || "Error grave al interrumpir ciclo del generador.")
     } finally {
       setDailyProcessing(false)
+    }
+  }
+
+  const openMovementModal = () => {
+    setMovResourceId(inventory[0]?.id ?? "")
+    setMovType("income")
+    setMovQuantity(0)
+    setMovDescription("")
+    setErrorState(null)
+    setShowMovementModal(true)
+  }
+
+  const handleSubmitMovement = async (e: FormEvent) => {
+    e.preventDefault()
+    if (!movResourceId || movQuantity <= 0) {
+      setErrorState("Selecciona un recurso y una cantidad válida.")
+      return
+    }
+    setSubmittingMov(true)
+    setErrorState(null)
+    try {
+      await api.post("/resources/movements", {
+        camp_id: Number(campId),
+        resource_id: Number(movResourceId),
+        quantity: movQuantity,
+        type: movType,
+        description: movDescription || undefined,
+      })
+      setShowMovementModal(false)
+      refetch()
+      refetchMovements()
+      onDataChanged()
+    } catch (err: any) {
+      setErrorState(err?.response?.data?.message || err?.message || "Error al registrar movimiento.")
+    } finally {
+      setSubmittingMov(false)
     }
   }
 
@@ -140,7 +251,24 @@ export default function ManagerInventory({
             Modifica las raciones en reserva y monitorea el estado del almacén.
           </p>
         </div>
+        <div className="flex flex-col sm:flex-row gap-3 shrink-0">
+          <button
+            type="button"
+            onClick={openMovementModal}
+            className="cursor-pointer flex items-center gap-2 bg-[#c27c2f]/10 hover:bg-[#c27c2f] hover:text-black border-2 border-[#c27c2f] text-[#c27c2f] px-6 py-3 text-sm font-black uppercase transition active:translate-y-0.5"
+          >
+            <PlusCircle className="h-4 w-4" /> REGISTRAR MOVIMIENTO
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowConfirmDaily(true)}
+            className="cursor-pointer flex items-center gap-2 bg-[#9c2720]/10 hover:bg-[#9c2720] hover:text-white border-2 border-[#9c2720] text-[#9c2720] px-6 py-3 text-sm font-black uppercase transition active:translate-y-0.5"
+          >
+            <RefreshCw className="h-4 w-4" /> CICLO SOLAR
+          </button>
+        </div>
       </div>
+
       {error && (
         <div className="border-2 border-black bg-[#9c2720]/20 text-red-200 font-mono text-xs p-3.5 flex items-start gap-4">
           <ShieldAlert className="h-4.5 w-4.5 shrink-0 text-red-500 mt-0.5" />
@@ -150,7 +278,7 @@ export default function ManagerInventory({
         </div>
       )}
 
-      {/* CONSOLE STYLE TABLE */}
+      {/* INVENTORY TABLE */}
       <div className="overflow-hidden border-2 border-black bg-[#161513]">
         <table className="table-auto w-full border-collapse font-mono text-xs">
           <thead className="bg-[#121110] text-[#c27c2f] border-b border-black text-left uppercase text-sm tracking-wider">
@@ -226,7 +354,6 @@ export default function ManagerInventory({
                               transition={{ duration: 1, ease: "easeOut" }}
                               className={`h-full ${barColor} ${item.is_below_minimum ? "animate-pulse" : ""}`}
                             />
-                            {/* Marker for minimum stock */}
                             <div
                               className="absolute top-0 bottom-0 w-0.5 bg-white z-10 opacity-70"
                               style={{
@@ -255,7 +382,65 @@ export default function ManagerInventory({
         </table>
       </div>
 
-      {/* MODAL EDIT MINIMUM_STOCK_REQUIRED */}
+      {/* MOVEMENT HISTORY */}
+      <div className="border-2 border-black bg-[#161513] font-mono">
+        <div className="flex items-center gap-3 px-6 md:px-8 py-5 border-b-2 border-black bg-[#121110]">
+          <Clock className="h-5 w-5 text-[#c27c2f]" />
+          <h4 className="font-black text-[#c27c2f] uppercase tracking-widest text-sm md:text-base">
+            REGISTRO DE OPERACIONES RECIENTES
+          </h4>
+          <span className="ml-auto text-xs text-zinc-500 uppercase">Últimos 30</span>
+        </div>
+
+        {movements.length === 0 ? (
+          <div className="px-8 py-10 text-center text-zinc-600 uppercase text-xs tracking-widest">
+            SIN MOVIMIENTOS REGISTRADOS
+          </div>
+        ) : (
+          <div className="divide-y divide-black">
+            {movements.map((mov) => {
+              const Icon = movementIcon(mov.type)
+              const color = movementColor(mov.type)
+              const isOut = mov.type.includes("out") || mov.type.includes("consumption")
+              const resourceName = mov.resource?.name ?? `Recurso #${mov.resource_id}`
+              const unit = mov.resource?.unit ?? ""
+
+              return (
+                <div
+                  key={mov.id}
+                  className="flex items-center gap-4 px-6 md:px-8 py-4 hover:bg-[#1e1c1a] transition-colors"
+                >
+                  <Icon className={`h-5 w-5 shrink-0 ${color}`} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <span className="font-black text-[#e0d8cc] uppercase text-sm">
+                        {resourceName}
+                      </span>
+                      <span className="text-xs text-zinc-500 uppercase border border-zinc-700 px-2 py-0.5">
+                        {mov.type.replace(/_/g, " ")}
+                      </span>
+                    </div>
+                    {mov.description && (
+                      <p className="text-xs text-zinc-500 mt-1 truncate uppercase">
+                        {mov.description}
+                      </p>
+                    )}
+                  </div>
+                  <div className="text-right shrink-0">
+                    <div className={`font-black text-base ${color}`}>
+                      {isOut ? "-" : "+"}
+                      {mov.quantity} {unit}
+                    </div>
+                    <div className="text-xs text-zinc-600 mt-0.5">{formatDate(mov.date)}</div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* MODAL: EDIT MINIMUM STOCK */}
       {editingItem && (
         <div className="fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-50">
           <motion.div
@@ -279,10 +464,11 @@ export default function ManagerInventory({
 
             <form onSubmit={handleSaveMinStock} className="space-y-4">
               <div className="space-y-1">
-                <label className="text-xs text-zinc-500 uppercase font-bold block">
+                <label htmlFor="minStockInput" className="text-xs text-zinc-500 uppercase font-bold block">
                   CANTIDAD_RESERVA_EXIGIDA ({editingItem.unit.toUpperCase()}):
                 </label>
                 <input
+                  id="minStockInput"
                   type="number"
                   min="0"
                   value={newMinStock}
@@ -314,7 +500,126 @@ export default function ManagerInventory({
         </div>
       )}
 
-      {/* CONFIRMATION DAILY PROCESS MODAL: MANDATORY CONFIRMATION */}
+      {/* MODAL: REGISTER MOVEMENT */}
+      {showMovementModal && (
+        <div className="fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-50">
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="w-full max-w-md bg-[#161513] border-4 border-double border-[#c27c2f] p-6 font-mono text-[#e0d8cc] shadow-2xl"
+          >
+            <div className="flex items-center gap-2 border-b-2 border-black pb-3 mb-5 text-[#c27c2f]">
+              <PlusCircle className="h-5 w-5" />
+              <h4 className="font-bold uppercase tracking-widest text-xs">
+                REGISTRAR MOVIMIENTO DE BODEGA
+              </h4>
+            </div>
+
+            <form onSubmit={handleSubmitMovement} className="space-y-4">
+              <div className="space-y-1">
+                <label htmlFor="resourceSelect" className="text-xs text-zinc-500 uppercase font-bold block">
+                  RECURSO:
+                </label>
+                <select
+                  id="resourceSelect"
+                  value={movResourceId}
+                  onChange={(e) => setMovResourceId(e.target.value)}
+                  className="w-full bg-[#2a2824] border-2 border-black p-2 text-[#e0d8cc] outline-none text-sm font-bold font-mono uppercase"
+                  required
+                >
+                  {inventory.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name.toUpperCase()} ({item.unit})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label htmlFor="operationTypeSelect" className="text-xs text-zinc-500 uppercase font-bold block">
+                  TIPO DE OPERACIÓN:
+                </label>
+                <select
+                  id="operationTypeSelect"
+                  value={movType}
+                  onChange={(e) => setMovType(e.target.value)}
+                  className="w-full bg-[#2a2824] border-2 border-black p-2 text-[#e0d8cc] outline-none text-sm font-bold font-mono uppercase"
+                >
+                  {MOVEMENT_TYPES.map((t) => (
+                    <option key={t.value} value={t.value}>
+                      {t.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label htmlFor="quantityInput" className="text-xs text-zinc-500 uppercase font-bold block">
+                  CANTIDAD:
+                </label>
+                <input
+                  id="quantityInput"
+                  type="number"
+                  min="0.001"
+                  step="0.001"
+                  value={movQuantity || ""}
+                  onChange={(e) => setMovQuantity(parseFloat(e.target.value) || 0)}
+                  className="w-full bg-[#2a2824] border-2 border-black p-2 text-[#e0d8cc] outline-none text-sm font-bold font-mono"
+                  placeholder="0.000"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label htmlFor="descriptionInput" className="text-xs text-zinc-500 uppercase font-bold block">
+                  DESCRIPCIÓN (OPCIONAL):
+                </label>
+                <input
+                  id="descriptionInput"
+                  type="text"
+                  value={movDescription}
+                  onChange={(e) => setMovDescription(e.target.value)}
+                  maxLength={200}
+                  className="w-full bg-[#2a2824] border-2 border-black p-2 text-[#e0d8cc] outline-none text-sm font-mono"
+                  placeholder="Ej: Recepción convoy norte..."
+                />
+              </div>
+
+              {errorState && (
+                <div className="text-xs text-red-400 uppercase border border-[#9c2720]/50 bg-[#9c2720]/10 p-2">
+                  {errorState}
+                </div>
+              )}
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => { setShowMovementModal(false); setErrorState(null) }}
+                  className="flex-1 border-2 border-black bg-transparent text-zinc-400 hover:text-white uppercase text-xs py-2 font-black transition"
+                >
+                  [CANCELAR]
+                </button>
+                <button
+                  type="submit"
+                  disabled={submittingMov}
+                  className="flex-1 border-2 border-black uppercase text-xs py-2 hover:bg-[#a96821] transition font-black flex items-center justify-center gap-2"
+                  style={{ backgroundColor: "#c27c2f", color: "#161513" }}
+                >
+                  {submittingMov ? (
+                    <>
+                      <RefreshCw className="h-3.5 w-3.5 animate-spin" /> PROCESANDO...
+                    </>
+                  ) : (
+                    "CONFIRMAR OPERACIÓN"
+                  )}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
+
+      {/* MODAL: DAILY PROCESS CONFIRMATION */}
       {showConfirmDaily && (
         <div className="fixed inset-0 bg-black/95 flex items-center justify-center p-4 z-50">
           <motion.div
