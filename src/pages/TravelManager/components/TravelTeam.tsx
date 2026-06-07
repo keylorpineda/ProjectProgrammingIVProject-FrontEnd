@@ -335,115 +335,173 @@ export default function TravelTeam() {
                   </div>
                 </div>
 
-                <div className="flex-1 p-5 flex flex-col overflow-hidden items-center justify-center relative bg-black/25">
-                  <div className="tm-paper tm-paper-texture w-full h-full max-w-2xl relative overflow-hidden p-8 flex flex-col shadow-2xl justify-between">
-                    {/* Stamp */}
-                    <div className="absolute top-10 right-10 flex flex-col items-center rotate-6 select-none opacity-20">
-                      <div className="border-4 border-ink p-1 mb-1">
-                        <span className="text-lg font-black font-mono px-2">CONFIDENCIAL</span>
+                <div className="flex-1 overflow-y-auto relative bg-black/25 p-4">
+                  <div className="tm-paper tm-paper-texture w-full h-full relative flex flex-col overflow-hidden shadow-2xl">
+                    {/* Sello confidencial */}
+                    <div className="absolute top-10 right-10 flex flex-col items-center rotate-12 select-none opacity-15 pointer-events-none z-10">
+                      <div className="border-4 border-ink p-1 mb-0.5">
+                        <span className="text-base font-black font-mono px-2 tracking-widest">CONFIDENCIAL</span>
                       </div>
-                      <span className="text-xs font-mono font-black italic">
-                        Refugio GDF - Comité
-                      </span>
+                      <span className="text-[9px] font-mono font-black italic text-ink">COMITÉ DE RESISTENCIA</span>
                     </div>
 
-                    <div className="flex-1 flex flex-col justify-between">
-                      {/* Top section */}
-                      <div className="border-b-2 border-dashed border-ink/20 pb-3 mb-6">
-                        <span className="text-[10px] font-mono text-ink-soft uppercase tracking-widest font-black block mb-1">
+                    {/* Header con foto + datos básicos */}
+                    <div className="flex gap-10 px-10 py-8 border-b-2 border-dashed border-ink/20">
+                      {/* Foto de perfil */}
+                      <div className="shrink-0 flex flex-col items-center gap-4">
+                        <div className="w-36 h-44 border-2 border-ink/40 overflow-hidden bg-ink/5 relative flex items-center justify-center shadow-md">
+                          {selectedPerson.photo_url ? (
+                            <img
+                              src={selectedPerson.photo_url}
+                              alt={`${selectedPerson.first_name} ${selectedPerson.last_name}`}
+                              className="w-full h-full object-cover object-top"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = "none"
+                              }}
+                            />
+                          ) : (
+                            <div className="flex flex-col items-center justify-center w-full h-full text-ink/20">
+                              <svg className="w-16 h-16" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
+                              </svg>
+                              <span className="text-[9px] font-mono font-black uppercase mt-2 opacity-50">SIN FOTO</span>
+                            </div>
+                          )}
+                        </div>
+                        {/* Badge de estado debajo de la foto */}
+                        <span className={`text-xs font-mono font-black uppercase px-4 py-1.5 border rounded-sm tracking-wider ${
+                          (selectedPerson.status === "active" || selectedPerson.status === "idle")
+                            ? "text-green-700 border-green-700/40 bg-green-700/8"
+                            : (selectedPerson.status === "exploring" || selectedPerson.status === "traveling")
+                            ? "text-[#c27c2f] border-[#c27c2f]/40 bg-[#c27c2f]/8"
+                            : "text-[#9c2720] border-[#9c2720]/40 bg-[#9c2720]/8"
+                        }`}>
+                          {getStatusLabel(selectedPerson.status || "idle").toUpperCase()}
+                        </span>
+                      </div>
+
+                      {/* Datos de identidad */}
+                      <div className="flex-1 min-w-0 flex flex-col justify-center">
+                        <span className="text-[11px] font-mono text-ink-soft/50 uppercase tracking-[0.2em] font-black block mb-2">
                           REGISTRO DEL RESISTENTE
                         </span>
-                        <h2 className="font-typewriter text-2xl font-black text-ink uppercase leading-none">
+                        <h2 className="font-typewriter text-3xl font-black text-ink uppercase leading-none mb-2">
                           {selectedPerson.first_name} {selectedPerson.last_name}
+                          {selectedPerson.last_name2 ? ` ${selectedPerson.last_name2}` : ""}
                         </h2>
-                        <span className="text-[9px] font-mono text-ink-soft uppercase block mt-1">
-                          Profesión: <span className="font-bold text-ink">{selectedPerson.profession?.name || "NO ASIGNADA"}</span>
+                        <p className="text-sm font-mono text-ink-soft uppercase mb-8 flex items-center gap-2">
+                          {selectedPerson.profession?.name || "SIN PROFESIÓN ASIGNADA"}
+                          {selectedPerson.profession?.can_explore && (
+                            <span className="px-2 py-1 bg-[#df8120]/15 border border-[#df8120]/30 text-[#df8120] text-xs font-black rounded-sm">
+                              EXPLORADOR
+                            </span>
+                          )}
+                        </p>
+
+                        {/* Campos como tarjetas */}
+                        <div className="grid grid-cols-3 gap-4">
+                          {[
+                            ...(selectedPerson.identification_code ? [{ label: "Cód. Identificación", value: selectedPerson.identification_code, color: "text-ink" }] : []),
+                            ...(selectedPerson.birth_date ? [{ label: "Fecha Nacimiento", value: new Date(selectedPerson.birth_date).toLocaleDateString(), color: "text-ink" }] : []),
+                            ...(selectedPerson.join_date ? [{ label: "Ingreso al Refugio", value: new Date(selectedPerson.join_date).toLocaleDateString(), color: "text-ink" }] : []),
+                            { label: "Base de Enlace", value: getCampName(selectedPerson.camp_id ?? ""), color: "text-ink" },
+                            { label: "Capacidad Laboral", value: selectedPerson.can_work ? "APTO" : "RESTRINGIDO", color: selectedPerson.can_work ? "text-green-700" : "text-red-700" },
+                            { label: "Puntos de Exp.", value: `${selectedPerson.experience_points ?? 0} XP`, color: "text-[#df8120]" },
+                          ].map((field) => (
+                            <div key={field.label} className="bg-ink/4 border border-ink/10 rounded-sm px-4 py-3">
+                              <span className="text-[9px] font-mono text-ink-soft/50 uppercase tracking-widest font-black block mb-1.5 leading-none">
+                                {field.label}
+                              </span>
+                              <span className={`text-sm font-mono font-black ${field.color} leading-tight uppercase`}>
+                                {field.value}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Nivel de experiencia */}
+                    <div className="px-10 py-6 border-b border-dashed border-ink/15">
+                      <div className="flex justify-between items-center mb-3">
+                        <span className="text-xs font-mono font-black text-ink-soft/70 uppercase tracking-[0.15em] flex items-center gap-2">
+                          <Star className="h-3.5 w-3.5" /> Rango de Experiencia
+                        </span>
+                        <span className="text-sm font-mono font-black text-ink">
+                          NIVEL {selectedPerson.experience_level || 1} / 10
                         </span>
                       </div>
+                      <div className="flex gap-1.5">
+                        {[...Array(10)].map((_, i) => (
+                          <div
+                            key={i}
+                            className={`h-3 flex-1 rounded-sm transition-all ${i < (selectedPerson.experience_level || 1) ? "bg-[#df8120]" : "bg-ink/8"}`}
+                          />
+                        ))}
+                      </div>
+                    </div>
 
-                      {/* Main grids */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                        {/* Info vital */}
-                        <div className="bg-[#faf4e6]/50 p-4 border border-dashed border-ink/20 rounded-sm space-y-3 font-mono text-[11px] text-ink/80">
-                          <h4 className="text-[10px] font-black text-ink-soft uppercase border-b border-ink/10 pb-1 flex items-center gap-1.5">
-                            <Activity className="h-3.5 w-3.5" /> Estado Operativo
-                          </h4>
-                          <div className="space-y-2">
-                            <div className="flex justify-between">
-                              <span className="text-ink-soft font-bold">Estado Vital:</span>
-                              <span className={`font-bold uppercase ${getStatusColor(selectedPerson.status || ("idle" as PersonStatus))}`}>
-                                {getStatusLabel(selectedPerson.status || ("idle" as PersonStatus)).toUpperCase()}
-                              </span>
+                    {/* Estado Operativo + Habilidades previas */}
+                    <div className="grid grid-cols-2 border-b border-dashed border-ink/15">
+                      <div className="px-10 py-8 border-r border-dashed border-ink/15">
+                        <h4 className="text-xs font-black text-ink-soft/70 uppercase tracking-[0.15em] mb-5 flex items-center gap-2">
+                          <Activity className="h-4 w-4" /> Estado Operativo
+                        </h4>
+                        <div className="space-y-3 font-mono">
+                          {[
+                            { label: "Estado Vital", value: getStatusLabel(selectedPerson.status || "idle").toUpperCase(), color: getStatusColor(selectedPerson.status || ("idle" as PersonStatus)) },
+                            { label: "Capacidad", value: selectedPerson.can_work ? "OPERATIVO" : "INACTIVO", color: selectedPerson.can_work ? "text-green-700" : "text-red-700" },
+                            { label: "Explorador", value: selectedPerson.profession?.can_explore ? "AUTORIZADO" : "NO AUTORIZADO", color: selectedPerson.profession?.can_explore ? "text-[#df8120]" : "text-ink-soft/50" },
+                          ].map((row) => (
+                            <div key={row.label} className="flex justify-between items-center bg-ink/4 border border-ink/10 rounded-sm px-4 py-3">
+                              <span className="text-ink-soft/60 font-bold text-xs">{row.label}</span>
+                              <span className={`font-black uppercase text-sm ${row.color}`}>{row.value}</span>
                             </div>
-                            <div className="flex justify-between">
-                              <span className="text-ink-soft font-bold">Base de Enlace:</span>
-                              <span className="font-bold text-ink uppercase">
-                                {getCampName(selectedPerson.camp_id ?? "")}
-                              </span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-ink-soft font-bold">Capacidad Laboral:</span>
-                              <span className={`font-bold uppercase ${selectedPerson.can_work ? "text-green-700" : "text-red-700"}`}>
-                                {selectedPerson.can_work ? "APTO" : "RESTRINGIDO"}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Calificación técnica */}
-                        <div className="bg-[#faf4e6]/50 p-4 border border-dashed border-ink/20 rounded-sm space-y-3 font-mono text-[11px] text-ink/80">
-                          <h4 className="text-[10px] font-black text-ink-soft uppercase border-b border-ink/10 pb-1 flex items-center gap-1.5">
-                            <Star className="h-3.5 w-3.5" /> Ficha Técnica
-                          </h4>
-                          <div className="space-y-3">
-                            <div>
-                              <span className="text-ink-soft font-bold block mb-1">Rango / Nivel de Experiencia</span>
-                              <div className="flex gap-1">
-                                {[...Array(10)].map((_, i) => (
-                                  <div
-                                    key={i}
-                                    className={`h-1.5 flex-1 rounded-sm ${i < (selectedPerson.experience_level || 1) ? "bg-[#df8120]" : "bg-ink/10"}`}
-                                  />
-                                ))}
-                              </div>
-                            </div>
-                            <div className="flex justify-between text-[10px] font-bold">
-                              <span>NIVEL {selectedPerson.experience_level || 1} DE 10</span>
-                              <span>{selectedPerson.profession?.can_explore ? "EXPLORADOR AUTORIZADO" : "SOPORTE INTERNO"}</span>
-                            </div>
-                          </div>
+                          ))}
                         </div>
                       </div>
 
-                      {/* Diagnostic / Notes */}
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-                        <div className="md:col-span-1 p-4 bg-[#c27c2f]/5 border border-[#c27c2f]/20 rounded-sm font-mono text-[10px] text-ink/80">
-                          <h5 className="font-black text-[#df8120] uppercase mb-1.5 flex items-center gap-1">
-                            <AlertTriangle className="h-3.5 w-3.5 shrink-0" /> Riesgo
-                          </h5>
-                          <p className="leading-relaxed">
-                            Sujeto asignado a la base operativa. Acreditación de seguridad de Nivel 1 activa.
+                      <div className="px-10 py-8">
+                        <h4 className="text-xs font-black text-ink-soft/70 uppercase tracking-[0.15em] mb-5 flex items-center gap-2">
+                          <AlertTriangle className="h-4 w-4" /> Habilidades Previas
+                        </h4>
+                        {selectedPerson.previous_skills ? (
+                          <p className="font-mono text-sm text-ink/70 leading-[1.8] italic">
+                            {selectedPerson.previous_skills}
                           </p>
-                          <span className="block mt-3 text-ink-soft font-bold">
-                            ACTUALIZADO: {new Date(selectedPerson.updated_at).toLocaleDateString()}
-                          </span>
-                        </div>
-
-                        <div className="md:col-span-2 p-4 bg-white/40 border border-ink/10 rounded-sm flex flex-col font-mono text-[10px] text-ink/80">
-                          <h5 className="font-black text-ink-soft uppercase mb-1.5 border-b border-ink/5 pb-1">
-                            Anotaciones del Comité de Resistencia
-                          </h5>
-                          <div className="flex-1 italic leading-relaxed min-h-[60px] p-2 bg-[#faf4e6]/30 rounded-sm border border-ink/5">
-                            Sujeto enrolado en basecamp. Comportamiento alineado con directivas de seguridad. No se reportan incidentes críticos ni desacatos en bitácora.
-                          </div>
-                        </div>
+                        ) : (
+                          <p className="font-mono text-sm text-ink-soft/40 uppercase italic leading-relaxed">
+                            Sin habilidades previas registradas.
+                          </p>
+                        )}
                       </div>
+                    </div>
 
-                      {/* Footer block */}
-                      <div className="border-t border-ink/15 pt-3 mt-6 flex justify-between items-center text-ink-soft/70 font-mono text-[9px] uppercase tracking-wider">
-                        <span>Registro: {new Date(selectedPerson.created_at).toLocaleDateString()}</span>
-                        <span className="border border-dashed border-ink/30 px-2 py-0.5">ID: {String(selectedPerson.id).substring(0, 12).toUpperCase()}</span>
+                    {/* Notas del comité */}
+                    <div className="px-10 py-8 border-b border-dashed border-ink/15">
+                      <h4 className="text-xs font-black text-ink-soft/70 uppercase tracking-[0.15em] mb-4">
+                        Anotaciones del Comité de Resistencia
+                      </h4>
+                      <div className="p-5 bg-ink/4 border border-dashed border-ink/12 rounded-sm min-h-[80px]">
+                        {selectedPerson.notes ? (
+                          <p className="font-mono text-sm text-ink/70 italic leading-[1.8]">
+                            {selectedPerson.notes}
+                          </p>
+                        ) : (
+                          <p className="font-mono text-xs text-ink-soft/35 uppercase italic leading-relaxed">
+                            Sin anotaciones registradas en bitácora.
+                          </p>
+                        )}
                       </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="px-10 py-5 flex justify-between items-center text-ink-soft/40 font-mono text-[10px] uppercase tracking-[0.15em] mt-auto">
+                      <span>Registro: {new Date(selectedPerson.created_at).toLocaleDateString()}</span>
+                      <span>Actualizado: {new Date(selectedPerson.updated_at).toLocaleDateString()}</span>
+                      <span className="border border-dashed border-ink/20 px-4 py-1.5">
+                        ID: {String(selectedPerson.id).substring(0, 12).toUpperCase()}
+                      </span>
                     </div>
                   </div>
                 </div>

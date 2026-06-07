@@ -16,8 +16,8 @@ import {
   Users,
 } from "lucide-react"
 import { useState, useMemo, useEffect } from "react"
-import { io } from "socket.io-client"
 import { useLocation } from "react-router-dom"
+import { io } from "socket.io-client"
 
 import type { IntercampRequest, Person, InventoryItem } from "@/types/api.types"
 
@@ -35,7 +35,9 @@ import { useAuthStore, useTokenStore } from "@/store/useAuthStore"
 // ── Status helpers ──────────────────────────────────────────────────────────
 
 function getTransferStatusLabel(rawStatus: string): string {
-  const status = String(rawStatus ?? "").toLowerCase().replace(/\s+/g, "_")
+  const status = String(rawStatus ?? "")
+    .toLowerCase()
+    .replace(/\s+/g, "_")
   switch (status) {
     case "pending":
       return "Pendiente"
@@ -55,7 +57,9 @@ function getTransferStatusLabel(rawStatus: string): string {
 }
 
 function getTransferStatusColorClass(rawStatus: string): string {
-  const status = String(rawStatus ?? "").toLowerCase().replace(/\s+/g, "_")
+  const status = String(rawStatus ?? "")
+    .toLowerCase()
+    .replace(/\s+/g, "_")
   switch (status) {
     case "pending":
       return "text-[#c27c2f]"
@@ -213,7 +217,9 @@ export default function TravelTransfers() {
 
   // ── Derived state ────────────────────────────────────────────────────────
   const normalize = (s: string | null | undefined) =>
-    String(s ?? "").toLowerCase().replace(/\s+/g, "_")
+    String(s ?? "")
+      .toLowerCase()
+      .replace(/\s+/g, "_")
 
   const filteredTransfers = useMemo(() => {
     return transfers.filter((t) => {
@@ -296,9 +302,9 @@ export default function TravelTransfers() {
       resource_details:
         transferType !== "people"
           ? selectedResources.map((r) => ({
-            resource_id: Number(r.resource_id),
-            requested_quantity: Number(r.requested_quantity),
-          }))
+              resource_id: Number(r.resource_id),
+              requested_quantity: Number(r.requested_quantity),
+            }))
           : undefined,
       person_details:
         transferType !== "resources"
@@ -394,10 +400,11 @@ export default function TravelTransfers() {
               { label: "Enviados", count: stats.sent, color: "text-white/60" },
               { label: "Recibidos", count: stats.received, color: "text-white/60" },
             ].map((s) => (
-              <div key={s.label} className="flex flex-col items-center px-3 border-r border-white/10 last:border-none">
-                <span className={`text-sm font-mono font-black ${s.color}`}>
-                  {s.count}
-                </span>
+              <div
+                key={s.label}
+                className="flex flex-col items-center px-3 border-r border-white/10 last:border-none"
+              >
+                <span className={`text-sm font-mono font-black ${s.color}`}>{s.count}</span>
                 <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-white/30">
                   {s.label}
                 </span>
@@ -550,11 +557,7 @@ export default function TravelTransfers() {
                   <p className="text-xs font-mono text-white/30 uppercase leading-relaxed font-black mb-3">
                     Sin traslados registrados
                   </p>
-                  <button
-                    type="button"
-                    onClick={() => setIsNewModalOpen(true)}
-                    className="tm-btn"
-                  >
+                  <button type="button" onClick={() => setIsNewModalOpen(true)} className="tm-btn">
                     <Plus className="h-3.5 w-3.5" /> Nuevo Traslado
                   </button>
                 </div>
@@ -582,7 +585,8 @@ export default function TravelTransfers() {
                   <div className="flex items-center gap-4">
                     <span
                       className={`tm-op-chip ${
-                        selectedTransfer.status === "in_transit" || selectedTransfer.status === "approved"
+                        selectedTransfer.status === "in_transit" ||
+                        selectedTransfer.status === "approved"
                           ? "tm-chip-active"
                           : selectedTransfer.status === "pending"
                             ? "tm-chip-transit"
@@ -614,7 +618,8 @@ export default function TravelTransfers() {
                           HOJA DE ENRUTAMIENTO
                         </span>
                         <h4 className="font-typewriter text-base font-black text-ink uppercase flex items-center gap-3">
-                          BASE: {selectedTransfer.camp_origin_id} ➔ {selectedTransfer.camp_destination_id}
+                          BASE: {selectedTransfer.camp_origin_id} ➔{" "}
+                          {selectedTransfer.camp_destination_id}
                         </h4>
                       </div>
 
@@ -811,11 +816,11 @@ export default function TravelTransfers() {
                   {(selectedTransfer.status === "completed" ||
                     selectedTransfer.status === "rejected" ||
                     selectedTransfer.status === "cancelled") && (
-                      <span className="text-[10px] font-mono text-white/30 uppercase tracking-widest flex items-center gap-1.5 pl-2">
-                        <Archive className="h-3.5 w-3.5 text-white/30" />
-                        Traslado archivado en histórico
-                      </span>
-                    )}
+                    <span className="text-[10px] font-mono text-white/30 uppercase tracking-widest flex items-center gap-1.5 pl-2">
+                      <Archive className="h-3.5 w-3.5 text-white/30" />
+                      Traslado archivado en histórico
+                    </span>
+                  )}
                 </div>
               </div>
             ) : (
@@ -903,7 +908,9 @@ export default function TravelTransfers() {
                       onChange={(e) => setDestCampId(e.target.value)}
                       className="vintage-input w-full p-3 text-base"
                     >
-                      <option value="" disabled>Seleccione un destino...</option>
+                      <option value="" disabled>
+                        Seleccione un destino...
+                      </option>
                       {camps
                         .filter((c) => String(c.id) !== String(campId))
                         .map((c) => (
@@ -1005,14 +1012,10 @@ export default function TravelTransfers() {
                                   >
                                     <div
                                       className={`h-3.5 w-3.5 border flex items-center justify-center shrink-0 rounded-sm ${
-                                        isSelected
-                                          ? "border-ink bg-ink/10"
-                                          : "border-ink/20"
+                                        isSelected ? "border-ink bg-ink/10" : "border-ink/20"
                                       }`}
                                     >
-                                      {isSelected && (
-                                        <Check className="h-2.5 w-2.5 text-ink" />
-                                      )}
+                                      {isSelected && <Check className="h-2.5 w-2.5 text-ink" />}
                                     </div>
                                     <div className="flex items-center gap-2">
                                       <div className="w-6 h-6 rounded bg-black/5 border border-ink/10 flex items-center justify-center">
@@ -1089,14 +1092,10 @@ export default function TravelTransfers() {
                                 >
                                   <div
                                     className={`h-3.5 w-3.5 border flex items-center justify-center shrink-0 rounded-sm ${
-                                      isSelected
-                                        ? "border-ink bg-ink/10"
-                                        : "border-ink/20"
+                                      isSelected ? "border-ink bg-ink/10" : "border-ink/20"
                                     }`}
                                   >
-                                    {isSelected && (
-                                      <Check className="h-2.5 w-2.5 text-ink" />
-                                    )}
+                                    {isSelected && <Check className="h-2.5 w-2.5 text-ink" />}
                                   </div>
                                   <span className="text-xs font-mono text-ink font-bold uppercase">
                                     {person.first_name} {person.last_name}
