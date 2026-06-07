@@ -22,7 +22,8 @@ import {
   ChevronRight,
   Package,
 } from "lucide-react"
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
+import { useLocation } from "react-router-dom"
 
 import type { Exploration, Person, InventoryItem } from "@/types/api.types"
 import type { ReturnExplorationFormData } from "@/types/travel-comms.types"
@@ -88,6 +89,7 @@ export default function TravelExplorations() {
   const { user } = useAuthStore()
   const queryClient = useQueryClient()
   const baseCampId = user?.camp_id ?? ""
+  const location = useLocation()
 
   // ── Local UI state ───────────────────────────────────────────────────────
   const [search, setSearch] = useState("")
@@ -96,6 +98,14 @@ export default function TravelExplorations() {
   const [isNewModalOpen, setIsNewModalOpen] = useState(false)
   const [isReturnModalOpen, setIsReturnModalOpen] = useState(false)
   const [formError, setFormError] = useState("")
+
+  useEffect(() => {
+    const locState = location.state as { openNewExploration?: boolean } | null
+    if (locState?.openNewExploration) {
+      setIsNewModalOpen(true)
+      window.history.replaceState({}, document.title)
+    }
+  }, [location.state])
 
   // New exploration form state
   const [newName, setNewName] = useState("")
@@ -531,9 +541,8 @@ export default function TravelExplorations() {
                     key={exp.id}
                     whileHover={{ x: 2 }}
                     onClick={() => setSelectedId(exp.id)}
-                    className={`tm-op-row cursor-pointer transition-all ${getRowClass(exp.status)} ${
-                      selectedExp?.id === exp.id ? "selected" : ""
-                    }`}
+                    className={`tm-op-row cursor-pointer transition-all ${getRowClass(exp.status)} ${selectedExp?.id === exp.id ? "selected" : ""
+                      }`}
                   >
                     {/* Header: ID + Status */}
                     <div className="flex items-center justify-between w-full">
@@ -546,9 +555,8 @@ export default function TravelExplorations() {
                     </div>
 
                     {/* Name: Crisp and Bolder */}
-                    <h5 className={`text-[12px] font-mono font-bold uppercase tracking-tight truncate mt-0.5 w-full ${
-                      selectedExp?.id === exp.id ? "text-[#df8120]" : "text-white"
-                    }`}>
+                    <h5 className={`text-[12px] font-mono font-bold uppercase tracking-tight truncate mt-0.5 w-full ${selectedExp?.id === exp.id ? "text-[#df8120]" : "text-white"
+                      }`}>
                       {exp.name}
                     </h5>
 
@@ -631,7 +639,7 @@ export default function TravelExplorations() {
                 <div className="flex-1 p-5 flex flex-col overflow-hidden items-center justify-center relative bg-black/25">
                   <div className="tm-paper tm-paper-texture w-full h-full max-w-4xl relative overflow-hidden p-6 flex flex-col shadow-2xl">
                     <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-8 min-height-0 overflow-hidden">
-                      
+
                       {/* Left: Logística y Ruta */}
                       <div className="flex flex-col gap-6 overflow-y-auto pr-1 custom-scrollbar h-full">
                         <div className="border-b-2 border-dashed border-ink/20 pb-2.5">
@@ -703,7 +711,7 @@ export default function TravelExplorations() {
                             <Radio className="h-5 w-5 text-[#df8120]" />
                             <span className="text-[8px] font-mono text-ink-soft mt-1 uppercase font-bold">{baseCampId}</span>
                           </div>
-                          
+
                           <div className="flex flex-col items-center z-20">
                             <Target className="h-5 w-5 text-[#9c2720]" />
                             <span className="text-[8px] font-mono text-ink-soft mt-1 uppercase font-bold max-w-[80px] truncate">
@@ -810,22 +818,20 @@ export default function TravelExplorations() {
                       return (
                         <div key={i} className="relative z-10 flex flex-col items-center">
                           <div
-                            className={`h-8 w-8 rounded-full border-2 flex items-center justify-center transition-all shadow-lg ${
-                              step.status === "completed"
+                            className={`h-8 w-8 rounded-full border-2 flex items-center justify-center transition-all shadow-lg ${step.status === "completed"
                                 ? "bg-[#4c6351] border-none text-white"
                                 : step.status === "current"
                                   ? "bg-[#df8120] border-none text-white animate-pulse"
                                   : "bg-[#1c1208] border-[#d4a373]/15 text-[#d4a373]/25"
-                            }`}
+                              }`}
                           >
                             <StepIcon className="h-3.5 w-3.5" />
                           </div>
                           <span
-                            className={`absolute top-full mt-2 text-[10px] font-mono font-black tracking-widest whitespace-nowrap ${
-                              step.status !== "pending"
+                            className={`absolute top-full mt-2 text-[10px] font-mono font-black tracking-widest whitespace-nowrap ${step.status !== "pending"
                                 ? "text-[#df8120] opacity-80"
                                 : "text-white/20"
-                            }`}
+                              }`}
                           >
                             {step.label}
                           </span>
@@ -1155,11 +1161,10 @@ export default function TravelExplorations() {
                               key={person.id}
                               role="button"
                               tabIndex={0}
-                              className={`flex items-center justify-between p-2 border transition-all cursor-pointer rounded-sm ${
-                                isSelected
+                              className={`flex items-center justify-between p-2 border transition-all cursor-pointer rounded-sm ${isSelected
                                   ? "bg-ink/5 border-ink/40"
                                   : "bg-transparent border-dashed border-ink/15 hover:border-ink/30"
-                              }`}
+                                }`}
                               onClick={() => handleTogglePersonSelect(person.id)}
                               onKeyDown={(e) =>
                                 e.key === "Enter" && handleTogglePersonSelect(person.id)
@@ -1167,11 +1172,10 @@ export default function TravelExplorations() {
                             >
                               <div className="flex items-center gap-2">
                                 <div
-                                  className={`h-3.5 w-3.5 border flex items-center justify-center shrink-0 rounded-sm ${
-                                    isSelected
+                                  className={`h-3.5 w-3.5 border flex items-center justify-center shrink-0 rounded-sm ${isSelected
                                       ? "border-ink bg-ink/10"
                                       : "border-ink/20"
-                                  }`}
+                                    }`}
                                 >
                                   {isSelected && <Check className="h-2.5 w-2.5 text-ink" />}
                                 </div>
@@ -1191,11 +1195,10 @@ export default function TravelExplorations() {
                                     ev.stopPropagation()
                                     handleSetLeader(person.id)
                                   }}
-                                  className={`text-[10px] font-mono font-black uppercase px-2 py-0.5 border transition-all rounded-sm ${
-                                    sel?.is_leader
+                                  className={`text-[10px] font-mono font-black uppercase px-2 py-0.5 border transition-all rounded-sm ${sel?.is_leader
                                       ? "bg-[#df8120] text-black border-[#df8120]"
                                       : "border-ink/20 text-ink-soft hover:bg-ink/5"
-                                  }`}
+                                    }`}
                                 >
                                   {sel?.is_leader ? "LÍDER ✓" : "Líder?"}
                                 </button>
@@ -1222,11 +1225,10 @@ export default function TravelExplorations() {
                           return (
                             <div
                               key={item.resource_id}
-                              className={`flex items-center justify-between p-2 border transition-all rounded-sm ${
-                                isSelected
+                              className={`flex items-center justify-between p-2 border transition-all rounded-sm ${isSelected
                                   ? "bg-ink/5 border-ink/40"
                                   : "bg-transparent border-dashed border-ink/15"
-                              }`}
+                                }`}
                             >
                               <div
                                 role="button"
@@ -1238,11 +1240,10 @@ export default function TravelExplorations() {
                                 }
                               >
                                 <div
-                                  className={`h-3.5 w-3.5 border flex items-center justify-center shrink-0 rounded-sm ${
-                                    isSelected
+                                  className={`h-3.5 w-3.5 border flex items-center justify-center shrink-0 rounded-sm ${isSelected
                                       ? "border-ink bg-ink/10"
                                       : "border-ink/20"
-                                  }`}
+                                    }`}
                                 >
                                   {isSelected && <Check className="h-2.5 w-2.5 text-ink" />}
                                 </div>
@@ -1398,11 +1399,10 @@ export default function TravelExplorations() {
                         return (
                           <div
                             key={item.resource_id}
-                            className={`flex items-center justify-between p-2 border transition-all rounded-sm ${
-                              isSelected
+                            className={`flex items-center justify-between p-2 border transition-all rounded-sm ${isSelected
                                 ? "bg-ink/5 border-ink/40"
                                 : "bg-transparent border-dashed border-ink/15 hover:border-ink/30"
-                            }`}
+                              }`}
                           >
                             <div
                               role="button"
@@ -1415,11 +1415,10 @@ export default function TravelExplorations() {
                               }
                             >
                               <div
-                                className={`h-3.5 w-3.5 border flex items-center justify-center shrink-0 rounded-sm ${
-                                  isSelected
+                                className={`h-3.5 w-3.5 border flex items-center justify-center shrink-0 rounded-sm ${isSelected
                                     ? "border-ink bg-ink/10"
                                     : "border-ink/20"
-                                }`}
+                                  }`}
                               >
                                 {isSelected && <Check className="h-2.5 w-2.5 text-ink" />}
                               </div>
