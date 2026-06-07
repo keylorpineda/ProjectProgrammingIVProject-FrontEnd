@@ -95,8 +95,8 @@ const AdminLayout = () => {
                 {/* ID Avatar Block */}
                 <div className="relative h-14 w-14 bg-black border-2 border-[#c27c2f] flex items-center justify-center">
                   <div className="absolute inset-0 bg-[#c27c2f]/20 animate-pulse" />
-                  <span className="font-black text-[#c27c2f] text-2xl font-typewriter z-10">
-                    {user?.name?.[0]?.toUpperCase() || user?.id?.[0]?.toUpperCase() || "A"}
+                  <span className="font-black text-[#df8120] text-2xl font-typewriter z-10">
+                    {user?.username?.[0]?.toUpperCase() || user?.id?.[0]?.toUpperCase() || "A"}
                   </span>
                   {/* Micro decor */}
                   <div
@@ -111,7 +111,7 @@ const AdminLayout = () => {
                     ID-AUTH: VALIDADO
                   </div>
                   <div className="font-black text-lg text-[#e0d8cc] uppercase tracking-widest leading-none mb-2">
-                    {user?.name?.toUpperCase() || user?.id?.toUpperCase() || "ADMIN"}
+                    {user?.username?.toUpperCase() || user?.id?.toUpperCase() || "ADMIN"}
                   </div>
                   <span className="inline-block bg-[#3b4d3e] text-white text-xs font-bold px-2 py-1 uppercase tracking-widest">
                     RANGO: ADMINISTRADOR

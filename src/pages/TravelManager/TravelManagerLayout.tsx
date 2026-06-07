@@ -1,15 +1,14 @@
 import { useState, useEffect } from "react"
-import { Outlet, useNavigate, NavLink, useLocation } from "react-router-dom"
+import { Outlet, useNavigate, NavLink } from "react-router-dom"
 import { LogOut, LayoutDashboard, Compass, Users, ArrowLeftRight, Package, Menu, X } from "lucide-react"
 
 import InactivityGuard from "@/components/ui/InactivityGuard"
 import { useAuthStore } from "@/store/useAuthStore"
-import CampSelector from "@/pages/Admin/components/CampSelector"
+import "./TravelManagerViews.css"
 
 export default function TravelManagerLayout() {
   const { user, logout } = useAuthStore()
   const navigate = useNavigate()
-  const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [utcTime, setUtcTime] = useState("")
 
@@ -83,8 +82,7 @@ export default function TravelManagerLayout() {
                 to={item.path}
                 onClick={closeSidebar}
                 className={({ isActive }) =>
-                  `w-full text-left relative flex items-center justify-center md:justify-start gap-3 md:gap-4 py-4 px-4 md:px-5 rounded-xl transition-all duration-150 group border cursor-pointer shrink-0 hover:translate-x-1 active:translate-y-0.5 min-w-[140px] md:min-w-0 mx-1 md:mx-0 ${
-                    isActive ? "bg-[#c27c2f]" : "bg-[#9a9080]"
+                  `w-full text-left relative flex items-center justify-center md:justify-start gap-3 md:gap-4 py-4 px-4 md:px-5 rounded-xl transition-all duration-150 group border cursor-pointer shrink-0 hover:translate-x-1 active:translate-y-0.5 min-w-[140px] md:min-w-0 mx-1 md:mx-0 ${isActive ? "bg-[#c27c2f]" : "bg-[#9a9080]"
                   }`
                 }
                 style={{
@@ -105,7 +103,7 @@ export default function TravelManagerLayout() {
           })}
         </nav>
       </div>
-      
+
       {/* Mobile only footer */}
       <div className="md:hidden p-3 border-t-2 border-black relative z-10 mt-auto pt-6">
         <button
@@ -123,7 +121,7 @@ export default function TravelManagerLayout() {
 
   return (
     <InactivityGuard isAuthenticated={!!user} onLogout={handleLogout}>
-      <div className="h-screen max-h-screen bg-[#0d0c0b] text-[#e0d8cc] relative overflow-hidden font-mono flex flex-col">
+      <div className="h-screen max-h-screen bg-[#0d0c0b] text-[#e0d8cc] relative overflow-hidden font-mono flex flex-col travel-manager-root">
         {/* SCANLINE OVERLAY */}
         <div
           className="absolute inset-0 pointer-events-none z-50 opacity-[0.035]"
@@ -137,12 +135,12 @@ export default function TravelManagerLayout() {
         <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
           {/* DESKTOP SIDEBAR */}
           <div className="hidden md:flex w-72 shrink-0 relative z-20">
-             <SidebarContent />
+            <SidebarContent />
           </div>
 
           {/* MAIN CONTENT AREA */}
           <div className="flex-1 flex flex-col overflow-hidden min-w-0 relative">
-            
+
             {/* MOBILE TOPBAR */}
             <header className="md:hidden bg-[#121110] border-b-2 border-black flex items-center justify-between px-4 py-3 shrink-0 font-mono select-none z-30 shadow-md relative">
               <button
@@ -153,10 +151,10 @@ export default function TravelManagerLayout() {
                 <Menu className="w-6 h-6" />
               </button>
               <div className="flex items-center gap-2">
-                 <span className="text-[#9c2720] animate-pulse font-bold">★</span>
-                 <span className="font-black text-[#df8120] uppercase tracking-widest text-sm">
-                   GESTIÓN VIAJES
-                 </span>
+                <span className="text-[#9c2720] animate-pulse font-bold">★</span>
+                <span className="font-black text-[#df8120] uppercase tracking-widest text-sm">
+                  GESTIÓN VIAJES
+                </span>
               </div>
               <div className="w-10"></div>
             </header>
@@ -170,10 +168,10 @@ export default function TravelManagerLayout() {
                 </div>
                 <div>
                   <h2 className="text-xs md:text-sm font-black text-[#e0d8cc] hover:text-[#df8120] transition uppercase tracking-widest">
-                    OPERACIONES DE CAMPO
+                    COORDINACIÓN DE MOVILIDAD
                   </h2>
                   <div className="text-sm text-zinc-500 uppercase font-bold mt-0.5 flex items-center gap-2">
-                    <span>COORD. LOGÍSTICA</span>
+                    <span>TRAVEL MANAGER</span>
                   </div>
                 </div>
               </div>
@@ -191,7 +189,7 @@ export default function TravelManagerLayout() {
                   <div className="relative h-14 w-14 bg-black border-2 border-[#c27c2f] flex items-center justify-center">
                     <div className="absolute inset-0 bg-[#c27c2f]/20 animate-pulse" />
                     <span className="font-black text-[#c27c2f] text-2xl font-typewriter z-10">
-                      {user?.name?.[0]?.toUpperCase() || user?.id?.[0]?.toUpperCase() || "T"}
+                      {user?.username?.[0]?.toUpperCase() || user?.id?.[0]?.toUpperCase() || "T"}
                     </span>
                     <div
                       className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-emerald-500 border-2 border-black rounded-full"
@@ -204,7 +202,7 @@ export default function TravelManagerLayout() {
                       ID-AUTH: VALIDADO
                     </div>
                     <div className="font-black text-lg text-[#e0d8cc] uppercase tracking-widest leading-none mb-2">
-                      {user?.name?.toUpperCase() || user?.id?.toUpperCase() || "TRAVEL MGR"}
+                      {user?.username?.toUpperCase() || user?.id?.toUpperCase() || "TRAVEL MGR"}
                     </div>
                     <span className="inline-block bg-[#3b4d3e] text-white text-xs font-bold px-2 py-1 uppercase tracking-widest">
                       RANGO: TRAVEL MANAGER
@@ -236,12 +234,12 @@ export default function TravelManagerLayout() {
         {/* MOBILE SIDEBAR MODAL */}
         {sidebarOpen && (
           <div className="md:hidden fixed inset-0 z-50 flex">
-            <div 
-               className="absolute inset-0 bg-black/80" 
-               onClick={closeSidebar} 
+            <div
+              className="absolute inset-0 bg-black/80"
+              onClick={closeSidebar}
             />
             <div className="w-4/5 max-w-sm bg-[#121110] relative flex flex-col h-full shadow-[4px_0_24px_rgba(0,0,0,0.8)] border-r-2 border-black">
-               <SidebarContent />
+              <SidebarContent />
             </div>
           </div>
         )}

@@ -17,6 +17,7 @@ import {
 } from "lucide-react"
 import { useState, useMemo, useEffect } from "react"
 import { io } from "socket.io-client"
+import { useLocation } from "react-router-dom"
 
 import type { IntercampRequest, Person, InventoryItem } from "@/types/api.types"
 
@@ -103,6 +104,7 @@ export default function TravelTransfers() {
   const token = useTokenStore((state) => state.token)
   const queryClient = useQueryClient()
   const campId = user?.camp_id ?? ""
+  const location = useLocation()
 
   // ── Local UI state ───────────────────────────────────────────────────────
   const [search, setSearch] = useState("")
@@ -111,6 +113,14 @@ export default function TravelTransfers() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [isNewModalOpen, setIsNewModalOpen] = useState(false)
   const [formError, setFormError] = useState("")
+
+  useEffect(() => {
+    const locState = location.state as { openNewTransfer?: boolean } | null
+    if (locState?.openNewTransfer) {
+      setIsNewModalOpen(true)
+      window.history.replaceState({}, document.title)
+    }
+  }, [location.state])
 
   // New transfer form
   const [destCampId, setDestCampId] = useState("")

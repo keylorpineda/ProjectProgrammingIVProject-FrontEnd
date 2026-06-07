@@ -293,7 +293,7 @@ export default function DashboardManager() {
                       {user.name.toUpperCase()}
                     </div>
                     <span className="inline-block bg-[#3b4d3e] text-white text-xs font-bold px-2 py-1 uppercase tracking-widest">
-                      RANGO: {user.role === "admin" ? "ADMINISTRADOR" : "GESTOR DE RECURSOS"}
+                      RANGO: {user.role === "camp_leader" ? "LÍDER DE CAMPAMENTO" : "ADMINISTRADOR"}
                     </span>
                   </div>
                 </div>
