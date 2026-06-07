@@ -28,7 +28,7 @@ export default function WorkerSidebar({
         {/* BRAND HEADER */}
         <div className="mb-6 pb-4 border-b-2 border-black">
           <div className="flex items-center gap-4">
-            <span className="text-[#9a9080] text-xl animate-pulse font-bold">★</span>
+            <span className="text-[#9c2720] text-xl animate-pulse font-bold">★</span>
             <span className="text-lg font-black text-[#df8120] tracking-widest uppercase">
               GESTIÓN DEL FIN
             </span>
@@ -36,7 +36,6 @@ export default function WorkerSidebar({
           <p className="text-sm text-zinc-500 tracking-wider font-extrabold uppercase mt-0.5 pl-0.5">
             TERMINAL PERSONAL
           </p>
-          {campName && <div className="text-xs text-[#9a9080] font-bold uppercase mt-2 border border-[#9a9080]/30 inline-block px-2 py-1">{campName}</div>}
         </div>
 
         <nav className="flex flex-row md:flex-col overflow-x-auto md:overflow-x-visible pb-2 md:pb-0 scrollbar-none shrink-0 font-mono">
@@ -49,12 +48,12 @@ export default function WorkerSidebar({
                 key={item.id}
                 type="button"
                 onClick={() => setActiveTab(item.id)}
-                className={`w-full text-left relative flex items-center justify-center md:justify-start gap-3 md:gap-4 py-4 px-4 md:px-5 rounded-xl transition-all duration-150 group border cursor-pointer shrink-0 hover:translate-x-1 active:translate-y-0.5 min-w-[140px] md:min-w-0 mx-1 md:mx-0 ${
-                  active ? "bg-[#c27c2f]" : "bg-[#9a9080]"
-                }`}
+                className={`w-full text-left relative flex items-center justify-center md:justify-start gap-3 md:gap-4 rounded-xl transition-all duration-150 group cursor-pointer shrink-0 hover:translate-x-1 active:translate-y-0.5 min-w-[140px] md:min-w-0 mx-1 md:mx-0`}
                 style={{
+                  backgroundColor: active ? "#c27c2f" : "#9a9080",
                   borderColor: "#000000",
                   borderWidth: "2px",
+                  borderStyle: "solid",
                   color: "#000000",
                   boxShadow: "3px 3px 0px #000000",
                   padding: "20px 20px",

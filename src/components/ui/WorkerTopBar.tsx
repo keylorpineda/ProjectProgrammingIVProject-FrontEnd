@@ -39,8 +39,8 @@ export default function WorkerTopBar({ campName, activeLabel, onLogout }: Worker
     <header className="bg-[#121110] border-b-2 border-black flex flex-col sm:flex-row justify-between items-center px-4 md:px-6 py-3 gap-4 shrink-0 font-mono select-none z-10 shadow-md">
       <div className="flex items-center gap-3.5 w-full sm:w-auto">
         <div className="relative flex h-3 w-3 shrink-0">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#9a9080] opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-3 w-3 bg-[#9a9080]"></span>
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#9c2720] opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-3 w-3 bg-[#9c2720]"></span>
         </div>
         <div>
           <div className="text-sm text-zinc-500 uppercase font-bold mt-0.5 flex items-center gap-2">
