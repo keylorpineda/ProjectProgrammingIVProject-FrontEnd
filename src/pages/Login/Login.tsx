@@ -1,4 +1,4 @@
-import { motion, useMotionValue, useTransform } from "framer-motion"
+﻿import { motion, useMotionValue, useTransform } from "framer-motion"
 import { useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 
@@ -16,7 +16,7 @@ export default function Login() {
   const [isGateOpen, setIsGateOpen] = useState(false)
   const rafRef = useRef<number | null>(null)
 
-  // MotionValues bypass React state — zero re-renders on mouse move
+  // MotionValues bypass React state â€” zero re-renders on mouse move
   const mouseX = useMotionValue(0)
   const mouseY = useMotionValue(0)
   const bgX2 = useTransform(mouseX, (v) => v * -2)
@@ -41,7 +41,7 @@ export default function Login() {
           ? "/worker"
           : normalizedRole === "camp_leader"
             ? "/campleader"
-            : normalizedRole === "camp_manager" || normalizedRole === "resource_manager"
+            : normalizedRole === "resource_manager"
               ? "/camp-manager"
               : normalizedRole === "travel_manager"
                 ? "/travel-manager"
@@ -89,7 +89,7 @@ export default function Login() {
       rafRef.current = requestAnimationFrame(() => {
         const x = e.clientX / window.innerWidth - 0.5
         const y = e.clientY / window.innerHeight - 0.5
-        // Update MotionValues directly — no React setState, no re-render
+        // Update MotionValues directly â€” no React setState, no re-render
         mouseX.set(x)
         mouseY.set(y)
         rafRef.current = null
@@ -104,7 +104,7 @@ export default function Login() {
 
   return (
     <div className="industrial-login-page fixed inset-0 overflow-hidden bg-[#020202] font-sans selection:bg-[#4ade80] selection:text-black">
-      {/* SVG filters removed — they are very expensive on GPU */}
+      {/* SVG filters removed â€” they are very expensive on GPU */}
 
       {/* BACKGROUND SCENE: Realistic Cinematic Camp Entrance */}
       <div
@@ -402,7 +402,7 @@ export default function Login() {
           transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
         />
 
-        {/* Cinematic Spotlight — static center, no mouse tracking (perf) */}
+        {/* Cinematic Spotlight â€” static center, no mouse tracking (perf) */}
         <div
           className="absolute inset-0 z-30 pointer-events-none mix-blend-screen opacity-50"
           style={{

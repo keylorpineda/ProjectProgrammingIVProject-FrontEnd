@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from "framer-motion"
+﻿import { motion, AnimatePresence } from "framer-motion"
 import { useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
 
@@ -12,12 +12,12 @@ import {
 import { useAuth } from "@/pages/Admin/context/AuthContext"
 import "./WorkerViews.css"
 
-// ── Constants ──────────────────────────────────────────────────
+// â”€â”€ Constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const ROLE_LABELS: Record<string, string> = {
   worker: "TRABAJADOR",
-  camp_leader: "LÍDER DE CAMPAMENTO",
+  camp_leader: "LÃDER DE CAMPAMENTO",
   admin: "ADMINISTRADOR",
-  camp_manager: "GESTOR DE CAMPAMENTO",
+  resource_manager: "GESTOR DE CAMPAMENTO",
   travel_manager: "GESTOR DE TRASLADOS",
   resource_manager: "GESTOR DE RECURSOS",
 }
@@ -30,10 +30,10 @@ const STATUS_COLORS: Record<string, string> = {
 }
 
 const RARITY_LABELS: Record<number, string> = {
-  1: "COMÚN",
+  1: "COMÃšN",
   2: "INFRECUENTE",
   3: "RARO",
-  4: "ÉPICO",
+  4: "Ã‰PICO",
   5: "LEGENDARIO",
 }
 const RARITY_CLASS: Record<number, string> = {
@@ -48,7 +48,7 @@ const RANK_TIERS = [
   { min: 0, label: "RECLUTA", color: "rgba(154,144,128,0.6)", next: 2 },
   { min: 2, label: "SOLDADO", color: "#3b82f6", next: 4 },
   { min: 4, label: "VETERANO", color: "#4c6351", next: 7 },
-  { min: 7, label: "ÉLITE", color: "#8b5cf6", next: 10 },
+  { min: 7, label: "Ã‰LITE", color: "#8b5cf6", next: 10 },
   { min: 10, label: "LEYENDA", color: "#c8a84b", next: 10 },
 ]
 
@@ -56,7 +56,7 @@ function getRank(n: number) {
   return [...RANK_TIERS].reverse().find((t) => n >= t.min) ?? RANK_TIERS[0]
 }
 
-// ── XP Bar ─────────────────────────────────────────────────────
+// â”€â”€ XP Bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function XPBar({ count }: { count: number }) {
   const rank = getRank(count)
   const idx = RANK_TIERS.findIndex((t) => t.label === rank.label)
@@ -69,7 +69,7 @@ function XPBar({ count }: { count: number }) {
       <div className="wv-xp-bar-header">
         <span style={{ color: rank.color }}>{rank.label}</span>
         <span className="wv-xp-bar-next">
-          {next ? `→ ${next.label} (${count}/${next.min})` : "RANGO MÁX."}
+          {next ? `â†’ ${next.label} (${count}/${next.min})` : "RANGO MÃX."}
         </span>
       </div>
       <div className="wv-xp-track">
@@ -86,18 +86,18 @@ function XPBar({ count }: { count: number }) {
   )
 }
 
-// ── Profession chip ─────────────────────────────────────────────
+// â”€â”€ Profession chip â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function ProfessionChip({ name, canExplore }: { name: string; canExplore: boolean }) {
   return (
     <div className="wv-profession-chip">
-      <span className="wv-profession-chip-label">PROFESIÓN</span>
+      <span className="wv-profession-chip-label">PROFESIÃ“N</span>
       <span className="wv-profession-chip-name">{name.toUpperCase()}</span>
       {canExplore ? <span className="wv-profession-chip-explore">PUEDE EXPLORAR</span> : null}
     </div>
   )
 }
 
-// ── Main component ──────────────────────────────────────────────
+// â”€â”€ Main component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 type SelectedBadge = {
   name: string
   description: string
@@ -122,7 +122,7 @@ function BadgeMedal({ imageUrl, name }: { imageUrl?: string | null; name: string
       <circle cx="60" cy="88" r="33" fill="#c8a84b" />
       <circle cx="60" cy="88" r="25" fill="none" stroke="rgba(255,220,100,0.3)" />
       <text x="60" y="98" textAnchor="middle" fontSize="30" fontFamily="serif" fill="#ffe080">
-        ★
+        â˜…
       </text>
     </svg>
   )
@@ -174,12 +174,12 @@ function BadgeAchievementModal({
             </motion.div>
             <div className="wv-achievement-title">{badge.name}</div>
             <div className="wv-achievement-stars">
-              {"★".repeat(Math.min(badge.rarity, 5))}
-              <span>{"☆".repeat(Math.max(5 - badge.rarity, 0))}</span>
+              {"â˜…".repeat(Math.min(badge.rarity, 5))}
+              <span>{"â˜†".repeat(Math.max(5 - badge.rarity, 0))}</span>
             </div>
             <div className="wv-achievement-description">{badge.description}</div>
             <div className="wv-achievement-meta">
-              {RARITY_LABELS[badge.rarity] ?? "COMÚN"}
+              {RARITY_LABELS[badge.rarity] ?? "COMÃšN"}
               {badge.tag ? ` / ${badge.tag}` : ""}
               {badge.acquiredAt ? ` / ${String(badge.acquiredAt).split("T")[0]}` : ""}
             </div>
@@ -233,16 +233,16 @@ export default function WorkerProfile() {
       id: -1,
       isLocal: true,
       name: "PRIMER TRABAJO",
-      description: "Primera vez que iniciaste sesión en el sistema.",
+      description: "Primera vez que iniciaste sesiÃ³n en el sistema.",
       rarity: 1,
-      stars: "★☆☆☆☆",
+      stars: "â˜…â˜†â˜†â˜†â˜†",
       acquiredAt: remote?.obtained_at ?? null,
     }
   }, [hasFirstLogin, achievements])
 
   return (
     <div className="wv-page wv-profile-page">
-      {/* ── Page header ── */}
+      {/* â”€â”€ Page header â”€â”€ */}
       <div className="wv-page-header">
         <h2>EXPEDIENTE DEL SUPERVIVIENTE</h2>
         <button
@@ -250,11 +250,11 @@ export default function WorkerProfile() {
           className="wv-header-action"
           onClick={() => navigate("/worker/dashboard")}
         >
-          → TABLERO
+          â†’ TABLERO
         </button>
       </div>
 
-      {/* ── ID CARD ── */}
+      {/* â”€â”€ ID CARD â”€â”€ */}
       <motion.div
         className="wv-id-card"
         initial={{ y: -20, opacity: 0 }}
@@ -288,7 +288,7 @@ export default function WorkerProfile() {
                   transition={{ delay: 0.3 + i * 0.08, type: "spring", stiffness: 200 }}
                   style={{ color: rank.color }}
                 >
-                  ★
+                  â˜…
                 </motion.span>
               ),
             )}
@@ -315,9 +315,9 @@ export default function WorkerProfile() {
 
         {/* Right column */}
         <div className="wv-id-right">
-          <div className="wv-id-classified-tag">[ DOCUMENTO CLASIFICADO — NIVEL 1 ]</div>
+          <div className="wv-id-classified-tag">[ DOCUMENTO CLASIFICADO â€” NIVEL 1 ]</div>
 
-          {/* Profession banner — prominent if we have it */}
+          {/* Profession banner â€” prominent if we have it */}
           {profession ? (
             <ProfessionChip name={profession.name} canExplore={profession.can_explore} />
           ) : null}
@@ -363,7 +363,7 @@ export default function WorkerProfile() {
         </div>
       </motion.div>
 
-      {/* ── INSIGNIAS ── */}
+      {/* â”€â”€ INSIGNIAS â”€â”€ */}
       <motion.div
         className="wv-paper"
         style={{ padding: 24, marginTop: 24 }}
@@ -413,13 +413,13 @@ export default function WorkerProfile() {
               >
                 <div className="wv-badge-rarity-corner wv-rarity-1" />
                 <div className="wv-badge-img-wrap">
-                  <div className="wv-badge-icon-placeholder">🏅</div>
+                  <div className="wv-badge-icon-placeholder">ðŸ…</div>
                 </div>
                 <div className="wv-badge-name">PRIMER TRABAJO</div>
                 <div className="wv-badge-stars">
-                  ★<span className="wv-badge-stars-empty">☆☆☆☆</span>
+                  â˜…<span className="wv-badge-stars-empty">â˜†â˜†â˜†â˜†</span>
                 </div>
-                <div className="wv-badge-rarity-label">COMÚN</div>
+                <div className="wv-badge-rarity-label">COMÃšN</div>
                 <div className="wv-badge-displayed-tag">DEBUT</div>
               </motion.div>
             ) : null}
@@ -446,7 +446,7 @@ export default function WorkerProfile() {
                         badge.asset?.description ?? "Insignia obtenida por el trabajador.",
                       rarity,
                       acquiredAt: badge.acquired_at,
-                      tag: badge.is_displayed ? "EN EXHIBICIÓN" : undefined,
+                      tag: badge.is_displayed ? "EN EXHIBICIÃ“N" : undefined,
                       imageUrl: imgUrl,
                     })
                   }
@@ -458,7 +458,7 @@ export default function WorkerProfile() {
                           badge.asset?.description ?? "Insignia obtenida por el trabajador.",
                         rarity,
                         acquiredAt: badge.acquired_at,
-                        tag: badge.is_displayed ? "EN EXHIBICIÓN" : undefined,
+                        tag: badge.is_displayed ? "EN EXHIBICIÃ“N" : undefined,
                         imageUrl: imgUrl,
                       })
                     }
@@ -478,22 +478,22 @@ export default function WorkerProfile() {
                         }}
                       />
                     ) : (
-                      <div className="wv-badge-icon-placeholder">★</div>
+                      <div className="wv-badge-icon-placeholder">â˜…</div>
                     )}
                   </div>
                   <div className="wv-badge-name">{badge.asset?.name ?? "Insignia"}</div>
                   <div className="wv-badge-stars">
-                    {"★".repeat(Math.min(rarity, 5))}
+                    {"â˜…".repeat(Math.min(rarity, 5))}
                     <span className="wv-badge-stars-empty">
-                      {"☆".repeat(Math.max(5 - rarity, 0))}
+                      {"â˜†".repeat(Math.max(5 - rarity, 0))}
                     </span>
                   </div>
-                  <div className="wv-badge-rarity-label">{RARITY_LABELS[rarity] ?? "COMÚN"}</div>
+                  <div className="wv-badge-rarity-label">{RARITY_LABELS[rarity] ?? "COMÃšN"}</div>
                   {badge.acquired_at ? (
                     <div className="wv-badge-date">{String(badge.acquired_at).split("T")[0]}</div>
                   ) : null}
                   {badge.is_displayed ? (
-                    <div className="wv-badge-displayed-tag">EN EXHIBICIÓN</div>
+                    <div className="wv-badge-displayed-tag">EN EXHIBICIÃ“N</div>
                   ) : null}
                 </motion.div>
               )
@@ -506,8 +506,8 @@ export default function WorkerProfile() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
             >
-              <div className="wv-empty-badge-icon">☐</div>
-              <div>AÚN SIN INSIGNIAS</div>
+              <div className="wv-empty-badge-icon">â˜</div>
+              <div>AÃšN SIN INSIGNIAS</div>
               <div className="wv-empty-badge-sub">
                 COMPLETE MISIONES Y EXPEDICIONES PARA OBTENER INSIGNIAS
               </div>
@@ -516,7 +516,7 @@ export default function WorkerProfile() {
         )}
       </motion.div>
 
-      {/* ── EQUIPO ASIGNADO ── */}
+      {/* â”€â”€ EQUIPO ASIGNADO â”€â”€ */}
       <motion.div
         className="wv-paper-dark"
         style={{ padding: 24, marginTop: 20, marginBottom: 12 }}
@@ -568,7 +568,7 @@ export default function WorkerProfile() {
                         }}
                       />
                     ) : (
-                      <span className="wv-equip-fallback-icon">⚙</span>
+                      <span className="wv-equip-fallback-icon">âš™</span>
                     )}
                   </div>
                   <div className="wv-equip-info">
@@ -578,7 +578,7 @@ export default function WorkerProfile() {
                   <div className="wv-equip-meta">
                     <span className="wv-equip-cat">{cat.toUpperCase()}</span>
                     {rarity != null ? (
-                      <span className="wv-equip-rarity">{"★".repeat(Math.min(rarity, 5))}</span>
+                      <span className="wv-equip-rarity">{"â˜…".repeat(Math.min(rarity, 5))}</span>
                     ) : null}
                   </div>
                 </motion.div>
