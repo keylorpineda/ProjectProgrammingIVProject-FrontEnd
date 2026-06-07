@@ -6,7 +6,7 @@
 
 import { useQuery } from "@tanstack/react-query"
 import { motion } from "framer-motion"
-import { ShieldAlert, Activity, Truck, Database } from "lucide-react"
+import { ShieldAlert, Activity, Truck, Database, Flame, Droplet, AlertTriangle } from "lucide-react"
 import { useEffect } from "react"
 
 import { api } from "../config/api"
@@ -16,6 +16,28 @@ import type { CampBalance, TransferStatistics } from "../types/api.types"
 interface ManagerOverviewProps {
   campId: string
   refreshTrigger: number
+}
+
+function StatBlock({
+  label,
+  value,
+  sub,
+  color = "text-[#c27c2f]",
+  alert = false,
+}: {
+  label: string
+  value: string | number
+  sub?: string
+  color?: string
+  alert?: boolean
+}) {
+  return (
+    <div className={`space-y-1 ${alert ? "animate-pulse" : ""}`}>
+      <div className="text-xs text-zinc-500 uppercase tracking-widest font-bold">{label}</div>
+      <div className={`text-2xl font-black font-mono ${color}`}>{value}</div>
+      {sub && <div className="text-xs text-zinc-600 uppercase">{sub}</div>}
+    </div>
+  )
 }
 
 export default function ManagerOverview({ campId, refreshTrigger }: ManagerOverviewProps) {
@@ -33,7 +55,7 @@ export default function ManagerOverview({ campId, refreshTrigger }: ManagerOverv
       ])
       return { balance: balanceRes.data as CampBalance, stats: statsRes.data as TransferStatistics }
     },
-    staleTime: 1000 * 60 * 2, // 2 minutes
+    staleTime: 1000 * 60 * 2,
   })
 
   useEffect(() => {
@@ -52,17 +74,17 @@ export default function ManagerOverview({ campId, refreshTrigger }: ManagerOverv
 
   if (error || !balance || !stats) {
     return (
-      <div className="border border-[#9c2720] bg-[#9c2720]/10 p-6 rounded font-mono text-[#e0d8cc] my-4">
-        <h3 className="font-bold text-red-500 uppercase tracking-widest flex items-center gap-2 mb-2">
+      <div className="border border-[#9c2720] bg-[#9c2720]/10 p-8 font-mono text-[#e0d8cc] my-4">
+        <h3 className="font-bold text-red-500 uppercase tracking-widest flex items-center gap-2 mb-3">
           <ShieldAlert className="h-6 w-6" /> TELEMETRY INTERRUPTED
         </h3>
-        <p className="text-sm">
+        <p className="text-sm text-zinc-400">
           {error || "La respuesta de los datos de soporte vital está vacía."}
         </p>
         <button
           type="button"
           onClick={() => refetch()}
-          className="mt-4 border border-[#c27c2f] text-[#c27c2f] px-4 py-1.5 uppercase text-xs hover:bg-[#c27c2f] hover:text-[#161513] transition font-bold"
+          className="mt-5 border border-[#c27c2f] text-[#c27c2f] px-5 py-2 uppercase text-xs hover:bg-[#c27c2f] hover:text-[#161513] transition font-bold cursor-pointer"
         >
           RETRY LINK SIGNAL
         </button>
@@ -70,8 +92,25 @@ export default function ManagerOverview({ campId, refreshTrigger }: ManagerOverv
     )
   }
 
-  // Check if food production is less than consumption
-  const isFoodDeficit = balance.foodProduction < balance.foodConsumption
+  // Normalise field names — Render backend may return snake_case
+  const b = balance as any
+  const foodProd = b.foodProduction ?? b.food_production ?? 0
+  const foodCons = b.foodConsumption ?? b.food_consumption ?? 0
+  const waterProd = b.waterProduction ?? b.water_production ?? 0
+  const waterCons = b.waterConsumption ?? b.water_consumption ?? 0
+  const medNeeded = b.medicalSuppliesNeeded ?? b.medical_supplies_needed ?? 0
+  const alarmCount = b.activeAlarmsCount ?? b.active_alarms_count ?? 0
+  const alarmList: string[] = b.detailedAlarms ?? b.detailed_alarms ?? []
+
+  const s = stats as any
+  const sentCount = s.sentCount ?? s.sent_count ?? 0
+  const receivedCount = s.receivedCount ?? s.received_count ?? 0
+  const totalTransferred = s.totalTransferredResources ?? s.total_transferred_resources ?? 0
+  const pendingIncoming = s.pendingIncomingRequests ?? s.pending_incoming_requests ?? 0
+
+  const isFoodDeficit = foodProd < foodCons
+  const foodPct = foodCons > 0 ? Math.min(100, Math.round((foodProd / foodCons) * 100)) : 100
+  const waterPct = waterCons > 0 ? Math.min(100, Math.round((waterProd / waterCons) * 100)) : 100
 
   return (
     <motion.div
@@ -80,260 +119,212 @@ export default function ManagerOverview({ campId, refreshTrigger }: ManagerOverv
       transition={{ duration: 0.2 }}
       className="space-y-6"
     >
-      {/* 3-COLUMN INDUSTRIAL GRID */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-        {/* CARD 1: LIFELINE / SOPORTE VITAL */}
+      {/* ROW 1: Food & Water balance — 2 wide cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* CARD: FOOD */}
         <div
-          className={`flex flex-col justify-between p-8 md:p-10 font-mono ${
-            isFoodDeficit
-              ? "bg-[#9c2720] border-2 border-black text-white shadow-[inset_0_0_20px_rgba(0,0,0,0.4)]"
-              : "bg-[#1a1a1a] border-2 border-black text-[#e0d8cc]"
-          }`}
+          className={`p-8 font-mono border-2 border-black ${isFoodDeficit ? "bg-[#9c2720]/20 border-[#9c2720]" : "bg-[#1a1a1a]"}`}
         >
-          <div className="space-y-4">
-            <div
-              className={`flex items-center gap-3 border-b-2 pb-4 ${isFoodDeficit ? "border-white/20" : "border-black"}`}
-            >
-              <Activity
-                className={`h-6 w-6 ${isFoodDeficit ? "text-white animate-bounce" : "text-[#c27c2f]"}`}
-              />
-              <h3 className="font-black tracking-widest text-base uppercase">
-                01. Balance Alimentario
-              </h3>
-            </div>
-
-            <div className="space-y-8 text-base">
-              {/* Food Details */}
-              <div className="space-y-3">
-                <div className="flex justify-between font-black">
-                  <span>PRODUCCIÓN FOOD:</span>
-                  <span
-                    className={isFoodDeficit ? "text-white font-extrabold" : "text-emerald-400"}
-                  >
-                    +{balance.foodProduction} MRE/DÍA
-                  </span>
-                </div>
-                <div
-                  className={`flex justify-between font-bold ${isFoodDeficit ? "text-white/70" : "text-zinc-400"}`}
-                >
-                  <span>CONSUMO POBLACIÓN:</span>
-                  <span>-{balance.foodConsumption} MRE/DÍA</span>
-                </div>
-                {/* Visual indicator of production ratio */}
-                <div
-                  className={`w-full h-5 border-2 my-4 relative overflow-hidden ${isFoodDeficit ? "bg-black border-[#9c2720]" : "bg-black border-emerald-900"}`}
-                >
-                  <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_5px,rgba(0,0,0,0.7)_5px,rgba(0,0,0,0.7)_10px)] z-10" />
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{
-                      width: `${Math.min(100, (balance.foodProduction / (balance.foodConsumption || 1)) * 100)}%`,
-                    }}
-                    transition={{ duration: 1.5, ease: "easeOut" }}
-                    className={`h-full relative z-0 ${isFoodDeficit ? "bg-[#9c2720]" : "bg-emerald-500"}`}
-                  />
-                </div>
-                <div
-                  className={`flex justify-between text-sm font-black ${isFoodDeficit ? "text-white/60" : "text-zinc-500"}`}
-                >
-                  <span>EFICIENCIA</span>
-                  <span>
-                    {balance.foodConsumption > 0
-                      ? Math.round((balance.foodProduction / balance.foodConsumption) * 100)
-                      : 100}
-                    %
-                  </span>
-                </div>
-              </div>
-
-              {/* Water Details */}
-              <div
-                className={`space-y-3 pt-6 border-t-2 ${isFoodDeficit ? "border-white/15" : "border-zinc-800"}`}
-              >
-                <div className="flex justify-between font-black">
-                  <span>SUMINISTRO DE AGUA:</span>
-                  <span className={isFoodDeficit ? "text-white" : "text-emerald-400"}>
-                    +{balance.waterProduction} L/DÍA
-                  </span>
-                </div>
-                <div
-                  className={`flex justify-between font-bold ${isFoodDeficit ? "text-white/70" : "text-zinc-400"}`}
-                >
-                  <span>CONSUMO HIDRATACIÓN:</span>
-                  <span>-{balance.waterConsumption} L/DÍA</span>
-                </div>
-                {/* Visual indicator of water ratio */}
-                <div
-                  className={`w-full h-5 border-2 my-4 relative overflow-hidden ${isFoodDeficit ? "bg-black border-zinc-700" : "bg-black border-cyan-900"}`}
-                >
-                  <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_5px,rgba(0,0,0,0.7)_5px,rgba(0,0,0,0.7)_10px)] z-10" />
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{
-                      width: `${Math.min(100, (balance.waterProduction / (balance.waterConsumption || 1)) * 100)}%`,
-                    }}
-                    transition={{ duration: 1.5, delay: 0.2, ease: "easeOut" }}
-                    className={`h-full relative z-0 ${isFoodDeficit ? "bg-zinc-400" : "bg-cyan-500"}`}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-4">
-            {isFoodDeficit ? (
-              <div className="text-base bg-white text-[#9c2720] p-2 text-center font-extrabold tracking-wider border border-black uppercase">
-                CRITICAL_DEFICIT
-              </div>
-            ) : (
-              <div className="text-base bg-black text-[#e0d8cc] p-2 text-center font-bold tracking-wider border border-black uppercase">
-                SOPORTE_VITAL_ESTABLE
-              </div>
+          <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-black">
+            <Flame
+              className={`h-5 w-5 ${isFoodDeficit ? "text-[#9c2720] animate-bounce" : "text-[#c27c2f]"}`}
+            />
+            <span className="text-sm font-black uppercase tracking-widest text-[#c27c2f]">
+              BALANCE ALIMENTARIO
+            </span>
+            {isFoodDeficit && (
+              <span className="ml-auto text-xs font-black text-white bg-[#9c2720] px-2 py-0.5 animate-pulse">
+                DÉFICIT
+              </span>
             )}
           </div>
-        </div>
 
-        {/* CARD 2: LOGISTICS SATELLITE */}
-        <div className="flex flex-col justify-between p-8 md:p-10 bg-[#9a9080] border-2 border-black text-black font-mono">
-          <div className="space-y-6">
-            <div className="flex items-center gap-3 border-b-2 border-black pb-4">
-              <Truck className="h-6 w-6 text-black" />
-              <h3 className="font-black tracking-widest text-base uppercase text-black">
-                02. Logística y Tránsitos
-              </h3>
-            </div>
-
-            <div className="space-y-6 text-base">
-              <div className="flex justify-between font-bold">
-                <span>EXPEDICIONES ENVIADAS:</span>
-                <span className="font-mono text-black font-black">{stats.sentCount} DESPACHOS</span>
-              </div>
-              <div className="flex justify-between text-black/80">
-                <span>CARGAMENTOS SEGUROS:</span>
-                <span className="font-mono text-black font-bold">
-                  {stats.receivedCount} ENTREGAS
-                </span>
-              </div>
-              <div className="flex justify-between text-black/80">
-                <span>TOTAL TRANSFERIDO:</span>
-                <span className="font-mono text-black font-bold">
-                  {stats.totalTransferredResources} UNIDADES
-                </span>
-              </div>
-              <div className="flex justify-between text-[#801b15] font-extrabold border-t border-black/40 pt-2 pb-1">
-                <span>PEDIDOS PENDIENTES:</span>
-                <span className="animate-pulse">{stats.pendingIncomingRequests} ENTRANTES</span>
-              </div>
-              <div className="flex justify-between text-sm text-black/60">
-                <span>GASTO DIÉSEL:</span>
-                <span>{stats.totalFuelCostUsed} BIDONES</span>
-              </div>
-            </div>
+          <div className="grid grid-cols-2 gap-8 mb-6">
+            <StatBlock
+              label="Producción diaria"
+              value={`+${foodProd}`}
+              sub="MRE / DÍA"
+              color="text-emerald-400"
+            />
+            <StatBlock
+              label="Consumo población"
+              value={`-${foodCons}`}
+              sub="MRE / DÍA"
+              color={isFoodDeficit ? "text-[#9c2720]" : "text-zinc-400"}
+            />
           </div>
 
-          <div className="mt-6">
-            {/* RADAR ANIMATION */}
-            <div className="h-20 w-full border-2 border-black bg-[#161513] mb-4 relative overflow-hidden flex items-center justify-center">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(194,124,47,0.15)_0,transparent_70%)]" />
-              {/* Grid Lines */}
-              <div className="absolute inset-0 bg-[linear-gradient(rgba(194,124,47,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(194,124,47,0.1)_1px,transparent_1px)] bg-[size:10px_10px]" />
-
-              <div className="w-14 h-14 border border-[#c27c2f]/40 rounded-full flex items-center justify-center relative">
-                <div className="w-6 h-6 border border-[#c27c2f]/60 rounded-full" />
-                <div className="w-1 h-1 bg-[#df8120] rounded-full absolute top-2 left-2 animate-ping" />
-                <div
-                  className="w-1 h-1 bg-[#df8120] rounded-full absolute bottom-3 right-1 animate-ping"
-                  style={{ animationDelay: "1s" }}
-                />
-
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                  className="absolute inset-0 rounded-full"
-                  style={{
-                    background:
-                      "conic-gradient(from 0deg, transparent 70%, rgba(194,124,47,0.6) 100%)",
-                  }}
-                />
-              </div>
-              <div className="absolute left-3 bottom-2 text-[10px] text-[#c27c2f] font-black uppercase tracking-widest flex flex-col">
-                <span className="animate-pulse">TRACKING</span>
-                <span>SAT_UPLINK</span>
-              </div>
+          <div>
+            <div className="flex justify-between text-xs text-zinc-500 uppercase mb-2 font-bold">
+              <span>Eficiencia de producción</span>
+              <span className={foodPct >= 100 ? "text-emerald-400" : "text-[#9c2720]"}>
+                {foodPct}%
+              </span>
             </div>
-            <div className="text-base bg-black text-white p-2 text-center font-bold tracking-wider border border-black uppercase shadow-[inset_0_0_10px_rgba(255,255,255,0.2)]">
-              ENLACE_ORBITAL_STABLE
+            <div className="w-full h-4 bg-black border border-black overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${foodPct}%` }}
+                transition={{ duration: 1.5, ease: "easeOut" }}
+                className={`h-full ${isFoodDeficit ? "bg-[#9c2720]" : "bg-emerald-500"}`}
+              />
             </div>
           </div>
         </div>
 
-        {/* CARD 3: MEDICINE AND SANITARY */}
-        <div className="flex flex-col justify-between p-8 md:p-10 bg-[#2a2824] border-2 border-black text-[#e0d8cc] font-mono">
-          <div className="space-y-6">
-            <div className="flex items-center gap-3 border-b-2 border-black pb-4">
-              <Database className="h-6 w-6 text-[#c27c2f]" />
-              <h3 className="font-black tracking-widest text-base uppercase text-[#c27c2f]">
-                03. Biometría Cuarentena
-              </h3>
-            </div>
-
-            <div className="space-y-6 text-base">
-              <div className="flex justify-between font-black">
-                <span>APOYO MÉDICO REQ:</span>
-                <span className="font-mono text-[#c27c2f] font-extrabold">
-                  {balance.medicalSuppliesNeeded} DOSIS
-                </span>
-              </div>
-              <div className="flex justify-between text-[#9c2720] font-black border-y-2 border-black/40 py-2">
-                <span>ALARMAS SECTOR:</span>
-                <span className="animate-pulse">REGISTRADAS</span>
-              </div>
-              <div className="flex justify-between text-[#e0d8cc]/80 font-bold">
-                <span>SEGURIDAD BÚNKER:</span>
-                <span className="text-emerald-400 font-mono font-black">NIVEL_4_MAX</span>
-              </div>
-              <div className="flex justify-between text-[#e0d8cc]/60 font-bold">
-                <span>DETECCIÓN INTRUSIONES:</span>
-                <span className="text-emerald-400 font-mono">ACTIVA</span>
-              </div>
-            </div>
+        {/* CARD: WATER */}
+        <div className="p-8 font-mono border-2 border-black bg-[#1a1a1a]">
+          <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-black">
+            <Droplet className="h-5 w-5 text-cyan-400" />
+            <span className="text-sm font-black uppercase tracking-widest text-cyan-400">
+              SUMINISTRO HÍDRICO
+            </span>
           </div>
 
-          <div className="mt-4">
-            <div className="text-base border-2 border-[#c27c2f] text-[#c27c2f] p-2 text-center font-bold uppercase tracking-widest">
-              MONITOR_BIOMÉTRICO_ONLINE
+          <div className="grid grid-cols-2 gap-8 mb-6">
+            <StatBlock
+              label="Producción diaria"
+              value={`+${waterProd}`}
+              sub="LITROS / DÍA"
+              color="text-cyan-400"
+            />
+            <StatBlock
+              label="Consumo hidratación"
+              value={`-${waterCons}`}
+              sub="LITROS / DÍA"
+              color="text-zinc-400"
+            />
+          </div>
+
+          <div>
+            <div className="flex justify-between text-xs text-zinc-500 uppercase mb-2 font-bold">
+              <span>Eficiencia hídrica</span>
+              <span className={waterPct >= 100 ? "text-cyan-400" : "text-[#9c2720]"}>
+                {waterPct}%
+              </span>
+            </div>
+            <div className="w-full h-4 bg-black border border-black overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${waterPct}%` }}
+                transition={{ duration: 1.5, delay: 0.2, ease: "easeOut" }}
+                className={`h-full ${waterPct >= 100 ? "bg-cyan-500" : "bg-[#9c2720]"}`}
+              />
             </div>
           </div>
         </div>
       </div>
 
-      {/* DEDICATED ALARM PANEL */}
-      <div className="border-2 border-black bg-[#1a1a1a] font-mono">
-        <div className="bg-black p-2 text-sm font-bold uppercase tracking-widest text-[#c27c2f] flex justify-between items-center">
-          <span>ALARMAS_HISTORIAL_REGULADOR ({balance.activeAlarmsCount})</span>
-          <span className="animate-pulse text-[#c27c2f]">● MONITOREO DIRECTO</span>
+      {/* ROW 2: Logistics + Medical — 2 cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* CARD: LOGISTICS */}
+        <div className="p-8 font-mono border-2 border-black bg-[#1a1a1a]">
+          <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-black">
+            <Truck className="h-5 w-5 text-[#c27c2f]" />
+            <span className="text-sm font-black uppercase tracking-widest text-[#c27c2f]">
+              LOGÍSTICA Y TRÁNSITOS
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-8">
+            <StatBlock
+              label="Expediciones enviadas"
+              value={sentCount}
+              sub="DESPACHOS"
+              color="text-[#e0d8cc]"
+            />
+            <StatBlock
+              label="Cargamentos recibidos"
+              value={receivedCount}
+              sub="ENTREGAS"
+              color="text-[#e0d8cc]"
+            />
+            <StatBlock
+              label="Total transferido"
+              value={totalTransferred}
+              sub="UNIDADES"
+              color="text-[#e0d8cc]"
+            />
+            <StatBlock
+              label="Pedidos pendientes"
+              value={pendingIncoming}
+              sub="ENTRANTES"
+              color={pendingIncoming > 0 ? "text-[#9c2720]" : "text-zinc-500"}
+              alert={pendingIncoming > 0}
+            />
+          </div>
         </div>
 
-        <div className="p-4">
-          {(balance.detailedAlarms || []).length === 0 ? (
-            <p className="text-xs text-emerald-400 uppercase py-2">
-              ✔ TODO EN ORDEN. Sensores de inventario y personal en márgenes permitidos.
-            </p>
-          ) : (
-            <div className="space-y-2">
-              {(balance.detailedAlarms || []).map((alarm, index) => (
-                <div
-                  key={index}
-                  className="flex items-center gap-3 bg-black/40 border-l-4 border-[#9c2720] p-2 text-xs text-[#e0d8cc]"
-                >
-                  <div className="h-2 w-2 rounded-full bg-[#9c2720] animate-ping shrink-0" />
-                  <span className="font-medium">{alarm}</span>
-                </div>
-              ))}
-            </div>
-          )}
+        {/* CARD: MEDICAL & SECURITY */}
+        <div className="p-8 font-mono border-2 border-black bg-[#1a1a1a]">
+          <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-black">
+            <Database className="h-5 w-5 text-[#c27c2f]" />
+            <span className="text-sm font-black uppercase tracking-widest text-[#c27c2f]">
+              BIOMETRÍA Y SEGURIDAD
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-8">
+            <StatBlock
+              label="Apoyo médico req."
+              value={medNeeded}
+              sub="DOSIS"
+              color="text-[#c27c2f]"
+            />
+            <StatBlock
+              label="Alarmas activas"
+              value={alarmCount}
+              sub="SECTOR"
+              color={alarmCount > 0 ? "text-[#9c2720]" : "text-emerald-400"}
+              alert={alarmCount > 0}
+            />
+            <StatBlock
+              label="Seguridad búnker"
+              value="NIVEL 4"
+              sub="MÁXIMO"
+              color="text-emerald-400"
+            />
+            <StatBlock
+              label="Detección intrusiones"
+              value="ACTIVA"
+              sub="ONLINE"
+              color="text-emerald-400"
+            />
+          </div>
         </div>
       </div>
+
+      {/* ALARM PANEL */}
+      {alarmCount > 0 && (
+        <div className="border-2 border-[#9c2720] bg-[#9c2720]/10 font-mono">
+          <div className="bg-[#9c2720] px-5 py-3 text-sm font-black uppercase tracking-widest text-white flex items-center gap-3">
+            <AlertTriangle className="h-4 w-4" />
+            <span>ALARMAS ACTIVAS ({alarmCount})</span>
+            <span className="ml-auto animate-pulse">● EN VIVO</span>
+          </div>
+          <div className="p-5 space-y-3">
+            {alarmList.map((alarm, index) => (
+              <div
+                key={index}
+                className="flex items-center gap-4 border-l-4 border-[#9c2720] bg-black/30 px-4 py-3 text-sm text-[#e0d8cc]"
+              >
+                <div className="h-2 w-2 rounded-full bg-[#9c2720] animate-ping shrink-0" />
+                <span>{alarm}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {alarmCount === 0 && (
+        <div className="border-2 border-black bg-[#1a1a1a] font-mono px-6 py-4 flex items-center gap-4 text-sm text-emerald-400">
+          <Activity className="h-4 w-4 shrink-0" />
+          <span className="uppercase font-bold tracking-wider">
+            Todo en orden — Sensores de inventario y personal en márgenes permitidos.
+          </span>
+          <span className="ml-auto text-zinc-600 text-xs uppercase">● Monitoreo directo</span>
+        </div>
+      )}
     </motion.div>
   )
 }

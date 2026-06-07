@@ -17,9 +17,8 @@ const ROLE_LABELS: Record<string, string> = {
   worker: "TRABAJADOR",
   camp_leader: "LÃDER DE CAMPAMENTO",
   admin: "ADMINISTRADOR",
-  resource_manager: "GESTOR DE CAMPAMENTO",
-  travel_manager: "GESTOR DE TRASLADOS",
   resource_manager: "GESTOR DE RECURSOS",
+  travel_manager: "GESTOR DE TRASLADOS",
 }
 
 const STATUS_COLORS: Record<string, string> = {

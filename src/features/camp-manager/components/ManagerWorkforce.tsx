@@ -12,7 +12,7 @@ import { type FormEvent } from "react"
 
 import { api } from "../config/api"
 
-import type { Person, ProfessionAlert, PersonStatus } from "../types/api.types"
+import type { Person, ProfessionAlert } from "../types/api.types"
 
 interface ManagerWorkforceProps {
   campId: string
@@ -89,25 +89,6 @@ export default function ManagerWorkforce({
   const [selectedProfession, setSelectedProfession] = useState<string>("")
   const [submittingAssignment, setSubmittingAssignment] = useState<boolean>(false)
 
-  const handleStatusChange = async (personId: string, newStatus: PersonStatus) => {
-    // ⚠️ OPTIMISTIC UI: Instantly update local state to reflect change before API returns
-    const previousPersonsState = [...localPersons]
-    setLocalPersons((prev) =>
-      prev.map((p) => (p.id === personId ? { ...p, status: newStatus } : p)),
-    )
-
-    try {
-      await api.put(`/users/persons/${personId}/status`, { status: newStatus })
-      onDataChanged() // Propagate change to trigger refresh on Overview & Inventory
-    } catch (err: any) {
-      // Rollback on fail
-      setLocalPersons(previousPersonsState)
-      setErrorState(
-        `No se pudo actualizar el estado de salud del sobreviviente. Código error de red: ${err?.message}`,
-      )
-    }
-  }
-
   const handleOpenAssignModal = (person: Person) => {
     setAssigningPerson(person)
     setSelectedProfession(professionsList.length > 0 ? professionsList[0].id.toString() : "1")
@@ -146,8 +127,6 @@ export default function ManagerWorkforce({
     return <div className="min-h-[400px]" />
   }
 
-  const staticProfessionsList = ["Farmer", "Doctor", "Engineer", "Soldier", "Scavenger"]
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 5 }}
@@ -161,52 +140,61 @@ export default function ManagerWorkforce({
           <div className="flex items-center gap-3 text-[#c27c2f] border-b-2 border-black pb-4">
             <Cpu className="h-6 w-6 animate-pulse text-[#c27c2f]" />
             <h4 className="font-black text-lg uppercase tracking-wider">
-              RECOM_AUTÓMATA_SISTEMA_IA
+              SISTEMA IA — ANÁLISIS DE PERSONAL
             </h4>
           </div>
 
-          <p className="text-base text-zinc-400 leading-relaxed uppercase">
-            Sistemas de patrullaje biónico analizan los cuellos de botella de especialización en
-            búnker.
+          <p className="text-sm text-zinc-500 uppercase">
+            Cuellos de botella detectados por especialización en búnker.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
             {!alerts || alerts.length === 0 ? (
-              <div className="text-base col-span-full text-emerald-400 bg-[#161513] border-2 border-black px-4 py-3 font-bold uppercase tracking-wide">
-                ✔ DISTRIBUCIÓN LABORAL ÓPTIMA. Sin cuellos de botella detectados.
+              <div className="col-span-full text-emerald-400 bg-[#161513] border-2 border-black px-5 py-4 font-bold uppercase tracking-wide flex items-center gap-3">
+                <span className="text-xl">✔</span>
+                <span className="text-sm">
+                  DISTRIBUCIÓN LABORAL ÓPTIMA — Sin cuellos de botella.
+                </span>
               </div>
             ) : (
               (alerts || []).map((alert, i) => {
-                const colors =
-                  alert.severity === "high"
-                    ? "border-2 border-black bg-[#9c2720]/10 text-[#9c2720] shadow-[inset_0_0_10px_rgba(0,0,0,0.2)]"
-                    : alert.severity === "medium"
-                      ? "border-2 border-black bg-transparent text-[#c27c2f]"
-                      : "border-2 border-black bg-[#2a2824] text-[#e0d8cc]"
+                const profName = String(
+                  (alert.profession as any)?.name || alert.profession || "—",
+                ).toUpperCase()
+                const count = alert.neededCount ?? (alert as any).needed_count ?? 0
+                const isHigh = alert.severity === "high"
+                const isMed = alert.severity === "medium"
+                const accentColor = isHigh ? "#9c2720" : isMed ? "#c27c2f" : "#6b7280"
+                const bgClass = isHigh
+                  ? "bg-[#9c2720]/10 border-[#9c2720]"
+                  : isMed
+                    ? "bg-[#c27c2f]/10 border-[#c27c2f]"
+                    : "bg-[#2a2824] border-zinc-700"
 
                 return (
-                  <div
-                    key={i}
-                    className={`p-4 md:p-5 text-base flex flex-col justify-center font-mono ${colors} border-2 border-black`}
-                  >
-                    <div className="flex justify-between items-center w-full">
-                      <span className="font-black uppercase tracking-wider">
-                        {alert.severity === "high"
-                          ? "🔴 "
-                          : alert.severity === "medium"
-                            ? "🟡 "
-                            : "⚪ "}
-                        {alert.neededCount}x{" "}
-                        {String(
-                          (alert.profession as any)?.name || alert.profession || "",
-                        ).toUpperCase()}
+                  <div key={i} className={`p-4 flex flex-col gap-3 font-mono border-2 ${bgClass}`}>
+                    <div className="flex items-center justify-between gap-2">
+                      <span
+                        className="text-3xl font-black leading-none"
+                        style={{ color: accentColor }}
+                      >
+                        {count}
                       </span>
-                      <span className="text-xs uppercase font-bold px-2.5 py-1 bg-black text-white">
+                      <span
+                        className="text-xs uppercase font-black px-2 py-0.5 border"
+                        style={{ color: accentColor, borderColor: accentColor }}
+                      >
                         {String(alert.severity || "").toUpperCase()}
                       </span>
                     </div>
+                    <div>
+                      <div className="font-black text-sm uppercase text-[#e0d8cc]">{profName}</div>
+                      <div className="text-xs text-zinc-600 mt-0.5 uppercase">
+                        {count === 1 ? "falta 1 trabajador" : `faltan ${count} trabajadores`}
+                      </div>
+                    </div>
                     {alert.impactDescription && (
-                      <p className="text-sm text-[#e0d8cc]/70 uppercase mt-2">
+                      <p className="text-xs text-zinc-500 uppercase border-t border-zinc-800 pt-2">
                         {String(alert.impactDescription || "").toUpperCase()}
                       </p>
                     )}
@@ -235,7 +223,7 @@ export default function ManagerWorkforce({
             <div className="flex items-center gap-3 shrink-0">
               <Users className="h-6 w-6 text-[#c27c2f]" />
               <span className="text-base md:text-lg text-[#c27c2f] font-black uppercase tracking-wider">
-                CENSO_FUERZA_TRABAJO_ACTIVO
+                CENSO LABORAL ACTIVO
               </span>
             </div>
 
@@ -278,10 +266,10 @@ export default function ManagerWorkforce({
             <table className="table-auto w-full border-collapse font-mono text-sm md:text-base text-[#e0d8cc]">
               <thead className="bg-[#121110] border-b border-black text-left uppercase text-[#c27c2f] text-base tracking-wider font-bold">
                 <tr>
-                  <th className="p-6 md:p-8 border-r border-black">SOBREVIVIENTE / SKILLS</th>
-                  <th className="p-6 md:p-8 border-r border-black">PROFESIÓN_ROL</th>
-                  <th className="p-6 md:p-8 border-r border-black text-center">BIOMETRÍA_FÍSICA</th>
-                  <th className="p-6 md:p-8 text-center">ACCIONES</th>
+                  <th className="px-5 py-3 border-r border-black">SOBREVIVIENTE</th>
+                  <th className="px-5 py-3 border-r border-black">PROFESIÓN</th>
+                  <th className="px-5 py-3 border-r border-black text-center">ESTADO FÍSICO</th>
+                  <th className="px-5 py-3 text-center">ACCIONES</th>
                 </tr>
               </thead>
               <tbody className="text-sm">
@@ -310,9 +298,9 @@ export default function ManagerWorkforce({
 
                   return (
                     <tr key={person.id} className={`${rowColor} transition-colors`}>
-                      <td className="p-6 md:p-8 border-r border-black">
-                        <div className="text-base md:text-lg font-bold flex items-center gap-3 uppercase">
-                          <span className="text-2xl" title={person.profession || ""}>
+                      <td className="px-5 py-4 border-r border-black">
+                        <div className="text-base font-bold flex items-center gap-2 uppercase">
+                          <span className="text-xl" title={person.profession || ""}>
                             {person.profession === "Farmer" && "🌾"}
                             {person.profession === "Doctor" && "⚕️"}
                             {person.profession === "Engineer" && "⚙️"}
@@ -322,9 +310,11 @@ export default function ManagerWorkforce({
                           </span>
                           {person.name}
                         </div>
-                        <div className="text-sm text-zinc-500 font-normal uppercase mt-1">
-                          APTITUDES: {person.skills?.join(", ")?.toUpperCase() || "NINGUNA"}
-                        </div>
+                        {person.skills && person.skills.length > 0 && (
+                          <div className="text-xs text-zinc-500 font-normal uppercase mt-0.5">
+                            {person.skills.join(", ").toUpperCase()}
+                          </div>
+                        )}
                         {cleanAlert && (
                           <div
                             className="text-sm leading-relaxed text-[#9c2720] font-black uppercase tracking-wider mt-3 border-l-4 border-[#9c2720] pl-3 py-2 bg-[#9c2720]/10 rounded-r-sm"
@@ -337,50 +327,46 @@ export default function ManagerWorkforce({
                           </div>
                         )}
                       </td>
-                      <td className="p-6 md:p-8 border-r border-black">
-                        <span className="inline-flex items-center gap-2 px-3 py-1 border-2 border-black bg-black text-[#c27c2f] font-black uppercase text-base">
+                      <td className="px-5 py-4 border-r border-black">
+                        <span className="inline-flex items-center gap-2 px-3 py-1 border-2 border-black bg-black text-[#c27c2f] font-black uppercase text-sm">
                           {person.profession?.toUpperCase() || "SIN ASIGNAR"}
                         </span>
                       </td>
-                      <td className="p-6 md:p-8 border-r border-black text-center">
-                        <select
-                          value={person.status}
-                          onChange={(e) =>
-                            handleStatusChange(person.id, e.target.value as PersonStatus)
+                      <td className="px-5 py-4 border-r border-black text-center">
+                        {(() => {
+                          const statusMap: Record<string, { label: string; cls: string }> = {
+                            active: {
+                              label: "✓ SANO",
+                              cls: "border-emerald-700 text-emerald-400 bg-emerald-900/20",
+                            },
+                            sick: {
+                              label: "⚠ ENFERMO",
+                              cls: "border-yellow-700 text-yellow-400 bg-yellow-900/20",
+                            },
+                            injured: {
+                              label: "✕ HERIDO",
+                              cls: "border-red-700 text-red-400 bg-red-900/20",
+                            },
+                            dead: {
+                              label: "— M.I.A.",
+                              cls: "border-zinc-700 text-zinc-500 bg-zinc-900/20",
+                            },
                           }
-                          className="w-full text-sm md:text-base font-black uppercase py-3 px-4 text-[#c27c2f] bg-[#1a1a1a] border-2 border-[#c27c2f]/20 hover:border-[#c27c2f] transition cursor-pointer outline-none shadow-sm"
-                        >
-                          <option
-                            value="active"
-                            className="bg-[#161513] text-emerald-400 font-bold py-2"
-                          >
-                            SANO (ACTIVO)
-                          </option>
-                          <option
-                            value="sick"
-                            className="bg-[#161513] text-yellow-400 font-bold py-2"
-                          >
-                            ENFERMO (SICK)
-                          </option>
-                          <option
-                            value="injured"
-                            className="bg-[#161513] text-red-400 font-bold py-2"
-                          >
-                            HERIDO GRAVE
-                          </option>
-                          <option
-                            value="dead"
-                            className="bg-[#161513] text-zinc-500 font-bold py-2"
-                          >
-                            FALLECIDO (M.I.A)
-                          </option>
-                        </select>
+                          const s = statusMap[person.status] ?? statusMap.dead
+                          return (
+                            <span
+                              className={`inline-block w-full py-2 px-3 font-black uppercase text-sm border-2 ${s.cls}`}
+                            >
+                              {s.label}
+                            </span>
+                          )
+                        })()}
                       </td>
-                      <td className="p-6 md:p-8 text-center">
+                      <td className="px-5 py-4 text-center">
                         <button
                           type="button"
                           onClick={() => handleOpenAssignModal(person)}
-                          className="w-full bg-[#1a1a1a] hover:bg-[#c27c2f] hover:text-black border-2 border-[#c27c2f] text-[#c27c2f] px-6 py-3 text-sm md:text-base font-black uppercase transition shadow-md active:translate-y-0.5"
+                          className="w-full bg-[#1a1a1a] hover:bg-[#c27c2f] hover:text-black border-2 border-[#c27c2f] text-[#c27c2f] px-4 py-2 text-sm font-black uppercase transition shadow-md active:translate-y-0.5"
                         >
                           ORDEN ROL
                         </button>
@@ -393,23 +379,23 @@ export default function ManagerWorkforce({
           </div>
 
           {/* PAGINATION CONTROLS */}
-          <div className="bg-[#121110] border-t-2 border-black p-6 md:p-10 flex justify-between items-center font-mono">
+          <div className="bg-[#121110] border-t-2 border-black px-5 py-4 flex justify-between items-center font-mono">
             <button
               type="button"
               disabled={page === 1}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="flex items-center gap-2 border-2 border-[#c27c2f] bg-[#161513] text-[#c27c2f] hover:bg-[#c27c2f] hover:text-black text-base md:text-lg font-black px-8 py-4 uppercase transition disabled:opacity-30 disabled:border-zinc-700 disabled:text-zinc-500 disabled:hover:bg-[#161513] disabled:hover:text-zinc-500 disabled:cursor-not-allowed shadow-md"
+              className="flex items-center gap-2 border-2 border-[#c27c2f] bg-[#161513] text-[#c27c2f] hover:bg-[#c27c2f] hover:text-black text-sm font-black px-5 py-2 uppercase transition disabled:opacity-30 disabled:border-zinc-700 disabled:text-zinc-500 disabled:hover:bg-[#161513] disabled:hover:text-zinc-500 disabled:cursor-not-allowed"
             >
               « ANTERIOR
             </button>
-            <span className="text-base md:text-lg text-zinc-500 uppercase tracking-widest font-black">
-              SOBREVIVIENTES ({total} REGISTRADOS)
+            <span className="text-xs text-zinc-500 uppercase tracking-widest font-black">
+              {total} SOBREVIVIENTES REGISTRADOS
             </span>
             <button
               type="button"
               disabled={page * limit >= total}
               onClick={() => setPage((p) => p + 1)}
-              className="flex items-center gap-2 border-2 border-[#c27c2f] bg-[#161513] text-[#c27c2f] hover:bg-[#c27c2f] hover:text-black text-base md:text-lg font-black px-8 py-4 uppercase transition disabled:opacity-30 disabled:border-zinc-700 disabled:text-zinc-500 disabled:hover:bg-[#161513] disabled:hover:text-zinc-500 disabled:cursor-not-allowed shadow-md"
+              className="flex items-center gap-2 border-2 border-[#c27c2f] bg-[#161513] text-[#c27c2f] hover:bg-[#c27c2f] hover:text-black text-sm font-black px-5 py-2 uppercase transition disabled:opacity-30 disabled:border-zinc-700 disabled:text-zinc-500 disabled:hover:bg-[#161513] disabled:hover:text-zinc-500 disabled:cursor-not-allowed"
             >
               SIGUIENTE »
             </button>

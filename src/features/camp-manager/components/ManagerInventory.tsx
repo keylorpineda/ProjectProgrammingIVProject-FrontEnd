@@ -89,28 +89,16 @@ export default function ManagerInventory({
     queryKey: ["managerInventory", campId],
     queryFn: async () => {
       const res = await api.get(`/resources/inventory/${campId}`)
-      const raw = Array.isArray(res.data) ? res.data : []
-      return raw.map((item: any) => ({
-        id: String(item.resource_id),
-        resource_id: Number(item.resource_id),
-        name: item.resource?.name ?? `Recurso #${item.resource_id}`,
-        category: item.resource?.category ?? "Materials",
-        unit: item.resource?.unit ?? "",
-        current_stock: Number(item.current_quantity ?? 0),
-        minimum_stock_required: Number(item.minimum_stock_required ?? 0),
-        is_below_minimum: Boolean(item.alert_active),
-      })) as InventoryItem[]
+      // The api interceptor already maps inventory items to InventoryItem shape
+      return (Array.isArray(res.data) ? res.data : []) as InventoryItem[]
     },
     staleTime: 1000 * 60 * 2,
   })
 
-  const {
-    data: movements = [],
-    refetch: refetchMovements,
-  } = useQuery({
+  const { data: movements = [], refetch: refetchMovements } = useQuery({
     queryKey: ["managerMovements", campId],
     queryFn: async () => {
-      const res = await api.get(`/resources/movements/${campId}?limit=30`)
+      const res = await api.get(`/resources/movements/${campId}?limit=10`)
       return (Array.isArray(res.data) ? res.data : []) as InventoryMovement[]
     },
     staleTime: 1000 * 60,
@@ -224,7 +212,9 @@ export default function ManagerInventory({
       refetchMovements()
       onDataChanged()
     } catch (err: any) {
-      setErrorState(err?.response?.data?.message || err?.message || "Error al registrar movimiento.")
+      setErrorState(
+        err?.response?.data?.message || err?.message || "Error al registrar movimiento.",
+      )
     } finally {
       setSubmittingMov(false)
     }
@@ -245,10 +235,10 @@ export default function ManagerInventory({
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 bg-[#1a1a1a] border-2 border-black p-6 md:p-10 font-mono">
         <div>
           <h3 className="text-lg md:text-xl font-black text-[#c27c2f] uppercase tracking-wider flex items-center gap-3">
-            <Layers className="h-6 w-6 text-[#c27c2f]" /> CONTROL_FÍSICO_DE_LA_BODEGA_CENTRAL
+            <Layers className="h-6 w-6 text-[#c27c2f]" /> CONTROL DE BODEGA CENTRAL
           </h3>
-          <p className="text-base text-zinc-400 mt-3 uppercase leading-relaxed">
-            Modifica las raciones en reserva y monitorea el estado del almacén.
+          <p className="text-sm text-zinc-500 mt-1 uppercase">
+            Reservas y parámetros críticos del almacén.
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3 shrink-0">
@@ -281,21 +271,13 @@ export default function ManagerInventory({
       {/* INVENTORY TABLE */}
       <div className="overflow-hidden border-2 border-black bg-[#161513]">
         <table className="table-auto w-full border-collapse font-mono text-xs">
-          <thead className="bg-[#121110] text-[#c27c2f] border-b border-black text-left uppercase text-sm tracking-wider">
+          <thead className="bg-[#121110] text-[#c27c2f] border-b border-black text-left uppercase text-xs tracking-wider">
             <tr>
-              <th className="p-6 md:p-8 border-r border-black font-black text-sm md:text-base">
-                RECURSO / CATEGORÍA
-              </th>
-              <th className="p-6 md:p-8 border-r border-black font-black text-sm md:text-base">
-                INVENTARIO_ACTUAL
-              </th>
-              <th className="p-6 md:p-8 border-r border-black font-black text-sm md:text-base">
-                STOCK_CRÍTICO_MÍNIMO
-              </th>
-              <th className="p-6 md:p-8 border-r border-black font-black text-center text-sm md:text-base">
-                ESTADO_DE_SEGURIDAD
-              </th>
-              <th className="p-6 md:p-8 text-center font-black text-sm md:text-base">ACCIONES</th>
+              <th className="px-6 py-4 border-r border-black font-black">Recurso</th>
+              <th className="px-6 py-4 border-r border-black font-black">Stock actual</th>
+              <th className="px-6 py-4 border-r border-black font-black">Mínimo requerido</th>
+              <th className="px-6 py-4 border-r border-black font-black text-center">Estado</th>
+              <th className="px-6 py-4 text-center font-black">Acciones</th>
             </tr>
           </thead>
           <tbody className="text-sm text-[#e0d8cc] tracking-wide">
@@ -306,25 +288,25 @@ export default function ManagerInventory({
 
               return (
                 <tr key={item.id} className={`${warningStyle} transition-colors`}>
-                  <td className="p-6 md:p-8 border-r border-black font-black">
-                    <div className="text-base md:text-lg">{item.name.toUpperCase()}</div>
-                    <div className="text-sm text-zinc-500 font-normal uppercase mt-1">
-                      CÓDIGO: {item.category.toUpperCase()}
+                  <td className="px-6 py-5 border-r border-black font-black">
+                    <div className="text-sm font-black uppercase">{item.name}</div>
+                    <div className="text-xs text-zinc-500 font-normal uppercase mt-0.5">
+                      {item.category}
                     </div>
                   </td>
-                  <td className="p-6 md:p-8 border-r border-black font-mono font-black text-base md:text-lg">
+                  <td className="px-6 py-5 border-r border-black font-mono font-black text-base">
                     {item.current_stock}{" "}
-                    <span className="text-sm font-normal text-zinc-500">
+                    <span className="text-xs font-normal text-zinc-500">
                       {item.unit.toUpperCase()}
                     </span>
                   </td>
-                  <td className="p-6 md:p-8 border-r border-black font-mono text-base md:text-lg font-bold">
+                  <td className="px-6 py-5 border-r border-black font-mono text-base font-bold">
                     {item.minimum_stock_required}{" "}
-                    <span className="text-sm font-normal text-zinc-500">
+                    <span className="text-xs font-normal text-zinc-500">
                       {item.unit.toUpperCase()}
                     </span>
                   </td>
-                  <td className="p-6 md:p-8 border-r border-black text-center uppercase font-mono font-bold text-base md:text-lg">
+                  <td className="px-6 py-5 border-r border-black text-center uppercase font-mono font-bold text-sm">
                     {(() => {
                       const maxCapacity =
                         Math.max(item.current_stock, item.minimum_stock_required * 3) || 1
@@ -366,11 +348,11 @@ export default function ManagerInventory({
                       )
                     })()}
                   </td>
-                  <td className="p-6 md:p-8 text-center">
+                  <td className="px-6 py-5 text-center">
                     <button
                       type="button"
                       onClick={() => handleEditClick(item)}
-                      className="cursor-pointer bg-[#c27c2f]/10 hover:bg-[#c27c2f] hover:text-black border-2 border-[#c27c2f] text-[#c27c2f] px-6 py-3 text-sm font-black uppercase transition active:translate-y-0.5"
+                      className="cursor-pointer bg-[#c27c2f]/10 hover:bg-[#c27c2f] hover:text-black border-2 border-[#c27c2f] text-[#c27c2f] px-4 py-2 text-xs font-black uppercase transition active:translate-y-0.5"
                     >
                       EDITAR RESERVA
                     </button>
@@ -389,7 +371,7 @@ export default function ManagerInventory({
           <h4 className="font-black text-[#c27c2f] uppercase tracking-widest text-sm md:text-base">
             REGISTRO DE OPERACIONES RECIENTES
           </h4>
-          <span className="ml-auto text-xs text-zinc-500 uppercase">Últimos 30</span>
+          <span className="ml-auto text-xs text-zinc-500 uppercase">Últimos 10</span>
         </div>
 
         {movements.length === 0 ? (
@@ -408,12 +390,16 @@ export default function ManagerInventory({
               return (
                 <div
                   key={mov.id}
-                  className="flex items-center gap-4 px-6 md:px-8 py-4 hover:bg-[#1e1c1a] transition-colors"
+                  className="flex items-center gap-5 px-6 py-5 hover:bg-[#1e1c1a] transition-colors"
                 >
-                  <Icon className={`h-5 w-5 shrink-0 ${color}`} />
+                  <div
+                    className={`shrink-0 w-10 h-10 flex items-center justify-center border-2 border-black ${isOut ? "bg-[#9c2720]/15" : "bg-emerald-900/20"}`}
+                  >
+                    <Icon className={`h-5 w-5 ${color}`} />
+                  </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 flex-wrap">
-                      <span className="font-black text-[#e0d8cc] uppercase text-sm">
+                      <span className="font-black text-[#e0d8cc] uppercase text-base">
                         {resourceName}
                       </span>
                       <span className="text-xs text-zinc-500 uppercase border border-zinc-700 px-2 py-0.5">
@@ -421,17 +407,16 @@ export default function ManagerInventory({
                       </span>
                     </div>
                     {mov.description && (
-                      <p className="text-xs text-zinc-500 mt-1 truncate uppercase">
+                      <p className="text-sm text-zinc-500 mt-1 truncate uppercase">
                         {mov.description}
                       </p>
                     )}
+                    <div className="text-xs text-zinc-600 mt-1">{formatDate(mov.date)}</div>
                   </div>
-                  <div className="text-right shrink-0">
-                    <div className={`font-black text-base ${color}`}>
-                      {isOut ? "-" : "+"}
-                      {mov.quantity} {unit}
-                    </div>
-                    <div className="text-xs text-zinc-600 mt-0.5">{formatDate(mov.date)}</div>
+                  <div className={`font-black text-xl shrink-0 ${color}`}>
+                    {isOut ? "−" : "+"}
+                    {mov.quantity}
+                    <span className="text-sm font-normal text-zinc-500 ml-1">{unit}</span>
                   </div>
                 </div>
               )
@@ -446,25 +431,28 @@ export default function ManagerInventory({
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="w-full max-w-md bg-[#161513] border-4 border-double border-[#c27c2f] p-6 font-mono text-[#e0d8cc] relative shadow-2xl"
+            className="w-full max-w-2xl bg-[#161513] border-4 border-double border-[#c27c2f] p-8 md:p-10 font-mono text-[#e0d8cc] relative shadow-2xl"
           >
-            <div className="flex items-center gap-2 border-b-2 border-black pb-3 mb-4 text-[#c27c2f]">
-              <Sliders className="h-5 w-5" />
-              <h4 className="font-bold uppercase tracking-widest text-xs">
+            <div className="flex items-center gap-3 border-b-2 border-black pb-4 mb-6 text-[#c27c2f]">
+              <Sliders className="h-6 w-6" />
+              <h4 className="font-black uppercase tracking-widest text-base md:text-lg">
                 REDIMENSIONAR RESERVA MÍNIMA
               </h4>
             </div>
 
-            <p className="text-xs text-zinc-400 mb-4 leading-relaxed uppercase">
+            <p className="text-sm text-zinc-400 mb-6 leading-relaxed uppercase">
               Establece el umbral mínimo necesario para el recurso{" "}
               <span className="font-bold text-[#e0d8cc]">{editingItem.name.toUpperCase()}</span>. Si
               el stock cae por debajo de este límite, el sistema central emitirá una alerta de
               defensa pasiva.
             </p>
 
-            <form onSubmit={handleSaveMinStock} className="space-y-4">
-              <div className="space-y-1">
-                <label htmlFor="minStockInput" className="text-xs text-zinc-500 uppercase font-bold block">
+            <form onSubmit={handleSaveMinStock} className="space-y-5">
+              <div className="space-y-2">
+                <label
+                  htmlFor="minStockInput"
+                  className="text-sm text-zinc-400 uppercase font-black block tracking-wider"
+                >
                   CANTIDAD_RESERVA_EXIGIDA ({editingItem.unit.toUpperCase()}):
                 </label>
                 <input
@@ -473,24 +461,24 @@ export default function ManagerInventory({
                   min="0"
                   value={newMinStock}
                   onChange={(e) => setNewMinStock(Math.max(0, parseInt(e.target.value) || 0))}
-                  className="w-full bg-[#2a2824] border-2 border-black p-2 bg-transparent text-[#e0d8cc] outline-none text-sm font-bold font-mono transition"
+                  className="w-full bg-[#2a2824] border-2 border-black p-3 bg-transparent text-[#e0d8cc] outline-none text-base font-bold font-mono transition"
                   required
                 />
               </div>
 
-              <div className="flex gap-2 pt-2">
+              <div className="flex gap-3 pt-2">
                 <button
                   type="button"
                   onClick={() => setEditingItem(null)}
-                  className="flex-1 border-2 border-black bg-transparent text-zinc-400 hover:text-white uppercase text-xs py-2 font-black transition"
+                  className="flex-1 border-2 border-black bg-transparent text-zinc-400 hover:text-white uppercase text-sm py-3 font-black transition"
                 >
                   [CANCELAR]
                 </button>
                 <button
                   type="submit"
                   disabled={submittingEdit}
-                  className="flex-1 border-2 border-black uppercase text-xs py-2 hover:bg-[#a96821] transition font-black flex items-center justify-center gap-2"
-                  style={{ backgroundColor: "#c27c2f", color: "#161513" }}
+                  className="flex-1 border-2 border-black uppercase text-sm py-3 hover:bg-[#a96821] transition font-black flex items-center justify-center gap-2"
+                  style={{ backgroundColor: "#c27c2f", color: "#e0d8cc" }}
                 >
                   {submittingEdit ? "ACTUALIZANDO..." : "GUARDAR LÍMITES"}
                 </button>
@@ -506,25 +494,28 @@ export default function ManagerInventory({
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="w-full max-w-md bg-[#161513] border-4 border-double border-[#c27c2f] p-6 font-mono text-[#e0d8cc] shadow-2xl"
+            className="w-full max-w-2xl bg-[#161513] border-4 border-double border-[#c27c2f] p-8 md:p-10 font-mono text-[#e0d8cc] shadow-2xl"
           >
-            <div className="flex items-center gap-2 border-b-2 border-black pb-3 mb-5 text-[#c27c2f]">
-              <PlusCircle className="h-5 w-5" />
-              <h4 className="font-bold uppercase tracking-widest text-xs">
+            <div className="flex items-center gap-3 border-b-2 border-black pb-4 mb-6 text-[#c27c2f]">
+              <PlusCircle className="h-6 w-6" />
+              <h4 className="font-black uppercase tracking-widest text-base md:text-lg">
                 REGISTRAR MOVIMIENTO DE BODEGA
               </h4>
             </div>
 
-            <form onSubmit={handleSubmitMovement} className="space-y-4">
-              <div className="space-y-1">
-                <label htmlFor="resourceSelect" className="text-xs text-zinc-500 uppercase font-bold block">
+            <form onSubmit={handleSubmitMovement} className="space-y-5">
+              <div className="space-y-2">
+                <label
+                  htmlFor="resourceSelect"
+                  className="text-sm text-zinc-400 uppercase font-black block tracking-wider"
+                >
                   RECURSO:
                 </label>
                 <select
                   id="resourceSelect"
                   value={movResourceId}
                   onChange={(e) => setMovResourceId(e.target.value)}
-                  className="w-full bg-[#2a2824] border-2 border-black p-2 text-[#e0d8cc] outline-none text-sm font-bold font-mono uppercase"
+                  className="w-full bg-[#2a2824] border-2 border-black p-3 text-[#e0d8cc] outline-none text-base font-bold font-mono uppercase"
                   required
                 >
                   {inventory.map((item) => (
@@ -535,15 +526,18 @@ export default function ManagerInventory({
                 </select>
               </div>
 
-              <div className="space-y-1">
-                <label htmlFor="operationTypeSelect" className="text-xs text-zinc-500 uppercase font-bold block">
+              <div className="space-y-2">
+                <label
+                  htmlFor="operationTypeSelect"
+                  className="text-sm text-zinc-400 uppercase font-black block tracking-wider"
+                >
                   TIPO DE OPERACIÓN:
                 </label>
                 <select
                   id="operationTypeSelect"
                   value={movType}
                   onChange={(e) => setMovType(e.target.value)}
-                  className="w-full bg-[#2a2824] border-2 border-black p-2 text-[#e0d8cc] outline-none text-sm font-bold font-mono uppercase"
+                  className="w-full bg-[#2a2824] border-2 border-black p-3 text-[#e0d8cc] outline-none text-base font-bold font-mono uppercase"
                 >
                   {MOVEMENT_TYPES.map((t) => (
                     <option key={t.value} value={t.value}>
@@ -553,8 +547,11 @@ export default function ManagerInventory({
                 </select>
               </div>
 
-              <div className="space-y-1">
-                <label htmlFor="quantityInput" className="text-xs text-zinc-500 uppercase font-bold block">
+              <div className="space-y-2">
+                <label
+                  htmlFor="quantityInput"
+                  className="text-sm text-zinc-400 uppercase font-black block tracking-wider"
+                >
                   CANTIDAD:
                 </label>
                 <input
@@ -564,50 +561,56 @@ export default function ManagerInventory({
                   step="0.001"
                   value={movQuantity || ""}
                   onChange={(e) => setMovQuantity(parseFloat(e.target.value) || 0)}
-                  className="w-full bg-[#2a2824] border-2 border-black p-2 text-[#e0d8cc] outline-none text-sm font-bold font-mono"
+                  className="w-full bg-[#2a2824] border-2 border-black p-3 text-[#e0d8cc] outline-none text-base font-bold font-mono"
                   placeholder="0.000"
                   required
                 />
               </div>
 
-              <div className="space-y-1">
-                <label htmlFor="descriptionInput" className="text-xs text-zinc-500 uppercase font-bold block">
+              <div className="space-y-2">
+                <label
+                  htmlFor="descriptionInput"
+                  className="text-sm text-zinc-400 uppercase font-black block tracking-wider"
+                >
                   DESCRIPCIÓN (OPCIONAL):
                 </label>
-                <input
+                <textarea
                   id="descriptionInput"
-                  type="text"
                   value={movDescription}
                   onChange={(e) => setMovDescription(e.target.value)}
                   maxLength={200}
-                  className="w-full bg-[#2a2824] border-2 border-black p-2 text-[#e0d8cc] outline-none text-sm font-mono"
+                  rows={3}
+                  className="w-full bg-[#2a2824] border-2 border-black p-3 text-[#e0d8cc] outline-none text-base font-mono resize-none"
                   placeholder="Ej: Recepción convoy norte..."
                 />
               </div>
 
               {errorState && (
-                <div className="text-xs text-red-400 uppercase border border-[#9c2720]/50 bg-[#9c2720]/10 p-2">
+                <div className="text-sm text-red-400 uppercase border border-[#9c2720]/50 bg-[#9c2720]/10 p-3">
                   {errorState}
                 </div>
               )}
 
-              <div className="flex gap-2 pt-2">
+              <div className="flex gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => { setShowMovementModal(false); setErrorState(null) }}
-                  className="flex-1 border-2 border-black bg-transparent text-zinc-400 hover:text-white uppercase text-xs py-2 font-black transition"
+                  onClick={() => {
+                    setShowMovementModal(false)
+                    setErrorState(null)
+                  }}
+                  className="flex-1 border-2 border-black bg-transparent text-zinc-400 hover:text-white uppercase text-sm py-3 font-black transition"
                 >
                   [CANCELAR]
                 </button>
                 <button
                   type="submit"
                   disabled={submittingMov}
-                  className="flex-1 border-2 border-black uppercase text-xs py-2 hover:bg-[#a96821] transition font-black flex items-center justify-center gap-2"
-                  style={{ backgroundColor: "#c27c2f", color: "#161513" }}
+                  className="flex-1 border-2 border-black uppercase text-sm py-3 hover:bg-[#a96821] transition font-black flex items-center justify-center gap-2"
+                  style={{ backgroundColor: "#c27c2f", color: "#e0d8cc" }}
                 >
                   {submittingMov ? (
                     <>
-                      <RefreshCw className="h-3.5 w-3.5 animate-spin" /> PROCESANDO...
+                      <RefreshCw className="h-4 w-4 animate-spin" /> PROCESANDO...
                     </>
                   ) : (
                     "CONFIRMAR OPERACIÓN"

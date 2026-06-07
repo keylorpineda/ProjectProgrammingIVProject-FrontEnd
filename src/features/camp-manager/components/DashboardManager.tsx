@@ -5,38 +5,60 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { AnimatePresence } from "framer-motion"
-import { Terminal, Database, Radio, Users, Truck, LogOut } from "lucide-react"
+import {
+  Terminal,
+  Database,
+  Radio,
+  Users,
+  Truck,
+  LogOut,
+  BookOpen,
+  Trophy,
+  Clock,
+  Plus,
+} from "lucide-react"
 import { type ComponentType, useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 
+import ManagerCatalog from "./ManagerCatalog"
 import ManagerInventory from "./ManagerInventory"
 import ManagerLogistics from "./ManagerLogistics"
 import ManagerOverview from "./ManagerOverview"
+import ManagerRanking from "./ManagerRanking"
 import ManagerWorkforce from "./ManagerWorkforce"
 import { useAuthStore } from "../store/useAuthStore"
 
 import InactivityGuard from "@/components/ui/InactivityGuard"
+import { useAuthStore as useGlobalAuthStore } from "@/store/useAuthStore"
 
-type TabID = "overview" | "inventory" | "workforce" | "logistics"
+type TabID = "overview" | "inventory" | "catalog" | "ranking" | "workforce" | "logistics"
 
 export default function DashboardManager() {
   const user = useAuthStore((state) => state.user)
   const setCampId = useAuthStore((state) => state.setCampId)
+  const loginLocal = useAuthStore((state) => state.login)
   const logout = useAuthStore((state) => state.logout)
   const navigate = useNavigate()
-  const campId = user?.campId
+  const globalUser = useGlobalAuthStore((state) => state.user)
+  // Use real camp_id from the JWT-authenticated global store; fall back to local store
+  const campId = globalUser?.camp_id ?? user?.campId
 
-
-  const [activeTab, setActiveTab] = useState<TabID>(
-    user?.role?.toLowerCase() === "resource_manager" ? "inventory" : "overview",
-  )
-  const [refreshTrigger, setRefreshTrigger] = useState<number>(0)
-
+  // Sync local store from global user when local is null (e.g. after logout + re-login)
   useEffect(() => {
-    if (user?.role?.toLowerCase() === "resource_manager" && activeTab !== "inventory") {
-      setActiveTab("inventory")
+    if (!user && globalUser) {
+      loginLocal({
+        id: String(globalUser.id),
+        name: globalUser.username || globalUser.email || "Commander",
+        email: globalUser.email || "",
+        role: "camp_leader",
+        campId: globalUser.camp_id ? String(globalUser.camp_id) : null,
+      })
     }
-  }, [user?.role, activeTab])
+  }, [user, globalUser, loginLocal])
+
+  const [activeTab, setActiveTab] = useState<TabID>("overview")
+  const [refreshTrigger, setRefreshTrigger] = useState<number>(0)
+  const [showLogisticsModal, setShowLogisticsModal] = useState<boolean>(false)
 
   // Helper to force-refresh all sub-components by incrementing key
   const triggerRefresh = () => {
@@ -106,14 +128,11 @@ export default function DashboardManager() {
   const tabList: { id: TabID; label: string; icon: ComponentType<any> }[] = [
     { id: "overview", label: "Balance", icon: Database },
     { id: "inventory", label: "Bodega", icon: Terminal },
+    { id: "catalog", label: "Catálogo", icon: BookOpen },
+    { id: "ranking", label: "Ranking", icon: Trophy },
     { id: "workforce", label: "Personal", icon: Users },
     { id: "logistics", label: "Traslados", icon: Truck },
   ]
-
-  const allowedTabs =
-    user?.role?.toLowerCase() === "resource_manager"
-      ? tabList.filter((t) => t.id === "inventory")
-      : tabList
 
   return (
     <InactivityGuard
@@ -159,7 +178,7 @@ export default function DashboardManager() {
                 2. RETRO NAVIGATION MENU
                 ========================================== */}
               <nav className="flex flex-row md:flex-col overflow-x-auto md:overflow-x-visible pb-2 md:pb-0 scrollbar-none shrink-0 font-mono">
-                {allowedTabs.map((tab) => {
+                {tabList.map((tab) => {
                   const Icon = tab.icon
                   const isActive = activeTab === tab.id
 
@@ -262,10 +281,18 @@ export default function DashboardManager() {
                 </div>
                 <div className="border-l-2 border-black h-6"></div>
                 <div className="flex items-center gap-2 text-left text-sm">
-                  <span className="text-[#df8120]">⚡</span>
-                  <span className="tracking-widest text-zinc-300 font-bold font-mono">
-                    {utcTime}
-                  </span>
+                  <div className="relative flex items-center justify-center">
+                    <Clock className="h-5 w-5 text-[#df8120]" />
+                    <span className="absolute -top-1 -right-1 w-1.5 h-1.5 bg-[#9c2720] rounded-full animate-ping" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-xs text-zinc-600 uppercase tracking-widest font-bold">
+                      HORA DEL BÚNKER
+                    </span>
+                    <span className="tracking-widest text-zinc-200 font-black font-mono text-sm">
+                      {utcTime}
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -319,31 +346,45 @@ export default function DashboardManager() {
 
             {/* MAIN PAGE ROUTE INJECTION ADAPTER */}
             <main className="flex-1 p-4 md:p-6 overflow-y-auto bg-[#0d0c0b] space-y-6 relative">
-              {/* VIEW TITLE BAR WITH BENTO STATS ADAPTER */}
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 pb-5 border-b-2 border-black font-mono">
+              {/* VIEW TITLE BAR */}
+              <div className="flex items-center justify-between gap-4 pb-4 border-b-2 border-black font-mono">
                 <div>
-                  <h3 className="text-2xl md:text-3xl font-black uppercase tracking-widest text-[#df8120]">
-                    {activeTab === "overview" && "ESTACIÓN CENTRAL DE TABLERO DE COMBATE"}
-                    {activeTab === "inventory" && "BODEGA CENTRAL DE SUMINISTROS"}
-                    {activeTab === "workforce" && "ADMINISTRACIÓN DE PERSONAL Y RECURSOS"}
-                    {activeTab === "logistics" && "CONTROL DE TRASLADOS DE CONVOY"}
+                  <h3 className="text-lg md:text-xl font-black uppercase tracking-widest text-[#df8120]">
+                    {activeTab === "overview" && "TABLERO DE COMBATE"}
+                    {activeTab === "inventory" && "BODEGA CENTRAL"}
+                    {activeTab === "catalog" && "CATÁLOGO DE RECURSOS"}
+                    {activeTab === "ranking" && "RANKING DE PRODUCTIVIDAD"}
+                    {activeTab === "workforce" && "ADMINISTRACIÓN DE PERSONAL"}
+                    {activeTab === "logistics" && "CONTROL DE TRASLADOS"}
                   </h3>
-                  <p className="text-base md:text-lg text-zinc-500 uppercase mt-3 tracking-wider font-extrabold">
-                    {activeTab === "overview" &&
-                      "SINOPSIS METADATA • REPORTES OPERATIVOS ACTOS DEL SECTOR GRIS"}
-                    {activeTab === "inventory" &&
-                      "CONSOLIDACIÓN DE RESERVAS DE BODEGAS Y PARÁMETROS CRÍTICOS"}
-                    {activeTab === "workforce" &&
-                      "CENSO MULTIDISPENSARIO • DISTRIBUCIÓN DE HABILIDADES TÉCNICAS"}
-                    {activeTab === "logistics" && "GESTIÓN OPERATIVA DE TRASLADOS"}
+                  <p className="text-xs text-zinc-500 uppercase mt-1 tracking-wider font-bold">
+                    {activeTab === "overview" && "Reportes operativos del sector"}
+                    {activeTab === "inventory" && "Reservas y parámetros críticos"}
+                    {activeTab === "catalog" && "Registro global de recursos"}
+                    {activeTab === "ranking" && "Clasificación por producción diaria"}
+                    {activeTab === "workforce" && "Censo y distribución de habilidades"}
+                    {activeTab === "logistics" && "Gestión operativa de traslados"}
                   </p>
                 </div>
-                <div className="hidden sm:block">
-                  <div className="border-2 border-black bg-[#121110] font-mono px-4 py-3 text-base md:text-lg text-[#e0d8cc] select-none uppercase font-black tracking-widest shadow-[inset_0_0_10px_rgba(0,0,0,0.5)]">
-                    {activeTab === "overview" && "CONTROL MILITAR ACTIVO"}
-                    {activeTab === "inventory" && "PROTOCOLO DE SEGURIDAD ON"}
-                    {activeTab === "workforce" && "MONITOR CLÍNICO ONLINE"}
-                    {activeTab === "logistics" && "SATELLITE LINK ACTIVE"}
+                <div className="flex items-center gap-3 shrink-0">
+                  {activeTab === "logistics" && (
+                    <button
+                      type="button"
+                      onClick={() => setShowLogisticsModal(true)}
+                      className="border-2 border-[#c27c2f] bg-[#c27c2f] hover:bg-[#df9a45] text-white font-black uppercase text-sm px-5 py-3 transition-all flex items-center gap-2 shadow-lg"
+                    >
+                      <Plus className="h-4 w-4" /> PEDIR REFUERZO
+                    </button>
+                  )}
+                  <div className="hidden sm:block">
+                    <div className="border-2 border-black bg-[#121110] font-mono px-3 py-2 text-xs text-[#e0d8cc] select-none uppercase font-black tracking-widest">
+                      {activeTab === "overview" && "CONTROL ACTIVO"}
+                      {activeTab === "inventory" && "SEGURIDAD ON"}
+                      {activeTab === "catalog" && "REGISTRO ON"}
+                      {activeTab === "ranking" && "RENDIMIENTO ON"}
+                      {activeTab === "workforce" && "MONITOR ON"}
+                      {activeTab === "logistics" && "SAT LINK ACTIVE"}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -365,6 +406,16 @@ export default function DashboardManager() {
                       />
                     </div>
                   )}
+                  {activeTab === "catalog" && (
+                    <div key="catalog">
+                      <ManagerCatalog campId={campId} onDataChanged={triggerRefresh} />
+                    </div>
+                  )}
+                  {activeTab === "ranking" && (
+                    <div key="ranking">
+                      <ManagerRanking campId={campId} refreshTrigger={refreshTrigger} />
+                    </div>
+                  )}
                   {activeTab === "workforce" && (
                     <div key="workforce">
                       <ManagerWorkforce
@@ -380,6 +431,8 @@ export default function DashboardManager() {
                         campId={campId}
                         onDataChanged={triggerRefresh}
                         refreshTrigger={refreshTrigger}
+                        showModal={showLogisticsModal}
+                        onModalClose={() => setShowLogisticsModal(false)}
                       />
                     </div>
                   )}

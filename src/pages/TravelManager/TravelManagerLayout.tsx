@@ -1,15 +1,22 @@
+import {
+  LogOut,
+  LayoutDashboard,
+  Compass,
+  Users,
+  ArrowLeftRight,
+  Package,
+  Menu,
+  X,
+} from "lucide-react"
 import { useState, useEffect } from "react"
-import { Outlet, useNavigate, NavLink, useLocation } from "react-router-dom"
-import { LogOut, LayoutDashboard, Compass, Users, ArrowLeftRight, Package, Menu, X } from "lucide-react"
+import { Outlet, useNavigate, NavLink } from "react-router-dom"
 
 import InactivityGuard from "@/components/ui/InactivityGuard"
 import { useAuthStore } from "@/store/useAuthStore"
-import CampSelector from "@/pages/Admin/components/CampSelector"
 
 export default function TravelManagerLayout() {
   const { user, logout } = useAuthStore()
   const navigate = useNavigate()
-  const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [utcTime, setUtcTime] = useState("")
 
@@ -105,7 +112,7 @@ export default function TravelManagerLayout() {
           })}
         </nav>
       </div>
-      
+
       {/* Mobile only footer */}
       <div className="md:hidden p-3 border-t-2 border-black relative z-10 mt-auto pt-6">
         <button
@@ -137,12 +144,11 @@ export default function TravelManagerLayout() {
         <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
           {/* DESKTOP SIDEBAR */}
           <div className="hidden md:flex w-72 shrink-0 relative z-20">
-             <SidebarContent />
+            <SidebarContent />
           </div>
 
           {/* MAIN CONTENT AREA */}
           <div className="flex-1 flex flex-col overflow-hidden min-w-0 relative">
-            
             {/* MOBILE TOPBAR */}
             <header className="md:hidden bg-[#121110] border-b-2 border-black flex items-center justify-between px-4 py-3 shrink-0 font-mono select-none z-30 shadow-md relative">
               <button
@@ -153,10 +159,10 @@ export default function TravelManagerLayout() {
                 <Menu className="w-6 h-6" />
               </button>
               <div className="flex items-center gap-2">
-                 <span className="text-[#9c2720] animate-pulse font-bold">★</span>
-                 <span className="font-black text-[#df8120] uppercase tracking-widest text-sm">
-                   GESTIÓN VIAJES
-                 </span>
+                <span className="text-[#9c2720] animate-pulse font-bold">★</span>
+                <span className="font-black text-[#df8120] uppercase tracking-widest text-sm">
+                  GESTIÓN VIAJES
+                </span>
               </div>
               <div className="w-10"></div>
             </header>
@@ -227,7 +233,10 @@ export default function TravelManagerLayout() {
               </div>
             </header>
 
-            <main className="flex-1 overflow-y-auto bg-[#0d0c0b] relative admin-route-container" style={{ padding: "16px" }}>
+            <main
+              className="flex-1 overflow-y-auto bg-[#0d0c0b] relative admin-route-container"
+              style={{ padding: "16px" }}
+            >
               <Outlet />
             </main>
           </div>
@@ -236,12 +245,18 @@ export default function TravelManagerLayout() {
         {/* MOBILE SIDEBAR MODAL */}
         {sidebarOpen && (
           <div className="md:hidden fixed inset-0 z-50 flex">
-            <div 
-               className="absolute inset-0 bg-black/80" 
-               onClick={closeSidebar} 
+            <div
+              role="button"
+              tabIndex={0}
+              aria-label="Cerrar menú"
+              className="absolute inset-0 bg-black/80"
+              onClick={closeSidebar}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") closeSidebar()
+              }}
             />
             <div className="w-4/5 max-w-sm bg-[#121110] relative flex flex-col h-full shadow-[4px_0_24px_rgba(0,0,0,0.8)] border-r-2 border-black">
-               <SidebarContent />
+              <SidebarContent />
             </div>
           </div>
         )}

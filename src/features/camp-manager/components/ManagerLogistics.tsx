@@ -6,7 +6,7 @@
 
 import { useQuery } from "@tanstack/react-query"
 import { motion } from "framer-motion"
-import { Truck, ShieldAlert, Plus, Archive, Mail, Send } from "lucide-react"
+import { Truck, ShieldAlert, Archive, Mail, Send } from "lucide-react"
 import { useEffect, useState } from "react"
 import { type FormEvent } from "react"
 
@@ -18,12 +18,16 @@ interface ManagerLogisticsProps {
   campId: string
   onDataChanged: () => void
   refreshTrigger: number
+  showModal?: boolean
+  onModalClose?: () => void
 }
 
 export default function ManagerLogistics({
   campId,
   onDataChanged,
   refreshTrigger,
+  showModal = false,
+  onModalClose,
 }: ManagerLogisticsProps) {
   const {
     data: requests = [],
@@ -48,11 +52,9 @@ export default function ManagerLogistics({
     if (refreshTrigger > 0) refetch()
   }, [refreshTrigger, refetch])
 
-  // New Request Modal state
-  const [showRequestModal, setShowRequestModal] = useState<boolean>(false)
-  const [selectedResource, setSelectedResource] = useState<string>("Raciones de Emergencia (MRE)")
+  const [selectedResource, setSelectedResource] = useState<string>("")
   const [requestAmount, setRequestAmount] = useState<number>(50)
-  const [sourceBunker, setSourceBunker] = useState<string>("2")
+  const [sourceBunker, setSourceBunker] = useState<string>("")
   const [requestNotes, setRequestNotes] = useState<string>("")
   const [submittingRequest, setSubmittingRequest] = useState<boolean>(false)
 
@@ -85,12 +87,12 @@ export default function ManagerLogistics({
           },
         ],
       })
-      setShowRequestModal(false)
+      onModalClose?.()
       setRequestNotes("")
       refetch()
       onDataChanged()
     } catch (err: any) {
-      setErrorState(err?.message || "Fallo de enlace de solicitud.")
+      setErrorState(err?.response?.data?.message || err?.message || "Fallo de enlace de solicitud.")
     } finally {
       setSubmittingRequest(false)
     }
@@ -128,15 +130,38 @@ export default function ManagerLogistics({
   const { data: resourceTypes = [] } = useQuery({
     queryKey: ["allResources"],
     queryFn: async () => {
-      const res = await api.get("/resources")
-      const items = res.data?.items || res.data || []
-      // Auto-select first item
-      if (items.length > 0 && selectedResource === "Raciones de Emergencia (MRE)") {
-        setSelectedResource(String(items[0].id))
-      }
+      const res = await api.get("/resources?limit=100")
+      const items = res.data?.data || res.data?.items || (Array.isArray(res.data) ? res.data : [])
       return items
     },
+    staleTime: 1000 * 60 * 5,
   })
+
+  // Fetch camps for origin dropdown
+  const { data: campList = [] } = useQuery({
+    queryKey: ["allCamps"],
+    queryFn: async () => {
+      const res = await api.get("/camps")
+      const items = res.data?.data || res.data?.items || (Array.isArray(res.data) ? res.data : [])
+      return items as { id: string | number; name: string }[]
+    },
+    staleTime: 1000 * 60 * 10,
+  })
+
+  // Auto-select first resource when list loads and nothing is selected
+  useEffect(() => {
+    if (resourceTypes.length > 0 && !selectedResource) {
+      setSelectedResource(String((resourceTypes[0] as any).id))
+    }
+  }, [resourceTypes, selectedResource])
+
+  // Auto-select first OTHER camp as origin when camps load
+  useEffect(() => {
+    if (campList.length > 0 && !sourceBunker) {
+      const other = campList.find((c) => String(c.id) !== String(campId))
+      if (other) setSourceBunker(String(other.id))
+    }
+  }, [campList, campId, sourceBunker])
 
   if (loading) {
     return <div className="min-h-[400px]" />
@@ -146,12 +171,10 @@ export default function ManagerLogistics({
   const incomingRequests = requests.filter((r) => r.camp_destination_id === campId)
   const outgoingRequests = requests.filter((r) => r.camp_source_id === campId)
 
-  const bunkerList = [
-    { id: "1", name: "Bunker-Alfa" },
-    { id: "2", name: "Camp-Beta" },
-    { id: "3", name: "Bunker-Delta" },
-    { id: "4", name: "Bunker-Gamma" },
-  ]
+  // Use API camps, filtered to exclude current camp
+  const bunkerList = campList
+    .filter((c) => String(c.id) !== String(campId))
+    .map((c) => ({ id: String(c.id), name: (c.name || `Camp ${c.id}`).toUpperCase() }))
 
   return (
     <motion.div
@@ -160,27 +183,6 @@ export default function ManagerLogistics({
       transition={{ duration: 0.2 }}
       className="space-y-4"
     >
-      {/* LOGISTICAL ACTION PANEL */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 bg-[#1a1a1a] border-2 border-black p-6 md:p-10 font-mono">
-        <div>
-          <h3 className="text-lg md:text-xl font-black text-[#c27c2f] uppercase tracking-wider flex items-center gap-3">
-            <Truck className="h-6 w-6 text-[#c27c2f]" /> PROTOCOLO_LOGÍSTICA_DE_SUMINISTROS
-          </h3>
-          <p className="text-base text-zinc-400 mt-3 uppercase leading-relaxed">
-            Aprueba reabastecimientos entrantes o despacha transportes blindados solicitando
-            refuerzos.
-          </p>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => setShowRequestModal(true)}
-          className="border-2 border-black bg-[#c27c2f] hover:bg-white text-[#161513] font-black uppercase text-sm md:text-base px-6 py-4 hover:text-black transition-all flex items-center gap-2 shrink-0 shadow-lg"
-        >
-          <Plus className="h-5 w-5" /> PEDIR_REFUERZO
-        </button>
-      </div>
-
       {error && (
         <div className="border-2 border-black bg-[#9c2720]/20 text-red-150 font-mono text-xs p-3.5 flex items-start gap-4">
           <ShieldAlert className="h-4.5 w-4.5 shrink-0 text-red-500 mt-0.5" />
@@ -197,13 +199,13 @@ export default function ManagerLogistics({
           <div className="flex items-center gap-3 border-b-2 border-black pb-4 text-[#c27c2f] font-mono mb-4">
             <Mail className="h-5 w-5" />
             <h4 className="font-black text-base md:text-lg uppercase tracking-wider">
-              EXPEDICIONES_Y_CARGAS_ENTRANTES ({incomingRequests.length})
+              CARGAS ENTRANTES ({incomingRequests.length})
             </h4>
           </div>
 
           {incomingRequests.length === 0 ? (
-            <div className="font-mono text-base md:text-lg text-zinc-500 py-20 px-8 text-center uppercase border-2 border-black bg-[#161513] font-black tracking-widest shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]">
-              INBOX_SEGURO: No hay tránsitos pendientes de ingreso.
+            <div className="font-mono text-sm text-zinc-500 py-10 px-6 text-center uppercase border-2 border-black bg-[#161513] font-black tracking-widest">
+              Sin tránsitos pendientes de ingreso.
             </div>
           ) : (
             <div className="space-y-3">
@@ -325,13 +327,13 @@ export default function ManagerLogistics({
           <div className="flex items-center gap-3 border-b-2 border-black pb-4 text-[#c27c2f] font-mono mb-4">
             <Send className="h-5 w-5" />
             <h4 className="font-black text-base md:text-lg uppercase tracking-wider">
-              HISTORIAL_DESPACHOS_SALIENTES ({outgoingRequests.length})
+              DESPACHOS SALIENTES ({outgoingRequests.length})
             </h4>
           </div>
 
           {outgoingRequests.length === 0 ? (
-            <div className="font-mono text-base md:text-lg text-zinc-500 py-20 px-8 text-center uppercase border-2 border-black bg-[#161513] font-black tracking-widest shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]">
-              NINGÚN DESPACHO REGISTRADO DESDE LA BODEGA ACTIVA.
+            <div className="font-mono text-sm text-zinc-500 py-10 px-6 text-center uppercase border-2 border-black bg-[#161513] font-black tracking-widest">
+              Ningún despacho registrado desde la bodega.
             </div>
           ) : (
             <div className="space-y-3">
@@ -386,7 +388,7 @@ export default function ManagerLogistics({
       </div>
 
       {/* NEW REQUEST MODAL (POST /transfers/requests) */}
-      {showRequestModal && (
+      {showModal && (
         <div className="fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-50">
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
@@ -406,7 +408,7 @@ export default function ManagerLogistics({
                   htmlFor="field-392"
                   className="text-sm text-zinc-500 uppercase font-black block"
                 >
-                  BÚNKER_DE_SUMINISTRO_ORIGEN:
+                  BÚNKER ORIGEN:
                 </label>
                 <select
                   id="field-392"
@@ -427,7 +429,7 @@ export default function ManagerLogistics({
                   htmlFor="field-409"
                   className="text-sm text-zinc-500 uppercase font-black block"
                 >
-                  RECURSO_BODEGA_SOLICITADO:
+                  RECURSO SOLICITADO:
                 </label>
                 <select
                   id="field-409"
@@ -444,9 +446,7 @@ export default function ManagerLogistics({
               </div>
 
               <div className="space-y-2">
-                <div className="text-sm text-zinc-500 uppercase font-black block">
-                  CANTIDAD_CARGA_PEDIDA:
-                </div>
+                <div className="text-sm text-zinc-500 uppercase font-black block">CANTIDAD:</div>
                 <input
                   type="number"
                   min="1"
@@ -477,7 +477,7 @@ export default function ManagerLogistics({
               <div className="flex flex-col md:flex-row gap-4 pt-4">
                 <button
                   type="button"
-                  onClick={() => setShowRequestModal(false)}
+                  onClick={() => onModalClose?.()}
                   className="flex-1 border-2 border-black uppercase text-sm md:text-base py-3 md:py-4 font-black transition"
                   style={{ backgroundColor: "#9c2720", color: "#ffffff" }}
                 >

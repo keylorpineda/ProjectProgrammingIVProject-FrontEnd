@@ -46,15 +46,19 @@ api.interceptors.response.use(
 
     // 2. Mapear Inventario (/resources/inventory)
     if (url.includes("/resources/inventory")) {
-      const mapInventoryItem = (item: any) => ({
-        id: item.resource?.id?.toString() || `${item.resource_id}`,
-        name: item.resource?.name || "Recurso",
-        category: item.resource?.category || "Materials",
-        current_stock: Number(item.current_quantity || 0),
-        minimum_stock_required: Number(item.minimum_stock_required || 0),
-        is_below_minimum: item.alert_active || false,
-        unit: item.resource?.unit || "Unidades",
-      })
+      const mapInventoryItem = (item: any) => {
+        const rid = item.resource?.id ?? item.resource_id
+        return {
+          id: String(rid ?? ""),
+          resource_id: Number(rid ?? 0),
+          name: item.resource?.name || "Recurso",
+          category: item.resource?.category || "Materials",
+          current_stock: Number(item.current_quantity || 0),
+          minimum_stock_required: Number(item.minimum_stock_required || 0),
+          is_below_minimum: item.alert_active || false,
+          unit: item.resource?.unit || "Unidades",
+        }
+      }
 
       if (Array.isArray(response.data)) {
         response.data = response.data.map(mapInventoryItem)

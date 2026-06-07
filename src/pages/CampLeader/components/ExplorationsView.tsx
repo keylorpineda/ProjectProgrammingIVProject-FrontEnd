@@ -113,7 +113,9 @@ export default function ExplorationsView({
         if ((reqQty as number) <= 0) return // skip resources not requested
         const dbInv = inventory.find((i) => i.resource_id === Number(resId))
         if (!dbInv || dbInv.current_quantity < (reqQty as number)) {
-          setFormError(`RECURSOS INSUFICIENTES: se requieren ${reqQty} unidades del recurso #${resId} pero solo hay ${dbInv?.current_quantity ?? 0}.`)
+          setFormError(
+            `RECURSOS INSUFICIENTES: se requieren ${reqQty} unidades del recurso #${resId} pero solo hay ${dbInv?.current_quantity ?? 0}.`,
+          )
           stockOk = false
         }
       })
@@ -157,7 +159,9 @@ export default function ExplorationsView({
     } catch (err: any) {
       const backendMsg = err.response?.data?.message
       const errorMsg = Array.isArray(backendMsg) ? backendMsg[0] : backendMsg
-      setFormError(errorMsg || (err instanceof Error ? err.message : "FALLO EN REGISTRO DE MISIÓN."))
+      setFormError(
+        errorMsg || (err instanceof Error ? err.message : "FALLO EN REGISTRO DE MISIÓN."),
+      )
     } finally {
       setIsSubmitting(false)
     }
@@ -651,7 +655,7 @@ export default function ExplorationsView({
                               canExplore && e.key === "Enter" && togglePersonSelection(p.id)
                             }
                             className={`p-2 rounded border transition-colors flex justify-between items-center ${
-                              !canExplore 
+                              !canExplore
                                 ? "bg-red-950/20 border-red-900/30 text-zinc-600 cursor-not-allowed opacity-60"
                                 : isSelected
                                   ? "bg-amber-950/40 border-amber-500 text-white cursor-pointer"
@@ -667,7 +671,9 @@ export default function ExplorationsView({
                                   </span>
                                 )}
                               </span>
-                              <span className={`text-[9px] block uppercase font-mono tracking-widest ${!canExplore ? 'text-red-900/50' : 'text-zinc-400'}`}>
+                              <span
+                                className={`text-[9px] block uppercase font-mono tracking-widest ${!canExplore ? "text-red-900/50" : "text-zinc-400"}`}
+                              >
                                 {p.profession?.name ?? "Desconocida"} • XP: {p.experience_points} (
                                 {p.expeditionsSurvived} EXT)
                               </span>
@@ -677,7 +683,7 @@ export default function ExplorationsView({
                               checked={isSelected}
                               disabled={!canExplore}
                               readOnly
-                              className={`accent-amber-500 pointer-events-none ${!canExplore ? 'opacity-20' : ''}`}
+                              className={`accent-amber-500 pointer-events-none ${!canExplore ? "opacity-20" : ""}`}
                             />
                           </div>
                         )
