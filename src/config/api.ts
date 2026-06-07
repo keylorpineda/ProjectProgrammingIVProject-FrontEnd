@@ -78,7 +78,7 @@ api.interceptors.response.use(
         useAuthStore.getState().logout()
         const isPublicPage = PUBLIC_PATHS.some((p) => window.location.pathname.startsWith(p))
         if (!isPublicPage) {
-          window.location.href = "/login"
+          useAuthStore.getState().setSessionExpired(true)
         }
         return Promise.reject(refreshError)
       } finally {

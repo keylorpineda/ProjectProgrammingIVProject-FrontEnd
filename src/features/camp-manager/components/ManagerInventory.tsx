@@ -10,7 +10,6 @@ import {
   Sliders,
   ShieldAlert,
   RefreshCw,
-  Layers,
   PlusCircle,
   Clock,
   ArrowUpCircle,
@@ -46,6 +45,44 @@ const MOVEMENT_TYPES: { value: string; label: string }[] = [
   { value: "transfer_in", label: "TRANSFERENCIA RECIBIDA" },
   { value: "transfer_out", label: "TRANSFERENCIA ENVIADA" },
 ]
+
+function categoryIcon(category: string): string {
+  const c = category.toLowerCase()
+  if (
+    c.includes("food") ||
+    c.includes("comida") ||
+    c.includes("aliment") ||
+    c.includes("ración") ||
+    c.includes("racion")
+  )
+    return "🌽"
+  if (c.includes("water") || c.includes("agua")) return "💧"
+  if (
+    c.includes("medic") ||
+    c.includes("medicina") ||
+    c.includes("farmac") ||
+    c.includes("antibio")
+  )
+    return "💊"
+  if (
+    c.includes("weapon") ||
+    c.includes("arma") ||
+    c.includes("bala") ||
+    c.includes("municion") ||
+    c.includes("munición")
+  )
+    return "⚔️"
+  if (
+    c.includes("fuel") ||
+    c.includes("combustible") ||
+    c.includes("gasolina") ||
+    c.includes("diesel")
+  )
+    return "⛽"
+  if (c.includes("tool") || c.includes("herramienta")) return "🔧"
+  if (c.includes("cloth") || c.includes("ropa")) return "👕"
+  return "📦"
+}
 
 function movementIcon(type: string) {
   if (type.includes("out") || type.includes("consumption")) return ArrowDownCircle
@@ -231,32 +268,22 @@ export default function ManagerInventory({
       transition={{ duration: 0.2 }}
       className="space-y-6"
     >
-      {/* ACTION HEADER */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 bg-[#1a1a1a] border-2 border-black p-6 md:p-10 font-mono">
-        <div>
-          <h3 className="text-lg md:text-xl font-black text-[#c27c2f] uppercase tracking-wider flex items-center gap-3">
-            <Layers className="h-6 w-6 text-[#c27c2f]" /> CONTROL DE BODEGA CENTRAL
-          </h3>
-          <p className="text-sm text-zinc-500 mt-1 uppercase">
-            Reservas y parámetros críticos del almacén.
-          </p>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-3 shrink-0">
-          <button
-            type="button"
-            onClick={openMovementModal}
-            className="cursor-pointer flex items-center gap-2 bg-[#c27c2f]/10 hover:bg-[#c27c2f] hover:text-black border-2 border-[#c27c2f] text-[#c27c2f] px-6 py-3 text-sm font-black uppercase transition active:translate-y-0.5"
-          >
-            <PlusCircle className="h-4 w-4" /> REGISTRAR MOVIMIENTO
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowConfirmDaily(true)}
-            className="cursor-pointer flex items-center gap-2 bg-[#9c2720]/10 hover:bg-[#9c2720] hover:text-white border-2 border-[#9c2720] text-[#9c2720] px-6 py-3 text-sm font-black uppercase transition active:translate-y-0.5"
-          >
-            <RefreshCw className="h-4 w-4" /> CICLO SOLAR
-          </button>
-        </div>
+      {/* ACTION BUTTONS */}
+      <div className="flex flex-wrap gap-3 justify-end">
+        <button
+          type="button"
+          onClick={openMovementModal}
+          className="cursor-pointer flex items-center gap-2 bg-[#c27c2f]/10 hover:bg-[#c27c2f] hover:text-black border-2 border-[#c27c2f] text-[#c27c2f] px-6 py-3 text-sm font-black uppercase transition active:translate-y-0.5 font-mono"
+        >
+          <PlusCircle className="h-4 w-4" /> REGISTRAR MOVIMIENTO
+        </button>
+        <button
+          type="button"
+          onClick={() => setShowConfirmDaily(true)}
+          className="cursor-pointer flex items-center gap-2 bg-[#9c2720]/10 hover:bg-[#9c2720] hover:text-white border-2 border-[#9c2720] text-[#9c2720] px-6 py-3 text-sm font-black uppercase transition active:translate-y-0.5 font-mono"
+        >
+          <RefreshCw className="h-4 w-4" /> CICLO SOLAR
+        </button>
       </div>
 
       {error && (
@@ -274,8 +301,7 @@ export default function ManagerInventory({
           <thead className="bg-[#121110] text-[#c27c2f] border-b border-black text-left uppercase text-xs tracking-wider">
             <tr>
               <th className="px-6 py-4 border-r border-black font-black">Recurso</th>
-              <th className="px-6 py-4 border-r border-black font-black">Stock actual</th>
-              <th className="px-6 py-4 border-r border-black font-black">Mínimo requerido</th>
+              <th className="px-6 py-4 border-r border-black font-black">Stock</th>
               <th className="px-6 py-4 border-r border-black font-black text-center">Estado</th>
               <th className="px-6 py-4 text-center font-black">Acciones</th>
             </tr>
@@ -289,22 +315,28 @@ export default function ManagerInventory({
               return (
                 <tr key={item.id} className={`${warningStyle} transition-colors`}>
                   <td className="px-6 py-5 border-r border-black font-black">
-                    <div className="text-sm font-black uppercase">{item.name}</div>
-                    <div className="text-xs text-zinc-500 font-normal uppercase mt-0.5">
-                      {item.category}
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl leading-none shrink-0">
+                        {categoryIcon(item.category)}
+                      </span>
+                      <div>
+                        <div className="text-sm font-black uppercase">{item.name}</div>
+                        <div className="text-xs text-zinc-500 font-normal uppercase mt-0.5">
+                          {item.category}
+                        </div>
+                      </div>
                     </div>
                   </td>
-                  <td className="px-6 py-5 border-r border-black font-mono font-black text-base">
-                    {item.current_stock}{" "}
+                  <td className="px-6 py-5 border-r border-black font-mono">
+                    <span className="font-black text-base">{item.current_stock}</span>{" "}
                     <span className="text-xs font-normal text-zinc-500">
                       {item.unit.toUpperCase()}
                     </span>
-                  </td>
-                  <td className="px-6 py-5 border-r border-black font-mono text-base font-bold">
-                    {item.minimum_stock_required}{" "}
-                    <span className="text-xs font-normal text-zinc-500">
-                      {item.unit.toUpperCase()}
-                    </span>
+                    {item.minimum_stock_required > 0 && (
+                      <div className="text-xs text-zinc-600 mt-1 font-normal">
+                        mín. {item.minimum_stock_required} {item.unit.toUpperCase()}
+                      </div>
+                    )}
                   </td>
                   <td className="px-6 py-5 border-r border-black text-center uppercase font-mono font-bold text-sm">
                     {(() => {
@@ -386,6 +418,10 @@ export default function ManagerInventory({
               const isOut = mov.type.includes("out") || mov.type.includes("consumption")
               const resourceName = mov.resource?.name ?? `Recurso #${mov.resource_id}`
               const unit = mov.resource?.unit ?? ""
+              const inventoryMatch = inventory.find(
+                (i) => String(i.resource_id) === String(mov.resource_id),
+              )
+              const catIcon = categoryIcon(inventoryMatch?.category ?? "")
 
               return (
                 <div
@@ -399,6 +435,7 @@ export default function ManagerInventory({
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 flex-wrap">
+                      <span className="text-lg leading-none">{catIcon}</span>
                       <span className="font-black text-[#e0d8cc] uppercase text-base">
                         {resourceName}
                       </span>

@@ -27,13 +27,21 @@ interface ManagerCatalogProps {
 }
 
 const CATEGORIES = [
-  { value: "food", label: "ALIMENTOS" },
-  { value: "water", label: "AGUA" },
-  { value: "medical", label: "MEDICINA" },
-  { value: "weapons", label: "ARMAMENTO" },
-  { value: "materials", label: "MATERIALES" },
-  { value: "tools", label: "HERRAMIENTAS" },
+  { value: "food", label: "ALIMENTOS", icon: "🌽" },
+  { value: "water", label: "AGUA", icon: "💧" },
+  { value: "medical", label: "MEDICINA", icon: "💊" },
+  { value: "weapons", label: "ARMAMENTO", icon: "⚔️" },
+  { value: "materials", label: "MATERIALES", icon: "📦" },
+  { value: "tools", label: "HERRAMIENTAS", icon: "🔧" },
 ]
+
+function catIcon(category: string): string {
+  const c = category.toLowerCase()
+  return (
+    CATEGORIES.find((cat) => c === cat.value || c.includes(cat.value) || cat.value.includes(c))
+      ?.icon ?? "📦"
+  )
+}
 
 const emptyForm = { name: "", unit: "", category: "food", description: "" }
 
@@ -204,15 +212,15 @@ export default function ManagerCatalog({ campId, onDataChanged }: ManagerCatalog
       {/* TABLE */}
       <div className="overflow-hidden border-2 border-black bg-[#161513]">
         <table className="table-auto w-full border-collapse font-mono text-xs">
-          <thead className="bg-[#121110] text-[#c27c2f] border-b border-black text-left uppercase text-sm tracking-wider">
+          <thead className="bg-[#121110] text-[#c27c2f] border-b border-black text-left uppercase text-xs tracking-wider">
             <tr>
-              <th className="px-4 py-3 border-r border-black font-black">NOMBRE</th>
-              <th className="px-4 py-3 border-r border-black font-black">CATEGORÍA</th>
-              <th className="px-4 py-3 border-r border-black font-black">UNIDAD</th>
-              <th className="px-4 py-3 border-r border-black font-black hidden md:table-cell">
+              <th className="px-5 py-4 border-r border-black font-black">RECURSO</th>
+              <th className="px-5 py-4 border-r border-black font-black">CATEGORÍA</th>
+              <th className="px-5 py-4 border-r border-black font-black">UNIDAD</th>
+              <th className="px-5 py-4 border-r border-black font-black hidden md:table-cell">
                 DESCRIPCIÓN
               </th>
-              <th className="px-4 py-3 text-center font-black">ACCIONES</th>
+              <th className="px-5 py-4 text-center font-black">ACCIONES</th>
             </tr>
           </thead>
           <tbody className="text-sm text-[#e0d8cc] tracking-wide">
@@ -231,22 +239,25 @@ export default function ManagerCatalog({ campId, onDataChanged }: ManagerCatalog
                 key={r.id}
                 className="border-b border-black hover:bg-[#2a2824]/40 transition-colors"
               >
-                <td className="px-4 py-3 border-r border-black font-black text-base">
-                  {r.name.toUpperCase()}
+                <td className="px-5 py-4 border-r border-black">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl leading-none shrink-0">{catIcon(r.category)}</span>
+                    <span className="font-black text-sm uppercase">{r.name}</span>
+                  </div>
                 </td>
-                <td className="px-4 py-3 border-r border-black">
-                  <span className="text-xs border border-[#c27c2f]/40 text-[#c27c2f] px-2 py-0.5 uppercase font-bold">
+                <td className="px-5 py-4 border-r border-black">
+                  <span className="text-xs border border-[#c27c2f]/40 text-[#c27c2f] px-2 py-1 uppercase font-bold">
                     {CATEGORIES.find((c) => c.value === r.category)?.label ??
                       r.category.toUpperCase()}
                   </span>
                 </td>
-                <td className="px-4 py-3 border-r border-black text-zinc-400 uppercase">
+                <td className="px-5 py-4 border-r border-black text-zinc-400 uppercase font-mono">
                   {r.unit}
                 </td>
-                <td className="px-4 py-3 border-r border-black text-zinc-500 hidden md:table-cell text-xs max-w-xs truncate">
+                <td className="px-5 py-4 border-r border-black text-zinc-500 hidden md:table-cell text-xs max-w-xs truncate">
                   {r.description ?? "—"}
                 </td>
-                <td className="px-4 py-3 text-center">
+                <td className="px-5 py-4 text-center">
                   <div className="flex items-center justify-center gap-3">
                     <button
                       type="button"

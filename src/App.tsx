@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
 
+import SessionExpiredOverlay from "./components/ui/SessionExpiredOverlay"
 import CampLeaderGuard from "./core/guards/CampLeaderGuard"
 import CampManagerGuard from "./core/guards/CampManagerGuard"
 import TravelManagerGuard from "./core/guards/TravelManagerGuard"
@@ -21,6 +22,7 @@ import WorkerLayout from "./pages/worker/WorkerLayout"
 function App() {
   return (
     <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <SessionExpiredOverlay />
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/admissions/new" element={<AdmissionNew />} />

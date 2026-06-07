@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from "axios"
 
-import { useTokenStore } from "@/store/useAuthStore"
+import { useTokenStore, useAuthStore } from "@/store/useAuthStore"
 
 // Creamos la instancia real apuntando a la URL del backend
 export const api = axios.create({
@@ -90,10 +90,28 @@ api.interceptors.response.use(
 
     return response
   },
-  (error) => {
-    if (error.response?.status === 401) {
-      console.warn("🔴 401 No autorizado, posible expiración de token")
-      // No redirigimos aquí forzosamente para no romper componentes, el hook global se encargará
+  async (error) => {
+    const originalRequest = error.config
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true
+      try {
+        const { data } = await axios.post(
+          `${import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1"}/auth/refresh`,
+          {},
+          { withCredentials: true },
+        )
+        useTokenStore.getState().setToken(data.access_token)
+        originalRequest.headers.Authorization = `Bearer ${data.access_token}`
+        return api(originalRequest)
+      } catch {
+        useTokenStore.getState().setToken(null)
+        useAuthStore.getState().logout()
+        const PUBLIC_PATHS = ["/login", "/admissions", "/register"]
+        const isPublicPage = PUBLIC_PATHS.some((p) => window.location.pathname.startsWith(p))
+        if (!isPublicPage) {
+          useAuthStore.getState().setSessionExpired(true)
+        }
+      }
     }
     return Promise.reject(error)
   },

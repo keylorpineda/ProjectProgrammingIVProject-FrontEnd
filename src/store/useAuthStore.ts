@@ -20,8 +20,10 @@ export const useTokenStore = create<TokenState>()((set, get) => ({
 interface AuthState {
   user: AuthUser | null
   isAuthenticated: boolean
+  sessionExpired: boolean
   setAuth: (token: string, user: AuthUser, _refreshToken?: string | null) => void
   setRefreshToken: (_refreshToken: string | null) => void
+  setSessionExpired: (value: boolean) => void
   logout: () => void
   isTokenExpired: () => boolean
 }
@@ -31,18 +33,21 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       user: null,
       isAuthenticated: false,
+      sessionExpired: false,
 
       setAuth: (token, user) => {
         useTokenStore.getState().setToken(token)
-        set({ user, isAuthenticated: true })
+        set({ user, isAuthenticated: true, sessionExpired: false })
       },
 
       // Kept for call-site compatibility; refresh token no longer stored client-side
       setRefreshToken: (_refreshToken) => {},
 
+      setSessionExpired: (value) => set({ sessionExpired: value }),
+
       logout: () => {
         useTokenStore.getState().setToken(null)
-        set({ user: null, isAuthenticated: false })
+        set({ user: null, isAuthenticated: false, sessionExpired: false })
       },
 
       isTokenExpired: () => {

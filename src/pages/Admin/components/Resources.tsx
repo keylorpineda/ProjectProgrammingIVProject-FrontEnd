@@ -17,6 +17,22 @@ import {
 
 import "./Resources.css"
 
+const CATEGORY_ICON: Record<string, string> = {
+  food: "🌽",
+  water: "💧",
+  medicine: "💊",
+  tools: "🔧",
+  weapons: "⚔️",
+  fuel: "⛽",
+  clothing: "👕",
+}
+
+const STATUS_COLORS: Record<string, string> = {
+  OK: "var(--accent-approved)",
+  ADVERTENCIA: "var(--accent-warning)",
+  CRÍTICO: "var(--accent-critical)",
+}
+
 type InventoryRow = {
   id: number
   resourceId: string
@@ -24,6 +40,7 @@ type InventoryRow = {
   quantity: number
   minimumStock: number
   unit: string
+  category: string
   status: "OK" | "ADVERTENCIA" | "CRÍTICO"
   alertActive: boolean
 }
@@ -97,11 +114,16 @@ export default function Resources() {
         quantity: Number(item.current_quantity),
         minimumStock: Number(item.minimum_stock_required),
         unit: item.resource?.unit ?? "",
+        category: item.resource?.category ?? "",
         status: getStatus(item),
         alertActive: item.alert_active,
       })),
     [items],
   )
+
+  const criticalCount = rows.filter((r) => r.status === "CRÍTICO").length
+  const warningCount = rows.filter((r) => r.status === "ADVERTENCIA").length
+  const okCount = rows.filter((r) => r.status === "OK").length
 
   const openMovement = (row?: InventoryRow) => {
     setFormResourceId(row?.resourceId ?? "")
@@ -226,6 +248,83 @@ export default function Resources() {
 
       {error ? <div className="error-msg">{error}</div> : null}
 
+      {/* ── CRITICAL ALERT BANNER ───────────────────────────────── */}
+      <AnimatePresence>
+        {!isLoading && criticalCount > 0 ? (
+          <motion.div
+            className="res-alert-banner"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+          >
+            ⚠ ALERTA — {criticalCount} RECURSO(S) EN ESTADO CRÍTICO REQUIEREN ATENCIÓN INMEDIATA
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+
+      {/* ── STAT CARDS ──────────────────────────────────────────── */}
+      {!isLoading ? (
+        <div className="res-stat-row">
+          <motion.div
+            className="res-stat-card"
+            style={{ borderColor: "var(--accent-approved)" }}
+            initial={{ scale: 0.85, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.05, type: "spring", stiffness: 160 }}
+          >
+            <div className="res-stat-num" style={{ color: "var(--accent-approved)" }}>
+              {okCount}
+            </div>
+            <div className="res-stat-label">NORMALES</div>
+            <div className="res-stat-icon">✓</div>
+          </motion.div>
+          <motion.div
+            className="res-stat-card"
+            style={{ borderColor: "var(--accent-warning)" }}
+            initial={{ scale: 0.85, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.1, type: "spring", stiffness: 160 }}
+          >
+            <div className="res-stat-num" style={{ color: "var(--accent-warning)" }}>
+              {warningCount}
+            </div>
+            <div className="res-stat-label">ESCASOS</div>
+            <div className="res-stat-icon">⚡</div>
+          </motion.div>
+          <motion.div
+            className="res-stat-card"
+            style={{ borderColor: "var(--accent-critical)" }}
+            initial={{ scale: 0.85, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.15, type: "spring", stiffness: 160 }}
+          >
+            <motion.div
+              className="res-stat-num"
+              style={{ color: "var(--accent-critical)" }}
+              animate={criticalCount > 0 ? { opacity: [1, 0.4, 1] } : {}}
+              transition={criticalCount > 0 ? { duration: 1.2, repeat: Infinity } : {}}
+            >
+              {criticalCount}
+            </motion.div>
+            <div className="res-stat-label">CRÍTICOS</div>
+            <div className="res-stat-icon">☠</div>
+          </motion.div>
+          <motion.div
+            className="res-stat-card"
+            style={{ borderColor: "var(--panel-border-bright)" }}
+            initial={{ scale: 0.85, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.2, type: "spring", stiffness: 160 }}
+          >
+            <div className="res-stat-num" style={{ color: "var(--text-amber)" }}>
+              {rows.length}
+            </div>
+            <div className="res-stat-label">TOTAL ÍTEMS</div>
+            <div className="res-stat-icon">📦</div>
+          </motion.div>
+        </div>
+      ) : null}
+
       {isLoading ? (
         <div className="loading-msg">CARGANDO INVENTARIO...</div>
       ) : (
@@ -245,8 +344,7 @@ export default function Resources() {
                 <tr>
                   <th>ID</th>
                   <th>DESCRIPCIÓN</th>
-                  <th>CANTIDAD</th>
-                  <th>STOCK MÍN.</th>
+                  <th>STOCK</th>
                   <th>ESTADO</th>
                   <th>ACCIONES</th>
                 </tr>
@@ -256,45 +354,78 @@ export default function Resources() {
                 animate="show"
                 variants={{ show: { transition: { staggerChildren: 0.06 } } }}
               >
-                {rows.map((item) => (
-                  <motion.tr
-                    key={item.id}
-                    className={`row-${item.status === "CRÍTICO" ? "critical" : item.status === "ADVERTENCIA" ? "warning" : "ok"}`}
-                    variants={{
-                      hidden: { opacity: 0, x: -16 },
-                      show: { opacity: 1, x: 0 },
-                    }}
-                  >
-                    <td>{String(item.id).padStart(4, "0")}</td>
-                    <td>{item.name}</td>
-                    <td>
-                      {item.quantity} {item.unit}
-                    </td>
-                    <td>
-                      {item.minimumStock} {item.unit}
-                    </td>
-                    <td>
-                      <span
-                        className={`status-badge ${item.status === "CRÍTICO" ? "critical" : item.status === "ADVERTENCIA" ? "warning" : "ok"}`}
-                      >
-                        {item.status}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="table-actions">
-                        <button className="table-action-btn" onClick={() => openMovement(item)}>
-                          MOVIMIENTO
-                        </button>
-                        <button className="table-action-btn" onClick={() => openAdjustStock(item)}>
-                          AJUSTAR
-                        </button>
-                      </div>
-                    </td>
-                  </motion.tr>
-                ))}
+                {rows.map((item) => {
+                  const statusKey =
+                    item.status === "CRÍTICO"
+                      ? "critical"
+                      : item.status === "ADVERTENCIA"
+                        ? "warning"
+                        : "ok"
+                  const icon = CATEGORY_ICON[item.category] ?? "📦"
+                  const color = STATUS_COLORS[item.status]
+                  const max = Math.max(item.minimumStock * 2, item.quantity, 1)
+                  const pct = Math.min((item.quantity / max) * 100, 100)
+                  const minPct = (item.minimumStock / max) * 100
+                  return (
+                    <motion.tr
+                      key={item.id}
+                      className={`row-${statusKey}`}
+                      variants={{
+                        hidden: { opacity: 0, x: -16 },
+                        show: { opacity: 1, x: 0 },
+                      }}
+                    >
+                      <td style={{ width: 56 }}>{String(item.id).padStart(4, "0")}</td>
+                      <td>
+                        <div className="res-desc-cell">
+                          <span className="res-cat-icon">{icon}</span>
+                          <div>
+                            <div className="res-item-name">{item.name}</div>
+                            <div className="res-item-cat">{item.category.toUpperCase() || "—"}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td style={{ minWidth: 200 }}>
+                        <div className="res-stock-cell">
+                          <div className="res-stock-nums">
+                            <span style={{ color, fontWeight: "bold" }}>{item.quantity}</span>
+                            <span className="res-stock-unit">{item.unit}</span>
+                            <span className="res-stock-min">/ mín {item.minimumStock}</span>
+                          </div>
+                          <div className="res-bar-track">
+                            <div className="res-bar-min" style={{ left: `${minPct}%` }} />
+                            <motion.div
+                              className="res-bar-fill"
+                              style={{ background: color, boxShadow: `0 0 5px ${color}40` }}
+                              initial={{ width: 0 }}
+                              animate={{ width: `${pct}%` }}
+                              transition={{ duration: 0.9, ease: "easeOut" }}
+                            />
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <span className={`status-badge ${statusKey}`}>{item.status}</span>
+                      </td>
+                      <td>
+                        <div className="table-actions">
+                          <button className="table-action-btn" onClick={() => openMovement(item)}>
+                            MOVIMIENTO
+                          </button>
+                          <button
+                            className="table-action-btn"
+                            onClick={() => openAdjustStock(item)}
+                          >
+                            AJUSTAR
+                          </button>
+                        </div>
+                      </td>
+                    </motion.tr>
+                  )
+                })}
                 {rows.length === 0 ? (
                   <tr>
-                    <td colSpan={6} style={{ textAlign: "center", padding: "32px", opacity: 0.5 }}>
+                    <td colSpan={5} style={{ textAlign: "center", padding: "32px", opacity: 0.5 }}>
                       SIN INVENTARIO REGISTRADO
                     </td>
                   </tr>
