@@ -130,10 +130,13 @@ export default function TravelExplorations() {
 
   const { data: personsData } = useQuery({
     queryKey: ["persons", baseCampId],
-    queryFn: () => getPersons({ campId: baseCampId }),
+    queryFn: () => getPersons({ campId: baseCampId, limit: 1000 }),
     enabled: !!baseCampId && isNewModalOpen,
   })
-  const persons: Person[] = personsData?.data ?? []
+  const persons: Person[] = (personsData?.data ?? []).filter((p) => {
+    const pCampId = p.camp_id ?? p.userAccount?.camp_id
+    return String(pCampId) === String(baseCampId)
+  })
 
   const { data: inventory = [] } = useQuery<InventoryItem[]>({
     queryKey: ["inventory", baseCampId],
@@ -148,7 +151,10 @@ export default function TravelExplorations() {
       resetNewForm()
       setIsNewModalOpen(false)
     },
-    onError: () => setFormError("Error al crear la expedición. Intente nuevamente."),
+    onError: (error: any) => {
+      const msg = error.response?.data?.message || error.message
+      setFormError(Array.isArray(msg) ? msg.join(", ") : (msg || "Error al crear la expedición."))
+    },
   })
 
   const departMutation = useMutation({
@@ -158,8 +164,8 @@ export default function TravelExplorations() {
 
   const returnMutation = useMutation({
     mutationFn: ({ id, body }: { id: string; body: ReturnExplorationFormData }) =>
-      returnExploration(id, { 
-        real_return_date: body.real_return_date, 
+      returnExploration(id, {
+        real_return_date: body.real_return_date,
         notes: body.notes,
         found_resources: body.found_resources
       }),
@@ -293,7 +299,7 @@ export default function TravelExplorations() {
       camp_id: Number(baseCampId),
       name: newName,
       destination_description: newDestination + coordSuffix,
-      departure_date: newDepartureDate,
+      departure_date: new Date(newDepartureDate).toISOString(),
       estimated_days: newEstimatedDays,
       grace_days: newGraceDays,
       persons: newSelectedPersons.map((p) => ({
@@ -322,8 +328,8 @@ export default function TravelExplorations() {
     if (!selectedExp) return
     returnMutation.mutate({
       id: selectedExp.id,
-      body: { 
-        real_return_date: returnDate, 
+      body: {
+        real_return_date: new Date(returnDate).toISOString(),
         notes: returnNotes,
         found_resources: returnFoundResources.map(r => ({
           resource_id: Number(r.resource_id),
@@ -436,11 +442,10 @@ export default function TravelExplorations() {
               <button
                 key={s.id}
                 onClick={() => setFilterStatus(filterStatus === s.id ? "" : s.id)}
-                className={`flex flex-col items-center transition-all px-2 md:px-4 py-2 border border-transparent ${
-                  filterStatus === s.id
-                    ? "bg-[#c27c2f]/10 border-[#c27c2f]/20 shadow-inner"
-                    : "hover:bg-[#d4a373]/20"
-                }`}
+                className={`flex flex-col items-center transition-all px-2 md:px-4 py-2 border border-transparent ${filterStatus === s.id
+                  ? "bg-[#c27c2f]/10 border-[#c27c2f]/20 shadow-inner"
+                  : "hover:bg-[#d4a373]/20"
+                  }`}
               >
                 <span className="text-base md:text-lg font-mono font-black text-[#c27c2f]">
                   {s.count}
@@ -521,30 +526,26 @@ export default function TravelExplorations() {
                     key={exp.id}
                     whileHover={{ x: 2 }}
                     onClick={() => setSelectedId(exp.id)}
-                    className={`w-full text-left p-3 relative transition-all border border-[#c27c2f]/10 ${
-                      selectedExp?.id === exp.id
-                        ? "bg-bg-paper shadow-xl scale-[1.02] z-10"
-                        : "bg-[#c27c2f]/5 hover:bg-[#c27c2f]/10 opacity-70 hover:opacity-100"
-                    }`}
+                    className={`w-full text-left p-3 relative transition-all border border-[#c27c2f]/10 ${selectedExp?.id === exp.id
+                      ? "bg-bg-paper shadow-xl scale-[1.02] z-10"
+                      : "bg-[#c27c2f]/5 hover:bg-[#c27c2f]/10 opacity-70 hover:opacity-100"
+                      }`}
                   >
                     <div
-                      className={`absolute top-2 right-3 font-mono text-sm font-black tracking-tighter ${
-                        selectedExp?.id === exp.id ? "text-ink-soft/50" : "text-[#c27c2f]/30"
-                      }`}
+                      className={`absolute top-2 right-3 font-mono text-sm font-black tracking-tighter ${selectedExp?.id === exp.id ? "text-ink-soft/50" : "text-[#c27c2f]/30"
+                        }`}
                     >
                       REF-{exp.id.slice(0, 4).toUpperCase()}
                     </div>
                     <h5
-                      className={`text-[12px] font-typewriter font-black uppercase leading-tight mb-1 ${
-                        selectedExp?.id === exp.id ? "text-ink" : "text-[#c27c2f]"
-                      }`}
+                      className={`text-[12px] font-typewriter font-black uppercase leading-tight mb-1 ${selectedExp?.id === exp.id ? "text-ink" : "text-[#c27c2f]"
+                        }`}
                     >
                       {exp.name}
                     </h5>
                     <p
-                      className={`text-[10px] font-mono uppercase tracking-wide font-normal truncate mt-0.5 ${
-                        selectedExp?.id === exp.id ? "text-ink/60" : "text-white/30"
-                      }`}
+                      className={`text-[10px] font-mono uppercase tracking-wide font-normal truncate mt-0.5 ${selectedExp?.id === exp.id ? "text-ink/60" : "text-white/30"
+                        }`}
                     >
                       {exp.destination_description}
                     </p>
@@ -571,22 +572,20 @@ export default function TravelExplorations() {
                       </div>
                       <div className="flex items-center gap-1.5">
                         <div
-                          className={`h-2 w-2 rounded-full border border-black/10 ${
-                            exp.status === "active" || exp.status === "in_progress"
-                              ? "bg-accent-approved animate-pulse"
-                              : exp.status === "scheduled"
-                                ? "bg-[#c27c2f]"
-                                : exp.status === "cancelled"
-                                  ? "bg-accent-critical"
-                                  : "bg-black/20"
-                          }`}
+                          className={`h-2 w-2 rounded-full border border-black/10 ${exp.status === "active" || exp.status === "in_progress"
+                            ? "bg-accent-approved animate-pulse"
+                            : exp.status === "scheduled"
+                              ? "bg-[#c27c2f]"
+                              : exp.status === "cancelled"
+                                ? "bg-accent-critical"
+                                : "bg-black/20"
+                            }`}
                         />
                         <span
-                          className={`text-sm font-mono font-black uppercase tracking-widest ${
-                            selectedExp?.id === exp.id
-                              ? getStatusColorClass(exp.status)
-                              : "text-white/20"
-                          }`}
+                          className={`text-sm font-mono font-black uppercase tracking-widest ${selectedExp?.id === exp.id
+                            ? getStatusColorClass(exp.status)
+                            : "text-white/20"
+                            }`}
                         >
                           {getStatusLabel(exp.status)}
                         </span>
@@ -635,22 +634,20 @@ export default function TravelExplorations() {
                   </div>
                   <div className="flex items-center gap-4">
                     <div
-                      className={`px-2 py-0.5 border inline-flex items-center gap-1.5 ${
-                        selectedExp.status === "active" || selectedExp.status === "in_progress"
-                          ? "bg-accent-mil/10 border-accent-mil/20 text-accent-approved"
-                          : selectedExp.status === "scheduled"
-                            ? "bg-[#c27c2f]/10 border-[#c27c2f]/20 text-[#c27c2f]"
-                            : "bg-white/5 border-white/10 text-white/40"
-                      }`}
+                      className={`px-2 py-0.5 border inline-flex items-center gap-1.5 ${selectedExp.status === "active" || selectedExp.status === "in_progress"
+                        ? "bg-accent-mil/10 border-accent-mil/20 text-accent-approved"
+                        : selectedExp.status === "scheduled"
+                          ? "bg-[#c27c2f]/10 border-[#c27c2f]/20 text-[#c27c2f]"
+                          : "bg-white/5 border-white/10 text-white/40"
+                        }`}
                     >
                       <div
-                        className={`h-1 w-1 rounded-full ${
-                          selectedExp.status === "active" || selectedExp.status === "in_progress"
-                            ? "bg-accent-approved animate-pulse"
-                            : selectedExp.status === "scheduled"
-                              ? "bg-[#c27c2f]"
-                              : "bg-white/40"
-                        }`}
+                        className={`h-1 w-1 rounded-full ${selectedExp.status === "active" || selectedExp.status === "in_progress"
+                          ? "bg-accent-approved animate-pulse"
+                          : selectedExp.status === "scheduled"
+                            ? "bg-[#c27c2f]"
+                            : "bg-white/40"
+                          }`}
                       />
                       <span className="text-sm font-mono font-black uppercase tracking-widest leading-none">
                         {getStatusLabel(selectedExp.status)}
@@ -674,14 +671,14 @@ export default function TravelExplorations() {
 
                         {(selectedExp.status === "active" ||
                           selectedExp.status === "in_progress") && (
-                          <motion.div
-                            animate={{ left: ["20%", "80%"] }}
-                            transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-                            className="absolute top-1/2 -translate-y-1/2 z-10"
-                          >
-                            <Footprints className="h-5 w-5 text-ink/30 -rotate-90" />
-                          </motion.div>
-                        )}
+                            <motion.div
+                              animate={{ left: ["20%", "80%"] }}
+                              transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+                              className="absolute top-1/2 -translate-y-1/2 z-10"
+                            >
+                              <Footprints className="h-5 w-5 text-ink/30 -rotate-90" />
+                            </motion.div>
+                          )}
 
                         {/* Origin node */}
                         <div className="flex flex-col items-center gap-4 z-20">
@@ -752,22 +749,20 @@ export default function TravelExplorations() {
                       return (
                         <div key={i} className="relative z-10 flex flex-col items-center">
                           <div
-                            className={`h-8 w-8 rounded-full border-2 flex items-center justify-center transition-all shadow-lg ${
-                              step.status === "completed"
-                                ? "bg-paper-dark border-white/20 text-white"
-                                : step.status === "current"
-                                  ? "bg-accent-mil border-[#c27c2f] text-white animate-pulse"
-                                  : "bg-black/80 border-[#c27c2f]/10 text-[#c27c2f]/20"
-                            }`}
+                            className={`h-8 w-8 rounded-full border-2 flex items-center justify-center transition-all shadow-lg ${step.status === "completed"
+                              ? "bg-paper-dark border-white/20 text-white"
+                              : step.status === "current"
+                                ? "bg-accent-mil border-[#c27c2f] text-white animate-pulse"
+                                : "bg-black/80 border-[#c27c2f]/10 text-[#c27c2f]/20"
+                              }`}
                           >
                             <StepIcon className="h-3.5 w-3.5" />
                           </div>
                           <span
-                            className={`absolute top-full mt-2 text-sm font-mono font-black tracking-widest whitespace-nowrap ${
-                              step.status !== "pending"
-                                ? "text-[#c27c2f] opacity-80"
-                                : "text-[#c27c2f]/10"
-                            }`}
+                            className={`absolute top-full mt-2 text-sm font-mono font-black tracking-widest whitespace-nowrap ${step.status !== "pending"
+                              ? "text-[#c27c2f] opacity-80"
+                              : "text-[#c27c2f]/10"
+                              }`}
                           >
                             {step.label}
                           </span>
@@ -1016,101 +1011,95 @@ export default function TravelExplorations() {
                       />
                     </div>
                     <div>
-                      <label
-                        htmlFor="te-grace"
-                        className="text-sm md:text-base font-mono font-black text-[#c27c2f] uppercase tracking-widest block mb-2"
-                      >
-                        Días de Gracia
-                      </label>
-                      <input
-                        type="number"
-                        min={0}
-                        value={newGraceDays}
-                        onChange={(e) => setNewGraceDays(Number(e.target.value))}
-                        className="vintage-input w-full text-base p-4"
-                      />
-                    </div>
-                  </div>
+                      {(() => {
+                        if (persons.length === 0) {
+                          return (
+                            <p className="text-xs font-mono text-white/30 uppercase text-center py-4">
+                              Cargando personas disponibles...
+                            </p>
+                          )
+                        }
 
-                  {/* Team selection */}
-                  <div>
-                    <div className="text-xs font-mono font-black text-[#c27c2f] uppercase tracking-widest block mb-2">
-                      Seleccionar Equipo * ({newSelectedPersons.length} seleccionado(s))
-                    </div>
-                    <div className="max-h-40 overflow-y-auto custom-scrollbar space-y-1 border border-[#c27c2f]/10 p-2 bg-black/20">
-                      {persons.length === 0 ? (
-                        <p className="text-xs font-mono text-white/30 uppercase text-center py-4">
-                          Cargando personas disponibles...
-                        </p>
-                      ) : (
-                        persons
-                          .filter(
-                            (p) =>
-                              p.status === "active" ||
+                        const availableExplorers = persons.filter(
+                          (p) =>
+                            (p.status === "active" ||
                               p.status === "activo" ||
                               p.status === "idle" ||
                               p.status === "inactivo" ||
                               p.status === "resting" ||
                               p.status === "available" ||
-                              !p.status,
+                              !p.status) &&
+                            p.profession?.can_explore === true,
+                        )
+
+                        if (availableExplorers.length === 0) {
+                          return (
+                            <div className="flex flex-col items-center justify-center py-6 text-center opacity-80">
+                              <AlertCircle className="h-6 w-6 text-[#c27c2f] mb-2" />
+                              <p className="text-xs font-mono text-[#c27c2f] uppercase font-bold">
+                                Sin personal capacitado
+                              </p>
+                              <p className="text-[10px] font-mono text-white/50 mt-1 uppercase">
+                                No hay Exploradores ni Recolectores activos.
+                              </p>
+                            </div>
                           )
-                          .map((person) => {
-                            const sel = newSelectedPersons.find((s) => s.person_id === person.id)
-                            const isSelected = !!sel
-                            return (
-                              <div
-                                key={person.id}
-                                role="button"
-                                tabIndex={0}
-                                className={`flex items-center justify-between p-2 border transition-all cursor-pointer ${
-                                  isSelected
-                                    ? "bg-[#c27c2f]/10 border-[#c27c2f]/30"
-                                    : "bg-black/20 border-white/5 hover:border-[#c27c2f]/20"
+                        }
+
+                        return availableExplorers.map((person) => {
+                          const sel = newSelectedPersons.find((s) => s.person_id === person.id)
+                          const isSelected = !!sel
+                          return (
+                            <div
+                              key={person.id}
+                              role="button"
+                              tabIndex={0}
+                              className={`flex items-center justify-between p-2 border transition-all cursor-pointer ${isSelected
+                                ? "bg-[#c27c2f]/10 border-[#c27c2f]/30"
+                                : "bg-black/20 border-white/5 hover:border-[#c27c2f]/20"
                                 }`}
-                                onClick={() => handleTogglePersonSelect(person.id)}
-                                onKeyDown={(e) =>
-                                  e.key === "Enter" && handleTogglePersonSelect(person.id)
-                                }
-                              >
-                                <div className="flex items-center gap-2">
-                                  <div
-                                    className={`h-3 w-3 border flex items-center justify-center shrink-0 ${
-                                      isSelected
-                                        ? "border-[#c27c2f] bg-[#c27c2f]/20"
-                                        : "border-white/20"
+                              onClick={() => handleTogglePersonSelect(person.id)}
+                              onKeyDown={(e) =>
+                                e.key === "Enter" && handleTogglePersonSelect(person.id)
+                              }
+                            >
+                              <div className="flex items-center gap-2">
+                                <div
+                                  className={`h-3 w-3 border flex items-center justify-center shrink-0 ${isSelected
+                                    ? "border-[#c27c2f] bg-[#c27c2f]/20"
+                                    : "border-white/20"
                                     }`}
-                                  >
-                                    {isSelected && <Check className="h-2 w-2 text-[#c27c2f]" />}
-                                  </div>
-                                  <span className="text-sm font-mono text-white/80 uppercase">
-                                    {person.first_name} {person.last_name}
-                                  </span>
-                                  {person.profession && (
-                                    <span className="text-sm font-mono text-white/30">
-                                      [{person.profession.name}]
-                                    </span>
-                                  )}
+                                >
+                                  {isSelected && <Check className="h-2 w-2 text-[#c27c2f]" />}
                                 </div>
-                                {isSelected && (
-                                  <button
-                                    type="button"
-                                    onClick={(ev) => {
-                                      ev.stopPropagation()
-                                      handleSetLeader(person.id)
-                                    }}
-                                    className={`text-sm font-mono font-black uppercase px-2 py-0.5 border transition-all ${
-                                      sel?.is_leader
-                                        ? "bg-[#c27c2f] text-black hover:bg-[#fca311] border-[#c27c2f]"
-                                        : "border-[#c27c2f]/30 text-[#c27c2f]/60 hover:bg-[#c27c2f]/10"
-                                    }`}
-                                  >
-                                    {sel?.is_leader ? "LÍDER ✓" : "Líder?"}
-                                  </button>
+                                <span className="text-sm font-mono text-white/80 uppercase">
+                                  {person.first_name} {person.last_name}
+                                </span>
+                                {person.profession && (
+                                  <span className="text-sm font-mono text-white/30">
+                                    [{person.profession.name}]
+                                  </span>
                                 )}
                               </div>
-                            )
-                          })
-                      )}
+                              {isSelected && (
+                                <button
+                                  type="button"
+                                  onClick={(ev) => {
+                                    ev.stopPropagation()
+                                    handleSetLeader(person.id)
+                                  }}
+                                  className={`text-sm font-mono font-black uppercase px-2 py-0.5 border transition-all ${sel?.is_leader
+                                    ? "bg-[#c27c2f] text-black hover:bg-[#fca311] border-[#c27c2f]"
+                                    : "border-[#c27c2f]/30 text-[#c27c2f]/60 hover:bg-[#c27c2f]/10"
+                                    }`}
+                                >
+                                  {sel?.is_leader ? "LÍDER ✓" : "Líder?"}
+                                </button>
+                              )}
+                            </div>
+                          )
+                        })
+                      })()}
                     </div>
                   </div>
 
@@ -1129,11 +1118,10 @@ export default function TravelExplorations() {
                           return (
                             <div
                               key={item.resource_id}
-                              className={`flex items-center justify-between p-2 border transition-all ${
-                                isSelected
-                                  ? "bg-[#c27c2f]/10 border-[#c27c2f]/30"
-                                  : "bg-black/20 border-white/5"
-                              }`}
+                              className={`flex items-center justify-between p-2 border transition-all ${isSelected
+                                ? "bg-[#c27c2f]/10 border-[#c27c2f]/30"
+                                : "bg-black/20 border-white/5"
+                                }`}
                             >
                               <div
                                 role="button"
@@ -1145,11 +1133,10 @@ export default function TravelExplorations() {
                                 }
                               >
                                 <div
-                                  className={`h-3 w-3 border flex items-center justify-center shrink-0 ${
-                                    isSelected
-                                      ? "border-[#c27c2f] bg-[#c27c2f]/20"
-                                      : "border-white/20"
-                                  }`}
+                                  className={`h-3 w-3 border flex items-center justify-center shrink-0 ${isSelected
+                                    ? "border-[#c27c2f] bg-[#c27c2f]/20"
+                                    : "border-white/20"
+                                    }`}
                                 >
                                   {isSelected && <Check className="h-2 w-2 text-[#c27c2f]" />}
                                 </div>
@@ -1300,9 +1287,8 @@ export default function TravelExplorations() {
                         return (
                           <div
                             key={item.resource_id}
-                            className={`flex items-center justify-between p-2 border transition-all ${
-                              isSelected ? "bg-[#c27c2f]/10 border-[#c27c2f]/30" : "bg-black/20 border-white/5"
-                            }`}
+                            className={`flex items-center justify-between p-2 border transition-all ${isSelected ? "bg-[#c27c2f]/10 border-[#c27c2f]/30" : "bg-black/20 border-white/5"
+                              }`}
                           >
                             <div
                               role="button"
