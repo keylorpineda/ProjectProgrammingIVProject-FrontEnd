@@ -58,40 +58,30 @@ export const CampProvider = ({ children }: { children: React.ReactNode }) => {
     setError(null)
 
     try {
-      const fetchedCamps = await campsService.getCamps()
+      // Tres requests en paralelo en lugar de 1 + N + N
+      const [fetchedCamps, alertsResponse] = await Promise.all([
+        campsService.getCamps(),
+        api
+          .get<Record<string, RawInventoryAlert[]>>("/resources/inventory/alerts/all")
+          .catch(() => ({ data: {} as Record<string, RawInventoryAlert[]> })),
+      ])
 
-      // Fetch real inventory alerts for all camps in parallel (best-effort)
-      const alertsResults = await Promise.allSettled(
-        fetchedCamps.map((camp) =>
-          api
-            .get<RawInventoryAlert[]>(`/resources/inventory/${camp.id}/alerts`)
-            .then((res) => ({
-              campId: String(camp.id),
-              alerts: Array.isArray(res.data) ? res.data : [],
-            })),
-        ),
-      )
-
+      const rawAlerts = alertsResponse.data ?? {}
       const alertsByCampId: Record<string, RawInventoryAlert[]> = {}
-      for (const result of alertsResults) {
-        if (result.status === "fulfilled") {
-          const { campId, alerts } = result.value
-          alertsByCampId[campId] = alerts
-          // Seed the global store so socket updates can diff correctly
-          setInventoryAlerts(
-            campId,
-            alerts.map((a) => ({
-              ...a,
-              resource_name: a.resource_name ?? `Recurso ${a.resource_id}`,
-            })),
-          )
-        }
+
+      for (const [campId, alerts] of Object.entries(rawAlerts)) {
+        const normalized = (Array.isArray(alerts) ? alerts : []).map((a) => ({
+          ...a,
+          resource_name: a.resource_name ?? `Recurso ${a.resource_id}`,
+        }))
+        alertsByCampId[campId] = normalized
+        setInventoryAlerts(campId, normalized)
       }
 
       const campsWithAlerts = applyAlertsToCamps(fetchedCamps, alertsByCampId)
 
       const [fetchedTransfers, fetchedHazards] = await Promise.all([
-        campsService.getTransfers(fetchedCamps),
+        campsService.getTransfers(campsWithAlerts),
         campsService.getHazardAreas(campsWithAlerts),
       ])
 
