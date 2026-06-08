@@ -790,7 +790,7 @@ export default function ManagerInventory({
                   type="number"
                   min="0"
                   value={newMinStock}
-                  onChange={(e) => setNewMinStock(Math.max(0, parseInt(e.target.value) || 0))}
+                  onChange={(e) => setNewMinStock(parseInt(e.target.value) || 0)}
                   className="w-full bg-[#2a2824] border-2 border-black p-4 bg-transparent text-[#e0d8cc] outline-none text-lg font-bold font-mono transition"
                   required
                 />

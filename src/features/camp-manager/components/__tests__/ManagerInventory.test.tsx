@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { render, screen, waitFor, fireEvent } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { beforeEach, afterEach, describe, expect, it, vi } from "vitest"
 
 import { api } from "../../config/api"
 import ManagerInventory from "../ManagerInventory"
@@ -16,7 +16,7 @@ const mockPatch = api.patch as ReturnType<typeof vi.fn>
 
 const mockInventory = [
   {
-    id: "1",
+    id: "item-1",
     resource_id: 1,
     name: "Gasolina",
     category: "combustible",
@@ -26,7 +26,7 @@ const mockInventory = [
     unit: "Galón",
   },
   {
-    id: "2",
+    id: "item-2",
     resource_id: 2,
     name: "Comida Enlatada",
     category: "food",
@@ -36,7 +36,7 @@ const mockInventory = [
     unit: "Unidades",
   },
   {
-    id: 1,
+    id: "item-3",
     resource_id: 1,
     camp_id: 1,
     name: "Comida",
@@ -46,7 +46,7 @@ const mockInventory = [
     unit: "Raciones",
   },
   {
-    id: 2,
+    id: "item-4",
     resource_id: 2,
     camp_id: 1,
     name: "Medicina",
@@ -56,7 +56,7 @@ const mockInventory = [
     unit: "Dosis",
   },
   {
-    id: 3,
+    id: "item-5",
     resource_id: 3,
     camp_id: 1,
     name: "Armas",
@@ -66,7 +66,7 @@ const mockInventory = [
     unit: "Unidades",
   },
   {
-    id: 4,
+    id: "item-6",
     resource_id: 4,
     camp_id: 1,
     name: "Gasolina",
@@ -76,7 +76,7 @@ const mockInventory = [
     unit: "Galones",
   },
   {
-    id: 5,
+    id: "item-7",
     resource_id: 5,
     camp_id: 1,
     name: "Herramientas",
@@ -86,7 +86,7 @@ const mockInventory = [
     unit: "Sets",
   },
   {
-    id: 6,
+    id: "item-8",
     resource_id: 6,
     camp_id: 1,
     name: "Ropa",
@@ -96,7 +96,7 @@ const mockInventory = [
     unit: "Piezas",
   },
   {
-    id: 7,
+    id: "item-9",
     resource_id: 7,
     camp_id: 1,
     name: "Misterio",
@@ -112,14 +112,14 @@ const mockMovements = [
     resource_id: 1,
     quantity: 5,
     type: "income",
-    created_at: "2026-06-08T10:00:00.000Z",
+    date: "2026-06-08T10:00:00.000Z",
   },
   {
     id: 102,
     resource_id: 1,
     quantity: 5,
     type: "unknown",
-    created_at: "invalid-date",
+    date: "invalid-date",
   },
 ]
 
@@ -146,6 +146,10 @@ describe("ManagerInventory", () => {
     setupMocks()
   })
 
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   it("renders inventory cards with resource names", async () => {
     render(<ManagerInventory campId="7" onDataChanged={vi.fn()} refreshTrigger={0} />, {
       wrapper: wrapper(),
@@ -154,7 +158,7 @@ describe("ManagerInventory", () => {
     await waitFor(() => {
       expect(screen.getAllByText("Gasolina").length).toBeGreaterThan(0)
       expect(screen.getAllByText("Comida Enlatada").length).toBeGreaterThan(0)
-      expect(screen.getAllByText("Agua Purificada").length).toBeGreaterThan(0)
+      expect(screen.getAllByText("Medicina").length).toBeGreaterThan(0)
     })
   })
 
@@ -329,7 +333,7 @@ describe("ManagerInventory", () => {
     await user.click(screen.getByText(/REGISTRAR MOVIMIENTO/i))
 
     const resourceSelect = screen.getByLabelText(/RECURSO:/i)
-    await user.selectOptions(resourceSelect, "1")
+    await user.selectOptions(resourceSelect, "item-1")
 
     const opSelect = screen.getByLabelText(/TIPO DE OPERACIÓN:/i)
     await user.selectOptions(opSelect, "income")
@@ -349,29 +353,37 @@ describe("ManagerInventory", () => {
   })
 
   it("shows SANO badge for ... wait, it renders category icons", async () => {
-    // wait for render
-    await screen.findByText(/Raciones de Combate/i)
-    expect(screen.getByText("Medicina")).toBeInTheDocument()
-    expect(screen.getByText("Armas")).toBeInTheDocument()
-    expect(screen.getByText("Gasolina")).toBeInTheDocument()
-    expect(screen.getByText("Herramientas")).toBeInTheDocument()
-    expect(screen.getByText("Ropa")).toBeInTheDocument()
-    expect(screen.getByText("Misterio")).toBeInTheDocument()
+    render(<ManagerInventory campId="7" onDataChanged={vi.fn()} refreshTrigger={0} />, {
+      wrapper: wrapper(),
+    })
+    await waitFor(() => {
+      expect(screen.getAllByText(/Comida Enlatada/i).length).toBeGreaterThan(0)
+    })
+    expect(screen.getAllByText("Medicina").length).toBeGreaterThan(0)
+    expect(screen.getAllByText("Armas").length).toBeGreaterThan(0)
+    expect(screen.getAllByText("Gasolina").length).toBeGreaterThan(0)
+    expect(screen.getAllByText("Herramientas").length).toBeGreaterThan(0)
+    expect(screen.getAllByText("Ropa").length).toBeGreaterThan(0)
+    expect(screen.getAllByText("Misterio").length).toBeGreaterThan(0)
   })
 
   it("handles negative minimum stock error", async () => {
     const user = userEvent.setup()
-    render(<ManagerInventory campId="1" onDataChanged={vi.fn()} refreshTrigger={0} />)
+    render(<ManagerInventory campId="1" onDataChanged={vi.fn()} refreshTrigger={0} />, {
+      wrapper: wrapper(),
+    })
 
     const editButtons = await screen.findAllByText("EDITAR")
     await user.click(editButtons[0])
 
-    const minStockInput = screen.getByDisplayValue("15")
-    await user.clear(minStockInput)
-    await user.type(minStockInput, "-10")
+    const minStockInput = screen.getByDisplayValue("50")
+    fireEvent.change(minStockInput, { target: { value: "-10" } })
 
-    const saveBtn = screen.getByText("GUARDAR")
-    await user.click(saveBtn)
+    const saveBtn = screen.getByText(/GUARDAR/i)
+    const form = saveBtn.closest("form")
+    if (form) {
+      fireEvent.submit(form)
+    }
 
     expect(
       await screen.findByText("El umbral de reserva mínimo no puede ser negativo."),
@@ -379,36 +391,45 @@ describe("ManagerInventory", () => {
   })
 
   it("clears daily processing states after timeout", async () => {
-    vi.useFakeTimers()
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-    render(<ManagerInventory campId="1" onDataChanged={vi.fn()} refreshTrigger={0} />)
+    const user = userEvent.setup()
+    render(<ManagerInventory campId="1" onDataChanged={vi.fn()} refreshTrigger={0} />, {
+      wrapper: wrapper(),
+    })
 
-    const cycleBtn = screen.getByText("CICLO SOLAR")
+    const cycleBtn = await screen.findByText("CICLO SOLAR")
     await user.click(cycleBtn)
 
     const mockPost = api.post as ReturnType<typeof vi.fn>
-    mockPost.mockResolvedValueOnce({ data: { message: "Ciclo Diario ejecutado con éxito" } })
+    mockPost.mockResolvedValueOnce({
+      data: {
+        message: "Ciclo Diario ejecutado con éxito",
+        metrics: { foodProduced: 10, foodConsumed: 5, waterProduced: 10, waterConsumed: 5 },
+      },
+    })
 
-    const confirmBtn = screen.getByText("CONFIRMAR EJECUCIÓN")
+    const confirmBtn = screen.getByRole("button", { name: /EJECUTAR CONSUMOS/i })
     await user.click(confirmBtn)
 
     // Wait for the modal to show success message
     expect(await screen.findByText(/Ciclo Diario ejecutado con éxito/i)).toBeInTheDocument()
 
-    // advance timers by 4000ms
-    act(() => {
-      vi.advanceTimersByTime(4000)
-    })
-
-    // Modal should be closed now
-    expect(screen.queryByText(/Ciclo Diario ejecutado con éxito/i)).not.toBeInTheDocument()
-    vi.useRealTimers()
+    // Wait for the modal to close automatically
+    await waitFor(
+      () => {
+        expect(screen.queryByText(/Ciclo Diario ejecutado con éxito/i)).not.toBeInTheDocument()
+      },
+      { timeout: 5000 },
+    )
   })
 
-  it("refetches data when refreshTrigger changes", () => {
+  it("refetches data when refreshTrigger changes", async () => {
     const { rerender } = render(
       <ManagerInventory campId="1" onDataChanged={vi.fn()} refreshTrigger={0} />,
+      { wrapper: wrapper() },
     )
+
+    // wait for initial load
+    await screen.findByText("CICLO SOLAR")
 
     // clear previous mock calls
     const mockGet = api.get as ReturnType<typeof vi.fn>
@@ -416,11 +437,13 @@ describe("ManagerInventory", () => {
 
     rerender(<ManagerInventory campId="1" onDataChanged={vi.fn()} refreshTrigger={1} />)
     // refetch should be called again for inventory and movements
-    expect(mockGet).toHaveBeenCalled()
+    await waitFor(() => {
+      expect(mockGet).toHaveBeenCalled()
+    })
   })
 
   it("shows error when api to fetch inventory fails", async () => {
-    mockGet.mockRejectedValue(new Error("Network Error"))
+    mockGet.mockRejectedValueOnce(new Error("Network Error"))
     render(<ManagerInventory campId="7" onDataChanged={vi.fn()} refreshTrigger={0} />, {
       wrapper: wrapper(),
     })
@@ -431,7 +454,7 @@ describe("ManagerInventory", () => {
   })
 
   it("shows error when saving minimum stock fails", async () => {
-    mockPatch.mockRejectedValue(new Error("Fallo al actualizar stock"))
+    mockPatch.mockRejectedValueOnce(new Error("Fallo al actualizar stock"))
     const user = userEvent.setup()
     render(<ManagerInventory campId="7" onDataChanged={vi.fn()} refreshTrigger={0} />, {
       wrapper: wrapper(),
@@ -449,7 +472,7 @@ describe("ManagerInventory", () => {
   })
 
   it("shows error when confirming movement fails", async () => {
-    mockPost.mockRejectedValue(new Error("Fallo al registrar movimiento"))
+    mockPost.mockRejectedValueOnce(new Error("Fallo al registrar movimiento"))
     const user = userEvent.setup()
     render(<ManagerInventory campId="7" onDataChanged={vi.fn()} refreshTrigger={0} />, {
       wrapper: wrapper(),
@@ -470,7 +493,7 @@ describe("ManagerInventory", () => {
   })
 
   it("executes daily process successfully", async () => {
-    mockPost.mockResolvedValue({
+    mockPost.mockResolvedValueOnce({
       data: {
         message: "Proceso completado",
         metrics: { foodProduced: 10, foodConsumed: 5, waterProduced: 10, waterConsumed: 5 },
@@ -494,7 +517,7 @@ describe("ManagerInventory", () => {
   })
 
   it("shows error when daily process fails", async () => {
-    mockPost.mockRejectedValue(new Error("Fallo proceso diario"))
+    mockPost.mockRejectedValueOnce(new Error("Fallo proceso diario"))
     const user = userEvent.setup()
     render(<ManagerInventory campId="7" onDataChanged={vi.fn()} refreshTrigger={0} />, {
       wrapper: wrapper(),
@@ -534,5 +557,20 @@ describe("ManagerInventory", () => {
       const els = screen.getAllByText(/Selecciona un recurso y una cantidad válida/i)
       expect(els.length).toBeGreaterThan(0)
     })
+  })
+
+  it("renders raw date if formatting fails", async () => {
+    const originalToLocaleString = Date.prototype.toLocaleString
+    Date.prototype.toLocaleString = () => {
+      throw new Error("Mock error")
+    }
+
+    render(<ManagerInventory campId="7" onDataChanged={vi.fn()} refreshTrigger={0} />, {
+      wrapper: wrapper(),
+    })
+
+    expect(await screen.findByText("2026-06-08T10:00:00.000Z")).toBeInTheDocument()
+
+    Date.prototype.toLocaleString = originalToLocaleString
   })
 })
