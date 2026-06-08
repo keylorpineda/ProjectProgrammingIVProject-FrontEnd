@@ -1,5 +1,8 @@
 import { motion } from "framer-motion"
-import { ArrowRight, User } from "lucide-react"
+import { User } from "lucide-react"
+
+import { CorkBoard } from "@/components/ui/CorkBoard"
+import { PinnedCard } from "@/components/ui/PinnedCard"
 
 import type {
   CampBalance,
@@ -60,15 +63,6 @@ export default function DashboardView({
   const resourceNameMap = new Map(inventory.map((inv) => [inv.resource_id, inv.resource.name]))
 
   const rank = getRankInfo(statistics.survival_score)
-  const rankProgress =
-    rank.nextThreshold !== null
-      ? Math.min(
-          100,
-          ((statistics.survival_score - rank.prevThreshold) /
-            (rank.nextThreshold - rank.prevThreshold)) *
-            100,
-        )
-      : 100
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -84,154 +78,76 @@ export default function DashboardView({
   }
 
   return (
-    <motion.div
-      className="p-5 lg:p-6 flex flex-col gap-5"
+    <CorkBoard
+      animated
+      className="flex flex-col gap-5 worker-layout"
       variants={containerVariants}
       initial="hidden"
       animate="show"
+      title="TABLERO DE MANDO - RESUMEN OPERATIVO"
+      rightElement={<div className="vintage-tape shrink-0 text-sm px-4 py-2">CONTROL ACTIVO</div>}
     >
-      {/* ENCABEZADO */}
-      <div className="border-b-4 border-[#c27c2f] pb-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
-        <div>
-          <h2 className="font-typewriter text-2xl lg:text-3xl font-bold tracking-wider text-[#fca311] uppercase">
-            Tablero de Mando
-          </h2>
-          <p className="font-mono text-sm text-[#9a8a74] uppercase tracking-widest mt-1">
-            Resumen operativo del campamento
-          </p>
-        </div>
-        <div className="vintage-tape shrink-0 text-sm px-4 py-2">CONTROL ACTIVO</div>
-      </div>
 
       {/* CUATRO MÉTRICAS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="wv-cork-grid">
         {/* Card 1: Exploraciones */}
-        <motion.div
+        <PinnedCard
+          animated
           variants={itemVariants}
           onClick={() => onNavigate("explorations")}
-          className="bg-[#e8dcc8] border-2 border-black shadow-[5px_5px_0_#000] p-5 flex flex-col gap-3 cursor-pointer group hover:-translate-y-0.5 hover:shadow-[7px_7px_0_#000] transition-all"
-          style={{ borderLeft: "6px solid #c27c2f" }}
-        >
-          <div className="flex justify-between items-start">
-            <span className="font-mono text-xs font-bold text-black/50 uppercase tracking-wider">
-              EQUIPOS EN CAMPO
-            </span>
-            <span className="text-xl select-none">🧭</span>
-          </div>
-          <div>
-            <span className="font-typewriter text-5xl font-black text-black block">
-              {activeExplorations.length}
-            </span>
-            <span className="font-mono text-xs text-black/60 uppercase">
-              EQUIPOS EN ZONA MUERTA
-            </span>
-          </div>
-          <div className="border-t-2 border-black/15 pt-3 flex items-center justify-between">
-            <span className="font-mono text-xs text-black/60 uppercase">VER EXPEDICIONES</span>
-            <ArrowRight className="w-4 h-4 text-black/50 group-hover:translate-x-1 transition-transform" />
-          </div>
-        </motion.div>
+          title="EQUIPOS EN CAMPO"
+          value={activeExplorations.length}
+          label="EQUIPOS EN ZONA MUERTA"
+          pinColor="amber"
+          rotate={-1.5}
+        />
 
         {/* Card 2: Traslados */}
-        <motion.div
+        <PinnedCard
+          animated
           variants={itemVariants}
           onClick={() => onNavigate("transfers")}
-          className="bg-[#e8dcc8] border-2 border-black shadow-[5px_5px_0_#000] p-5 flex flex-col gap-3 cursor-pointer group hover:-translate-y-0.5 hover:shadow-[7px_7px_0_#000] transition-all"
-          style={{ borderLeft: "6px solid #4c6351" }}
-        >
-          <div className="flex justify-between items-start">
-            <span className="font-mono text-xs font-bold text-black/50 uppercase tracking-wider">
-              CONVOYES PENDIENTES
-            </span>
-            <span className="text-xl select-none">🚛</span>
-          </div>
-          <div>
-            <span className="font-typewriter text-5xl font-black text-black block">
-              {pendingTransfers.length}
-            </span>
-            <span className="font-mono text-xs text-black/60 uppercase">TRASLADOS EN ESPERA</span>
-          </div>
-          <div className="border-t-2 border-black/15 pt-3 flex items-center justify-between">
-            <span className="font-mono text-xs text-black/60 uppercase">REVISAR COLA</span>
-            <ArrowRight className="w-4 h-4 text-black/50 group-hover:translate-x-1 transition-transform" />
-          </div>
-        </motion.div>
+          title="CONVOYES PENDIENTES"
+          value={pendingTransfers.length}
+          label="TRASLADOS EN ESPERA"
+          pinColor="green"
+          rotate={2}
+        />
 
         {/* Card 3: Alertas de bodega */}
-        <motion.div
+        <PinnedCard
+          animated
           variants={itemVariants}
           onClick={() => onNavigate("inventory")}
-          className="bg-[#e8dcc8] border-2 border-black shadow-[5px_5px_0_#000] p-5 flex flex-col gap-3 cursor-pointer group hover:-translate-y-0.5 hover:shadow-[7px_7px_0_#000] transition-all"
-          style={{ borderLeft: `6px solid ${criticalStocks.length > 0 ? "#9c2720" : "#4c6351"}` }}
+          title="ALERTAS DE BODEGA"
+          pinColor={criticalStocks.length > 0 ? "red" : "green"}
+          rotate={-1}
         >
-          <div className="flex justify-between items-start">
-            <span className="font-mono text-xs font-bold text-black/50 uppercase tracking-wider">
-              ALERTAS DE BODEGA
-            </span>
-            <span className="text-xl select-none">{criticalStocks.length > 0 ? "⚠️" : "✅"}</span>
-          </div>
-          <div>
-            {criticalStocks.length > 0 ? (
-              <>
-                <span className="font-typewriter text-5xl font-black text-[#9c2720] block">
-                  {criticalStocks.length}
-                </span>
-                <span className="font-mono text-xs text-[#9c2720] uppercase font-bold">
-                  RECURSOS BAJO MÍNIMO
-                </span>
-              </>
-            ) : (
-              <>
-                <span className="font-typewriter text-2xl font-black text-[#4c6351] block uppercase">
-                  SEGURO
-                </span>
-                <span className="font-mono text-xs text-black/60 uppercase">RACIONES ESTABLES</span>
-              </>
-            )}
-          </div>
-          <div className="border-t-2 border-black/15 pt-3 flex items-center justify-between">
-            <span className="font-mono text-xs text-black/60 uppercase">VER INVENTARIO</span>
-            <ArrowRight className="w-4 h-4 text-black/50 group-hover:translate-x-1 transition-transform" />
-          </div>
-        </motion.div>
+          {criticalStocks.length > 0 ? (
+            <>
+              <div className="wv-big-number" style={{ color: "var(--accent-critical)" }}>{criticalStocks.length}</div>
+              <div className="wv-small-label" style={{ color: "var(--accent-critical)" }}>RECURSOS BAJO MÍNIMO</div>
+            </>
+          ) : (
+            <>
+              <div className="wv-big-number" style={{ color: "var(--accent-approved)" }}>OK</div>
+              <div className="wv-small-label">RACIONES ESTABLES</div>
+            </>
+          )}
+        </PinnedCard>
 
         {/* Card 4: Puntuación */}
-        <motion.div
+        <PinnedCard
+          animated
           variants={itemVariants}
           onClick={() => onNavigate("profile")}
-          className="bg-[#e8dcc8] border-2 border-black shadow-[5px_5px_0_#000] p-5 flex flex-col gap-3 cursor-pointer group hover:-translate-y-0.5 hover:shadow-[7px_7px_0_#000] transition-all"
-          style={{ borderLeft: `6px solid ${rank.color}` }}
+          title={`PUNTUACIÓN: ${rank.label}`}
+          pinColor="gold"
+          rotate={1}
         >
-          <div className="flex justify-between items-start">
-            <span className="font-mono text-xs font-bold text-black/50 uppercase tracking-wider">
-              PUNTUACIÓN
-            </span>
-            <span className="text-xl select-none">🏆</span>
-          </div>
-          <div>
-            <span
-              className="font-typewriter text-5xl font-black block"
-              style={{ color: rank.color }}
-            >
-              {statistics.survival_score}
-            </span>
-            <span className="font-mono text-xs uppercase font-bold" style={{ color: rank.color }}>
-              {rank.label}
-            </span>
-          </div>
-          <div className="w-full h-2 bg-black/15 border border-black/20 overflow-hidden">
-            <div
-              className="h-full transition-all duration-500"
-              style={{ width: `${rankProgress}%`, backgroundColor: rank.color }}
-            />
-          </div>
-          <div className="border-t-2 border-black/15 pt-2 flex items-center justify-between">
-            <span className="font-mono text-xs text-black/60 uppercase">
-              {statistics.explorations_completed} EXPEDICIONES
-            </span>
-            <ArrowRight className="w-4 h-4 text-black/50 group-hover:translate-x-1 transition-transform" />
-          </div>
-        </motion.div>
+          <div className="wv-big-number" style={{ color: rank.color }}>{statistics.survival_score}</div>
+          <div className="wv-small-label">{statistics.explorations_completed} EXPEDICIONES</div>
+        </PinnedCard>
       </div>
 
       {/* COLUMNAS: EXCURSIONISTAS ACTIVOS + BALANCE */}
@@ -239,14 +155,13 @@ export default function DashboardView({
         {/* Panel izquierdo: excursionistas en zona */}
         <motion.div
           variants={itemVariants}
-          className="bg-[#e8dcc8] border-2 border-black shadow-[5px_5px_0_#000] p-6 lg:col-span-8"
-          style={{ borderLeft: "6px solid #c27c2f" }}
+          className="wv-paper p-6 lg:col-span-8"
         >
-          <div className="flex items-center gap-3 border-b-2 border-black/15 pb-4 mb-4">
-            <span className="text-xl select-none">🧭</span>
-            <h3 className="font-typewriter text-lg font-bold tracking-wider text-black uppercase">
-              Excursionistas en Zona Muerta
+          <div className="wv-section-title-row">
+            <h3 className="wv-section-title" style={{ marginBottom: 0 }}>
+              EXCURSIONISTAS EN ZONA MUERTA
             </h3>
+            <span className="text-xl select-none">🧭</span>
           </div>
 
           {activeExplorations.length === 0 ? (
@@ -263,7 +178,7 @@ export default function DashboardView({
               </button>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-3 mt-4">
               {activeExplorations.map((exp) => {
                 const crewNames = exp.explorationPersons.map((p) => p.person.first_name).join(", ")
                 return (
@@ -307,17 +222,16 @@ export default function DashboardView({
         {/* Panel derecho: balance diario */}
         <motion.div
           variants={itemVariants}
-          className="bg-[#e8dcc8] border-2 border-black shadow-[5px_5px_0_#000] p-6 lg:col-span-4"
-          style={{ borderLeft: "6px solid #4c6351" }}
+          className="wv-paper p-6 lg:col-span-4"
         >
-          <div className="flex items-center gap-3 border-b-2 border-black/15 pb-4 mb-4">
-            <span className="text-xl select-none">⚖️</span>
-            <h3 className="font-typewriter text-lg font-bold tracking-wider text-black uppercase">
-              Balance Diario
+          <div className="wv-section-title-row">
+            <h3 className="wv-section-title" style={{ marginBottom: 0 }}>
+              BALANCE DIARIO
             </h3>
+            <span className="text-xl select-none">⚖️</span>
           </div>
 
-          <p className="font-mono text-xs text-black/40 uppercase font-bold mb-3">
+          <p className="font-mono text-xs text-black/40 uppercase font-bold mb-3 mt-2">
             CONSUMO VS PRODUCCIÓN
           </p>
 
@@ -368,14 +282,13 @@ export default function DashboardView({
       {/* HISTORIAL DE MOVIMIENTOS */}
       <motion.div
         variants={itemVariants}
-        className="bg-[#e8dcc8] border-2 border-black shadow-[5px_5px_0_#000] p-6"
-        style={{ borderLeft: "6px solid #5a5040" }}
+        className="wv-paper p-6"
       >
-        <div className="flex items-center gap-3 border-b-2 border-black/15 pb-4 mb-4">
-          <span className="text-xl select-none">📋</span>
-          <h3 className="font-typewriter text-lg font-bold tracking-wider text-black uppercase">
-            Historial de Logs de Reserva
+        <div className="wv-section-title-row">
+          <h3 className="wv-section-title" style={{ marginBottom: 0 }}>
+            HISTORIAL DE LOGS DE RESERVA
           </h3>
+          <span className="text-xl select-none">📋</span>
         </div>
 
         {movements.length === 0 ? (
@@ -383,7 +296,7 @@ export default function DashboardView({
             SIN MOVIMIENTOS REGISTRADOS
           </p>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto mt-4">
             <table className="w-full text-left font-mono text-xs">
               <thead>
                 <tr className="border-b-2 border-black/15">
@@ -432,6 +345,6 @@ export default function DashboardView({
           </div>
         )}
       </motion.div>
-    </motion.div>
+    </CorkBoard>
   )
 }

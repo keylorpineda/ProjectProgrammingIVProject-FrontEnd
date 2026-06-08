@@ -9,6 +9,8 @@ import {
   useCamp,
 } from "@/features/worker/hooks/useWorkerAPI"
 import { useAuth } from "@/pages/Admin/context/AuthContext"
+import { CorkBoard } from "@/components/ui/CorkBoard"
+import { PinnedCard } from "@/components/ui/PinnedCard"
 import "./WorkerViews.css"
 
 const formatTime = () => {
@@ -133,31 +135,25 @@ export default function WorkerDashboard() {
   ]
 
   return (
-    <div className="wv-cork-board">
-      <div className="wv-board-header">
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <span className="wv-board-dot wv-board-dot-green" />
-          <h2 className="wv-board-title">TABLERO - {campName}</h2>
-        </div>
-        <span className="wv-board-time">{time}</span>
-      </div>
+    <CorkBoard
+      title={`TABLERO - ${campName}`}
+      rightElement={<span className="wv-board-time">{time}</span>}
+    >
 
       <div className="wv-cork-grid">
         {cards.map((card, i) => (
-          <motion.div
+          <PinnedCard
             key={card.title}
-            className="wv-pinned"
-            style={{ transform: `rotate(${card.rotate}deg)` }}
+            animated
+            title={card.title}
+            value={card.value}
+            label={card.label}
+            pinColor={card.pinClass}
+            rotate={card.rotate}
             initial={{ scale: 0, rotate: -20, opacity: 0 }}
             animate={{ scale: 1, rotate: card.rotate, opacity: 1 }}
             transition={{ type: "spring", stiffness: 120, delay: i * 0.1 }}
-            whileHover={{ scale: 1.06, rotate: 0 }}
-          >
-            <div className={`wv-pin ${card.pinClass}`} />
-            <h3 className="wv-card-title">{card.title}</h3>
-            <div className="wv-big-number">{card.value}</div>
-            <div className="wv-small-label">{card.label}</div>
-          </motion.div>
+          />
         ))}
       </div>
 
@@ -219,6 +215,6 @@ export default function WorkerDashboard() {
           </div>
         </motion.div>
       ) : null}
-    </div>
+    </CorkBoard>
   )
 }

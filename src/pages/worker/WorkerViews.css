@@ -28,6 +28,7 @@
   --ink-soft: rgba(154, 144, 128, 0.55);
   --font-typewriter: "Special Elite", monospace;
   --font-mono: "JetBrains Mono", monospace;
+  --font-marker: "Permanent Marker", cursive;
 }
 
 .worker-route-container {
@@ -235,7 +236,7 @@
 }
 
 .wv-big-number {
-  font-family: var(--font-typewriter);
+  font-family: var(--font-marker, "Permanent Marker", cursive);
   font-size: 3.2rem;
   line-height: 1;
   font-weight: bold;
@@ -1826,6 +1827,33 @@
   --ink-soft: #111111;
 }
 
+/* Skin class to apply beige-paper palette without requiring .worker-layout wrapper.
+   Use this on any CorkBoard or PinnedCard outside the worker layout. */
+.wv-cork-skin {
+  --panel: #9a9080;
+  --panel-alt: #817769;
+  --panel-border: #000000;
+  --panel-border-bright: #000000;
+  --bg-deep: #161513;
+  --text-primary: #111111;
+  --text-secondary: rgba(0, 0, 0, 0.68);
+  --text-amber: #000000;
+  --text-dim: rgba(0, 0, 0, 0.52);
+  --accent-amber: #c27c2f;
+  --accent-warning: #c27c2f;
+  --accent-critical: #9c2720;
+  --accent-approved: #4c6351;
+  --accent-emergency: #b38536;
+  --bg-paper: #9a9080;
+  --bg-paper-dark: #817769;
+  --bg-paper-shadow: #635b50;
+  --ink: #000000;
+  --ink-soft: #111111;
+  --font-typewriter: "Special Elite", monospace;
+  --font-mono: "JetBrains Mono", monospace;
+  --font-marker: "Permanent Marker", cursive;
+}
+
 .worker-route-container {
   background:
     radial-gradient(ellipse at center, rgba(194, 124, 47, 0.08) 0%, #161513 68%),
@@ -2015,7 +2043,6 @@
 
 .wv-paper,
 .wv-paper-dark,
-.wv-pinned,
 .wv-profession-card,
 .wv-res-stat-card,
 .wv-resource-row,
@@ -2039,7 +2066,6 @@
   background: #817769 !important;
 }
 
-.wv-pinned,
 .wv-profession-card,
 .wv-res-stat-card,
 .wv-badge-card,
@@ -2051,7 +2077,6 @@
     background 0.18s ease;
 }
 
-.wv-pinned:hover,
 .wv-profession-card:hover,
 .wv-res-stat-card:hover,
 .wv-badge-card:hover,
