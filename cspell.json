@@ -164,7 +164,9 @@
     "ALMACEN",
     "Vigia",
     "metodo",
-    "unstub"
+    "unstub",
+    "antíxidas",
+    "ANTÍXIDAS"
   ],
   "ignorePaths": [
     "node_modules",

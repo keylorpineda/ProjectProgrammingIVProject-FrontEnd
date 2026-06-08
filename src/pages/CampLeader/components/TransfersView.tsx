@@ -507,6 +507,7 @@ export default function TransfersView({
                       CANTIDAD DISPUESTA
                     </label>
                     <input
+                      id="tr-qty"
                       type="number"
                       className="w-full bg-[#111111]/90 border border-[#3b4d3e] text-white text-xs font-mono py-2 px-3 rounded uppercase focus:outline-none focus:border-[#c27c2f] focus:ring-1 focus:ring-[#c27c2f] transition-colors"
                       min={10}

@@ -261,6 +261,16 @@ export default function ExplorationsView({
             PATRULLAS DE CAMPO · ZONA MUERTA
           </p>
         </div>
+        <button
+          onClick={() => {
+            setFormError(null)
+            setIsNewModalOpen(true)
+          }}
+          className="bg-[#c27c2f] text-black font-typewriter text-sm font-bold uppercase py-3 px-6 border-2 border-black shadow-[3px_3px_0_#000] hover:bg-[#df8120] active:shadow-none active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer flex items-center gap-2 shrink-0"
+        >
+          <Compass className="w-4 h-4" />
+          NUEVA EXPEDICIÓN
+        </button>
       </div>
 
       {/* FILTERS */}
