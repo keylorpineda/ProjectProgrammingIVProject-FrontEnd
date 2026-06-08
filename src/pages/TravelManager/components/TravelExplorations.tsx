@@ -477,18 +477,6 @@ export default function TravelExplorations() {
         </div>
 
         <div className="flex flex-wrap items-center gap-4 shrink-0">
-          <div className="tm-folder-tabs">
-            {stats.map((s) => (
-              <button
-                type="button"
-                key={s.id}
-                onClick={() => setFilterStatus(filterStatus === s.id ? "" : s.id)}
-                className={`tm-tab ${filterStatus === s.id ? "tm-tab-active" : ""}`}
-              >
-                {s.label.toUpperCase()} ({s.count})
-              </button>
-            ))}
-          </div>
           <button
             type="button"
             onClick={() => setIsNewModalOpen(true)}
@@ -1041,7 +1029,7 @@ export default function TravelExplorations() {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="tm-paper tm-paper-texture w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl relative p-0 border-4 border-double border-ink/40"
+              className="tm-paper tm-paper-texture w-full max-w-5xl flex flex-col shadow-2xl relative p-0 border-4 border-double border-ink/40"
             >
               {/* Modal header */}
               <div className="flex items-center justify-between p-6 border-b-2 border-dashed border-ink/20 bg-black/5">
@@ -1064,312 +1052,316 @@ export default function TravelExplorations() {
               </div>
 
               {/* Modal body */}
-              <form
-                onSubmit={handleCreateExploration}
-                className="flex-1 overflow-y-auto custom-scrollbar"
-              >
-                <div className="p-8 space-y-6">
-                  {/* Basic info */}
-                  <div className="grid grid-cols-1 gap-5">
-                    <div>
-                      <label
-                        htmlFor="te-name"
-                        className="text-xs font-mono font-black text-ink uppercase tracking-widest block mb-2"
-                      >
-                        Nombre de la Expedición *
-                      </label>
-                      <input
-                        id="te-name"
-                        type="text"
-                        value={newName}
-                        onChange={(e) => setNewName(e.target.value)}
-                        placeholder="Ej: EXPEDICIÓN NORTE-7"
-                        className="vintage-input w-full p-3 text-base"
-                      />
-                    </div>
-                    <div>
-                      <label
-                        htmlFor="te-dest"
-                        className="text-xs font-mono font-black text-ink uppercase tracking-widest block mb-2"
-                      >
-                        Descripción del Destino *
-                      </label>
-                      <input
-                        id="te-dest"
-                        type="text"
-                        value={newDestination}
-                        onChange={(e) => setNewDestination(e.target.value)}
-                        placeholder="Ej: Sector norte, cuadrícula B-7"
-                        className="vintage-input w-full p-3 text-base"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Map coord picker */}
-                  <div>
-                    <div className="text-xs font-mono font-black text-ink uppercase tracking-widest block mb-2 flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-ink-soft" />
-                      Zona de Destino en el Mapa
-                      <span className="text-ink-soft/50 font-normal normal-case tracking-normal text-[11px]">
-                        — haz clic para marcar coordenadas
-                      </span>
-                    </div>
-                    <div className="border-2 border-dashed border-ink/20 overflow-hidden rounded-sm">
-                      <MapCoordPicker
-                        lat={destLat}
-                        lng={destLng}
-                        onChange={(lat, lng) => {
-                          setDestLat(lat)
-                          setDestLng(lng)
-                        }}
-                        campLat={explorations[0]?.camp?.latitude ?? 9.934739}
-                        campLng={explorations[0]?.camp?.longitude ?? -84.087502}
-                        campName={`Base ${baseCampId.toUpperCase()}`}
-                      />
-                    </div>
-                    {destLat !== null && destLng !== null && (
-                      <p className="mt-1 text-[11px] font-mono text-ink-soft/70 flex items-center gap-2">
-                        <span className="inline-block w-2 h-2 rounded-full bg-ink animate-pulse" />
-                        COORDENADAS REGISTRADAS: {destLat.toFixed(5)}, {destLng.toFixed(5)}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setDestLat(null)
-                            setDestLng(null)
-                          }}
-                          className="text-ink-soft hover:text-ink ml-2 underline"
+              <form onSubmit={handleCreateExploration} className="flex flex-col">
+                <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-6">
+                    {/* Basic info */}
+                    <div className="grid grid-cols-1 gap-5">
+                      <div>
+                        <label
+                          htmlFor="te-name"
+                          className="text-xs font-mono font-black text-ink uppercase tracking-widest block mb-2"
                         >
-                          limpiar
-                        </button>
-                      </p>
-                    )}
-                  </div>
+                          Nombre de la Expedición *
+                        </label>
+                        <input
+                          id="te-name"
+                          type="text"
+                          value={newName}
+                          onChange={(e) => setNewName(e.target.value)}
+                          placeholder="Ej: EXPEDICIÓN NORTE-7"
+                          className="vintage-input w-full p-3 text-base"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="te-dest"
+                          className="text-xs font-mono font-black text-ink uppercase tracking-widest block mb-2"
+                        >
+                          Descripción del Destino *
+                        </label>
+                        <input
+                          id="te-dest"
+                          type="text"
+                          value={newDestination}
+                          onChange={(e) => setNewDestination(e.target.value)}
+                          placeholder="Ej: Sector norte, cuadrícula B-7"
+                          className="vintage-input w-full p-3 text-base"
+                        />
+                      </div>
+                    </div>
 
-                  {/* Dates and duration */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    {/* Map coord picker */}
                     <div>
-                      <label
-                        htmlFor="te-departure"
-                        className="text-xs font-mono font-black text-ink uppercase tracking-widest block mb-2"
-                      >
-                        Fecha de Salida *
-                      </label>
-                      <input
-                        id="te-departure"
-                        type="datetime-local"
-                        value={newDepartureDate}
-                        onChange={(e) => setNewDepartureDate(e.target.value)}
-                        className="vintage-input w-full p-3"
-                      />
+                      <div className="text-xs font-mono font-black text-ink uppercase tracking-widest block mb-2 flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-ink-soft" />
+                        Zona de Destino en el Mapa
+                        <span className="text-ink-soft/50 font-normal normal-case tracking-normal text-[11px]">
+                          — haz clic para marcar coordenadas
+                        </span>
+                      </div>
+                      <div className="border-2 border-dashed border-ink/20 overflow-hidden rounded-sm">
+                        <MapCoordPicker
+                          lat={destLat}
+                          lng={destLng}
+                          onChange={(lat, lng) => {
+                            setDestLat(lat)
+                            setDestLng(lng)
+                          }}
+                          campLat={explorations[0]?.camp?.latitude ?? 9.934739}
+                          campLng={explorations[0]?.camp?.longitude ?? -84.087502}
+                          campName={`Base ${baseCampId.toUpperCase()}`}
+                        />
+                      </div>
+                      {destLat !== null && destLng !== null && (
+                        <p className="mt-1 text-[11px] font-mono text-ink-soft/70 flex items-center gap-2">
+                          <span className="inline-block w-2 h-2 rounded-full bg-ink animate-pulse" />
+                          COORDENADAS REGISTRADAS: {destLat.toFixed(5)}, {destLng.toFixed(5)}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setDestLat(null)
+                              setDestLng(null)
+                            }}
+                            className="text-ink-soft hover:text-ink ml-2 underline"
+                          >
+                            limpiar
+                          </button>
+                        </p>
+                      )}
                     </div>
-                    <div>
-                      <label
-                        htmlFor="te-days"
-                        className="text-xs font-mono font-black text-ink uppercase tracking-widest block mb-2"
-                      >
-                        Días Estimados *
-                      </label>
-                      <input
-                        id="te-days"
-                        type="number"
-                        min={1}
-                        value={newEstimatedDays}
-                        onChange={(e) => setNewEstimatedDays(Number(e.target.value))}
-                        className="vintage-input w-full p-3"
-                      />
-                    </div>
-                    <div>
-                      <label
-                        htmlFor="te-grace-days"
-                        className="text-xs font-mono font-black text-ink uppercase tracking-widest block mb-2"
-                      >
-                        Días de Gracia
-                      </label>
-                      <input
-                        id="te-grace-days"
-                        type="number"
-                        min={0}
-                        value={newGraceDays}
-                        onChange={(e) => setNewGraceDays(Number(e.target.value))}
-                        className="vintage-input w-full p-3"
-                      />
-                    </div>
-                  </div>
 
-                  {/* Personnel selection */}
-                  <div>
-                    <div className="text-xs font-mono font-black text-ink uppercase tracking-widest block mb-2">
-                      Personal Asignado *
-                    </div>
-                    <div className="max-h-40 overflow-y-auto custom-scrollbar space-y-1 border border-ink/20 p-2 bg-black/5 rounded-sm">
-                      {(() => {
-                        if (persons.length === 0) {
-                          return (
-                            <p className="text-xs font-mono text-ink-soft/40 uppercase text-center py-4">
-                              Cargando personas disponibles...
-                            </p>
-                          )
-                        }
-
-                        const availableExplorers = persons.filter(
-                          (p) =>
-                            (p.status === "active" ||
-                              p.status === "activo" ||
-                              p.status === "idle" ||
-                              p.status === "inactivo" ||
-                              p.status === "resting" ||
-                              p.status === "available" ||
-                              !p.status) &&
-                            p.profession?.can_explore === true,
-                        )
-
-                        if (availableExplorers.length === 0) {
-                          return (
-                            <div className="flex flex-col items-center justify-center py-6 text-center opacity-80">
-                              <AlertCircle className="h-6 w-6 text-[#df8120] mb-2" />
-                              <p className="text-xs font-mono text-[#df8120] uppercase font-bold">
-                                Sin personal capacitado
-                              </p>
-                              <p className="text-[10px] font-mono text-ink-soft mt-1 uppercase">
-                                No hay Exploradores ni Recolectores activos.
-                              </p>
-                            </div>
-                          )
-                        }
-
-                        return availableExplorers.map((person) => {
-                          const sel = newSelectedPersons.find((s) => s.person_id === person.id)
-                          const isSelected = !!sel
-                          return (
-                            <div
-                              key={person.id}
-                              role="button"
-                              tabIndex={0}
-                              className={`flex items-center justify-between p-2 border transition-all cursor-pointer rounded-sm ${
-                                isSelected
-                                  ? "bg-ink/5 border-ink/40"
-                                  : "bg-transparent border-dashed border-ink/15 hover:border-ink/30"
-                              }`}
-                              onClick={() => handleTogglePersonSelect(person.id)}
-                              onKeyDown={(e) =>
-                                e.key === "Enter" && handleTogglePersonSelect(person.id)
-                              }
-                            >
-                              <div className="flex items-center gap-2">
-                                <div
-                                  className={`h-3.5 w-3.5 border flex items-center justify-center shrink-0 rounded-sm ${
-                                    isSelected ? "border-ink bg-ink/10" : "border-ink/20"
-                                  }`}
-                                >
-                                  {isSelected && <Check className="h-2.5 w-2.5 text-ink" />}
-                                </div>
-                                <span className="text-xs font-mono font-bold text-ink uppercase">
-                                  {person.first_name} {person.last_name}
-                                </span>
-                                {person.profession && (
-                                  <span className="text-[10px] font-mono text-ink-soft/60">
-                                    [{person.profession.name.toUpperCase()}]
-                                  </span>
-                                )}
-                              </div>
-                              {isSelected && (
-                                <button
-                                  type="button"
-                                  onClick={(ev) => {
-                                    ev.stopPropagation()
-                                    handleSetLeader(person.id)
-                                  }}
-                                  className={`text-[10px] font-mono font-black uppercase px-2 py-0.5 border transition-all rounded-sm ${
-                                    sel?.is_leader
-                                      ? "bg-[#df8120] text-black border-[#df8120]"
-                                      : "border-ink/20 text-ink-soft hover:bg-ink/5"
-                                  }`}
-                                >
-                                  {sel?.is_leader ? "LÍDER ✓" : "Líder?"}
-                                </button>
-                              )}
-                            </div>
-                          )
-                        })
-                      })()}
+                    {/* Dates and duration */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                      <div>
+                        <label
+                          htmlFor="te-departure"
+                          className="text-xs font-mono font-black text-ink uppercase tracking-widest block mb-2"
+                        >
+                          Fecha de Salida *
+                        </label>
+                        <input
+                          id="te-departure"
+                          type="datetime-local"
+                          value={newDepartureDate}
+                          onChange={(e) => setNewDepartureDate(e.target.value)}
+                          className="vintage-input w-full p-3"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="te-days"
+                          className="text-xs font-mono font-black text-ink uppercase tracking-widest block mb-2"
+                        >
+                          Días Estimados *
+                        </label>
+                        <input
+                          id="te-days"
+                          type="number"
+                          min={1}
+                          value={newEstimatedDays}
+                          onChange={(e) => setNewEstimatedDays(Number(e.target.value))}
+                          className="vintage-input w-full p-3"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="te-grace-days"
+                          className="text-xs font-mono font-black text-ink uppercase tracking-widest block mb-2"
+                        >
+                          Días de Gracia
+                        </label>
+                        <input
+                          id="te-grace-days"
+                          type="number"
+                          min={0}
+                          value={newGraceDays}
+                          onChange={(e) => setNewGraceDays(Number(e.target.value))}
+                          className="vintage-input w-full p-3"
+                        />
+                      </div>
                     </div>
                   </div>
 
-                  {/* Resource selection */}
-                  {inventory.length > 0 && (
+                  <div className="space-y-6">
+                    {/* Personnel selection */}
                     <div>
                       <div className="text-xs font-mono font-black text-ink uppercase tracking-widest block mb-2">
-                        Recursos para la Expedición (opcional)
+                        Personal Asignado *
                       </div>
                       <div className="max-h-40 overflow-y-auto custom-scrollbar space-y-1 border border-ink/20 p-2 bg-black/5 rounded-sm">
-                        {inventory.map((item) => {
-                          const sel = newSelectedResources.find(
-                            (r) => r.resource_id === item.resource_id,
+                        {(() => {
+                          if (persons.length === 0) {
+                            return (
+                              <p className="text-xs font-mono text-ink-soft/40 uppercase text-center py-4">
+                                Cargando personas disponibles...
+                              </p>
+                            )
+                          }
+
+                          const availableExplorers = persons.filter(
+                            (p) =>
+                              (p.status === "active" ||
+                                p.status === "activo" ||
+                                p.status === "idle" ||
+                                p.status === "inactivo" ||
+                                p.status === "resting" ||
+                                p.status === "available" ||
+                                !p.status) &&
+                              p.profession?.can_explore === true,
                           )
-                          const isSelected = !!sel
-                          return (
-                            <div
-                              key={item.resource_id}
-                              className={`flex items-center justify-between p-2 border transition-all rounded-sm ${
-                                isSelected
-                                  ? "bg-ink/5 border-ink/40"
-                                  : "bg-transparent border-dashed border-ink/15"
-                              }`}
-                            >
+
+                          if (availableExplorers.length === 0) {
+                            return (
+                              <div className="flex flex-col items-center justify-center py-6 text-center opacity-80">
+                                <AlertCircle className="h-6 w-6 text-[#df8120] mb-2" />
+                                <p className="text-xs font-mono text-[#df8120] uppercase font-bold">
+                                  Sin personal capacitado
+                                </p>
+                                <p className="text-[10px] font-mono text-ink-soft mt-1 uppercase">
+                                  No hay Exploradores ni Recolectores activos.
+                                </p>
+                              </div>
+                            )
+                          }
+
+                          return availableExplorers.map((person) => {
+                            const sel = newSelectedPersons.find((s) => s.person_id === person.id)
+                            const isSelected = !!sel
+                            return (
                               <div
+                                key={person.id}
                                 role="button"
                                 tabIndex={0}
-                                className="flex items-center gap-2 cursor-pointer flex-1"
-                                onClick={() => handleToggleResourceSelect(item.resource_id)}
+                                className={`flex items-center justify-between p-2 border transition-all cursor-pointer rounded-sm ${
+                                  isSelected
+                                    ? "bg-ink/5 border-ink/40"
+                                    : "bg-transparent border-dashed border-ink/15 hover:border-ink/30"
+                                }`}
+                                onClick={() => handleTogglePersonSelect(person.id)}
                                 onKeyDown={(e) =>
-                                  e.key === "Enter" && handleToggleResourceSelect(item.resource_id)
+                                  e.key === "Enter" && handleTogglePersonSelect(person.id)
                                 }
                               >
-                                <div
-                                  className={`h-3.5 w-3.5 border flex items-center justify-center shrink-0 rounded-sm ${
-                                    isSelected ? "border-ink bg-ink/10" : "border-ink/20"
-                                  }`}
-                                >
-                                  {isSelected && <Check className="h-2.5 w-2.5 text-ink" />}
+                                <div className="flex items-center gap-2">
+                                  <div
+                                    className={`h-3.5 w-3.5 border flex items-center justify-center shrink-0 rounded-sm ${
+                                      isSelected ? "border-ink bg-ink/10" : "border-ink/20"
+                                    }`}
+                                  >
+                                    {isSelected && <Check className="h-2.5 w-2.5 text-ink" />}
+                                  </div>
+                                  <span className="text-xs font-mono font-bold text-ink uppercase">
+                                    {person.first_name} {person.last_name}
+                                  </span>
+                                  {person.profession && (
+                                    <span className="text-[10px] font-mono text-ink-soft/60">
+                                      [{person.profession.name.toUpperCase()}]
+                                    </span>
+                                  )}
                                 </div>
-                                <span className="text-xs font-mono font-bold text-ink uppercase">
-                                  {item.resource!.name}
-                                </span>
-                                <span className="text-[10px] font-mono text-ink-soft/60 uppercase">
-                                  {item.resource!.category} {"//"} {item.current_quantity}{" "}
-                                  {item.resource!.unit}
-                                </span>
+                                {isSelected && (
+                                  <button
+                                    type="button"
+                                    onClick={(ev) => {
+                                      ev.stopPropagation()
+                                      handleSetLeader(person.id)
+                                    }}
+                                    className={`text-[10px] font-mono font-black uppercase px-2 py-0.5 border transition-all rounded-sm ${
+                                      sel?.is_leader
+                                        ? "bg-[#df8120] text-black border-[#df8120]"
+                                        : "border-ink/20 text-ink-soft hover:bg-ink/5"
+                                    }`}
+                                  >
+                                    {sel?.is_leader ? "LÍDER ✓" : "Líder?"}
+                                  </button>
+                                )}
                               </div>
-                              {isSelected && (
-                                <input
-                                  type="number"
-                                  min={1}
-                                  max={item.current_quantity}
-                                  value={sel.quantity}
-                                  onClick={(ev) => ev.stopPropagation()}
-                                  onChange={(e) =>
-                                    handleResourceQuantityChange(
-                                      item.resource_id,
-                                      Number(e.target.value),
-                                    )
-                                  }
-                                  className="vintage-input w-16 text-sm ml-2 p-1"
-                                />
-                              )}
-                            </div>
-                          )
-                        })}
+                            )
+                          })
+                        })()}
                       </div>
                     </div>
-                  )}
 
-                  {/* Error display */}
-                  {formError && (
-                    <div className="flex items-center gap-2 text-[#9c2720] text-xs font-mono uppercase bg-[#9c2720]/15 border border-[#9c2720]/30 p-3 rounded-sm">
-                      <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-                      {formError}
-                    </div>
-                  )}
+                    {/* Resource selection */}
+                    {inventory.filter((i) => i.current_quantity > 0).length > 0 && (
+                      <div>
+                        <div className="text-xs font-mono font-black text-ink uppercase tracking-widest block mb-2">
+                          Recursos para la Expedición (opcional)
+                        </div>
+                        <div className="max-h-40 overflow-y-auto custom-scrollbar space-y-1 border border-ink/20 p-2 bg-black/5 rounded-sm">
+                          {inventory
+                            .filter((i) => i.current_quantity > 0)
+                            .map((item) => {
+                              const sel = newSelectedResources.find(
+                                (r) => r.resource_id === item.resource_id,
+                              )
+                              const isSelected = !!sel
+                              return (
+                                <div
+                                  key={item.resource_id}
+                                  className={`flex items-center justify-between p-2 border transition-all rounded-sm ${
+                                    isSelected
+                                      ? "bg-ink/5 border-ink/40"
+                                      : "bg-transparent border-dashed border-ink/15"
+                                  }`}
+                                >
+                                  <div
+                                    role="button"
+                                    tabIndex={0}
+                                    className="flex items-center gap-2 cursor-pointer flex-1"
+                                    onClick={() => handleToggleResourceSelect(item.resource_id)}
+                                    onKeyDown={(e) =>
+                                      e.key === "Enter" &&
+                                      handleToggleResourceSelect(item.resource_id)
+                                    }
+                                  >
+                                    <div
+                                      className={`h-3.5 w-3.5 border flex items-center justify-center shrink-0 rounded-sm ${
+                                        isSelected ? "border-ink bg-ink/10" : "border-ink/20"
+                                      }`}
+                                    >
+                                      {isSelected && <Check className="h-2.5 w-2.5 text-ink" />}
+                                    </div>
+                                    <span className="text-xs font-mono font-bold text-ink uppercase">
+                                      {item.resource!.name}
+                                    </span>
+                                    <span className="text-[10px] font-mono text-ink-soft/60 uppercase">
+                                      {item.resource!.category} {"//"} {item.current_quantity}{" "}
+                                      {item.resource!.unit}
+                                    </span>
+                                  </div>
+                                  {isSelected && (
+                                    <input
+                                      type="number"
+                                      min={1}
+                                      max={item.current_quantity}
+                                      value={sel.quantity}
+                                      onClick={(ev) => ev.stopPropagation()}
+                                      onChange={(e) =>
+                                        handleResourceQuantityChange(
+                                          item.resource_id,
+                                          Number(e.target.value),
+                                        )
+                                      }
+                                      className="vintage-input w-16 text-sm ml-2 p-1"
+                                    />
+                                  )}
+                                </div>
+                              )
+                            })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Error display */}
+                    {formError && (
+                      <div className="flex items-center gap-2 text-[#9c2720] text-xs font-mono uppercase bg-[#9c2720]/15 border border-[#9c2720]/30 p-3 rounded-sm">
+                        <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                        {formError}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Modal footer */}

@@ -884,16 +884,6 @@ export default function TravelResources() {
               <span className="tm-action-label">Preparar Exploración</span>
               <span className="tm-action-sub">Despliegue de patrulla</span>
             </button>
-            <button
-              type="button"
-              onClick={() =>
-                navigate("/travel-manager/transfers", { state: { openNewTransfer: true } })
-              }
-              className="tm-btn w-full text-center hover:bg-[#c27c2f]/20 hover:text-white transition-all font-mono font-bold uppercase text-xs tracking-wider cursor-pointer border border-[#d4a373]/30"
-              style={{ padding: "10px 12px", borderRadius: "4px" }}
-            >
-              Solicitar Suministros
-            </button>
           </div>
         </div>
       </div>
