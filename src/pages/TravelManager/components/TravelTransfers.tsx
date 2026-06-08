@@ -27,6 +27,7 @@ import type {
   RequestPersonDetail,
 } from "@/types/api.types"
 
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog"
 import { getCamps } from "@/features/camps/services/camps.service"
 import { getInventory } from "@/features/inventory/services/inventory.service"
 import { getPersons } from "@/features/persons/services/persons.service"
@@ -123,6 +124,21 @@ export default function TravelTransfers() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [isNewModalOpen, setIsNewModalOpen] = useState(false)
   const [formError, setFormError] = useState("")
+
+  // Confirm dialog state
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean
+    title: string
+    message: string
+    type: "warning" | "danger" | "info"
+    onConfirm: () => void
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "warning",
+    onConfirm: () => {},
+  })
 
   useEffect(() => {
     const locState = location.state as { openNewTransfer?: boolean } | null
@@ -358,15 +374,29 @@ export default function TravelTransfers() {
   }
 
   function handleCancelTransfer(id: string) {
-    if (window.confirm("¿Confirmar la cancelación de este traslado?")) {
-      cancelMutation.mutate(id)
-    }
+    setConfirmDialog({
+      isOpen: true,
+      title: "Cancelar Traslado",
+      message: "¿Confirmar la cancelación de este traslado? Esta acción no se puede deshacer.",
+      type: "danger",
+      onConfirm: () => {
+        setConfirmDialog((prev) => ({ ...prev, isOpen: false }))
+        cancelMutation.mutate(id)
+      },
+    })
   }
 
   function handleConfirmArrival(id: string) {
-    if (window.confirm("¿Confirmar la llegada de este traslado?")) {
-      confirmMutation.mutate(id)
-    }
+    setConfirmDialog({
+      isOpen: true,
+      title: "Confirmar Llegada",
+      message: "¿Confirmar la llegada exitosa de este traslado a la base de destino?",
+      type: "info",
+      onConfirm: () => {
+        setConfirmDialog((prev) => ({ ...prev, isOpen: false }))
+        confirmMutation.mutate(id)
+      },
+    })
   }
 
   function handleToggleResource(resourceId: string) {
@@ -429,6 +459,15 @@ export default function TravelTransfers() {
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="tm-container">
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        type={confirmDialog.type}
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={() => setConfirmDialog((prev) => ({ ...prev, isOpen: false }))}
+      />
+
       {/* ── Vista Header ── */}
       <div className="tm-board-header">
         <div className="tm-board-left">

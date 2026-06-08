@@ -41,6 +41,7 @@ function FitBounds({ bounds }: { bounds: L.LatLngBoundsExpression }) {
 import type { Exploration, Person, InventoryItem } from "@/types/api.types"
 import type { ReturnExplorationFormData } from "@/types/travel-comms.types"
 
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog"
 import {
   getExplorations,
   createExploration,
@@ -114,6 +115,21 @@ export default function TravelExplorations() {
   const [isNewModalOpen, setIsNewModalOpen] = useState(false)
   const [isReturnModalOpen, setIsReturnModalOpen] = useState(false)
   const [formError, setFormError] = useState("")
+
+  // Confirm dialog state
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean
+    title: string
+    message: string
+    type: "warning" | "danger" | "info"
+    onConfirm: () => void
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "warning",
+    onConfirm: () => {},
+  })
 
   // New exploration form state
   const [newName, setNewName] = useState("")
@@ -382,22 +398,33 @@ export default function TravelExplorations() {
     const exp = explorations.find((e) => e.id === id)
     if (exp && exp.departure_date) {
       if (new Date() < new Date(exp.departure_date)) {
-        if (
-          !window.confirm(
-            `La expedición está programada para ${new Date(exp.departure_date).toLocaleString()}. ¿Desea forzar la salida anticipada bajo su responsabilidad?`,
-          )
-        ) {
-          return
-        }
+        setConfirmDialog({
+          isOpen: true,
+          title: "Salida Anticipada",
+          message: `La expedición está programada para el ${new Date(exp.departure_date).toLocaleString()}. ¿Desea forzar la salida anticipada bajo su responsabilidad?`,
+          type: "warning",
+          onConfirm: () => {
+            setConfirmDialog((prev) => ({ ...prev, isOpen: false }))
+            departMutation.mutate(id)
+          },
+        })
+        return
       }
     }
     departMutation.mutate(id)
   }
 
   function handleCancelExploration(id: string) {
-    if (window.confirm("¿Confirmar la cancelación de esta expedición?")) {
-      cancelMutation.mutate(id)
-    }
+    setConfirmDialog({
+      isOpen: true,
+      title: "Cancelar Expedición",
+      message: "¿Confirmar la cancelación de esta expedición? Esta acción no se puede deshacer.",
+      type: "danger",
+      onConfirm: () => {
+        setConfirmDialog((prev) => ({ ...prev, isOpen: false }))
+        cancelMutation.mutate(id)
+      },
+    })
   }
 
   function handleRegisterReturn() {
@@ -521,6 +548,15 @@ export default function TravelExplorations() {
 
   return (
     <div className="tm-container">
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        type={confirmDialog.type}
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={() => setConfirmDialog((prev) => ({ ...prev, isOpen: false }))}
+      />
+
       {/* ── Vista Header ── */}
       <div className="tm-board-header">
         <div className="tm-board-left">
