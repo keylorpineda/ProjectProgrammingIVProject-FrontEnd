@@ -16,7 +16,7 @@ export interface Person {
   id: number
   first_name: string
   last_name: string
-  profession_id: number
+  profession_id?: number
   status: PersonStatus
   can_work: boolean
   experience_level: number // 1 to 5+
@@ -26,6 +26,11 @@ export interface Person {
   photo_url?: string
   profession?: Profession
   achievements?: string[]
+  /** Mapped from profession.name in the services layer */
+  role?: string
+  /** Mapped from userAccount.camp_id in the services layer */
+  campId?: number
+  username?: string
 }
 
 export interface Camp {

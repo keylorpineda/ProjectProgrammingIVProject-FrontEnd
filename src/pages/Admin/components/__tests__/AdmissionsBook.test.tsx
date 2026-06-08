@@ -209,7 +209,7 @@ describe("Admin → AdmissionsBook", () => {
       await user.click(prevBtn)
 
       await waitFor(() => {
-        const calls = mockedGetById.mock.calls.map(([id]: [string]) => id)
+        const calls = mockedGetById.mock.calls.map(([id]: string[]) => id)
         expect(calls).toContain("555")
       })
     })

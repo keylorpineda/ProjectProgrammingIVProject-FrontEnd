@@ -42,9 +42,9 @@ const mockTransfers: Transfer[] = [
     status: "pending",
     requested_by_user_id: 1,
     notes: "",
-    resource: { name: "Agua" },
-    origin_camp: { name: "Beta" },
-    destination_camp: { name: "Alpha" },
+    resource: { id: 10, name: "Agua", unit: "L", category: "water" },
+    origin_camp: { id: 2, name: "Beta" },
+    destination_camp: { id: 1, name: "Alpha" },
   },
 ]
 
@@ -55,18 +55,12 @@ const mockInventory: Inventory[] = [
     current_quantity: 120,
     minimum_stock_required: 100,
     alert_active: false,
-    last_update: "",
     resource: {
       id: 10,
       name: "Agua",
       unit: "L",
       category: "water",
-      description: "",
-      image_url: null,
-      image_public_id: null,
     },
-    created_at: "",
-    updated_at: "",
   },
 ]
 
@@ -89,7 +83,6 @@ const mockMovements: InventoryMovement[] = [
     type: "input_manual",
     notes: "Restock",
     created_at: "2026-06-08T10:30:00Z",
-    updated_at: "",
   },
 ]
 
@@ -195,18 +188,12 @@ describe("DashboardView Component", () => {
         current_quantity: 5,
         minimum_stock_required: 100,
         alert_active: true,
-        last_update: "",
         resource: {
           id: 10,
           name: "Agua",
           unit: "L",
           category: "water",
-          description: "",
-          image_url: null,
-          image_public_id: null,
         },
-        created_at: "",
-        updated_at: "",
       },
     ]
 

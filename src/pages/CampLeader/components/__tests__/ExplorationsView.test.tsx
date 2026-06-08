@@ -3,7 +3,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import ExplorationsView from "../ExplorationsView"
 
-import type { Camp, Exploration, Inventory, Person, ResourceItem } from "../../types"
+import type {
+  Camp,
+  Exploration,
+  ExplorationPerson,
+  Inventory,
+  Person,
+  ResourceItem,
+} from "../../types"
 import type { MapCoordPickerProps } from "@/features/map-test/components/MapCoordPicker"
 
 vi.mock("@/features/map-test/components/ExplorationZoneMap", () => ({
@@ -73,7 +80,9 @@ const mockExplorations: Exploration[] = [
     real_return_date: undefined,
     status: "scheduled",
     notes: "No comments",
-    explorationPersons: [{ is_leader: true, person: mockPersons[0] }],
+    explorationPersons: [
+      { is_leader: true, person: mockPersons[0] },
+    ] as unknown as ExplorationPerson[],
     explorationResources: [],
     camp: { id: 1, name: "Campamento de Prueba" } as Camp,
   },
@@ -88,7 +97,9 @@ const mockExplorations: Exploration[] = [
     real_return_date: undefined,
     status: "in_progress",
     notes: "",
-    explorationPersons: [{ is_leader: true, person: mockPersons[0] }],
+    explorationPersons: [
+      { is_leader: true, person: mockPersons[0] },
+    ] as unknown as ExplorationPerson[],
     explorationResources: [],
     camp: { id: 1, name: "Campamento de Prueba" } as Camp,
   },

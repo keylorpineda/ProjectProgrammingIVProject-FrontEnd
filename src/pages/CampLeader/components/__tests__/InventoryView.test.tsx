@@ -5,25 +5,19 @@ import InventoryView from "../InventoryView"
 
 import type { Inventory } from "../../types"
 
-const mockInventory: Inventory[] = [
+const mockInventory = [
   {
     camp_id: 1,
     resource_id: 10,
     current_quantity: 120,
     minimum_stock_required: 100,
     alert_active: false,
-    last_update: "2026-06-08",
     resource: {
       id: 10,
       name: "Agua limpia",
       unit: "L",
       category: "water",
-      description: "Water",
-      image_url: null,
-      image_public_id: null,
     },
-    created_at: "",
-    updated_at: "",
   },
   {
     camp_id: 1,
@@ -31,20 +25,14 @@ const mockInventory: Inventory[] = [
     current_quantity: 30,
     minimum_stock_required: 50,
     alert_active: true,
-    last_update: "2026-06-08",
     resource: {
       id: 20,
       name: "Raciones de comida",
       unit: "Units",
       category: "food",
-      description: "Food",
-      image_url: null,
-      image_public_id: null,
     },
-    created_at: "",
-    updated_at: "",
   },
-]
+] as unknown as Inventory[]
 
 describe("InventoryView Component", () => {
   it("renders all inventory items correctly with stock status", () => {
@@ -79,27 +67,21 @@ describe("InventoryView Component", () => {
   })
 
   it("handles edge cases for fallback emoji and zero minimum stock", () => {
-    const edgeCaseInventory: Inventory[] = [
+    const edgeCaseInventory = [
       {
         camp_id: 1,
         resource_id: 30,
         current_quantity: 10,
         minimum_stock_required: 0,
         alert_active: false,
-        last_update: "2026-06-08",
         resource: {
           id: 30,
           name: "Item Extra",
           unit: "Units",
           category: "unknown-category",
-          description: "Extra",
-          image_url: null,
-          image_public_id: null,
         },
-        created_at: "",
-        updated_at: "",
       },
-    ]
+    ] as unknown as Inventory[]
 
     render(<InventoryView inventory={edgeCaseInventory} />)
 

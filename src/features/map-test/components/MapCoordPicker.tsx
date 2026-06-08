@@ -7,7 +7,7 @@ import "../styles/map-widgets.css"
 
 const MAP_CENTER: [number, number] = [9.934739, -84.087502]
 
-interface MapCoordPickerProps {
+export interface MapCoordPickerProps {
   lat: number | null
   lng: number | null
   onChange: (lat: number, lng: number) => void

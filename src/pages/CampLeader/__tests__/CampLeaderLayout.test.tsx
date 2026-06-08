@@ -164,6 +164,7 @@ describe("CampLeaderLayout Page", () => {
   })
 
   afterEach(() => {
+    // @ts-expect-error: restoring mocked window.location
     window.location = originalLocation
   })
 
@@ -238,26 +239,26 @@ describe("CampLeaderLayout Page", () => {
     // 1. Create Exploration
     const createData = { name: "Search A" }
     await act(async () => {
-      await capturedExplorationsProps.onCreateExploration(createData)
+      await capturedExplorationsProps!.onCreateExploration(createData)
     })
     expect(explorationsService.createExploration).toHaveBeenCalledWith(createData)
 
     // 2. Depart Exploration
     await act(async () => {
-      await capturedExplorationsProps.onDepartExploration(123)
+      await capturedExplorationsProps!.onDepartExploration(123)
     })
     expect(explorationsService.departExploration).toHaveBeenCalledWith(123)
 
     // 3. Return Exploration
     const returnData = { notes: "Found supplies" }
     await act(async () => {
-      await capturedExplorationsProps.onReturnExploration(123, returnData)
+      await capturedExplorationsProps!.onReturnExploration(123, returnData)
     })
     expect(explorationsService.returnExploration).toHaveBeenCalledWith(123, returnData)
 
     // 4. Cancel Exploration
     await act(async () => {
-      await capturedExplorationsProps.onCancelExploration(123)
+      await capturedExplorationsProps!.onCancelExploration(123)
     })
     expect(explorationsService.cancelExploration).toHaveBeenCalledWith(123)
   })
@@ -277,13 +278,13 @@ describe("CampLeaderLayout Page", () => {
     // 1. Create Transfer Request
     const trData = { resource_id: 1, quantity: 10 }
     await act(async () => {
-      await capturedTransfersProps.onCreateTransferRequest(trData)
+      await capturedTransfersProps!.onCreateTransferRequest(trData)
     })
     expect(transfersService.createTransferRequest).toHaveBeenCalledWith(trData)
 
     // 2. Approve/Reject Transfer
     await act(async () => {
-      await capturedTransfersProps.onApproveTransferRequest(100, true)
+      await capturedTransfersProps!.onApproveTransferRequest(100, true)
     })
     expect(transfersService.handleTransferApproval).toHaveBeenCalledWith(
       100,
@@ -293,13 +294,13 @@ describe("CampLeaderLayout Page", () => {
 
     // 3. Cancel Transfer
     await act(async () => {
-      await capturedTransfersProps.onCancelTransferRequest(100)
+      await capturedTransfersProps!.onCancelTransferRequest(100)
     })
     expect(transfersService.cancelTransferRequest).toHaveBeenCalledWith(100)
 
     // 4. Arrive Transfer
     await act(async () => {
-      await capturedTransfersProps.onArriveTransferRequest(100)
+      await capturedTransfersProps!.onArriveTransferRequest(100)
     })
     expect(transfersService.arriveTransferRequest).toHaveBeenCalledWith(100)
   })
@@ -327,7 +328,7 @@ describe("CampLeaderLayout Page", () => {
     })
     expect(capturedDashboardProps).not.toBeNull()
     act(() => {
-      capturedDashboardProps.onNavigate("inventory")
+      capturedDashboardProps!.onNavigate("inventory")
     })
     expect(screen.getByTestId("mock-inventory-view")).toBeInTheDocument()
   })

@@ -83,7 +83,7 @@ describe("TravelExplorations", () => {
       return { data: [] }
     })
     ;(reactQuery.useMutation as ReturnType<typeof vi.fn>).mockReturnValue({
-      mutate: vi.fn((variables, options) => {
+      mutate: vi.fn((_variables, options) => {
         if (options && options.onSuccess) {
           options.onSuccess()
         }

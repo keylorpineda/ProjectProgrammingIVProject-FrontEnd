@@ -119,7 +119,7 @@ describe("Admin → CampSelector", () => {
     const user = userEvent.setup()
     renderSelector()
     const select = (await screen.findByRole("combobox")) as HTMLSelectElement
-    await user.selectOptions(select, adminUser.camp_id)
+    await user.selectOptions(select, adminUser.camp_id!)
     expect(mockedSwitchCamp).not.toHaveBeenCalled()
   })
 
