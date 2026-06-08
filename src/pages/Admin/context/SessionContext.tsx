@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react"
 
 import { useAuth } from "./AuthContext"
 
@@ -20,25 +20,24 @@ const WARNING_SECONDS = 60
 
 export const SessionProvider = ({ children }: { children: ReactNode }) => {
   const { isAuthenticated, logout } = useAuth()
-  const [lastActivity, setLastActivity] = useState<number>(Date.now())
   const [secondsUntilLogout, setSecondsUntilLogout] = useState(MAX_IDLE_SECONDS)
+  // Activity timestamp lives in a ref so high-frequency events (mousemove,
+  // scroll) don't re-render the provider or tear down the countdown interval
+  // on every single event — the interval just reads the ref each tick.
+  const lastActivityRef = useRef<number>(Date.now())
 
   const resetActivity = useCallback(() => {
-    setLastActivity(Date.now())
+    lastActivityRef.current = Date.now()
   }, [])
 
   useEffect(() => {
     if (!isAuthenticated) return undefined
 
-    const handleActivity = () => resetActivity()
-    window.addEventListener("mousemove", handleActivity)
-    window.addEventListener("keydown", handleActivity)
-    window.addEventListener("scroll", handleActivity)
+    const events = ["mousemove", "keydown", "scroll", "pointerdown", "touchstart"] as const
+    events.forEach((event) => window.addEventListener(event, resetActivity, { passive: true }))
 
     return () => {
-      window.removeEventListener("mousemove", handleActivity)
-      window.removeEventListener("keydown", handleActivity)
-      window.removeEventListener("scroll", handleActivity)
+      events.forEach((event) => window.removeEventListener(event, resetActivity))
     }
   }, [isAuthenticated, resetActivity])
 
@@ -46,9 +45,9 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
     if (!isAuthenticated) return undefined
 
     const interval = window.setInterval(() => {
-      const idleSeconds = Math.floor((Date.now() - lastActivity) / 1000)
-      const remaining = MAX_IDLE_SECONDS - idleSeconds
-      setSecondsUntilLogout(Math.max(0, remaining))
+      const idleSeconds = Math.floor((Date.now() - lastActivityRef.current) / 1000)
+      const remaining = Math.max(0, MAX_IDLE_SECONDS - idleSeconds)
+      setSecondsUntilLogout(remaining)
 
       if (remaining <= 0) {
         void logout()
@@ -56,7 +55,7 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
     }, 1000)
 
     return () => window.clearInterval(interval)
-  }, [isAuthenticated, lastActivity, logout])
+  }, [isAuthenticated, logout])
 
   useEffect(() => {
     if (!isAuthenticated) return undefined
@@ -77,12 +76,12 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
 
   const value = useMemo(
     () => ({
-      lastActivity,
+      lastActivity: lastActivityRef.current,
       secondsUntilLogout,
       resetActivity,
       isWarning: secondsUntilLogout <= WARNING_SECONDS,
     }),
-    [lastActivity, secondsUntilLogout, resetActivity],
+    [secondsUntilLogout, resetActivity],
   )
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>

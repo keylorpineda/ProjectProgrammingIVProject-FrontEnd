@@ -803,417 +803,413 @@ export default function AdmissionsBook() {
             </div>
           </div>
 
-          <AnimatePresence mode="wait" custom={turnDirection === "next" ? 1 : -1}>
-            {detailData ? (
-              <motion.div
-                key={detailData.id + (showingProcessed ? "-processed" : "-review")}
-                custom={turnDirection === "next" ? 1 : -1}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
-                className="portfolio-spread"
-              >
-                <div className="portfolio-page left-page">
-                  <div className="binder-header">PERFIL DE INTELIGENCIA</div>
-                  <div className="profile-photo">
-                    <div className="photo-placeholder">
-                      <svg viewBox="0 0 24 24" fill="#000" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z" />
-                      </svg>
-                    </div>
+          {/* The physical page-turn (CSS flip) is the transition. The content
+              swap is instant and happens while the flip overlay covers the
+              spread, so no opacity cross-fade is needed — a fade here finished
+              after the flip lifted, which read as a flicker on every turn. */}
+          {detailData ? (
+            <div
+              key={detailData.id + (showingProcessed ? "-processed" : "-review")}
+              className="portfolio-spread"
+            >
+              <div className="portfolio-page left-page">
+                <div className="binder-header">PERFIL DE INTELIGENCIA</div>
+                <div className="profile-photo">
+                  <div className="photo-placeholder">
+                    <svg viewBox="0 0 24 24" fill="#000" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z" />
+                    </svg>
                   </div>
-                  <div className="form-field">
-                    <span>EXPEDIENTE:</span> <span>{detailData.fileNumber}</span>
-                  </div>
-                  <div className="form-field">
-                    <span>NOMBRE:</span> <span>{detailData.applicantName}</span>
-                  </div>
-                  <div className="form-field">
-                    <span>FECHA:</span> <span>{detailData.date}</span>
-                  </div>
-                  <div className="form-field">
-                    <span>NOTAS:</span>
-                    <span style={{ fontFamily: "var(--font-marker)" }}>
-                      {detailData.appearanceNotes}
-                    </span>
-                  </div>
-                  <div className="form-field">
-                    <span>BIOMETRÍA:</span>
-                    <span className={detailData.fingerprintsScanned ? "biometrics-ok" : ""}>
-                      {detailData.fingerprintsScanned ? "VERIFICADO" : "PENDIENTE"}
-                    </span>
-                  </div>
-                  <div className="form-field">
-                    <span>CAMPAMENTO:</span>
-                    <span style={{ fontWeight: "bold" }}>
-                      {camps.find((c) => String(c.id) === String(detailData.campId))?.name ??
-                        `BASE #${detailData.campId || "?"}`}
-                    </span>
-                  </div>
+                </div>
+                <div className="form-field">
+                  <span>EXPEDIENTE:</span> <span>{detailData.fileNumber}</span>
+                </div>
+                <div className="form-field">
+                  <span>NOMBRE:</span> <span>{detailData.applicantName}</span>
+                </div>
+                <div className="form-field">
+                  <span>FECHA:</span> <span>{detailData.date}</span>
+                </div>
+                <div className="form-field">
+                  <span>NOTAS:</span>
+                  <span style={{ fontFamily: "var(--font-marker)" }}>
+                    {detailData.appearanceNotes}
+                  </span>
+                </div>
+                <div className="form-field">
+                  <span>BIOMETRÍA:</span>
+                  <span className={detailData.fingerprintsScanned ? "biometrics-ok" : ""}>
+                    {detailData.fingerprintsScanned ? "VERIFICADO" : "PENDIENTE"}
+                  </span>
+                </div>
+                <div className="form-field">
+                  <span>CAMPAMENTO:</span>
+                  <span style={{ fontWeight: "bold" }}>
+                    {camps.find((c) => String(c.id) === String(detailData.campId))?.name ??
+                      `BASE #${detailData.campId || "?"}`}
+                  </span>
+                </div>
 
-                  {decision ? (
+                {decision ? (
+                  <div
+                    className="decision-stamp-overlay"
+                    style={{
+                      color: decision === "ACCEPT" ? "var(--accent-mil)" : "var(--accent-critical)",
+                      borderColor:
+                        decision === "ACCEPT" ? "var(--accent-mil)" : "var(--accent-critical)",
+                    }}
+                  >
+                    {decision === "ACCEPT" ? "ACEPTADO" : "RECHAZADO"}
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="portfolio-page right-page" style={{ padding: "20px 30px" }}>
+                {!showingProcessed ? (
+                  <>
+                    <div className="binder-header" style={{ marginBottom: "10px" }}>
+                      REVISIÓN DE IA
+                    </div>
+
+                    {/* Contenedor escroleable para que los botones nunca se escondan */}
+                    <div
+                      style={{
+                        flex: 1,
+                        overflowY: "auto",
+                        paddingRight: "10px",
+                        marginBottom: "10px",
+                      }}
+                      className="scrollbar-thin"
+                    >
+                      <div className="ai-evaluation-section">
+                        <div className="form-field">
+                          <span>SCORE IA:</span>
+                          <span
+                            style={{
+                              color:
+                                detailData.aiScore >= 80
+                                  ? "var(--accent-mil)"
+                                  : "var(--accent-critical)",
+                              fontSize: "1.2em",
+                            }}
+                          >
+                            {detailData.aiScore}/100
+                          </span>
+                        </div>
+                        <div className="form-field">
+                          <span>SUGERENCIA:</span>
+                          <span>
+                            {detailData.suggestedDecision === "ACCEPT" ? "ACEPTAR" : "RECHAZAR"}
+                          </span>
+                        </div>
+                        <div
+                          className="form-field"
+                          style={{ display: "flex", flexDirection: "column" }}
+                        >
+                          <div style={{ marginBottom: "5px" }}>ANÁLISIS:</div>
+                          <span
+                            style={{
+                              fontFamily: "var(--font-typewriter)",
+                              fontSize: "0.95em",
+                              lineHeight: "1.3",
+                            }}
+                          >
+                            {formatAiAnalysis(detailData.aiAnalysis)}
+                          </span>
+                        </div>
+                        <div className="form-field">
+                          <span>REGLAS:</span>
+                          <ul
+                            style={{
+                              fontSize: "0.9em",
+                              paddingLeft: "20px",
+                              fontFamily: "var(--font-mono)",
+                            }}
+                          >
+                            {detailData.rulesApplied.map((rule) => (
+                              <li key={rule}>
+                                {rule === "CRITICAL_ROLE_NEEDED"
+                                  ? "ROL_CRÍTICO_REQUERIDO"
+                                  : rule === "HEALTH_SCORE_OK"
+                                    ? "ESTRUCTURA_SALUD_OK"
+                                    : rule}
+                              </li>
+                            ))}
+                            {detailData.rulesApplied.length === 0 ? <li>Ninguna</li> : null}
+                          </ul>
+                        </div>
+                      </div>
+
+                      <div className="binder-header" style={{ marginTop: "12px" }}>
+                        RESOLUCIÓN OFICIAL
+                      </div>
+
+                      <div className="form-field comments-field" style={{ marginTop: "10px" }}>
+                        <label
+                          htmlFor="field-912"
+                          style={{ display: "block", marginBottom: "5px" }}
+                        >
+                          COMENTARIOS (OPCIONAL):
+                        </label>
+                        <textarea
+                          id="field-912"
+                          className="vintage-input"
+                          value={adminNotes}
+                          onChange={(event) => setAdminNotes(event.target.value)}
+                          placeholder="Escriba observaciones..."
+                          style={{ width: "100%", height: "48px", resize: "none" }}
+                        />
+                      </div>
+                    </div>
+
+                    {decisionError && (
+                      <div
+                        style={{
+                          background: "rgba(156,39,32,0.12)",
+                          border: "1px solid #9c2720",
+                          color: "#9c2720",
+                          fontFamily: "var(--font-mono)",
+                          fontSize: "0.7rem",
+                          padding: "6px 10px",
+                          marginBottom: "8px",
+                          borderRadius: "3px",
+                        }}
+                      >
+                        ⚠ {decisionError}
+                      </div>
+                    )}
+                    <div className="binder-footer decision-footer">
+                      <StampButton
+                        label="RECHAZAR"
+                        type="reject"
+                        onClick={handleReject}
+                        disabled={!!decision || isProcessing}
+                      />
+                      <StampButton
+                        label="ACEPTAR"
+                        type="accept"
+                        onClick={handleAcceptClick}
+                        disabled={!!decision || isProcessing}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <div
+                    className="processed-view"
+                    style={{
+                      position: "relative",
+                      height: "100%",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      paddingTop: "50px",
+                    }}
+                  >
+                    <div className="binder-header" style={{ width: "100%" }}>
+                      RESULTADO
+                    </div>
+
                     <div
                       className="decision-stamp-overlay"
                       style={{
-                        color:
-                          decision === "ACCEPT" ? "var(--accent-mil)" : "var(--accent-critical)",
-                        borderColor:
-                          decision === "ACCEPT" ? "var(--accent-mil)" : "var(--accent-critical)",
+                        top: "30%",
+                        left: "10%",
+                        transform: "rotate(10deg)",
+                        color: "var(--accent-mil)",
+                        borderColor: "var(--accent-mil)",
                       }}
                     >
-                      {decision === "ACCEPT" ? "ACEPTADO" : "RECHAZADO"}
+                      PROCESADO
                     </div>
-                  ) : null}
-                </div>
 
-                <div className="portfolio-page right-page" style={{ padding: "20px 30px" }}>
-                  {!showingProcessed ? (
-                    <>
-                      <div className="binder-header" style={{ marginBottom: "10px" }}>
-                        REVISIÓN DE IA
-                      </div>
-
-                      {/* Contenedor escroleable para que los botones nunca se escondan */}
+                    {!accountDone ? (
                       <div
                         style={{
-                          flex: 1,
-                          overflowY: "auto",
-                          paddingRight: "10px",
-                          marginBottom: "10px",
-                        }}
-                        className="scrollbar-thin"
-                      >
-                        <div className="ai-evaluation-section">
-                          <div className="form-field">
-                            <span>SCORE IA:</span>
-                            <span
-                              style={{
-                                color:
-                                  detailData.aiScore >= 80
-                                    ? "var(--accent-mil)"
-                                    : "var(--accent-critical)",
-                                fontSize: "1.2em",
-                              }}
-                            >
-                              {detailData.aiScore}/100
-                            </span>
-                          </div>
-                          <div className="form-field">
-                            <span>SUGERENCIA:</span>
-                            <span>
-                              {detailData.suggestedDecision === "ACCEPT" ? "ACEPTAR" : "RECHAZAR"}
-                            </span>
-                          </div>
-                          <div
-                            className="form-field"
-                            style={{ display: "flex", flexDirection: "column" }}
-                          >
-                            <div style={{ marginBottom: "5px" }}>ANÁLISIS:</div>
-                            <span
-                              style={{
-                                fontFamily: "var(--font-typewriter)",
-                                fontSize: "0.95em",
-                                lineHeight: "1.3",
-                              }}
-                            >
-                              {formatAiAnalysis(detailData.aiAnalysis)}
-                            </span>
-                          </div>
-                          <div className="form-field">
-                            <span>REGLAS:</span>
-                            <ul
-                              style={{
-                                fontSize: "0.9em",
-                                paddingLeft: "20px",
-                                fontFamily: "var(--font-mono)",
-                              }}
-                            >
-                              {detailData.rulesApplied.map((rule) => (
-                                <li key={rule}>
-                                  {rule === "CRITICAL_ROLE_NEEDED"
-                                    ? "ROL_CRÍTICO_REQUERIDO"
-                                    : rule === "HEALTH_SCORE_OK"
-                                      ? "ESTRUCTURA_SALUD_OK"
-                                      : rule}
-                                </li>
-                              ))}
-                              {detailData.rulesApplied.length === 0 ? <li>Ninguna</li> : null}
-                            </ul>
-                          </div>
-                        </div>
-
-                        <div className="binder-header" style={{ marginTop: "12px" }}>
-                          RESOLUCIÓN OFICIAL
-                        </div>
-
-                        <div className="form-field comments-field" style={{ marginTop: "10px" }}>
-                          <label
-                            htmlFor="field-912"
-                            style={{ display: "block", marginBottom: "5px" }}
-                          >
-                            COMENTARIOS (OPCIONAL):
-                          </label>
-                          <textarea
-                            id="field-912"
-                            className="vintage-input"
-                            value={adminNotes}
-                            onChange={(event) => setAdminNotes(event.target.value)}
-                            placeholder="Escriba observaciones..."
-                            style={{ width: "100%", height: "48px", resize: "none" }}
-                          />
-                        </div>
-                      </div>
-
-                      {decisionError && (
-                        <div
-                          style={{
-                            background: "rgba(156,39,32,0.12)",
-                            border: "1px solid #9c2720",
-                            color: "#9c2720",
-                            fontFamily: "var(--font-mono)",
-                            fontSize: "0.7rem",
-                            padding: "6px 10px",
-                            marginBottom: "8px",
-                            borderRadius: "3px",
-                          }}
-                        >
-                          ⚠ {decisionError}
-                        </div>
-                      )}
-                      <div className="binder-footer decision-footer">
-                        <StampButton
-                          label="RECHAZAR"
-                          type="reject"
-                          onClick={handleReject}
-                          disabled={!!decision || isProcessing}
-                        />
-                        <StampButton
-                          label="ACEPTAR"
-                          type="accept"
-                          onClick={handleAcceptClick}
-                          disabled={!!decision || isProcessing}
-                        />
-                      </div>
-                    </>
-                  ) : (
-                    <div
-                      className="processed-view"
-                      style={{
-                        position: "relative",
-                        height: "100%",
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        paddingTop: "50px",
-                      }}
-                    >
-                      <div className="binder-header" style={{ width: "100%" }}>
-                        RESULTADO
-                      </div>
-
-                      <div
-                        className="decision-stamp-overlay"
-                        style={{
-                          top: "30%",
-                          left: "10%",
-                          transform: "rotate(10deg)",
-                          color: "var(--accent-mil)",
-                          borderColor: "var(--accent-mil)",
+                          width: "100%",
+                          marginTop: "60px",
+                          fontFamily: "var(--font-mono)",
                         }}
                       >
-                        PROCESADO
-                      </div>
-
-                      {!accountDone ? (
-                        <div
+                        <p
                           style={{
-                            width: "100%",
-                            marginTop: "60px",
-                            fontFamily: "var(--font-mono)",
+                            fontSize: "0.8rem",
+                            color: "#444",
+                            marginBottom: "16px",
+                            textAlign: "center",
                           }}
                         >
-                          <p
-                            style={{
-                              fontSize: "0.8rem",
-                              color: "#444",
-                              marginBottom: "16px",
-                              textAlign: "center",
-                            }}
-                          >
-                            CREAR CUENTA DE ACCESO Y ENVIAR CREDENCIALES AL CORREO REGISTRADO
-                          </p>
-                          {detailData.contactEmail ? (
-                            <>
-                              <div style={{ marginBottom: "12px" }}>
-                                <div
-                                  style={{
-                                    display: "block",
-                                    fontSize: "0.7rem",
-                                    fontWeight: "bold",
-                                    marginBottom: "4px",
-                                    color: "#333",
-                                  }}
-                                >
-                                  CORREO DESTINO
-                                </div>
-                                <div
-                                  style={{
-                                    background: "#e8e0d4",
-                                    border: "1px solid #bbb",
-                                    padding: "6px 10px",
-                                    fontSize: "0.8rem",
-                                    color: "#555",
-                                  }}
-                                >
-                                  {detailData.contactEmail}
-                                </div>
-                              </div>
-                              <div style={{ marginBottom: "12px" }}>
-                                <div
-                                  style={{
-                                    display: "block",
-                                    fontSize: "0.7rem",
-                                    fontWeight: "bold",
-                                    marginBottom: "4px",
-                                    color: "#333",
-                                  }}
-                                >
-                                  NOMBRE DE USUARIO
-                                </div>
-                                <input
-                                  className="vintage-input"
-                                  value={accountUsername}
-                                  onChange={(e) => setAccountUsername(e.target.value)}
-                                  style={{
-                                    width: "100%",
-                                    boxSizing: "border-box",
-                                    fontSize: "0.85rem",
-                                  }}
-                                  maxLength={30}
-                                />
-                              </div>
-                              {accountError && (
-                                <div
-                                  style={{
-                                    color: "#9c2720",
-                                    fontSize: "0.7rem",
-                                    marginBottom: "10px",
-                                  }}
-                                >
-                                  ⚠ {accountError}
-                                </div>
-                              )}
+                          CREAR CUENTA DE ACCESO Y ENVIAR CREDENCIALES AL CORREO REGISTRADO
+                        </p>
+                        {detailData.contactEmail ? (
+                          <>
+                            <div style={{ marginBottom: "12px" }}>
                               <div
-                                className="binder-footer"
                                 style={{
-                                  position: "static",
-                                  marginTop: "16px",
-                                  gap: "12px",
-                                  flexDirection: "column",
+                                  display: "block",
+                                  fontSize: "0.7rem",
+                                  fontWeight: "bold",
+                                  marginBottom: "4px",
+                                  color: "#333",
                                 }}
                               >
-                                <button
-                                  className="book-archive-btn"
-                                  onClick={() => void handleCreateAccount()}
-                                  disabled={isCreatingAccount}
-                                >
-                                  {isCreatingAccount
-                                    ? "CREANDO CUENTA..."
-                                    : "CREAR CUENTA Y ENVIAR EMAIL"}
-                                </button>
-                                <button
-                                  className="book-archive-btn book-archive-btn--secondary"
-                                  onClick={archiveAdmission}
-                                >
-                                  ARCHIVAR SIN CUENTA
-                                </button>
+                                CORREO DESTINO
                               </div>
-                            </>
-                          ) : (
-                            <>
-                              <p
+                              <div
+                                style={{
+                                  background: "#e8e0d4",
+                                  border: "1px solid #bbb",
+                                  padding: "6px 10px",
+                                  fontSize: "0.8rem",
+                                  color: "#555",
+                                }}
+                              >
+                                {detailData.contactEmail}
+                              </div>
+                            </div>
+                            <div style={{ marginBottom: "12px" }}>
+                              <div
+                                style={{
+                                  display: "block",
+                                  fontSize: "0.7rem",
+                                  fontWeight: "bold",
+                                  marginBottom: "4px",
+                                  color: "#333",
+                                }}
+                              >
+                                NOMBRE DE USUARIO
+                              </div>
+                              <input
+                                className="vintage-input"
+                                value={accountUsername}
+                                onChange={(e) => setAccountUsername(e.target.value)}
+                                style={{
+                                  width: "100%",
+                                  boxSizing: "border-box",
+                                  fontSize: "0.85rem",
+                                }}
+                                maxLength={30}
+                              />
+                            </div>
+                            {accountError && (
+                              <div
                                 style={{
                                   color: "#9c2720",
-                                  fontSize: "0.75rem",
-                                  textAlign: "center",
-                                  marginBottom: "16px",
+                                  fontSize: "0.7rem",
+                                  marginBottom: "10px",
                                 }}
                               >
-                                ⚠ Sin correo registrado — no se puede crear cuenta automáticamente.
-                              </p>
-                              <div
-                                className="binder-footer"
-                                style={{
-                                  position: "static",
-                                  marginTop: "8px",
-                                  justifyContent: "center",
-                                }}
-                              >
-                                <button className="book-archive-btn" onClick={archiveAdmission}>
-                                  ARCHIVAR EXPEDIENTE
-                                </button>
+                                ⚠ {accountError}
                               </div>
-                            </>
-                          )}
-                        </div>
-                      ) : (
+                            )}
+                            <div
+                              className="binder-footer"
+                              style={{
+                                position: "static",
+                                marginTop: "16px",
+                                gap: "12px",
+                                flexDirection: "column",
+                              }}
+                            >
+                              <button
+                                className="book-archive-btn"
+                                onClick={() => void handleCreateAccount()}
+                                disabled={isCreatingAccount}
+                              >
+                                {isCreatingAccount
+                                  ? "CREANDO CUENTA..."
+                                  : "CREAR CUENTA Y ENVIAR EMAIL"}
+                              </button>
+                              <button
+                                className="book-archive-btn book-archive-btn--secondary"
+                                onClick={archiveAdmission}
+                              >
+                                ARCHIVAR SIN CUENTA
+                              </button>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <p
+                              style={{
+                                color: "#9c2720",
+                                fontSize: "0.75rem",
+                                textAlign: "center",
+                                marginBottom: "16px",
+                              }}
+                            >
+                              ⚠ Sin correo registrado — no se puede crear cuenta automáticamente.
+                            </p>
+                            <div
+                              className="binder-footer"
+                              style={{
+                                position: "static",
+                                marginTop: "8px",
+                                justifyContent: "center",
+                              }}
+                            >
+                              <button className="book-archive-btn" onClick={archiveAdmission}>
+                                ARCHIVAR EXPEDIENTE
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    ) : (
+                      <div
+                        style={{
+                          marginTop: "60px",
+                          textAlign: "center",
+                          fontFamily: "var(--font-mono)",
+                        }}
+                      >
                         <div
                           style={{
-                            marginTop: "60px",
-                            textAlign: "center",
-                            fontFamily: "var(--font-mono)",
+                            fontSize: "2rem",
+                            color: accountError ? "var(--accent-warning)" : "var(--accent-mil)",
+                            marginBottom: "12px",
                           }}
                         >
-                          <div
+                          {accountError ? "⚠" : "✓"}
+                        </div>
+                        <p style={{ fontWeight: "bold", color: "#333", marginBottom: "6px" }}>
+                          CUENTA CREADA EXITOSAMENTE
+                        </p>
+                        {accountError ? (
+                          <p
                             style={{
-                              fontSize: "2rem",
-                              color: accountError ? "var(--accent-warning)" : "var(--accent-mil)",
+                              fontSize: "0.75rem",
+                              color: "#9c2720",
+                              border: "1px solid #9c2720",
+                              padding: "8px",
                               marginBottom: "12px",
                             }}
                           >
-                            {accountError ? "⚠" : "✓"}
-                          </div>
-                          <p style={{ fontWeight: "bold", color: "#333", marginBottom: "6px" }}>
-                            CUENTA CREADA EXITOSAMENTE
+                            {accountError}
                           </p>
-                          {accountError ? (
-                            <p
-                              style={{
-                                fontSize: "0.75rem",
-                                color: "#9c2720",
-                                border: "1px solid #9c2720",
-                                padding: "8px",
-                                marginBottom: "12px",
-                              }}
-                            >
-                              {accountError}
-                            </p>
-                          ) : (
-                            <p style={{ fontSize: "0.75rem", color: "#666" }}>
-                              Se enviaron las credenciales a {detailData.contactEmail}
-                            </p>
-                          )}
-                          <div
-                            className="binder-footer"
-                            style={{
-                              position: "static",
-                              marginTop: "20px",
-                              justifyContent: "center",
-                            }}
-                          >
-                            <button className="book-archive-btn" onClick={archiveAdmission}>
-                              ARCHIVAR Y CONTINUAR
-                            </button>
-                          </div>
+                        ) : (
+                          <p style={{ fontSize: "0.75rem", color: "#666" }}>
+                            Se enviaron las credenciales a {detailData.contactEmail}
+                          </p>
+                        )}
+                        <div
+                          className="binder-footer"
+                          style={{
+                            position: "static",
+                            marginTop: "20px",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <button className="book-archive-btn" onClick={archiveAdmission}>
+                            ARCHIVAR Y CONTINUAR
+                          </button>
                         </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </motion.div>
-            ) : null}
-          </AnimatePresence>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : null}
         </div>
       </div>
 
