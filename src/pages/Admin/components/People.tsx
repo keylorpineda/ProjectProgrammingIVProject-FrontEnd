@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, keepPreviousData } from "@tanstack/react-query"
 import { AnimatePresence, motion } from "framer-motion"
 import { useMemo, useState } from "react"
 
@@ -243,6 +243,9 @@ export default function People() {
     },
     enabled: !!activeCampId,
     staleTime: 1000 * 60 * 2,
+    // Keep the current page visible while the next one loads instead of
+    // blanking the list on every page change.
+    placeholderData: keepPreviousData,
   })
 
   const { data: professionsData } = useQuery({

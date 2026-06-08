@@ -8,7 +8,15 @@ import "./styles/index.css"
 import "./styles/worker-components.css"
 import "./styles/worker-theme.css"
 
-const queryClient = new QueryClient()
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 2,
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+})
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
