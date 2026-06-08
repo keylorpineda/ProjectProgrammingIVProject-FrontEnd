@@ -19,7 +19,13 @@ import { useState, useMemo, useEffect } from "react"
 import { useLocation } from "react-router-dom"
 import { io } from "socket.io-client"
 
-import type { IntercampRequest, Person, InventoryItem } from "@/types/api.types"
+import type {
+  IntercampRequest,
+  Person,
+  InventoryItem,
+  RequestResourceDetail,
+  RequestPersonDetail,
+} from "@/types/api.types"
 
 import { getCamps } from "@/features/camps/services/camps.service"
 import { getInventory } from "@/features/inventory/services/inventory.service"
@@ -193,8 +199,9 @@ export default function TravelTransfers() {
       resetForm()
       setIsNewModalOpen(false)
     },
-    onError: (error: any) => {
-      const msg = error?.response?.data?.message
+    onError: (error: unknown) => {
+      const msg = (error as { response?: { data?: { message?: string | string[] } } })?.response
+        ?.data?.message
       if (Array.isArray(msg) && msg.length > 0) {
         setFormError(msg[0])
       } else if (typeof msg === "string") {
@@ -574,7 +581,7 @@ export default function TravelTransfers() {
                   <div className="flex items-center gap-3">
                     <Truck className="h-5 w-5 text-[#df8120] shrink-0" />
                     <div>
-                      <span className="text-[10px] font-mono text-white/30 uppercase tracking-widest font-black block mb-0.5">
+                      <span className="text-[10px] font-mono text-white/70 uppercase tracking-widest font-black block mb-0.5">
                         ORDEN DE TRASLADO
                       </span>
                       <h3 className="text-sm font-typewriter font-black text-white uppercase leading-none tracking-wider">
@@ -600,174 +607,268 @@ export default function TravelTransfers() {
 
                 {/* Paper sheet details */}
                 <div className="flex-1 p-5 flex flex-col overflow-hidden items-center justify-center relative bg-black/25">
-                  <div className="tm-paper tm-paper-texture w-full h-full max-w-2xl relative overflow-hidden p-8 flex flex-col shadow-2xl justify-between">
-                    {/* Document Header Seal */}
-                    <div className="absolute top-8 right-8 flex flex-col items-center rotate-6 select-none opacity-40">
-                      <div className="border-4 border-ink p-1 mb-1">
-                        <span className="text-sm font-black font-mono px-2">MANIFIESTO</span>
+                  <div className="tm-paper tm-paper-texture w-full h-full relative overflow-hidden p-8 flex flex-col shadow-2xl justify-between">
+                    {/* Sello MANIFIESTO */}
+                    <div className="absolute top-10 right-10 flex flex-col items-center rotate-12 select-none opacity-15 pointer-events-none z-10">
+                      <div className="border-4 border-ink p-1 mb-0.5">
+                        <span className="text-base font-black font-mono px-2 tracking-widest">
+                          MANIFIESTO
+                        </span>
                       </div>
-                      <span className="text-[10px] font-mono font-black italic text-ink">
-                        ENLACE ENTRE CAMPAMENTOS
+                      <span className="text-[9px] font-mono font-black italic text-ink">
+                        ENLACE ENTRE BASES
                       </span>
                     </div>
 
-                    <div className="flex-1 flex flex-col gap-6 min-height-0 overflow-y-auto pr-1 custom-scrollbar">
-                      {/* Section 1: Route & Type */}
-                      <div className="border-b-2 border-dashed border-ink/20 pb-2.5">
-                        <span className="text-[10px] font-mono text-ink-soft uppercase tracking-widest font-black block mb-1">
-                          HOJA DE ENRUTAMIENTO
+                    {/* ── Header: Ruta + Estado ── */}
+                    <div className="flex gap-10 px-10 py-8 border-b-2 border-dashed border-ink/20">
+                      {/* Icono */}
+                      <div className="shrink-0 flex flex-col items-center gap-4">
+                        <div className="w-28 h-28 border-2 border-ink/40 bg-ink/4 flex items-center justify-center shadow-md">
+                          <Truck className="w-14 h-14 text-ink/60" />
+                        </div>
+                        <span
+                          className={`text-xs font-mono font-black uppercase px-4 py-1.5 border rounded-sm tracking-wider ${
+                            selectedTransfer.status === "in_transit" ||
+                            selectedTransfer.status === "approved"
+                              ? "text-[#4c6351] border-[#4c6351]/40 bg-[#4c6351]/8"
+                              : selectedTransfer.status === "pending"
+                                ? "text-[#c27c2f] border-[#c27c2f]/40 bg-[#c27c2f]/8"
+                                : selectedTransfer.status === "completed"
+                                  ? "text-ink-soft border-ink/20 bg-ink/4"
+                                  : "text-[#9c2720] border-[#9c2720]/40 bg-[#9c2720]/8"
+                          }`}
+                        >
+                          {getTransferStatusLabel(selectedTransfer.status).toUpperCase()}
                         </span>
-                        <h4 className="font-typewriter text-base font-black text-ink uppercase flex items-center gap-3">
-                          BASE: {selectedTransfer.camp_origin_id} ➔{" "}
-                          {selectedTransfer.camp_destination_id}
-                        </h4>
                       </div>
 
-                      {/* Section 2: Info Grid */}
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-[#f5ecd7] p-3 border border-[#d4c4a8]/50 rounded-sm">
-                          <span className="text-[9px] font-mono text-ink-soft uppercase tracking-wider block mb-1 font-bold">
-                            Tipo de Carga
-                          </span>
-                          <span className="text-xs font-mono font-black text-ink uppercase">
+                      {/* Datos de ruta */}
+                      <div className="flex-1 min-w-0 flex flex-col justify-center">
+                        <span className="text-[11px] font-mono text-ink-soft/80 uppercase tracking-[0.2em] font-black block mb-2">
+                          ORDEN DE TRASLADO LOGÍSTICO
+                        </span>
+                        <h2 className="font-typewriter text-3xl font-black text-ink uppercase leading-none mb-4 flex items-center gap-4">
+                          BASE {selectedTransfer.camp_origin_id}
+                          <ArrowLeftRight className="h-6 w-6 text-ink/60 shrink-0" />
+                          BASE {selectedTransfer.camp_destination_id}
+                        </h2>
+                        <div className="flex items-center gap-3 mb-8">
+                          <span className="px-3 py-1 bg-ink/8 border border-ink/15 text-ink text-xs font-mono font-black rounded-sm">
                             {getTransferTypeBadge(selectedTransfer.type)}
                           </span>
-                        </div>
-                        <div className="bg-[#f5ecd7] p-3 border border-[#d4c4a8]/50 rounded-sm">
-                          <span className="text-[9px] font-mono text-ink-soft uppercase tracking-wider block mb-1 font-bold">
-                            Días Estimados de Viaje
-                          </span>
-                          <span className="text-xs font-mono font-black text-ink">
-                            {selectedTransfer.travel_days} DÍAS
-                          </span>
-                        </div>
-                        <div className="bg-[#f5ecd7] p-3 border border-[#d4c4a8]/50 rounded-sm">
-                          <span className="text-[9px] font-mono text-ink-soft uppercase tracking-wider block mb-1 font-bold">
-                            Solicitud Registrada
-                          </span>
-                          <span className="text-xs font-mono font-black text-ink">
-                            {new Date(selectedTransfer.created_at).toLocaleDateString()}
-                          </span>
-                        </div>
-                        <div className="bg-[#f5ecd7] p-3 border border-[#d4c4a8]/50 rounded-sm">
-                          <span className="text-[9px] font-mono text-ink-soft uppercase tracking-wider block mb-1 font-bold">
-                            Última Actualización
-                          </span>
-                          <span className="text-xs font-mono font-black text-ink">
-                            {new Date(selectedTransfer.updated_at).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Section 3: Notes */}
-                      {selectedTransfer.notes && (
-                        <div className="bg-[#f5ecd7] p-3.5 border border-[#d4c4a8]/50 rounded-sm">
-                          <span className="text-[9px] font-mono text-ink-soft uppercase tracking-wider block mb-1 font-bold">
-                            Notas del Solicitante
-                          </span>
-                          <p className="text-xs font-mono text-ink/80 leading-relaxed">
-                            {selectedTransfer.notes}
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Section 4: Items Detail (Carga de Recursos / Personas) */}
-                      <div className="space-y-4">
-                        {/* Resource list inside transfer request */}
-                        {/* Resource list inside transfer request */}
-                        {selectedTransfer.type !== "people" &&
-                          selectedTransfer.resourceDetails &&
-                          selectedTransfer.resourceDetails.length > 0 && (
-                            <div className="space-y-2">
-                              <h5 className="text-[10px] font-mono font-black text-ink uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                                <Package className="h-3.5 w-3.5 text-ink-soft" />
-                                Suministros Solicitados
-                              </h5>
-                              <div className="space-y-2">
-                                {selectedTransfer.resourceDetails.map((rd: any) => (
-                                  <div
-                                    key={rd.resource_id}
-                                    className="flex justify-between items-center bg-[#f5ecd7] px-3.5 py-2 border border-[#d4c4a8]/50 rounded-sm"
-                                  >
-                                    <span className="text-xs font-mono font-bold text-ink uppercase">
-                                      {rd.resource?.name || `Recurso #${rd.resource_id}`}
-                                    </span>
-                                    <span className="text-xs font-mono font-black text-[#df8120] bg-[#df8120]/10 border border-[#df8120]/25 px-2 py-0.5 rounded-sm">
-                                      {rd.requested_quantity} {rd.resource?.unit || "uds"}
-                                    </span>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
+                          {String(selectedTransfer.camp_origin_id) === String(campId) ? (
+                            <span className="px-3 py-1 bg-[#c27c2f]/10 border border-[#c27c2f]/25 text-[#c27c2f] text-xs font-mono font-black rounded-sm">
+                              ↑ ENVIADO
+                            </span>
+                          ) : (
+                            <span className="px-3 py-1 bg-[#4c6351]/10 border border-[#4c6351]/25 text-[#4c6351] text-xs font-mono font-black rounded-sm">
+                              ↓ RECIBIDO
+                            </span>
                           )}
+                        </div>
 
-                        {/* Person list inside transfer request */}
-                        {selectedTransfer.type !== "resources" &&
-                          selectedTransfer.personDetails &&
-                          selectedTransfer.personDetails.length > 0 && (
-                            <div className="space-y-2">
-                              <h5 className="text-[10px] font-mono font-black text-ink uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                                <Users className="h-3.5 w-3.5 text-ink-soft" />
-                                Personal Asignado
-                              </h5>
-                              <div className="space-y-2">
-                                {selectedTransfer.personDetails.map((pd: any) => (
-                                  <div
-                                    key={pd.person_id}
-                                    className="flex items-center gap-3 bg-[#f5ecd7] p-2.5 border border-[#d4c4a8]/50 rounded-sm"
-                                  >
-                                    <Users className="w-4 h-4 text-ink-soft" />
-                                    <span className="text-xs font-mono font-bold text-ink uppercase">
-                                      {pd.person?.first_name || `Personal #${pd.person_id}`}{" "}
-                                      {pd.person?.last_name || ""}
-                                    </span>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                      </div>
-
-                      {/* Section 5: Approvals */}
-                      <div className="space-y-2.5">
-                        <span className="text-[9px] font-mono text-ink-soft uppercase tracking-wider block font-bold">
-                          Firmas de Autorización
-                        </span>
-                        {selectedTransfer.approvals && selectedTransfer.approvals.length > 0 ? (
-                          <div className="flex flex-col gap-2">
-                            {selectedTransfer.approvals.map((app, i) => (
-                              <div
-                                key={i}
-                                className="flex items-center gap-3 bg-[#f5ecd7] p-2 border border-[#d4c4a8]/50 rounded-sm"
+                        {/* Data fields como tarjetas */}
+                        <div className="grid grid-cols-3 gap-4">
+                          {[
+                            {
+                              label: "REF. Orden",
+                              value: selectedTransfer.id.slice(0, 12).toUpperCase(),
+                              color: "text-ink",
+                              bg: "bg-[#253240]/10 border-[#253240]/20",
+                            },
+                            {
+                              label: "Días de Viaje",
+                              value: `${selectedTransfer.travel_days ?? "—"} DÍAS`,
+                              color: "text-[#253240]",
+                              bg: "bg-[#253240]/10 border-[#253240]/20",
+                            },
+                            {
+                              label: "Fecha Solicitud",
+                              value: new Date(
+                                selectedTransfer.request_date ?? selectedTransfer.created_at,
+                              ).toLocaleDateString(),
+                              color: "text-[#3d5041]",
+                              bg: "bg-[#4c6351]/10 border-[#4c6351]/20",
+                            },
+                            ...(selectedTransfer.departure_date
+                              ? [
+                                  {
+                                    label: "Salida",
+                                    value: new Date(
+                                      selectedTransfer.departure_date,
+                                    ).toLocaleDateString(),
+                                    color: "text-[#b35a12]",
+                                    bg: "bg-[#df8120]/10 border-[#df8120]/20",
+                                  },
+                                ]
+                              : []),
+                            ...(selectedTransfer.arrival_date
+                              ? [
+                                  {
+                                    label: "Llegada Est.",
+                                    value: new Date(
+                                      selectedTransfer.arrival_date,
+                                    ).toLocaleDateString(),
+                                    color: "text-[#b35a12]",
+                                    bg: "bg-[#df8120]/10 border-[#df8120]/20",
+                                  },
+                                ]
+                              : []),
+                            {
+                              label: "Actualización",
+                              value: new Date(selectedTransfer.updated_at).toLocaleDateString(),
+                              color: "text-ink-soft",
+                              bg: "bg-ink/5 border-ink/10",
+                            },
+                          ].map((field) => (
+                            <div
+                              key={field.label}
+                              className={`${field.bg} border rounded-sm px-4 py-3`}
+                            >
+                              <span className="text-[9px] font-mono text-ink-soft uppercase tracking-widest font-black block mb-1.5 leading-none">
+                                {field.label}
+                              </span>
+                              <span
+                                className={`text-sm font-mono font-black ${field.color} leading-tight`}
                               >
-                                <span
-                                  className={`text-[9px] font-mono font-black uppercase px-2 py-0.5 rounded ${
-                                    app.status === "approved"
-                                      ? "bg-[#4c6351]/15 text-[#4c6351]"
-                                      : "bg-red-800/15 text-red-800"
-                                  }`}
-                                >
-                                  {app.status === "approved" ? "APROBADO" : "RECHAZADO"}
+                                {field.value}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* ── Recursos + Personas ── */}
+                    <div className="grid grid-cols-2 border-b border-dashed border-ink/15">
+                      <div className="px-10 py-8 border-r border-dashed border-ink/15">
+                        <h4 className="text-xs font-black text-ink uppercase tracking-[0.15em] mb-5 flex items-center gap-2">
+                          <Package className="h-4 w-4 shrink-0 text-[#c27c2f]" /> Suministros
+                          Solicitados
+                        </h4>
+                        {selectedTransfer.resourceDetails &&
+                        selectedTransfer.resourceDetails.length > 0 ? (
+                          <div className="space-y-3">
+                            {selectedTransfer.resourceDetails.map((rd: RequestResourceDetail) => (
+                              <div
+                                key={rd.resource_id}
+                                className="flex justify-between items-center bg-[#df8120]/5 border border-[#df8120]/20 border-l-4 border-l-[#c27c2f] rounded-sm px-4 py-3"
+                              >
+                                <span className="text-sm font-mono font-bold text-ink uppercase truncate flex-1 leading-snug">
+                                  {rd.resource?.name || `Recurso #${rd.resource_id}`}
                                 </span>
-                                <span className="font-mono text-ink-soft text-xs">
-                                  Por: {app.user?.username || "Sistema"}
+                                <span className="text-sm font-mono font-black text-[#df8120] ml-4 shrink-0 bg-[#df8120]/10 border border-[#df8120]/30 px-3 py-1 rounded-sm">
+                                  {rd.requested_quantity} {rd.resource?.unit || "uds"}
                                 </span>
                               </div>
                             ))}
                           </div>
                         ) : (
-                          <div className="bg-[#f5ecd7]/50 border border-dashed border-ink/20 p-3.5 rounded-sm text-center italic text-xs font-mono text-ink-soft/60 uppercase">
-                            Pendiente de validación por oficial comandante
+                          <p className="font-mono text-sm text-ink-soft/70 uppercase italic leading-relaxed">
+                            Sin suministros registrados en esta orden.
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="px-10 py-8">
+                        <h4 className="text-xs font-black text-ink uppercase tracking-[0.15em] mb-5 flex items-center gap-2">
+                          <Users className="h-4 w-4 shrink-0 text-[#4c6351]" /> Personal Asignado
+                        </h4>
+                        {selectedTransfer.personDetails &&
+                        selectedTransfer.personDetails.length > 0 ? (
+                          <div className="space-y-3">
+                            {selectedTransfer.personDetails.map((pd: RequestPersonDetail) => (
+                              <div
+                                key={pd.person_id}
+                                className="flex items-center justify-between bg-[#4c6351]/5 border border-[#4c6351]/20 border-l-4 border-l-[#4c6351] rounded-sm px-4 py-3"
+                              >
+                                <span className="text-sm font-mono font-bold text-ink uppercase truncate flex-1 leading-snug">
+                                  {pd.person?.first_name || "Personal"}{" "}
+                                  {pd.person?.last_name || `#${pd.person_id}`}
+                                </span>
+                                {pd.is_leader && (
+                                  <span className="text-[10px] font-mono font-black text-white border border-[#3d5041] bg-[#4c6351] px-2 py-0.5 rounded-sm ml-3 shrink-0">
+                                    LÍDER
+                                  </span>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="font-mono text-sm text-ink-soft/70 uppercase italic leading-relaxed">
+                            Sin personal asignado a esta orden.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* ── Notas + Autorizaciones ── */}
+                    <div className="grid grid-cols-2 border-b border-dashed border-ink/15">
+                      <div className="px-10 py-8 border-r border-dashed border-ink/15">
+                        <h4 className="text-xs font-black text-ink-soft uppercase tracking-[0.15em] mb-4">
+                          Notas del Solicitante
+                        </h4>
+                        <div className="p-5 bg-[#e8c870]/20 border border-[#e8c870]/40 rounded-sm min-h-[80px] shadow-sm relative">
+                          <div className="absolute top-2 left-2 w-2 h-2 rounded-full bg-[#c27c2f]/40"></div>
+                          {selectedTransfer.notes ? (
+                            <p className="font-mono text-sm text-[#5a481c] italic leading-[1.8] mt-1 font-bold">
+                              {selectedTransfer.notes}
+                            </p>
+                          ) : (
+                            <p className="font-mono text-xs text-ink-soft/70 uppercase italic leading-relaxed mt-1">
+                              Sin notas registradas en la orden.
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="px-10 py-8">
+                        <h4 className="text-xs font-black text-ink-soft uppercase tracking-[0.15em] mb-4">
+                          Firmas de Autorización
+                        </h4>
+                        {selectedTransfer.approvals && selectedTransfer.approvals.length > 0 ? (
+                          <div className="space-y-3">
+                            {selectedTransfer.approvals.map((app, i) => (
+                              <div
+                                key={i}
+                                className="flex items-center gap-4 bg-ink/4 border border-ink/10 rounded-sm px-4 py-3"
+                              >
+                                <span
+                                  className={`text-xs font-mono font-black uppercase px-3 py-1 rounded-sm shrink-0 ${
+                                    app.status === "approved"
+                                      ? "bg-[#4c6351]/15 text-[#4c6351] border border-[#4c6351]/20"
+                                      : "bg-[#9c2720]/15 text-[#9c2720] border border-[#9c2720]/20"
+                                  }`}
+                                >
+                                  {app.status === "approved" ? "APROBADO" : "RECHAZADO"}
+                                </span>
+                                <span className="font-mono text-sm text-ink-soft/60 leading-snug">
+                                  {app.user?.username || "Sistema"}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="p-5 bg-ink/4 border border-dashed border-ink/12 rounded-sm min-h-[80px] flex items-center justify-center">
+                            <p className="font-mono text-xs text-ink-soft/70 uppercase italic text-center leading-relaxed">
+                              Pendiente de validación
+                              <br />
+                              por oficial comandante
+                            </p>
                           </div>
                         )}
                       </div>
                     </div>
 
-                    {/* Bottom strip details */}
-                    <div className="border-t border-ink/15 pt-3 mt-4 flex justify-between items-center text-ink-soft/70 font-mono text-[9px] uppercase tracking-wider">
+                    {/* ── Footer ── */}
+                    <div className="px-10 py-5 flex justify-between items-center text-ink-soft/70 font-mono text-[10px] uppercase tracking-[0.15em] mt-auto font-black">
                       <span>ORDEN REF-{selectedTransfer.id.slice(0, 8).toUpperCase()}</span>
-                      <span className="border border-dashed border-ink/30 px-2 py-0.5 rotate-1">
-                        SITUACIÓN LOGÍSTICA DE MOVILIDAD
+                      <span>
+                        Emitido: {new Date(selectedTransfer.created_at).toLocaleDateString()}
+                      </span>
+                      <span className="border border-dashed border-ink/30 px-4 py-1.5 rotate-1">
+                        SITUACIÓN LOGÍSTICA · MOVILIDAD
                       </span>
                     </div>
                   </div>
@@ -780,7 +881,7 @@ export default function TravelTransfers() {
                       <button
                         onClick={() => handleCancelTransfer(selectedTransfer.id)}
                         disabled={cancelMutation.isPending}
-                        className="tm-action-btn"
+                        className="tm-action-btn tm-action-btn-danger"
                         style={{ padding: "8px 16px", borderRadius: "4px" }}
                       >
                         <span className="tm-action-label flex items-center gap-2">
@@ -816,8 +917,8 @@ export default function TravelTransfers() {
                   {(selectedTransfer.status === "completed" ||
                     selectedTransfer.status === "rejected" ||
                     selectedTransfer.status === "cancelled") && (
-                    <span className="text-[10px] font-mono text-white/30 uppercase tracking-widest flex items-center gap-1.5 pl-2">
-                      <Archive className="h-3.5 w-3.5 text-white/30" />
+                    <span className="text-[10px] font-mono text-white/60 uppercase tracking-widest flex items-center gap-1.5 pl-2 font-black">
+                      <Archive className="h-3.5 w-3.5 text-white/50" />
                       Traslado archivado en histórico
                     </span>
                   )}
@@ -825,11 +926,11 @@ export default function TravelTransfers() {
               </div>
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center p-12 text-center bg-black/15">
-                <Truck className="h-20 w-20 mb-6 text-[#c27c2f] opacity-20" />
-                <p className="font-typewriter text-2xl text-white/20 font-black uppercase mb-3">
+                <Truck className="h-20 w-20 mb-6 text-[#c27c2f] opacity-50" />
+                <p className="font-typewriter text-2xl text-white/60 font-black uppercase mb-3">
                   Seleccione un Traslado
                 </p>
-                <p className="font-mono text-sm text-white/20 uppercase tracking-widest">
+                <p className="font-mono text-sm text-white/50 uppercase tracking-widest">
                   o cree uno nuevo para comenzar
                 </p>
               </div>
@@ -1124,7 +1225,7 @@ export default function TravelTransfers() {
                       setIsNewModalOpen(false)
                       resetForm()
                     }}
-                    className="tm-op-btn"
+                    className="tm-op-btn tm-op-btn-danger"
                     style={{ padding: "10px 20px" }}
                   >
                     Cancelar

@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { motion, AnimatePresence } from "framer-motion"
+import * as L from "leaflet"
 import {
   Plus,
   Compass,
@@ -10,8 +11,6 @@ import {
   X,
   CheckCircle2,
   AlertCircle,
-  Radio,
-  Target,
   Shield,
   Zap,
   FileText,
@@ -23,7 +22,21 @@ import {
   Package,
 } from "lucide-react"
 import { useState, useMemo, useEffect } from "react"
-import { useLocation } from "react-router-dom"
+import { MapContainer, TileLayer, Marker, Polyline, useMap } from "react-leaflet"
+import "leaflet/dist/leaflet.css"
+
+function FitBounds({ bounds }: { bounds: L.LatLngBoundsExpression }) {
+  const map = useMap()
+  useEffect(() => {
+    if (bounds) {
+      setTimeout(() => {
+        map.invalidateSize()
+        map.fitBounds(bounds, { padding: [20, 20] })
+      }, 100)
+    }
+  }, [map, bounds])
+  return null
+}
 
 import type { Exploration, Person, InventoryItem } from "@/types/api.types"
 import type { ReturnExplorationFormData } from "@/types/travel-comms.types"
@@ -93,7 +106,6 @@ export default function TravelExplorations() {
   const { user } = useAuthStore()
   const queryClient = useQueryClient()
   const baseCampId = user?.camp_id ?? ""
-  const location = useLocation()
 
   // ── Local UI state ───────────────────────────────────────────────────────
   const [search, setSearch] = useState("")
@@ -102,14 +114,6 @@ export default function TravelExplorations() {
   const [isNewModalOpen, setIsNewModalOpen] = useState(false)
   const [isReturnModalOpen, setIsReturnModalOpen] = useState(false)
   const [formError, setFormError] = useState("")
-
-  useEffect(() => {
-    const locState = location.state as { openNewExploration?: boolean } | null
-    if (locState?.openNewExploration) {
-      setIsNewModalOpen(true)
-      window.history.replaceState({}, document.title)
-    }
-  }, [location.state])
 
   // New exploration form state
   const [newName, setNewName] = useState("")
@@ -317,15 +321,15 @@ export default function TravelExplorations() {
       name: newName,
       destination_description: newDestination + coordSuffix,
       departure_date: new Date(newDepartureDate).toISOString(),
-      estimated_days: newEstimatedDays,
-      grace_days: newGraceDays,
+      estimated_days: Number(newEstimatedDays) || 1,
+      grace_days: Number(newGraceDays) || 0,
       persons: newSelectedPersons.map((p) => ({
         person_id: Number(p.person_id),
         is_leader: p.is_leader,
       })),
       resources: newSelectedResources.map((r) => ({
         resource_id: Number(r.resource_id),
-        quantity: r.quantity,
+        quantity: Number(r.quantity),
         flow: "out" as const,
       })),
     })
@@ -715,33 +719,79 @@ export default function TravelExplorations() {
                         </div>
 
                         {/* Compact Visual Map */}
-                        <div className="mt-auto bg-[#faf4e6]/50 p-4 border border-dashed border-ink/20 rounded-sm relative overflow-hidden h-24 flex items-center justify-between">
-                          <div className="absolute top-1/2 left-0 right-0 h-[2px] border-t border-dashed border-ink/10 -translate-y-1/2 mx-12" />
+                        <div className="mt-auto border border-dashed border-ink/20 rounded-sm relative overflow-hidden h-48 flex items-center justify-between z-0">
+                          {(() => {
+                            const destMatch = selectedExp.destination_description?.match(
+                              /\[([\d.-]+),\s*([\d.-]+)\]/,
+                            )
+                            const destLat = destMatch ? parseFloat(destMatch[1]) : null
+                            const destLng = destMatch ? parseFloat(destMatch[2]) : null
+                            const campLat = selectedExp.camp?.latitude ?? 9.934739
+                            const campLng = selectedExp.camp?.longitude ?? -84.087502
+                            const hasCoords = destLat !== null && destLng !== null
 
-                          {(selectedExp.status === "active" ||
-                            selectedExp.status === "in_progress") && (
-                            <motion.div
-                              animate={{ left: ["15%", "85%"] }}
-                              transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                              className="absolute top-1/2 -translate-y-1/2 z-10"
-                            >
-                              <Footprints className="h-4 w-4 text-ink/30 -rotate-90" />
-                            </motion.div>
-                          )}
+                            if (!hasCoords) {
+                              return (
+                                <div className="w-full h-full flex flex-col items-center justify-center bg-[#faf4e6]/50">
+                                  <Footprints className="h-6 w-6 text-ink/30 mb-2" />
+                                  <span className="text-[9px] font-mono text-ink-soft uppercase font-bold">
+                                    Sin coordenadas disponibles
+                                  </span>
+                                </div>
+                              )
+                            }
 
-                          <div className="flex flex-col items-center z-20">
-                            <Radio className="h-5 w-5 text-[#df8120]" />
-                            <span className="text-[8px] font-mono text-ink-soft mt-1 uppercase font-bold">
-                              {baseCampId}
-                            </span>
-                          </div>
+                            const bounds: L.LatLngBoundsExpression = [
+                              [campLat, campLng],
+                              [destLat, destLng],
+                            ]
 
-                          <div className="flex flex-col items-center z-20">
-                            <Target className="h-5 w-5 text-[#9c2720]" />
-                            <span className="text-[8px] font-mono text-ink-soft mt-1 uppercase font-bold max-w-[80px] truncate">
-                              {selectedExp.destination_description?.split(" ")[0]}
-                            </span>
-                          </div>
+                            return (
+                              <MapContainer
+                                center={[(campLat + destLat) / 2, (campLng + destLng) / 2]}
+                                bounds={bounds}
+                                boundsOptions={{ padding: [20, 20] }}
+                                className="w-full h-full"
+                                zoomControl={false}
+                                scrollWheelZoom={false}
+                                dragging={false}
+                                doubleClickZoom={false}
+                                attributionControl={false}
+                                style={{ background: "#e0d2b5" }}
+                              >
+                                <FitBounds bounds={bounds} />
+                                <TileLayer
+                                  url="https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png"
+                                  opacity={0.6}
+                                />
+                                <Marker
+                                  position={[campLat, campLng]}
+                                  icon={L.divIcon({
+                                    className: "",
+                                    html: "<div style='width:12px;height:12px;background:#df8120;border:2px solid #000;border-radius:50%;'></div>",
+                                    iconSize: [12, 12],
+                                    iconAnchor: [6, 6],
+                                  })}
+                                />
+                                <Marker
+                                  position={[destLat, destLng]}
+                                  icon={L.divIcon({
+                                    className: "",
+                                    html: "<div style='width:12px;height:12px;background:#9c2720;border:2px solid #000;border-radius:50%;'></div>",
+                                    iconSize: [12, 12],
+                                    iconAnchor: [6, 6],
+                                  })}
+                                />
+                                <Polyline
+                                  positions={[
+                                    [campLat, campLng],
+                                    [destLat, destLng],
+                                  ]}
+                                  pathOptions={{ color: "#9c2720", weight: 2, dashArray: "4 4" }}
+                                />
+                              </MapContainer>
+                            )
+                          })()}
                         </div>
                       </div>
 
@@ -1072,6 +1122,9 @@ export default function TravelExplorations() {
                           setDestLat(lat)
                           setDestLng(lng)
                         }}
+                        campLat={explorations[0]?.camp?.latitude ?? 9.934739}
+                        campLng={explorations[0]?.camp?.longitude ?? -84.087502}
+                        campName={`Base ${baseCampId.toUpperCase()}`}
                       />
                     </div>
                     {destLat !== null && destLng !== null && (
