@@ -29,8 +29,8 @@ export interface ResourcesParams {
 }
 
 export const getInventory = async (campId: string): Promise<InventoryItem[]> => {
-  const { data } = await api.get<InventoryItem[]>(`/resources/inventory/${campId}`)
-  return data
+  const { data } = await api.get<any>(`/resources/inventory/${campId}`)
+  return Array.isArray(data) ? data : (data?.data ?? [])
 }
 
 export const getInventoryAlerts = async (campId: string): Promise<InventoryItem[]> => {

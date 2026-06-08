@@ -42,8 +42,8 @@ export const createExploration = async (body: CreateExplorationBody): Promise<Ex
 }
 
 export const getExplorations = async (params?: ExplorationsParams): Promise<Exploration[]> => {
-  const { data } = await api.get<Exploration[]>("/explorations", { params })
-  return data
+  const { data } = await api.get<any>("/explorations", { params })
+  return Array.isArray(data) ? data : (data?.data ?? [])
 }
 
 export const getExplorationById = async (id: string): Promise<Exploration> => {
