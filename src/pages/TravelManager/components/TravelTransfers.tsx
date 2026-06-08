@@ -280,24 +280,61 @@ export default function TravelTransfers() {
     e.preventDefault()
     setFormError("")
 
-    if (!destCampId.trim()) {
-      setFormError("Ingrese el ID del campamento destino.")
+    if (!destCampId) {
+      setFormError("Seleccione un campamento de destino.")
       return
     }
-    if (destCampId === campId) {
-      setFormError("El campamento destino no puede ser el mismo que el origen.")
+
+    if (String(destCampId) === String(campId)) {
+      setFormError("Operación denegada. El destino no puede ser la misma base de origen.")
+      return
+    }
+
+    if (transferType === "resources" && selectedResources.length === 0) {
+      setFormError("Debe incluir al menos un recurso para el traslado.")
+      return
+    }
+    if (transferType === "people" && selectedPersons.length === 0) {
+      setFormError("Debe incluir al menos una persona para el traslado.")
       return
     }
     if (
-      (transferType === "resources" || transferType === "both") &&
-      selectedResources.length === 0
+      transferType === "both" &&
+      (selectedResources.length === 0 || selectedPersons.length === 0)
     ) {
-      setFormError("Seleccione al menos un recurso para transferir.")
+      setFormError(
+        "Operación denegada. El traslado mixto requiere al menos un recurso y una persona.",
+      )
       return
     }
-    if ((transferType === "people" || transferType === "both") && selectedPersons.length === 0) {
-      setFormError("Seleccione al menos una persona para transferir.")
-      return
+
+    if (transferType !== "people") {
+      const invalidQty = selectedResources.some((r) => {
+        const item = inventory.find((i) => i.resource_id === r.resource_id)
+        if (!item) return true
+        return r.requested_quantity <= 0 || r.requested_quantity > item.current_quantity
+      })
+      if (invalidQty) {
+        setFormError(
+          "Operación denegada. Cantidad de recursos solicitados excede el inventario físico disponible o es inválida.",
+        )
+        return
+      }
+    }
+
+    if (transferType !== "resources") {
+      const invalidPerson = selectedPersons.some((sel) => {
+        const p = persons.find((per) => per.id === sel.person_id)
+        if (!p) return true
+        const pCampId = p.camp_id ?? p.userAccount?.camp_id
+        return String(pCampId) !== String(campId)
+      })
+      if (invalidPerson) {
+        setFormError(
+          "Operación denegada. El personal seleccionado no pertenece a la base de origen actual.",
+        )
+        return
+      }
     }
 
     createMutation.mutate({
@@ -345,9 +382,13 @@ export default function TravelTransfers() {
   }
 
   function handleResourceQtyChange(resourceId: string, qty: number) {
+    const item = inventory.find((i) => i.resource_id === resourceId)
+    const maxQty = item ? item.current_quantity : qty
+    const validQty = Math.max(1, Math.min(qty, maxQty))
+
     setSelectedResources(
       selectedResources.map((r) =>
-        r.resource_id === resourceId ? { ...r, requested_quantity: Math.max(1, qty) } : r,
+        r.resource_id === resourceId ? { ...r, requested_quantity: validQty } : r,
       ),
     )
   }

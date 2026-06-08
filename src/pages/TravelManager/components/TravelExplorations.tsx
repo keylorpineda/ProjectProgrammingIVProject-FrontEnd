@@ -313,6 +313,49 @@ export default function TravelExplorations() {
       return
     }
 
+    const allApt = newSelectedPersons.every((sel) => {
+      const p = persons.find((per) => per.id === sel.person_id)
+      if (!p) return false
+      const st = String(p.status ?? "").toLowerCase()
+      const isAvailable =
+        st === "active" ||
+        st === "activo" ||
+        st === "idle" ||
+        st === "inactivo" ||
+        st === "resting" ||
+        st === "available" ||
+        !p.status
+      return isAvailable && p.profession?.can_explore === true
+    })
+    if (!allApt) {
+      setFormError(
+        "Operación denegada. Personal seleccionado no apto o no disponible para exploración.",
+      )
+      return
+    }
+
+    const totalDays = (Number(newEstimatedDays) || 1) + (Number(newGraceDays) || 0)
+    const requiredRations = totalDays * newSelectedPersons.length * 1
+    const foodResources = inventory.filter(
+      (i) =>
+        String(i.resource?.category).toLowerCase() === "food" ||
+        String(i.resource?.category).toLowerCase() === "comida",
+    )
+    const waterResources = inventory.filter(
+      (i) =>
+        String(i.resource?.category).toLowerCase() === "water" ||
+        String(i.resource?.category).toLowerCase() === "agua",
+    )
+    const totalFood = foodResources.reduce((sum, item) => sum + item.current_quantity, 0)
+    const totalWater = waterResources.reduce((sum, item) => sum + item.current_quantity, 0)
+
+    if (totalFood < requiredRations || totalWater < requiredRations) {
+      setFormError(
+        `Operación denegada. Insumos insuficientes. Se requieren ${requiredRations} raciones de comida y agua para la misión.`,
+      )
+      return
+    }
+
     const coordSuffix =
       destLat !== null && destLng !== null ? ` [${destLat.toFixed(5)}, ${destLng.toFixed(5)}]` : ""
 
@@ -336,6 +379,18 @@ export default function TravelExplorations() {
   }
 
   function handleMarkDeparture(id: string) {
+    const exp = explorations.find((e) => e.id === id)
+    if (exp && exp.departure_date) {
+      if (new Date() < new Date(exp.departure_date)) {
+        if (
+          !window.confirm(
+            `La expedición está programada para ${new Date(exp.departure_date).toLocaleString()}. ¿Desea forzar la salida anticipada bajo su responsabilidad?`,
+          )
+        ) {
+          return
+        }
+      }
+    }
     departMutation.mutate(id)
   }
 
