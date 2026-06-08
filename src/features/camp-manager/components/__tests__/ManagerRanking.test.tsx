@@ -154,4 +154,28 @@ describe("ManagerRanking", () => {
       expect(mockApi).toHaveBeenCalledTimes(2)
     })
   })
+
+  it("handles unknown profession gracefully", async () => {
+    const unknownProf = [
+      {
+        rank: 4,
+        person_id: 4,
+        name: "Carlos Desconocido",
+        profession: "UnknownJob",
+        food_production: 1,
+        water_production: 1,
+        total_production: 2,
+        experience_level: 1,
+      },
+    ]
+    mockApi.mockResolvedValue({ data: unknownProf })
+
+    render(<ManagerRanking campId="7" refreshTrigger={0} />, { wrapper: wrapper() })
+
+    await waitFor(() => {
+      expect(screen.getByText("CARLOS DESCONOCIDO")).toBeInTheDocument()
+      expect(screen.getByText("UnknownJob")).toBeInTheDocument()
+      expect(screen.getByText("👤")).toBeInTheDocument() // fallback emoji
+    })
+  })
 })

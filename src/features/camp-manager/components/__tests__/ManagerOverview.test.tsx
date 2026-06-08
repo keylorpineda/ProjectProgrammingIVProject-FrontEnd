@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { render, screen, waitFor } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { api } from "../../config/api"
@@ -126,5 +127,42 @@ describe("ManagerOverview", () => {
     await waitFor(() => {
       expect(mockApi).toHaveBeenCalledWith(expect.stringContaining("42"))
     })
+  })
+
+  it("calls refetch when RETRY LINK SIGNAL button is clicked", async () => {
+    mockApi.mockRejectedValue(new Error("Telemetry Error"))
+    const user = userEvent.setup()
+
+    render(<ManagerOverview campId="1" refreshTrigger={0} />, {
+      wrapper: wrapper(),
+    })
+
+    const retryBtn = await screen.findByText(/RETRY LINK SIGNAL/i)
+    await user.click(retryBtn)
+
+    // 2 times on mount (balance, stats) + 2 times on retry
+    expect(mockApi).toHaveBeenCalledTimes(4)
+  })
+
+  it("shows error when api fails", async () => {
+    mockApi.mockRejectedValue(new Error("Error de conexión"))
+
+    render(<ManagerOverview campId="7" refreshTrigger={0} />, { wrapper: wrapper() })
+
+    await waitFor(() => {
+      expect(screen.getByText(/Error de conexión/i)).toBeInTheDocument()
+    })
+  })
+
+  it("handles loading state", () => {
+    // We don't resolve the mock immediately to test the skeleton/loading state
+    mockApi.mockReturnValue(new Promise(() => {}))
+
+    const { container } = render(<ManagerOverview campId="7" refreshTrigger={0} />, {
+      wrapper: wrapper(),
+    })
+
+    // the component renders an empty div with min-h-[400px] while loading
+    expect(container.querySelector(".min-h-\\[400px\\]")).toBeInTheDocument()
   })
 })

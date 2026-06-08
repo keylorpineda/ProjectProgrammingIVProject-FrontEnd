@@ -780,7 +780,9 @@ export default function ManagerLogistics({
                   type="number"
                   min="1"
                   value={requestAmount}
-                  onChange={(e) => setRequestAmount(Math.max(1, parseInt(e.target.value) || 1))}
+                  onChange={(e) => {
+                    setRequestAmount(Number(e.target.value))
+                  }}
                   className="w-full bg-[#2a2824] border-4 border-black p-4 bg-transparent text-[#e0d8cc] outline-none text-base font-black font-mono transition shadow-[inset_0_0_10px_rgba(0,0,0,0.8)]"
                   required
                 />
