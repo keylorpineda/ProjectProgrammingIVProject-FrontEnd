@@ -734,13 +734,13 @@ export default function ManagerLogistics({
             <form onSubmit={handleCreateRequest} className="space-y-6">
               <div className="space-y-2">
                 <label
-                  htmlFor="field-392"
+                  htmlFor="targetCamp"
                   className="text-sm text-zinc-500 uppercase font-black block"
                 >
                   BÚNKER ORIGEN:
                 </label>
                 <select
-                  id="field-392"
+                  id="targetCamp"
                   value={sourceBunker}
                   onChange={(e) => setSourceBunker(e.target.value)}
                   className="w-full bg-[#2a2824] border-4 border-black p-4 bg-transparent text-[#e0d8cc] outline-none text-base font-black font-mono transition uppercase shadow-[inset_0_0_10px_rgba(0,0,0,0.8)]"
@@ -755,13 +755,13 @@ export default function ManagerLogistics({
 
               <div className="space-y-2">
                 <label
-                  htmlFor="field-409"
+                  htmlFor="resourceId"
                   className="text-sm text-zinc-500 uppercase font-black block"
                 >
                   RECURSO SOLICITADO:
                 </label>
                 <select
-                  id="field-409"
+                  id="resourceId"
                   value={selectedResource}
                   onChange={(e) => setSelectedResource(e.target.value)}
                   className="w-full bg-[#2a2824] border-4 border-black p-4 bg-transparent text-[#e0d8cc] outline-none text-base font-black font-mono transition uppercase shadow-[inset_0_0_10px_rgba(0,0,0,0.8)]"
@@ -777,6 +777,7 @@ export default function ManagerLogistics({
               <div className="space-y-2">
                 <div className="text-sm text-zinc-500 uppercase font-black block">CANTIDAD:</div>
                 <input
+                  id="quantity"
                   type="number"
                   min="1"
                   value={requestAmount}
@@ -789,14 +790,11 @@ export default function ManagerLogistics({
               </div>
 
               <div className="space-y-2">
-                <label
-                  htmlFor="field-440"
-                  className="text-sm text-zinc-500 uppercase font-black block"
-                >
+                <label htmlFor="notes" className="text-sm text-zinc-500 uppercase font-black block">
                   MOTIVACIONES / JUSTIFICANTE LOGÍSTICO:
                 </label>
                 <textarea
-                  id="field-440"
+                  id="notes"
                   value={requestNotes}
                   onChange={(e) => setRequestNotes(e.target.value)}
                   rows={3}

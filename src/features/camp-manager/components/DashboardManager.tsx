@@ -40,7 +40,7 @@ export default function DashboardManager() {
   const navigate = useNavigate()
   const globalUser = useGlobalAuthStore((state) => state.user)
   // Use real camp_id from the JWT-authenticated global store; fall back to local store
-  const campId = globalUser?.camp_id ?? user?.campId
+  const campId = globalUser ? globalUser.camp_id : user?.campId
 
   // Sync local store from global user when local is null (e.g. after logout + re-login)
   useEffect(() => {
@@ -401,32 +401,32 @@ export default function DashboardManager() {
                 </div>
               </div>
 
-              {/* NESTED DYNAMIC MODULE RENDER PANEL — all tabs stay mounted to avoid refetch on switch */}
+              {/* NESTED DYNAMIC MODULE RENDER PANEL */}
               <div className="min-h-[450px]">
-                <div className={activeTab === "overview" ? "block" : "hidden"}>
+                {activeTab === "overview" && (
                   <ManagerOverview campId={campId} refreshTrigger={refreshTrigger} />
-                </div>
-                <div className={activeTab === "inventory" ? "block" : "hidden"}>
+                )}
+                {activeTab === "inventory" && (
                   <ManagerInventory
                     campId={campId}
                     onDataChanged={triggerRefresh}
                     refreshTrigger={refreshTrigger}
                   />
-                </div>
-                <div className={activeTab === "catalog" ? "block" : "hidden"}>
+                )}
+                {activeTab === "catalog" && (
                   <ManagerCatalog campId={campId} onDataChanged={triggerRefresh} />
-                </div>
-                <div className={activeTab === "ranking" ? "block" : "hidden"}>
+                )}
+                {activeTab === "ranking" && (
                   <ManagerRanking campId={campId} refreshTrigger={refreshTrigger} />
-                </div>
-                <div className={activeTab === "workforce" ? "block" : "hidden"}>
+                )}
+                {activeTab === "workforce" && (
                   <ManagerWorkforce
                     campId={campId}
                     onDataChanged={triggerRefresh}
                     refreshTrigger={refreshTrigger}
                   />
-                </div>
-                <div className={activeTab === "logistics" ? "block" : "hidden"}>
+                )}
+                {activeTab === "logistics" && (
                   <ManagerLogistics
                     campId={campId}
                     onDataChanged={triggerRefresh}
@@ -434,7 +434,7 @@ export default function DashboardManager() {
                     showModal={showLogisticsModal}
                     onModalClose={() => setShowLogisticsModal(false)}
                   />
-                </div>
+                )}
               </div>
             </main>
           </div>
