@@ -14,6 +14,12 @@ import {
   Archive,
   Package,
   Users,
+  Apple,
+  Droplets,
+  HeartPulse,
+  Target,
+  Wrench,
+  Zap,
 } from "lucide-react"
 import { useState, useMemo, useEffect } from "react"
 import { useLocation } from "react-router-dom"
@@ -40,6 +46,34 @@ import {
 import { useAuthStore, useTokenStore } from "@/store/useAuthStore"
 
 // ── Status helpers ──────────────────────────────────────────────────────────
+
+function getCategoryIcon(category?: string) {
+  const cat = String(category || "").toLowerCase()
+  if (cat.includes("food") || cat.includes("comida") || cat.includes("alimento")) {
+    return <Apple className="w-5 h-5 text-[#df8120]" />
+  }
+  if (cat.includes("water") || cat.includes("agua")) {
+    return <Droplets className="w-5 h-5 text-[#4c6351]" />
+  }
+  if (cat.includes("medic") || cat.includes("health")) {
+    return <HeartPulse className="w-5 h-5 text-[#9c2720]" />
+  }
+  if (cat.includes("ammo") || cat.includes("weapon") || cat.includes("arm")) {
+    return <Target className="w-5 h-5 text-ink-soft" />
+  }
+  if (cat.includes("tool") || cat.includes("material") || cat.includes("herramienta")) {
+    return <Wrench className="w-5 h-5 text-[#a89b82]" />
+  }
+  if (
+    cat.includes("energy") ||
+    cat.includes("fuel") ||
+    cat.includes("energia") ||
+    cat.includes("combustible")
+  ) {
+    return <Zap className="w-5 h-5 text-[#e8c870]" />
+  }
+  return <Package className="w-5 h-5 text-[#c27c2f]" />
+}
 
 function getTransferStatusLabel(rawStatus: string): string {
   const status = String(rawStatus ?? "")
@@ -131,12 +165,14 @@ export default function TravelTransfers() {
     title: string
     message: string
     type: "warning" | "danger" | "info"
+    hideCancel?: boolean
     onConfirm: () => void
   }>({
     isOpen: false,
     title: "",
     message: "",
     type: "warning",
+    hideCancel: false,
     onConfirm: () => {},
   })
 
@@ -214,6 +250,17 @@ export default function TravelTransfers() {
       void queryClient.invalidateQueries({ queryKey: ["transfers", campId] })
       resetForm()
       setIsNewModalOpen(false)
+
+      setConfirmDialog({
+        isOpen: true,
+        title: "Traslado Creado",
+        message: "El traslado ha sido registrado y programado exitosamente en el sistema.",
+        type: "info",
+        hideCancel: true,
+        onConfirm: () => {
+          setConfirmDialog((prev) => ({ ...prev, isOpen: false }))
+        },
+      })
     },
     onError: (error: unknown) => {
       const msg = (error as { response?: { data?: { message?: string | string[] } } })?.response
@@ -399,6 +446,22 @@ export default function TravelTransfers() {
     })
   }
 
+  function handleDiscardDraft() {
+    setConfirmDialog({
+      isOpen: true,
+      title: "Descartar Solicitud",
+      message:
+        "¿Estás seguro de que deseas descartar esta solicitud de traslado? Se perderán todos los datos ingresados.",
+      type: "warning",
+      hideCancel: false,
+      onConfirm: () => {
+        setIsNewModalOpen(false)
+        resetForm()
+        setConfirmDialog((prev) => ({ ...prev, isOpen: false }))
+      },
+    })
+  }
+
   function handleToggleResource(resourceId: string) {
     const exists = selectedResources.find((r) => r.resource_id === resourceId)
     if (exists) {
@@ -464,6 +527,7 @@ export default function TravelTransfers() {
         title={confirmDialog.title}
         message={confirmDialog.message}
         type={confirmDialog.type}
+        hideCancel={confirmDialog.hideCancel}
         onConfirm={confirmDialog.onConfirm}
         onCancel={() => setConfirmDialog((prev) => ({ ...prev, isOpen: false }))}
       />
@@ -829,18 +893,32 @@ export default function TravelTransfers() {
                         </h4>
                         {selectedTransfer.resourceDetails &&
                         selectedTransfer.resourceDetails.length > 0 ? (
-                          <div className="space-y-3">
+                          <div className="space-y-4">
                             {selectedTransfer.resourceDetails.map((rd: RequestResourceDetail) => (
                               <div
                                 key={rd.resource_id}
-                                className="flex justify-between items-center bg-[#df8120]/5 border border-[#df8120]/20 border-l-4 border-l-[#c27c2f] rounded-sm px-4 py-3"
+                                className="flex items-center gap-4 bg-ink/5 border border-ink/10 rounded-sm p-3 relative overflow-hidden shadow-sm"
                               >
-                                <span className="text-sm font-mono font-bold text-ink uppercase truncate flex-1 leading-snug">
-                                  {rd.resource?.name || `Recurso #${rd.resource_id}`}
-                                </span>
-                                <span className="text-sm font-mono font-black text-[#df8120] ml-4 shrink-0 bg-[#df8120]/10 border border-[#df8120]/30 px-3 py-1 rounded-sm">
-                                  {rd.requested_quantity} {rd.resource?.unit || "uds"}
-                                </span>
+                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#c27c2f]"></div>
+                                <div className="w-10 h-10 shrink-0 bg-black/30 border border-[#c27c2f]/30 flex items-center justify-center rounded-sm">
+                                  {getCategoryIcon(rd.resource?.category)}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-mono font-black text-ink uppercase truncate leading-tight">
+                                    {rd.resource?.name || `Recurso #${rd.resource_id}`}
+                                  </p>
+                                  <p className="text-[10px] font-mono text-ink-soft uppercase mt-1 opacity-70 truncate">
+                                    Cat: {rd.resource?.category || "N/A"}
+                                  </p>
+                                </div>
+                                <div className="text-right shrink-0">
+                                  <div className="text-lg font-mono font-black text-[#df8120] leading-none">
+                                    {rd.requested_quantity}
+                                  </div>
+                                  <div className="text-[10px] font-mono text-ink-soft uppercase mt-1">
+                                    {rd.resource?.unit || "uds"}
+                                  </div>
+                                </div>
                               </div>
                             ))}
                           </div>
@@ -909,7 +987,13 @@ export default function TravelTransfers() {
                         </h4>
                         {selectedTransfer.approvals && selectedTransfer.approvals.length > 0 ? (
                           <div className="space-y-3">
-                            {selectedTransfer.approvals.map((app, i) => (
+                            {Object.values(
+                              selectedTransfer.approvals.reduce((acc: any, app: any) => {
+                                const key = app.user?.username || "Sistema"
+                                acc[key] = app
+                                return acc
+                              }, {}),
+                            ).map((app: any, i: number) => (
                               <div
                                 key={i}
                                 className="flex items-center gap-4 bg-ink/4 border border-ink/10 rounded-sm px-4 py-3"
@@ -1043,10 +1127,7 @@ export default function TravelTransfers() {
                   </h3>
                 </div>
                 <button
-                  onClick={() => {
-                    setIsNewModalOpen(false)
-                    resetForm()
-                  }}
+                  onClick={handleDiscardDraft}
                   className="text-ink-soft hover:text-ink transition-colors"
                 >
                   <X className="h-5 w-5" />
@@ -1301,10 +1382,7 @@ export default function TravelTransfers() {
                 <div className="p-6 border-t-2 border-dashed border-ink/20 flex justify-end gap-4 bg-black/5">
                   <button
                     type="button"
-                    onClick={() => {
-                      setIsNewModalOpen(false)
-                      resetForm()
-                    }}
+                    onClick={handleDiscardDraft}
                     className="tm-action-btn tm-action-btn-danger"
                     style={{ padding: "10px 20px" }}
                   >

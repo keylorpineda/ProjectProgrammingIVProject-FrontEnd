@@ -122,12 +122,14 @@ export default function TravelExplorations() {
     title: string
     message: string
     type: "warning" | "danger" | "info"
+    hideCancel?: boolean
     onConfirm: () => void
   }>({
     isOpen: false,
     title: "",
     message: "",
     type: "warning",
+    hideCancel: false,
     onConfirm: () => {},
   })
 
@@ -184,6 +186,18 @@ export default function TravelExplorations() {
       void queryClient.invalidateQueries({ queryKey: ["explorations", baseCampId] })
       resetNewForm()
       setIsNewModalOpen(false)
+
+      setConfirmDialog({
+        isOpen: true,
+        title: "Expedición Creada",
+        message:
+          "La expedición ha sido registrada y programada exitosamente en el fichero operativo.",
+        type: "info",
+        hideCancel: true,
+        onConfirm: () => {
+          setConfirmDialog((prev) => ({ ...prev, isOpen: false }))
+        },
+      })
     },
     onError: (error: any) => {
       const msg = error.response?.data?.message || error.message
@@ -320,6 +334,10 @@ export default function TravelExplorations() {
       setFormError("Describa el destino exterior.")
       return
     }
+    if (destLat === null || destLng === null) {
+      setFormError("Seleccione un punto de destino en el mapa.")
+      return
+    }
     if (newSelectedPersons.length === 0) {
       setFormError("Incluya al menos un (1) miembro de equipo.")
       return
@@ -443,6 +461,22 @@ export default function TravelExplorations() {
     })
   }
 
+  function handleDiscardNewDraft() {
+    setConfirmDialog({
+      isOpen: true,
+      title: "Descartar Expedición",
+      message:
+        "¿Estás seguro de que deseas descartar esta expedición? Se perderán todos los datos ingresados.",
+      type: "warning",
+      hideCancel: false,
+      onConfirm: () => {
+        setIsNewModalOpen(false)
+        resetNewForm()
+        setConfirmDialog((prev) => ({ ...prev, isOpen: false }))
+      },
+    })
+  }
+
   function handleToggleReturnResourceSelect(resourceId: string) {
     const exists = returnFoundResources.find((r) => r.resource_id === String(resourceId))
     if (exists) {
@@ -553,6 +587,7 @@ export default function TravelExplorations() {
         title={confirmDialog.title}
         message={confirmDialog.message}
         type={confirmDialog.type}
+        hideCancel={confirmDialog.hideCancel}
         onConfirm={confirmDialog.onConfirm}
         onCancel={() => setConfirmDialog((prev) => ({ ...prev, isOpen: false }))}
       />
@@ -1132,10 +1167,7 @@ export default function TravelExplorations() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => {
-                    setIsNewModalOpen(false)
-                    resetNewForm()
-                  }}
+                  onClick={handleDiscardNewDraft}
                   className="text-ink-soft hover:text-ink transition-colors"
                 >
                   <X className="h-5 w-5" />
@@ -1459,10 +1491,7 @@ export default function TravelExplorations() {
                 <div className="p-6 border-t-2 border-dashed border-ink/20 flex justify-end gap-6 bg-black/5">
                   <button
                     type="button"
-                    onClick={() => {
-                      setIsNewModalOpen(false)
-                      resetNewForm()
-                    }}
+                    onClick={handleDiscardNewDraft}
                     className="tm-action-btn tm-action-btn-danger"
                     style={{ padding: "8px 16px", borderRadius: "4px" }}
                   >
