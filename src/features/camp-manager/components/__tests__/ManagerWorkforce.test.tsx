@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { render, screen, waitFor } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { api } from "../../config/api"
@@ -154,6 +155,62 @@ describe("ManagerWorkforce", () => {
     })
   })
 
+  it("shows pagination controls and clicks", async () => {
+    const user = userEvent.setup()
+
+    // Create an array of 20 people to mock a large response and have multiple pages
+    const manyPeople = Array.from({ length: 20 }, (_, i) => ({
+      id: `p${i}`,
+      name: `Person ${i}`,
+      campId: "7",
+      profession: "RECOLECTOR",
+      status: "active",
+      energy: 100,
+      health: "SANO",
+      createdAt: "2026-06-05T00:00:00Z",
+    }))
+
+    const mockGet = api.get as ReturnType<typeof vi.fn>
+    mockGet.mockResolvedValueOnce({ data: { data: manyPeople, total: 20 } })
+
+    render(<ManagerWorkforce campId="7" onDataChanged={vi.fn()} refreshTrigger={0} />, {
+      wrapper: wrapper(),
+    })
+
+    await waitFor(() => {
+      expect(screen.getByText(/SOBREVIVIENTES/i)).toBeInTheDocument()
+    })
+
+    const nextBtn = screen.getByText(/SIGUIENTE/i)
+    await user.click(nextBtn)
+
+    const prevBtn = screen.getByText(/ANTERIOR/i)
+    await user.click(prevBtn)
+  })
+
+  it("handles persons with sick status", async () => {
+    const sickPerson = {
+      id: "3",
+      name: "Pedro",
+      campId: "7",
+      profession: "INGENIERO",
+      status: "sick",
+      energy: 30,
+      health: "ENFERMO",
+      createdAt: "2026-06-05T00:00:00Z",
+    }
+    const mockGet = api.get as ReturnType<typeof vi.fn>
+    mockGet.mockResolvedValueOnce({ data: { data: [sickPerson], total: 1 } })
+
+    render(<ManagerWorkforce campId="7" onDataChanged={vi.fn()} refreshTrigger={0} />, {
+      wrapper: wrapper(),
+    })
+
+    await waitFor(() => {
+      expect(screen.getByText("Pedro")).toBeInTheDocument()
+    })
+  })
+
   it("shows pagination controls", async () => {
     render(<ManagerWorkforce campId="7" onDataChanged={vi.fn()} refreshTrigger={0} />, {
       wrapper: wrapper(),
@@ -174,6 +231,41 @@ describe("ManagerWorkforce", () => {
 
     await waitFor(() => {
       expect(screen.getByText(/Fallo de red/i)).toBeInTheDocument()
+    })
+  })
+
+  it("handles persons with complex injuryDetails", async () => {
+    mockGet.mockImplementation((url: string) => {
+      if (url.includes("/users/persons"))
+        return Promise.resolve({
+          data: {
+            data: [
+              ...mockPersons,
+              {
+                id: "3",
+                name: "Maria Herida",
+                status: "injured",
+                profession: "Doctor",
+                campId: "7",
+                skills: ["cirugia"],
+                injuryDetails: "[2026-06-08] Fractura: Brazo roto",
+              },
+            ],
+            total: 3,
+          },
+        })
+      if (url.includes("alerts/needing-workers")) return Promise.resolve({ data: mockAlerts })
+      if (url.includes("/users/professions")) return Promise.resolve({ data: mockProfessions })
+      return Promise.resolve({ data: {} })
+    })
+
+    render(<ManagerWorkforce campId="7" onDataChanged={vi.fn()} refreshTrigger={0} />, {
+      wrapper: wrapper(),
+    })
+
+    await waitFor(() => {
+      expect(screen.getByText("BRAZO ROTO")).toBeInTheDocument()
+      expect(screen.getByText("☣ DIAGNÓSTICO MÉDICO:")).toBeInTheDocument()
     })
   })
 })

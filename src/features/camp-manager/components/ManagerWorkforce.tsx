@@ -2,13 +2,12 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any, react/prop-types */
 
 import { useQuery, keepPreviousData } from "@tanstack/react-query"
 import { motion } from "framer-motion"
-import { Users, ShieldAlert, Cpu, Briefcase } from "lucide-react"
+import { Users, ShieldAlert, Cpu } from "lucide-react"
 import { useEffect, useState } from "react"
-import { type FormEvent } from "react"
 
 import { api } from "../config/api"
 
@@ -16,7 +15,7 @@ import type { Person, ProfessionAlert } from "../types/api.types"
 
 interface ManagerWorkforceProps {
   campId: string
-  onDataChanged: () => void
+  onDataChanged?: () => void
   refreshTrigger: number
 }
 
@@ -28,6 +27,7 @@ export default function ManagerWorkforce({
   onDataChanged,
   refreshTrigger,
 }: ManagerWorkforceProps) {
+  void onDataChanged
   const [page, setPage] = useState<number>(1)
   const limit = 4
 
@@ -55,19 +55,9 @@ export default function ManagerWorkforce({
     placeholderData: keepPreviousData,
   })
 
-  const { data: professionsCatalog = [] } = useQuery({
-    queryKey: ["professionsCatalog"],
-    queryFn: async () => {
-      const res = await api.get("/users/professions")
-      return (res.data ?? []) as Array<{ id: number | string; name: string }>
-    },
-    staleTime: 1000 * 60 * 60,
-  })
-
-  const [errorState, setErrorState] = useState<string | null>(null)
   const error = queryError
     ? (queryError as any).message || "Fallo de enlace biométrico de sobrevivientes."
-    : errorState
+    : null
 
   useEffect(() => {
     if (refreshTrigger > 0) refetch()
@@ -84,46 +74,6 @@ export default function ManagerWorkforce({
   const persons = localPersons
   const total = data?.total || 0
   const alerts = data?.alerts || []
-  const professionsList = data?.professions || []
-
-  const [assigningPerson, setAssigningPerson] = useState<Person | null>(null)
-  const [selectedProfession, setSelectedProfession] = useState<string>("")
-  const [submittingAssignment, setSubmittingAssignment] = useState<boolean>(false)
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleOpenAssignModal = (person: Person) => {
-    setAssigningPerson(person)
-    setSelectedProfession(professionsList.length > 0 ? professionsList[0].id.toString() : "1")
-  }
-
-  const handleSaveAssignment = async (e: FormEvent) => {
-    e.preventDefault()
-    if (!assigningPerson) return
-
-    setSubmittingAssignment(true)
-    setErrorState(null)
-    try {
-      const matchedProfession = professionsCatalog.find(
-        (p) => p.name?.toLowerCase() === selectedProfession.toLowerCase(),
-      )
-      if (!matchedProfession) {
-        setErrorState(`Profesión "${selectedProfession}" no encontrada en el catálogo del sistema.`)
-        setSubmittingAssignment(false)
-        return
-      }
-      await api.post("/users/temporary-assignments", {
-        person_id: Number(assigningPerson.id),
-        profession_temporary_id: Number(matchedProfession.id),
-      })
-      setAssigningPerson(null)
-      refetch()
-      onDataChanged()
-    } catch (err: any) {
-      setErrorState(err?.message || "Error al asignar la orden temporal de trabajo.")
-    } finally {
-      setSubmittingAssignment(false)
-    }
-  }
 
   if (loading) {
     return <div className="min-h-[400px]" />
@@ -800,74 +750,6 @@ export default function ManagerWorkforce({
           </div>
         </div>
       </div>
-
-      {/* TEMPORARY ASSIGNMENT MODAL */}
-      {assigningPerson && (
-        <div className="fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-50">
-          <motion.div
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="w-full max-w-2xl bg-[#161513] border-4 border-double border-[#c27c2f] p-8 md:p-10 font-mono text-[#e0d8cc] relative shadow-2xl"
-          >
-            <div className="flex items-center gap-3 border-b-2 border-black pb-4 mb-6 text-[#c27c2f]">
-              <Briefcase className="h-8 w-8 animate-pulse text-[#c27c2f]" />
-              <h4 className="font-black uppercase tracking-widest text-lg md:text-xl">
-                DESPACHAR ORDEN TEMPORAL
-              </h4>
-            </div>
-
-            <p className="text-sm md:text-base text-zinc-400 mb-6 leading-relaxed uppercase">
-              Asigna de manera forzosa el rol operacional a{" "}
-              <span className="font-black text-white bg-black px-2 py-1">
-                {assigningPerson.name?.toUpperCase()}
-              </span>
-              . La IA reestructurará su perfil de habilidades de inmediato.
-            </p>
-
-            <form onSubmit={handleSaveAssignment} className="space-y-6">
-              <div className="space-y-2">
-                <label
-                  htmlFor="field-391"
-                  className="text-sm text-zinc-500 uppercase font-black block"
-                >
-                  ASIGNAR ROL / PROFESIÓN:
-                </label>
-                <select
-                  id="field-391"
-                  value={selectedProfession}
-                  onChange={(e) => setSelectedProfession(e.target.value)}
-                  className="w-full bg-[#2a2824] border-4 border-black p-4 bg-transparent text-[#e0d8cc] outline-none text-base font-black font-mono transition uppercase shadow-[inset_0_0_10px_rgba(0,0,0,0.8)]"
-                >
-                  {professionsList.map((prof) => (
-                    <option key={prof.id} value={prof.id} className="bg-[#161513] text-[#e0d8cc]">
-                      {prof.name.toUpperCase()}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="flex flex-col md:flex-row gap-4 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setAssigningPerson(null)}
-                  className="flex-1 border-2 border-black uppercase text-sm md:text-base py-3 md:py-4 font-black transition"
-                  style={{ backgroundColor: "#9c2720", color: "#ffffff" }}
-                >
-                  [CANCELAR]
-                </button>
-                <button
-                  type="submit"
-                  disabled={submittingAssignment}
-                  className="flex-1 border-2 border-black uppercase text-sm md:text-base py-3 md:py-4 hover:bg-[#a96821] transition font-black flex items-center justify-center gap-2"
-                  style={{ backgroundColor: "#c27c2f", color: "#161513" }}
-                >
-                  {submittingAssignment ? "COMUNICANDO..." : "REASIGNAR HUMANO"}
-                </button>
-              </div>
-            </form>
-          </motion.div>
-        </div>
-      )}
     </motion.div>
   )
 }

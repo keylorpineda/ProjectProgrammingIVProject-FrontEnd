@@ -406,7 +406,7 @@ export default function ManagerInventory({
                     marginLeft: 4,
                   }}
                 >
-                  {item.unit.toUpperCase()}
+                  {item.unit?.toUpperCase() || ""}
                 </span>
                 {item.minimum_stock_required > 0 && (
                   <div
@@ -417,7 +417,7 @@ export default function ManagerInventory({
                       fontFamily: "monospace",
                     }}
                   >
-                    mín. {item.minimum_stock_required} {item.unit.toUpperCase()}
+                    mín. {item.minimum_stock_required} {item.unit?.toUpperCase() || ""}
                   </div>
                 )}
               </div>
