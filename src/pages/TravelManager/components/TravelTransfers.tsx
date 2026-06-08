@@ -182,9 +182,16 @@ export default function TravelTransfers() {
   })
 
   useEffect(() => {
-    const locState = location.state as { openNewTransfer?: boolean } | null
+    const locState = location.state as {
+      openNewTransfer?: boolean
+      selectedTransferId?: string
+    } | null
     if (locState?.openNewTransfer) {
       setIsNewModalOpen(true)
+      window.history.replaceState({}, document.title)
+    }
+    if (locState?.selectedTransferId) {
+      setSelectedId(locState.selectedTransferId)
       window.history.replaceState({}, document.title)
     }
   }, [location.state])

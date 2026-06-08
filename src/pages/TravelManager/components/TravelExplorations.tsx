@@ -23,6 +23,7 @@ import {
 } from "lucide-react"
 import { useState, useMemo, useEffect } from "react"
 import { MapContainer, TileLayer, Marker, Polyline, useMap } from "react-leaflet"
+import { useLocation } from "react-router-dom"
 import "leaflet/dist/leaflet.css"
 
 function FitBounds({ bounds }: { bounds: L.LatLngBoundsExpression }) {
@@ -107,6 +108,15 @@ export default function TravelExplorations() {
   const { user } = useAuthStore()
   const queryClient = useQueryClient()
   const baseCampId = user?.camp_id ?? ""
+  const location = useLocation()
+
+  useEffect(() => {
+    const locState = location.state as { selectedExpeditionId?: string } | null
+    if (locState?.selectedExpeditionId) {
+      setSelectedId(locState.selectedExpeditionId)
+      window.history.replaceState({}, document.title)
+    }
+  }, [location.state])
 
   // ── Local UI state ───────────────────────────────────────────────────────
   const [search, setSearch] = useState("")
@@ -356,16 +366,21 @@ export default function TravelExplorations() {
     const allApt = newSelectedPersons.every((sel) => {
       const p = persons.find((per) => per.id === sel.person_id)
       if (!p) return false
-      const st = String(p.status ?? "").toLowerCase()
-      const isAvailable =
-        st === "active" ||
-        st === "activo" ||
-        st === "idle" ||
-        st === "inactivo" ||
-        st === "resting" ||
-        st === "available" ||
-        !p.status
-      return isAvailable && p.profession?.can_explore === true
+      const isAvailable = p.can_work === true
+
+      const inActiveExpedition = explorations.some((exp) => {
+        const expStatus = String(exp.status ?? "")
+          .toLowerCase()
+          .replace(/\s+/g, "_")
+        const isActiveExp =
+          expStatus !== "returned" && expStatus !== "completed" && expStatus !== "cancelled"
+        if (isActiveExp) {
+          return exp.explorationPersons?.some((ep) => String(ep.person_id) === String(p.id))
+        }
+        return false
+      })
+
+      return isAvailable && p.profession?.can_explore === true && !inActiveExpedition
     })
     if (!allApt) {
       setFormError(
@@ -1342,17 +1357,28 @@ export default function TravelExplorations() {
                             )
                           }
 
-                          const availableExplorers = persons.filter(
-                            (p) =>
-                              (p.status === "active" ||
-                                p.status === "activo" ||
-                                p.status === "idle" ||
-                                p.status === "inactivo" ||
-                                p.status === "resting" ||
-                                p.status === "available" ||
-                                !p.status) &&
-                              p.profession?.can_explore === true,
-                          )
+                          const availableExplorers = persons.filter((p) => {
+                            const isAvailable = p.can_work === true
+                            if (!isAvailable || p.profession?.can_explore !== true) return false
+
+                            const inActiveExpedition = explorations.some((exp) => {
+                              const expStatus = String(exp.status ?? "")
+                                .toLowerCase()
+                                .replace(/\s+/g, "_")
+                              const isActiveExp =
+                                expStatus !== "returned" &&
+                                expStatus !== "completed" &&
+                                expStatus !== "cancelled"
+                              if (isActiveExp) {
+                                return exp.explorationPersons?.some(
+                                  (ep) => String(ep.person_id) === String(p.id),
+                                )
+                              }
+                              return false
+                            })
+
+                            return !inActiveExpedition
+                          })
 
                           if (availableExplorers.length === 0) {
                             return (

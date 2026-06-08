@@ -287,7 +287,11 @@ export default function TravelDashboard() {
                       <button
                         type="button"
                         className="tm-op-btn"
-                        onClick={() => navigate("/travel-manager/transfers")}
+                        onClick={() =>
+                          navigate("/travel-manager/transfers", {
+                            state: { selectedTransferId: t.id },
+                          })
+                        }
                       >
                         Revisar
                       </button>
@@ -355,7 +359,11 @@ export default function TravelDashboard() {
                       <button
                         type="button"
                         className="tm-op-btn"
-                        onClick={() => navigate("/travel-manager/transfers")}
+                        onClick={() =>
+                          navigate("/travel-manager/transfers", {
+                            state: { selectedTransferId: t.id },
+                          })
+                        }
                       >
                         Ver
                       </button>
@@ -445,7 +453,11 @@ export default function TravelDashboard() {
                         <button
                           type="button"
                           className="tm-op-btn"
-                          onClick={() => navigate("/travel-manager/expeditions")}
+                          onClick={() =>
+                            navigate("/travel-manager/expeditions", {
+                              state: { selectedExpeditionId: exp.id },
+                            })
+                          }
                         >
                           Ver
                         </button>
