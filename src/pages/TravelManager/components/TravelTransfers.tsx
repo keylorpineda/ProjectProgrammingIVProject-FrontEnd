@@ -594,7 +594,7 @@ export default function TravelTransfers() {
 
       <div className="flex-1 flex flex-col gap-3 overflow-hidden">
         {/* ── Filtros ── */}
-        <div className="flex flex-wrap gap-3 shrink-0 items-center bg-[#1c1208] p-3 border border-[#d4a373]/20 rounded-md">
+        <div className="flex flex-wrap gap-3 shrink-0 items-center bg-[#1c1208] p-3 border-2 border-black shadow-[2px_2px_0px_#000]">
           <div className="relative w-full md:w-56">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/30" />
             <input
@@ -638,7 +638,7 @@ export default function TravelTransfers() {
         {/* ── Main layout ── */}
         <div className="flex-1 flex gap-4 overflow-hidden">
           {/* LEFT: Registro de Traslados */}
-          <div className="w-[290px] flex flex-col gap-3 shrink-0 overflow-hidden bg-[#1c1208] p-4 border border-[#d4a373]/20 rounded-md shadow-lg">
+          <div className="w-[290px] flex flex-col gap-3 shrink-0 overflow-hidden bg-[#1c1208] p-4 border-2 border-black shadow-[3px_3px_0px_#000]">
             <div className="tm-folder-header-row mb-1">
               <h4 className="tm-folder-title">REGISTRO DE TRASLADOS</h4>
               <span className="text-[10px] font-mono font-medium text-white/30 uppercase tracking-wider">
@@ -733,7 +733,7 @@ export default function TravelTransfers() {
           </div>
 
           {/* MIDDLE: Visualizador */}
-          <div className="flex-1 flex flex-col bg-[#1c1208] border border-[#d4a373]/20 rounded-md overflow-hidden shadow-lg">
+          <div className="flex-1 flex flex-col bg-[#1c1208] border-2 border-black overflow-hidden shadow-[3px_3px_0px_#000]">
             {selectedTransfer ? (
               <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header visualizador */}

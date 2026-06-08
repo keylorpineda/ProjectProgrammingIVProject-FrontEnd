@@ -2,6 +2,7 @@ import { LogOut } from "lucide-react"
 import { useEffect, useState } from "react"
 import { Navigate, Route, Routes, useNavigate } from "react-router-dom"
 
+import AdminProfile from "./components/AdminProfile"
 import AdmissionsBook from "./components/AdmissionsBook"
 import Camps from "./components/Camps"
 import CampSelector from "./components/CampSelector"
@@ -84,9 +85,7 @@ const AdminLayout = () => {
             {/* Center Clock */}
             <div className="hidden lg:flex items-center gap-8 text-center px-6">
               <div className="flex items-center gap-2 text-left text-sm">
-                <span className="tracking-widest text-zinc-300 font-bold font-mono">
-                  {utcTime}
-                </span>
+                <span className="tracking-widest text-zinc-300 font-bold font-mono">{utcTime}</span>
               </div>
             </div>
 
@@ -135,7 +134,10 @@ const AdminLayout = () => {
             </div>
           </header>
 
-          <main className="flex-1 overflow-y-auto bg-[#0d0c0b] relative admin-route-container" style={{ padding: "16px" }}>
+          <main
+            className="flex-1 overflow-y-auto bg-[#0d0c0b] relative admin-route-container"
+            style={{ padding: "16px" }}
+          >
             <Routes>
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="admissions" element={<AdmissionsBook />} />
@@ -144,6 +146,7 @@ const AdminLayout = () => {
               <Route path="explorations" element={<Explorations />} />
               <Route path="resources" element={<Resources />} />
               <Route path="transfers" element={<Transfers />} />
+              <Route path="profile" element={<AdminProfile />} />
               <Route path="*" element={<Navigate to="dashboard" replace />} />
             </Routes>
           </main>

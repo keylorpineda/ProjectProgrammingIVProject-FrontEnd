@@ -1,14 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion"
-import {
-  Archive,
-  CheckSquare,
-  Compass,
-  MapPin,
-  Play,
-  Search,
-  TriangleAlert,
-  XSquare,
-} from "lucide-react"
+import { Archive, CheckSquare, Compass, MapPin, Search, TriangleAlert, XSquare } from "lucide-react"
 import { type FormEvent, useState } from "react"
 
 import type {
@@ -39,6 +30,8 @@ interface ExplorationsViewProps {
   onCancelExploration: (id: number) => Promise<void>
 }
 
+const DEFAULT_CAMP_COORDS: [number, number] = [9.9281, -84.0907]
+
 function parseDestCoords(desc: string): [number, number] | null {
   const match = desc.match(/\[(-?\d+\.\d+),\s*(-?\d+\.\d+)\]/)
   if (!match) return null
@@ -57,7 +50,7 @@ export default function ExplorationsView({
   camps,
   myCampId,
   onCreateExploration,
-  onDepartExploration,
+  onDepartExploration: _onDepartExploration,
   onReturnExploration,
   onCancelExploration,
 }: ExplorationsViewProps) {
@@ -106,7 +99,9 @@ export default function ExplorationsView({
   })
 
   const getResourceId = (category: string, fallback: number) => {
-    const found = resources.find((r) => r.category?.toLowerCase() === category || r.name.toLowerCase().includes(category))
+    const found = resources.find(
+      (r) => r.category?.toLowerCase() === category || r.name.toLowerCase().includes(category),
+    )
     return found?.id ?? fallback
   }
 
@@ -134,10 +129,10 @@ export default function ExplorationsView({
     if (inventory.length > 0) {
       const checks = [
         { id: foodId, qty: provisionStocks.food, name: "COMIDA" },
-        { id: waterId, qty: provisionStocks.water, name: "AGUA" }
+        { id: waterId, qty: provisionStocks.water, name: "AGUA" },
       ]
-      
-      checks.forEach(({id, qty, name}) => {
+
+      checks.forEach(({ id, qty, name }) => {
         if (qty <= 0) return
         const dbInv = inventory.find((i) => i.resource_id === id)
         if (!dbInv || dbInv.current_quantity < qty) {
@@ -155,8 +150,8 @@ export default function ExplorationsView({
       setIsSubmitting(true)
       const resourceConsumptions = [
         { resource_id: foodId, quantity: provisionStocks.food },
-        { resource_id: waterId, quantity: provisionStocks.water }
-      ].filter(rc => rc.quantity > 0)
+        { resource_id: waterId, quantity: provisionStocks.water },
+      ].filter((rc) => rc.quantity > 0)
 
       // Embed coordinates in description if picked on map
       const coordSuffix =
@@ -202,9 +197,13 @@ export default function ExplorationsView({
 
     try {
       setIsSubmitting(true)
-      
+
       const categoryToFallback: Record<string, number> = {
-        food: 1, water: 2, medicine: 3, tools: 4, weapons: 5
+        food: 1,
+        water: 2,
+        medicine: 3,
+        tools: 4,
+        weapons: 5,
       }
 
       const foundList = Object.entries(salvagedResources)
@@ -329,10 +328,10 @@ export default function ExplorationsView({
             const cleanDesc = cleanDestDescription(exp.destination_description)
 
             const myCamp = camps.find((c) => c.id === myCampId)
-            const campCoords: [number, number] | null =
+            const campCoords: [number, number] =
               myCamp?.latitude != null && myCamp?.longitude != null
                 ? [Number(myCamp.latitude), Number(myCamp.longitude)]
-                : null
+                : DEFAULT_CAMP_COORDS
 
             const borderColor = isInProgress
               ? "#4c6351"
@@ -382,28 +381,26 @@ export default function ExplorationsView({
                 </div>
 
                 {/* MINIMAP: ruta desde campamento hasta zona de exploración */}
-                {campCoords && (
-                  <div className="mx-4 mb-2">
-                    {destCoords ? (
-                      <div className="wv-transfer-minimap">
-                        <TransferRouteMap
-                          fromCoords={campCoords}
-                          toCoords={destCoords}
-                          fromName="BASE"
-                          toName={cleanDesc.slice(0, 20) || "ZONA"}
-                        />
-                      </div>
-                    ) : (
-                      <div className="wv-exp-minimap">
-                        <ExplorationZoneMap
-                          originCoords={campCoords}
-                          originName="BASE"
-                          destinationLabel={cleanDesc.slice(0, 40) || "ZONA DE EXPLORACIÓN"}
-                        />
-                      </div>
-                    )}
-                  </div>
-                )}
+                <div className="mx-4 mb-2">
+                  {destCoords ? (
+                    <div className="wv-transfer-minimap">
+                      <TransferRouteMap
+                        fromCoords={campCoords}
+                        toCoords={destCoords}
+                        fromName="BASE"
+                        toName={cleanDesc.slice(0, 20) || "ZONA"}
+                      />
+                    </div>
+                  ) : (
+                    <div className="wv-exp-minimap">
+                      <ExplorationZoneMap
+                        originCoords={campCoords}
+                        originName="BASE"
+                        destinationLabel={cleanDesc.slice(0, 40) || "ZONA DE EXPLORACIÓN"}
+                      />
+                    </div>
+                  )}
+                </div>
 
                 {/* DETALLES */}
                 <div className="px-6 flex flex-col gap-4 flex-1">
@@ -465,22 +462,13 @@ export default function ExplorationsView({
                 {/* ACCIONES */}
                 <div className="flex gap-3 border-t-2 border-black/15 p-6 pt-4 mt-4">
                   {isScheduled && (
-                    <>
-                      <button
-                        onClick={() => onDepartExploration(exp.id)}
-                        className="flex-1 bg-[#c27c2f] text-black font-typewriter text-sm font-bold uppercase py-3 px-4 border-2 border-black hover:bg-[#df8120] cursor-pointer flex items-center justify-center gap-2 transition-colors"
-                      >
-                        <Play className="w-4 h-4" />
-                        PARTIR
-                      </button>
-                      <button
-                        onClick={() => onCancelExploration(exp.id)}
-                        className="bg-[#9c2720] hover:bg-red-800 text-white py-3 px-4 font-typewriter text-sm font-bold uppercase border-2 border-black flex items-center gap-2 cursor-pointer"
-                      >
-                        <XSquare className="w-4 h-4" />
-                        CANCELAR
-                      </button>
-                    </>
+                    <button
+                      onClick={() => onCancelExploration(exp.id)}
+                      className="bg-[#9c2720] hover:bg-red-800 text-white py-3 px-4 font-typewriter text-sm font-bold uppercase border-2 border-black flex items-center gap-2 cursor-pointer"
+                    >
+                      <XSquare className="w-4 h-4" />
+                      CANCELAR
+                    </button>
                   )}
                   {isInProgress && (
                     <button

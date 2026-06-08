@@ -1,4 +1,13 @@
-import { LayoutDashboard, UserPlus, Users, Tent, MapPin, Database, Truck } from "lucide-react"
+import {
+  LayoutDashboard,
+  UserPlus,
+  Users,
+  Tent,
+  MapPin,
+  Database,
+  Truck,
+  UserCircle,
+} from "lucide-react"
 import { NavLink } from "react-router-dom"
 
 export default function Sidebar() {
@@ -10,6 +19,7 @@ export default function Sidebar() {
     { name: "EXPLORACIONES", path: "/admin/explorations", icon: MapPin },
     { name: "RECURSOS", path: "/admin/resources", icon: Database },
     { name: "TRASLADOS", path: "/admin/transfers", icon: Truck },
+    { name: "PERFIL", path: "/admin/profile", icon: UserCircle },
   ]
 
   return (
@@ -60,7 +70,6 @@ export default function Sidebar() {
           })}
         </nav>
       </div>
-
     </aside>
   )
 }

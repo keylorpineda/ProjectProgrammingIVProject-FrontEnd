@@ -1,24 +1,36 @@
-import { motion, AnimatePresence } from "framer-motion"
-import { Award, FileText, Shield, Star, Trophy } from "lucide-react"
+import { useQuery } from "@tanstack/react-query"
+import { AnimatePresence, motion } from "framer-motion"
+import { Award, FileText, Radio, Star, Trophy } from "lucide-react"
 import { useState } from "react"
 
-import type { CampStatistics } from "../types"
-import type { AuthUser } from "@/types/api.types"
+import { getExplorations } from "@/features/explorations/services/explorations.service"
+import { getPersons } from "@/features/persons/services/persons.service"
+import { getCampTransfers } from "@/features/transfers/services/transfers.service"
+import { useAuthStore } from "@/store/useAuthStore"
 
-interface ProfileViewProps {
-  user: AuthUser | null
-  statistics: CampStatistics
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  residents: any[]
+// ── Palette: same Admin paper palette as CampLeader ────────────────────────────
+const PAPER = "#e3ddcd"
+const PAPER_D = "#cdc8bc"
+const PAPER_S = "#635b50"
+const INK = "#000000"
+const AMB = "#c27c2f"
+const SHADOW = "3px 3px 0px #000"
+const SHADOW_L = "5px 5px 0px #000"
+
+const paperCard = {
+  background: PAPER,
+  border: `2px solid ${INK}`,
+  boxShadow: SHADOW,
+  color: INK,
 }
 
 // ── Rank tiers ─────────────────────────────────────────────────────────────────
 const RANK_TIERS = [
-  { min: 0, label: "RECLUTA", color: "#635b50" },
-  { min: 100, label: "EXPLORADOR", color: "#3b7a5a" },
-  { min: 300, label: "VETERANO", color: "#8f581e" },
-  { min: 600, label: "COMANDANTE", color: "#c27c2f" },
-  { min: 900, label: "LEYENDA DEL PÁRAMO", color: "#b38536" },
+  { min: 0, label: "MENSAJERO", color: PAPER_S },
+  { min: 2, label: "COORDINADOR DE RUTA", color: "#3b7a5a" },
+  { min: 5, label: "OFICIAL DE LOGÍSTICA", color: "#8f581e" },
+  { min: 10, label: "JEFE DE OPERACIONES", color: AMB },
+  { min: 20, label: "COMANDANTE MÓVIL", color: "#b38536" },
 ]
 
 function getRank(score: number) {
@@ -48,125 +60,117 @@ const RARITY_LABEL: Record<number, string> = {
   5: "LEGENDARIO",
 }
 
-function buildTrophies(s: CampStatistics): TrophyDef[] {
+interface TravelStats {
+  totalTransfers: number
+  totalPersons: number
+  activeExplorations: number
+  pendingTransfers: number
+}
+
+function buildTrophies(s: TravelStats): TrophyDef[] {
   return [
     {
-      id: "primer_mando",
-      name: "PRIMER MANDO",
-      description: "Accediste al sistema como Líder de Campamento.",
-      icon: "⚔️",
+      id: "coordinador",
+      name: "COORDINADOR ACTIVO",
+      description: "Accediste al sistema como Travel Manager.",
+      icon: "📡",
       rarity: 1,
       unlocked: true,
     },
     {
-      id: "base_5",
-      name: "BASE ESTABLECIDA",
-      description: "Campamento con 5+ sobrevivientes registrados.",
-      icon: "🏕️",
+      id: "primera_ruta",
+      name: "PRIMERA RUTA",
+      description: "Al menos 1 traslado registrado en el sistema.",
+      icon: "🚗",
       rarity: 1,
-      unlocked: s.total_persons >= 5,
-      progress: Math.min(100, (s.total_persons / 5) * 100),
-      progressLabel: `${s.total_persons}/5`,
+      unlocked: s.totalTransfers >= 1,
+      progress: Math.min(100, s.totalTransfers * 100),
+      progressLabel: `${s.totalTransfers}/1`,
     },
     {
-      id: "primera_exp",
-      name: "PRIMERA EXPEDICIÓN",
-      description: "Al menos una expedición completada con éxito.",
-      icon: "🧭",
+      id: "equipo_campo",
+      name: "EQUIPO DE CAMPO",
+      description: "5+ personas en el campamento bajo coordinación.",
+      icon: "👥",
       rarity: 2,
-      unlocked: s.explorations_completed >= 1,
-      progress: Math.min(100, s.explorations_completed * 100),
-      progressLabel: `${s.explorations_completed}/1`,
+      unlocked: s.totalPersons >= 5,
+      progress: Math.min(100, (s.totalPersons / 5) * 100),
+      progressLabel: `${s.totalPersons}/5`,
     },
     {
-      id: "mano_obra",
-      name: "FUERZA LABORAL",
-      description: "10+ trabajadores activos simultáneamente.",
-      icon: "👷",
+      id: "ojo_mando",
+      name: "OJO DE MANDO",
+      description: "Al menos 1 expedición activa monitoreada.",
+      icon: "🔭",
       rarity: 2,
-      unlocked: s.active_workers >= 10,
-      progress: Math.min(100, (s.active_workers / 10) * 100),
-      progressLabel: `${s.active_workers}/10`,
+      unlocked: s.activeExplorations >= 1,
+      progress: Math.min(100, s.activeExplorations * 100),
+      progressLabel: `${s.activeExplorations}/1`,
     },
     {
-      id: "pts_100",
-      name: "PUNTOS DE HONOR",
-      description: "Alcanzaste 100 puntos de supervivencia.",
-      icon: "🏅",
-      rarity: 2,
-      unlocked: s.survival_score >= 100,
-      progress: Math.min(100, (s.survival_score / 100) * 100),
-      progressLabel: `${s.survival_score}/100`,
+      id: "logistico",
+      name: "LOGÍSTICO EFICIENTE",
+      description: "5+ traslados gestionados con éxito.",
+      icon: "📦",
+      rarity: 3,
+      unlocked: s.totalTransfers >= 5,
+      progress: Math.min(100, (s.totalTransfers / 5) * 100),
+      progressLabel: `${s.totalTransfers}/5`,
     },
     {
-      id: "exp_5",
-      name: "EXPLORADOR CURTIDO",
-      description: "5+ expediciones completadas.",
+      id: "coordinacion_avanzada",
+      name: "COORDINACIÓN AVANZADA",
+      description: "10+ personas bajo supervisión directa.",
+      icon: "🏕️",
+      rarity: 3,
+      unlocked: s.totalPersons >= 10,
+      progress: Math.min(100, (s.totalPersons / 10) * 100),
+      progressLabel: `${s.totalPersons}/10`,
+    },
+    {
+      id: "veterano_ruta",
+      name: "VETERANO DE RUTA",
+      description: "10+ traslados completados en el sistema.",
       icon: "🗺️",
-      rarity: 3,
-      unlocked: s.explorations_completed >= 5,
-      progress: Math.min(100, (s.explorations_completed / 5) * 100),
-      progressLabel: `${s.explorations_completed}/5`,
-    },
-    {
-      id: "pop_20",
-      name: "COMUNIDAD ORGANIZADA",
-      description: "20+ personas registradas en el campamento.",
-      icon: "🏙️",
-      rarity: 3,
-      unlocked: s.total_persons >= 20,
-      progress: Math.min(100, (s.total_persons / 20) * 100),
-      progressLabel: `${s.total_persons}/20`,
-    },
-    {
-      id: "pts_300",
-      name: "VETERANO DEL PÁRAMO",
-      description: "Alcanzaste 300 puntos de supervivencia.",
-      icon: "🌟",
       rarity: 4,
-      unlocked: s.survival_score >= 300,
-      progress: Math.min(100, (s.survival_score / 300) * 100),
-      progressLabel: `${s.survival_score}/300`,
+      unlocked: s.totalTransfers >= 10,
+      progress: Math.min(100, (s.totalTransfers / 10) * 100),
+      progressLabel: `${s.totalTransfers}/10`,
     },
     {
-      id: "exp_10",
-      name: "VETERANO DE CAMPO",
-      description: "10+ expediciones completadas con éxito.",
-      icon: "🎖️",
+      id: "explorador_monitor",
+      name: "MONITOR DE CAMPO",
+      description: "5+ expediciones monitoreadas activamente.",
+      icon: "🧭",
       rarity: 4,
-      unlocked: s.explorations_completed >= 10,
-      progress: Math.min(100, (s.explorations_completed / 10) * 100),
-      progressLabel: `${s.explorations_completed}/10`,
+      unlocked: s.activeExplorations >= 5,
+      progress: Math.min(100, (s.activeExplorations / 5) * 100),
+      progressLabel: `${s.activeExplorations}/5`,
     },
     {
-      id: "leyenda",
-      name: "LEYENDA DEL PÁRAMO",
-      description: "900 puntos de supervivencia. Rango máximo alcanzado.",
+      id: "red_vial",
+      name: "RED VIAL COMPLETA",
+      description: "20+ personas coordinadas en el campamento.",
+      icon: "🌐",
+      rarity: 4,
+      unlocked: s.totalPersons >= 20,
+      progress: Math.min(100, (s.totalPersons / 20) * 100),
+      progressLabel: `${s.totalPersons}/20`,
+    },
+    {
+      id: "maestro",
+      name: "MAESTRO COORDINADOR",
+      description: "20+ traslados gestionados. Rango máximo alcanzado.",
       icon: "👑",
       rarity: 5,
-      unlocked: s.survival_score >= 900,
-      progress: Math.min(100, (s.survival_score / 900) * 100),
-      progressLabel: `${s.survival_score}/900`,
+      unlocked: s.totalTransfers >= 20,
+      progress: Math.min(100, (s.totalTransfers / 20) * 100),
+      progressLabel: `${s.totalTransfers}/20`,
     },
   ]
 }
 
-// Admin paper palette
-const PAPER = "#e3ddcd"
-const PAPER_D = "#cdc8bc"
-const PAPER_S = "#635b50"
-const INK = "#000000"
-const SHADOW = "3px 3px 0px #000"
-const SHADOW_L = "5px 5px 0px #000"
-
-const paperCard = {
-  background: PAPER,
-  border: `2px solid ${INK}`,
-  boxShadow: SHADOW,
-  color: INK,
-}
-
-// ── Trophy detail modal ────────────────────────────────────────────────────────
+// ── Trophy modal ───────────────────────────────────────────────────────────────
 function TrophyModal({ trophy, onClose }: { trophy: TrophyDef | null; onClose: () => void }) {
   return (
     <AnimatePresence>
@@ -198,7 +202,6 @@ function TrophyModal({ trophy, onClose }: { trophy: TrophyDef | null; onClose: (
               color: INK,
             }}
           >
-            {/* Tape strip top */}
             <div
               style={{
                 position: "absolute",
@@ -212,7 +215,6 @@ function TrophyModal({ trophy, onClose }: { trophy: TrophyDef | null; onClose: (
                 opacity: 0.85,
               }}
             />
-
             <button
               onClick={onClose}
               style={{
@@ -230,7 +232,6 @@ function TrophyModal({ trophy, onClose }: { trophy: TrophyDef | null; onClose: (
             >
               ✕
             </button>
-
             <div
               style={{
                 fontSize: "3.5rem",
@@ -241,7 +242,6 @@ function TrophyModal({ trophy, onClose }: { trophy: TrophyDef | null; onClose: (
             >
               {trophy.icon}
             </div>
-
             <div
               style={{
                 fontFamily: "monospace",
@@ -254,7 +254,6 @@ function TrophyModal({ trophy, onClose }: { trophy: TrophyDef | null; onClose: (
             >
               {RARITY_LABEL[trophy.rarity]} · {trophy.unlocked ? "✓ DESBLOQUEADO" : "✗ BLOQUEADO"}
             </div>
-
             <div
               style={{
                 fontFamily: "'Special Elite', monospace",
@@ -269,7 +268,6 @@ function TrophyModal({ trophy, onClose }: { trophy: TrophyDef | null; onClose: (
             >
               {trophy.name}
             </div>
-
             <div
               style={{
                 fontFamily: "monospace",
@@ -281,8 +279,6 @@ function TrophyModal({ trophy, onClose }: { trophy: TrophyDef | null; onClose: (
             >
               {trophy.description}
             </div>
-
-            {/* Stars */}
             <div style={{ display: "flex", justifyContent: "center", gap: 4, marginBottom: 14 }}>
               {Array.from({ length: 5 }).map((_, i) => (
                 <Star
@@ -292,8 +288,6 @@ function TrophyModal({ trophy, onClose }: { trophy: TrophyDef | null; onClose: (
                 />
               ))}
             </div>
-
-            {/* Progress */}
             {!trophy.unlocked && trophy.progress !== undefined && (
               <div>
                 <div
@@ -327,7 +321,6 @@ function TrophyModal({ trophy, onClose }: { trophy: TrophyDef | null; onClose: (
                 </div>
               </div>
             )}
-
             <button
               onClick={onClose}
               style={{
@@ -355,29 +348,78 @@ function TrophyModal({ trophy, onClose }: { trophy: TrophyDef | null; onClose: (
 }
 
 // ── Main ───────────────────────────────────────────────────────────────────────
-export default function ProfileView({ user, statistics }: ProfileViewProps) {
+export default function TravelProfile() {
+  const { user } = useAuthStore()
   const [selectedTrophy, setSelectedTrophy] = useState<TrophyDef | null>(null)
 
-  const rank = getRank(statistics.survival_score)
-  const nextRank = getNextRank(statistics.survival_score)
+  const baseCampId = user?.camp_id ? String(user.camp_id) : ""
+
+  const { data: transfers = [] } = useQuery({
+    queryKey: ["transfers", baseCampId],
+    queryFn: () => getCampTransfers(baseCampId),
+    enabled: !!baseCampId,
+  })
+
+  const { data: explorations = [] } = useQuery({
+    queryKey: ["explorations", baseCampId],
+    queryFn: () => getExplorations({ campId: baseCampId }),
+    enabled: !!baseCampId,
+  })
+
+  const { data: personsResponse } = useQuery({
+    queryKey: ["persons", baseCampId],
+    queryFn: () => getPersons({ campId: baseCampId, limit: 1000 }),
+    enabled: !!baseCampId,
+  })
+  const persons = personsResponse?.data ?? []
+
+  const activeExplorations = explorations.filter((e) => {
+    const key = String(e.status ?? "")
+      .toLowerCase()
+      .replace(/\s+/g, "_")
+    return key === "active" || key === "in_progress"
+  })
+  const pendingTransfers = transfers.filter((t) => {
+    const key = String(t.status ?? "")
+      .toLowerCase()
+      .replace(/\s+/g, "_")
+    return key === "pending"
+  })
+
+  const stats: TravelStats = {
+    totalTransfers: transfers.length,
+    totalPersons: persons.length,
+    activeExplorations: activeExplorations.length,
+    pendingTransfers: pendingTransfers.length,
+  }
+
+  const rankScore = stats.totalTransfers
+  const rank = getRank(rankScore)
+  const nextRank = getNextRank(rankScore)
   const rankProgress = nextRank
-    ? Math.min(
-        100,
-        Math.round(((statistics.survival_score - rank.min) / (nextRank.min - rank.min)) * 100),
-      )
+    ? Math.min(100, Math.round(((rankScore - rank.min) / (nextRank.min - rank.min)) * 100))
     : 100
 
-  const trophies = buildTrophies(statistics)
+  const trophies = buildTrophies(stats)
   const unlockedCount = trophies.filter((t) => t.unlocked).length
 
-  const prefix = (user?.username ?? "LDR").slice(0, 3).toUpperCase()
+  const prefix = (user?.username ?? "TRV").slice(0, 3).toUpperCase()
   const suffix = String(user?.id ?? "0000")
     .slice(-4)
     .padStart(4, "0")
-  const idCode = `CLR-${prefix}-${suffix}`
+  const idCode = `TRV-${prefix}-${suffix}`
 
   return (
-    <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: 24 }}>
+    <div
+      className="overflow-y-auto custom-scrollbar h-full"
+      style={{
+        background: "#0d0c0b",
+        padding: "20px 24px",
+        display: "flex",
+        flexDirection: "column",
+        gap: 24,
+      }}
+    >
       {/* ── HEADER ── */}
       <div
         style={{
@@ -406,7 +448,7 @@ export default function ProfileView({ user, statistics }: ProfileViewProps) {
             }}
           >
             <FileText className="w-7 h-7 shrink-0" />
-            EXPEDIENTE DEL COMANDANTE
+            EXPEDIENTE DEL COORDINADOR
           </h2>
           <p
             style={{
@@ -418,10 +460,9 @@ export default function ProfileView({ user, statistics }: ProfileViewProps) {
               marginTop: 4,
             }}
           >
-            SISTEMA CENTRAL · REGISTRO CLASIFICADO
+            SISTEMA CENTRAL · REGISTRO DE MOVILIDAD
           </p>
         </div>
-        {/* Tape label */}
         <div
           style={{
             background: "#ab9e8b",
@@ -465,7 +506,6 @@ export default function ProfileView({ user, statistics }: ProfileViewProps) {
             gap: 12,
           }}
         >
-          {/* Avatar */}
           <div
             style={{
               width: 80,
@@ -486,11 +526,9 @@ export default function ProfileView({ user, statistics }: ProfileViewProps) {
                 color: INK,
               }}
             >
-              {(user?.username ?? "L")[0].toUpperCase()}
+              {(user?.username ?? "T")[0].toUpperCase()}
             </span>
           </div>
-
-          {/* ID code */}
           <div
             style={{
               fontFamily: "monospace",
@@ -504,14 +542,12 @@ export default function ProfileView({ user, statistics }: ProfileViewProps) {
           >
             {idCode}
           </div>
-
-          {/* Rank */}
           <div
             style={{
               background: INK,
               color: PAPER,
               fontFamily: "monospace",
-              fontSize: "0.55rem",
+              fontSize: "0.5rem",
               fontWeight: 900,
               padding: "4px 10px",
               textTransform: "uppercase",
@@ -521,8 +557,6 @@ export default function ProfileView({ user, statistics }: ProfileViewProps) {
           >
             {rank.label}
           </div>
-
-          {/* Trophy pill */}
           <div
             style={{
               background: PAPER,
@@ -542,8 +576,6 @@ export default function ProfileView({ user, statistics }: ProfileViewProps) {
             <Trophy className="w-3 h-3" />
             {unlockedCount}/{trophies.length}
           </div>
-
-          {/* Stars */}
           <div style={{ display: "flex", gap: 3 }}>
             {Array.from({ length: RANK_TIERS.indexOf(rank) + 1 }).map((_, i) => (
               <motion.span
@@ -573,17 +605,16 @@ export default function ProfileView({ user, statistics }: ProfileViewProps) {
               paddingBottom: 8,
             }}
           >
-            [ DOCUMENTO CLASIFICADO — NIVEL ALFA ]
+            [ DOCUMENTO CLASIFICADO — NIVEL COORDINACIÓN ]
           </div>
-
           {[
             { label: "IDENTIFICADOR", value: (user?.username ?? "N/D").toUpperCase() },
-            { label: "ROL DEL SISTEMA", value: "LÍDER DE CAMPAMENTO" },
-            { label: "CAMPAMENTO", value: `#${user?.camp_id ?? "?"}` },
-            { label: "PUNTOS SUPERVIVENCIA", value: `${statistics.survival_score} PTS` },
-            { label: "POBLACIÓN", value: `${statistics.total_persons} PERSONAS` },
-            { label: "TRABAJADORES ACTIVOS", value: `${statistics.active_workers}` },
-            { label: "EXPEDICIONES", value: `${statistics.explorations_completed} COMPLETADAS` },
+            { label: "ROL DEL SISTEMA", value: "TRAVEL MANAGER" },
+            { label: "CAMPAMENTO BASE", value: `#${user?.camp_id ?? "?"}` },
+            { label: "TRASLADOS GESTIONADOS", value: `${stats.totalTransfers}` },
+            { label: "PERSONAL A CARGO", value: `${stats.totalPersons} PERSONAS` },
+            { label: "EXPEDICIONES ACTIVAS", value: `${stats.activeExplorations}` },
+            { label: "TRASLADOS PENDIENTES", value: `${stats.pendingTransfers}` },
           ].map((row) => (
             <div
               key={row.label}
@@ -618,8 +649,6 @@ export default function ProfileView({ user, statistics }: ProfileViewProps) {
               </span>
             </div>
           ))}
-
-          {/* XP bar */}
           <div style={{ marginTop: 14 }}>
             <div
               style={{
@@ -634,9 +663,7 @@ export default function ProfileView({ user, statistics }: ProfileViewProps) {
             >
               <span style={{ fontWeight: 900 }}>{rank.label}</span>
               <span>
-                {nextRank
-                  ? `→ ${nextRank.label} (${statistics.survival_score}/${nextRank.min})`
-                  : "RANGO MÁXIMO"}
+                {nextRank ? `→ ${nextRank.label} (${rankScore}/${nextRank.min})` : "RANGO MÁXIMO"}
               </span>
             </div>
             <div
@@ -666,10 +693,10 @@ export default function ProfileView({ user, statistics }: ProfileViewProps) {
       {/* ── STATS BAR ── */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
         {[
-          { label: "POBLACIÓN", value: statistics.total_persons },
-          { label: "ACTIVOS", value: statistics.active_workers },
-          { label: "EN CAMPO", value: statistics.exploring },
-          { label: "BAJAS", value: statistics.injured_or_sick },
+          { label: "TRASLADOS", value: stats.totalTransfers },
+          { label: "PERSONAL", value: stats.totalPersons },
+          { label: "EXPEDICIONES", value: stats.activeExplorations },
+          { label: "PENDIENTES", value: stats.pendingTransfers },
         ].map((s) => (
           <div key={s.label} style={{ ...paperCard, padding: "16px 12px", textAlign: "center" }}>
             <div
@@ -706,7 +733,6 @@ export default function ProfileView({ user, statistics }: ProfileViewProps) {
         transition={{ type: "spring", stiffness: 110, delay: 0.15 }}
         style={{ ...paperCard }}
       >
-        {/* Header */}
         <div
           style={{
             background: INK,
@@ -744,8 +770,6 @@ export default function ProfileView({ user, statistics }: ProfileViewProps) {
             {unlockedCount}/{trophies.length} OBTENIDOS
           </span>
         </div>
-
-        {/* Grid */}
         <div
           style={{
             padding: 20,
@@ -778,7 +802,6 @@ export default function ProfileView({ user, statistics }: ProfileViewProps) {
                 filter: trophy.unlocked ? "none" : "grayscale(0.5)",
               }}
             >
-              {/* Rarity corner tape */}
               {trophy.unlocked && (
                 <div
                   style={{
@@ -798,9 +821,7 @@ export default function ProfileView({ user, statistics }: ProfileViewProps) {
                   {RARITY_LABEL[trophy.rarity][0]}
                 </div>
               )}
-
               <div style={{ fontSize: "2rem", lineHeight: 1, marginBottom: 8 }}>{trophy.icon}</div>
-
               <div
                 style={{
                   fontFamily: "monospace",
@@ -814,7 +835,6 @@ export default function ProfileView({ user, statistics }: ProfileViewProps) {
               >
                 {trophy.name}
               </div>
-
               <div style={{ display: "flex", justifyContent: "center", gap: 2, marginBottom: 6 }}>
                 {Array.from({ length: 5 }).map((_, si) => (
                   <span
@@ -825,7 +845,6 @@ export default function ProfileView({ user, statistics }: ProfileViewProps) {
                   </span>
                 ))}
               </div>
-
               {!trophy.unlocked && trophy.progress !== undefined && (
                 <div
                   style={{
@@ -839,7 +858,6 @@ export default function ProfileView({ user, statistics }: ProfileViewProps) {
                   <div style={{ height: "100%", width: `${trophy.progress}%`, background: INK }} />
                 </div>
               )}
-
               {trophy.unlocked && (
                 <div
                   style={{
@@ -878,7 +896,7 @@ export default function ProfileView({ user, statistics }: ProfileViewProps) {
             fontWeight: 900,
           }}
         >
-          <Shield className="w-4 h-4" /> NOTAS DE MANDO
+          <Radio className="w-4 h-4" /> DIRECTIVA DE COORDINACIÓN
         </h4>
         <p
           style={{
@@ -892,9 +910,9 @@ export default function ProfileView({ user, statistics }: ProfileViewProps) {
             margin: 0,
           }}
         >
-          &quot;La supervivencia del campamento depende de la disciplina, la cooperación y la
-          gestión de recursos. Como líder, cada decisión es responsabilidad tuya. Mantén la cadena
-          de mando activa.&quot;
+          &quot;La movilidad entre campamentos es el pulso de la red de supervivencia. Cada traslado
+          autorizado, cada expedición coordinada, refuerza nuestra capacidad colectiva de resistir.
+          Mantén las rutas abiertas y el personal informado.&quot;
         </p>
         <div
           style={{
@@ -906,10 +924,11 @@ export default function ProfileView({ user, statistics }: ProfileViewProps) {
             letterSpacing: 2,
           }}
         >
-          — PROTOCOLO ALFA · NIVEL DE ACCESO: COMANDANTE
+          — PROTOCOLO BRAVO · NIVEL DE ACCESO: COORDINACIÓN
         </div>
       </motion.div>
 
+      <div style={{ height: 20 }} />
       <TrophyModal trophy={selectedTrophy} onClose={() => setSelectedTrophy(null)} />
     </div>
   )
