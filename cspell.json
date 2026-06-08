@@ -157,7 +157,10 @@
     "JSDOM",
     "leaflet",
     "Lcamps",
-    "Lleaflet"
+    "Lleaflet",
+    "Btns",
+    "Reabastecimiento",
+    "sched"
   ],
   "ignorePaths": [
     "node_modules",

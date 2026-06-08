@@ -114,4 +114,18 @@ describe("Admin → CampSelector", () => {
     await user.selectOptions(select, "2")
     await waitFor(() => expect(select).not.toBeDisabled())
   })
+
+  it("does nothing when the same camp is re-selected (early return branch)", async () => {
+    const user = userEvent.setup()
+    renderSelector()
+    const select = (await screen.findByRole("combobox")) as HTMLSelectElement
+    await user.selectOptions(select, adminUser.camp_id)
+    expect(mockedSwitchCamp).not.toHaveBeenCalled()
+  })
+
+  it("shows 'SIN CAMPAMENTOS' option when camps list is empty", async () => {
+    mockedGetCamps.mockResolvedValue([])
+    renderSelector()
+    expect(await screen.findByText(/SIN CAMPAMENTOS/i)).toBeInTheDocument()
+  })
 })

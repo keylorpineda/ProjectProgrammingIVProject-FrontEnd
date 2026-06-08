@@ -161,4 +161,13 @@ describe("Admin shell", () => {
       await waitFor(() => expect(screen.getByText(/utc$/i)).toBeInTheDocument())
     })
   })
+
+  describe("header avatar fallback", () => {
+    it("uses the first character of user.id when username is absent", async () => {
+      useAuthStore.getState().setAuth("tk", { ...adminUser, username: null as unknown as string })
+      renderAdminAt("/admin/dashboard")
+      await waitFor(() => expect(screen.getByText(/utc$/i)).toBeInTheDocument())
+      expect(screen.getAllByText("5").length).toBeGreaterThan(0)
+    })
+  })
 })

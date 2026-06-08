@@ -7,6 +7,7 @@ import {
   Database,
   Truck,
   UserCircle,
+  Map,
 } from "lucide-react"
 import { NavLink } from "react-router-dom"
 
@@ -19,6 +20,7 @@ export default function Sidebar() {
     { name: "EXPLORACIONES", path: "/admin/explorations", icon: MapPin },
     { name: "RECURSOS", path: "/admin/resources", icon: Database },
     { name: "TRASLADOS", path: "/admin/transfers", icon: Truck },
+    { name: "MAPA", path: "/admin/mapa", icon: Map },
     { name: "PERFIL", path: "/admin/profile", icon: UserCircle },
   ]
 

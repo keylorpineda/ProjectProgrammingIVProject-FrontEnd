@@ -45,6 +45,7 @@ const mockedGetResources = getResources as unknown as ReturnType<typeof vi.fn>
 const mockedGetPersons = getPersons as unknown as ReturnType<typeof vi.fn>
 const mockedApprove = approveOrRejectTransfer as unknown as ReturnType<typeof vi.fn>
 const mockedCancel = cancelTransfer as unknown as ReturnType<typeof vi.fn>
+const mockedArrive = confirmTransferArrival as unknown as ReturnType<typeof vi.fn>
 
 import { getCamps } from "@/features/camps/services/camps.service"
 import { getResources } from "@/features/inventory/services/inventory.service"
@@ -52,6 +53,7 @@ import { getPersons } from "@/features/persons/services/persons.service"
 import {
   approveOrRejectTransfer,
   cancelTransfer,
+  confirmTransferArrival,
   getCampTransfers,
 } from "@/features/transfers/services/transfers.service"
 import { useAuthStore, useTokenStore } from "@/store/useAuthStore"
@@ -84,6 +86,7 @@ describe("Admin → Transfers (read + approve/reject + cancel)", () => {
     mockedGetPersons.mockReset()
     mockedApprove.mockReset()
     mockedCancel.mockReset()
+    mockedArrive.mockReset()
     mockedGetCamps.mockReset()
 
     mockedGetCamps.mockResolvedValue(camps)
@@ -106,18 +109,18 @@ describe("Admin → Transfers (read + approve/reject + cancel)", () => {
       expect(screen.getAllByText(/PENDIENTE/i).length).toBeGreaterThanOrEqual(1)
     })
 
-    it("filters the in-memory list by status select", async () => {
+    it("filters the in-memory list by status button", async () => {
       const user = userEvent.setup()
       renderTransfers()
       await screen.findByText(/TRASLADO #/i)
-      await user.selectOptions(screen.getByRole("combobox"), "approved")
+      await user.click(screen.getByRole("button", { name: /^APROBADO$/i }))
       expect(screen.queryByText(/TRASLADO #/i)).not.toBeInTheDocument()
     })
 
-    it("renders 'SIN TRASLADOS REGISTRADOS' for an empty list", async () => {
+    it("renders 'SIN CONVOYES EN LA COLA' for an empty list", async () => {
       mockedGetTransfers.mockResolvedValue([])
       renderTransfers()
-      expect(await screen.findByText(/SIN TRASLADOS REGISTRADOS/i)).toBeInTheDocument()
+      expect(await screen.findByText(/SIN CONVOYES EN LA COLA/i)).toBeInTheDocument()
     })
   })
 
@@ -148,13 +151,16 @@ describe("Admin → Transfers (read + approve/reject + cancel)", () => {
       expect(body.status).not.toBe("denied")
     })
 
-    it("CANCELAR TRASLADO calls the cancel service", async () => {
+    it("CANCELAR SOLICITUD calls the cancel service when admin is the origin", async () => {
       const user = userEvent.setup()
       mockedCancel.mockResolvedValue(transfers[0])
+      // admin's camp_id is "1"; mount a transfer where camp "1" is the origin
+      mockedGetTransfers.mockResolvedValue([
+        { ...transfers[0], id: "101", camp_origin_id: "1", camp_destination_id: "2" },
+      ])
       renderTransfers()
-      await user.click(await screen.findByText(/TRASLADO #/i))
-      await user.click(await screen.findByRole("button", { name: /CANCELAR TRASLADO/i }))
-      await waitFor(() => expect(mockedCancel).toHaveBeenCalledWith("100"))
+      await user.click(await screen.findByRole("button", { name: /CANCELAR SOLICITUD/i }))
+      await waitFor(() => expect(mockedCancel).toHaveBeenCalledWith("101"))
     })
 
     it("shows an error message when approval API rejects", async () => {
@@ -165,6 +171,85 @@ describe("Admin → Transfers (read + approve/reject + cancel)", () => {
       await user.click(await screen.findByRole("button", { name: /^APROBAR$/i }))
       await user.click(await screen.findByRole("button", { name: /CONFIRMAR APROBACIÓN/i }))
       expect(await screen.findByText(/No se pudo aprobar el traslado/i)).toBeInTheDocument()
+    })
+
+    it("typing in formNotes textarea includes notes in the approve payload", async () => {
+      const user = userEvent.setup()
+      mockedApprove.mockResolvedValue(transfers[0])
+      renderTransfers()
+      await user.click(await screen.findByText(/TRASLADO #/i))
+      await user.click(await screen.findByRole("button", { name: /^APROBAR$/i }))
+      const textarea = await screen.findByPlaceholderText(/Condiciones o comentarios/i)
+      await user.type(textarea, "Todo en orden")
+      await user.click(await screen.findByRole("button", { name: /CONFIRMAR APROBACIÓN/i }))
+      await waitFor(() => expect(mockedApprove).toHaveBeenCalled())
+      const [, body] = mockedApprove.mock.calls[0]
+      expect(body.notes).toBe("Todo en orden")
+    })
+  })
+
+  describe("transfer status branches", () => {
+    it("shows CONFIRMAR LLEGADA when status=approved and admin is destination", async () => {
+      mockedGetTransfers.mockResolvedValue([
+        {
+          ...transfers[0],
+          id: "200",
+          status: "approved",
+          camp_origin_id: "2",
+          camp_destination_id: "1",
+        },
+      ])
+      renderTransfers()
+      expect(await screen.findByRole("button", { name: /CONFIRMAR LLEGADA/i })).toBeInTheDocument()
+    })
+
+    it("shows CONVOY EN RUTA when status=approved and admin is origin", async () => {
+      mockedGetTransfers.mockResolvedValue([
+        {
+          ...transfers[0],
+          id: "201",
+          status: "approved",
+          camp_origin_id: "1",
+          camp_destination_id: "2",
+        },
+      ])
+      renderTransfers()
+      expect(await screen.findByText(/CONVOY EN RUTA/i)).toBeInTheDocument()
+    })
+
+    it("shows ENTREGADO — ARCHIVADO when status=completed", async () => {
+      mockedGetTransfers.mockResolvedValue([{ ...transfers[0], id: "202", status: "completed" }])
+      renderTransfers()
+      expect(await screen.findByText(/ENTREGADO — ARCHIVADO/i)).toBeInTheDocument()
+    })
+
+    it("shows TRASLADO RECHAZADO when status=rejected", async () => {
+      mockedGetTransfers.mockResolvedValue([{ ...transfers[0], id: "203", status: "rejected" }])
+      renderTransfers()
+      expect(await screen.findByText(/TRASLADO RECHAZADO/i)).toBeInTheDocument()
+    })
+
+    it("shows CONVOY CANCELADO when status=cancelled", async () => {
+      mockedGetTransfers.mockResolvedValue([{ ...transfers[0], id: "204", status: "cancelled" }])
+      renderTransfers()
+      expect(await screen.findByText(/CONVOY CANCELADO/i)).toBeInTheDocument()
+    })
+
+    it("CONFIRMAR LLEGADA calls confirmTransferArrival with the transfer id", async () => {
+      const user = userEvent.setup()
+      mockedArrive.mockResolvedValue(transfers[0])
+      mockedGetTransfers.mockResolvedValue([
+        {
+          ...transfers[0],
+          id: "205",
+          status: "approved",
+          camp_origin_id: "2",
+          camp_destination_id: "1",
+        },
+      ])
+      renderTransfers()
+      await user.click(await screen.findByRole("button", { name: /CONFIRMAR LLEGADA/i }))
+      await waitFor(() => expect(mockedArrive).toHaveBeenCalledWith("205"))
     })
   })
 })

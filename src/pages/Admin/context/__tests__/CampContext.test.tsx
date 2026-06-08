@@ -142,4 +142,33 @@ describe("Admin CampContext", () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false))
     expect(result.current.camps).toEqual([])
   })
+
+  it("falls back to data[0] when stored camp is not in the loaded list", async () => {
+    window.localStorage.setItem("active-camp-id", "99")
+    mockedGetCamps.mockResolvedValueOnce(camps)
+    useAuthStore.getState().setAuth("tk", { ...adminUser, camp_id: "1" })
+
+    const { result } = renderHook(() => useCamp(), { wrapper })
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+    expect(result.current.activeCampId).toBe("1")
+  })
+
+  it("falls back to data[0] when stored camp and user camp_id are both absent from the list", async () => {
+    window.localStorage.setItem("active-camp-id", "99")
+    mockedGetCamps.mockResolvedValueOnce(camps)
+    useAuthStore.getState().setAuth("tk", { ...adminUser, camp_id: "88" })
+
+    const { result } = renderHook(() => useCamp(), { wrapper })
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+    expect(result.current.activeCampId).toBe(camps[0].id)
+  })
+
+  it("sets activeCampId to empty string when there are no camps and no stored id", async () => {
+    mockedGetCamps.mockResolvedValueOnce([])
+    useAuthStore.getState().setAuth("tk", { ...adminUser, camp_id: null })
+
+    const { result } = renderHook(() => useCamp(), { wrapper })
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+    expect(result.current.activeCampId).toBe("")
+  })
 })

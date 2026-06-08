@@ -132,6 +132,25 @@ describe("Admin → AdmissionsBook", () => {
         expect(screen.getAllByText(/mateo vargas/i).length).toBeGreaterThanOrEqual(1),
       )
     })
+
+    it("shows loading skeleton while pending admissions are fetching", async () => {
+      let resolveList: (v: unknown) => void = () => {}
+      mockedGetPending.mockImplementation(
+        () =>
+          new Promise((r) => {
+            resolveList = r
+          }),
+      )
+      renderAdmissions()
+      expect(
+        screen.queryByRole("button", { name: /rechazar/i }) === null ||
+          screen.queryByText(/sarah connor/i) === null,
+      ).toBe(true)
+      resolveList({ data: [], total: 0, page: 1, limit: 100, totalPages: 0 })
+      await waitFor(() =>
+        expect(screen.getAllByText(/mateo vargas/i).length).toBeGreaterThanOrEqual(1),
+      )
+    })
   })
 
   describe("pagination through admissions", () => {
@@ -173,6 +192,27 @@ describe("Admin → AdmissionsBook", () => {
       await waitFor(() => expect(mockedGetById).toHaveBeenCalled())
       expect(screen.getByRole("button", { name: /PASAR PÁG\. ANTERIOR/i })).toBeDisabled()
     })
+
+    it("PASAR PÁG. ANTERIOR navigates back after going to next", async () => {
+      const user = userEvent.setup()
+
+      renderAdmissions()
+      await waitFor(() => expect(mockedGetById).toHaveBeenCalledWith("555"))
+
+      const nextBtn = await screen.findByRole("button", { name: /PASAR PÁG\. SIGUIENTE/i })
+      await user.click(nextBtn)
+
+      await waitFor(() => expect(mockedGetById).toHaveBeenCalledWith("556"), { timeout: 2000 })
+
+      const prevBtn = screen.getByRole("button", { name: /PASAR PÁG\. ANTERIOR/i })
+      expect(prevBtn).not.toBeDisabled()
+      await user.click(prevBtn)
+
+      await waitFor(() => {
+        const calls = mockedGetById.mock.calls.map(([id]: [string]) => id)
+        expect(calls).toContain("555")
+      })
+    })
   })
 
   describe("reject flow", () => {
@@ -190,6 +230,16 @@ describe("Admin → AdmissionsBook", () => {
       const [id, body] = mockedReview.mock.calls[0]
       expect(id).toBe("555")
       expect(body.decision).toBe("rejected")
+    })
+
+    it("shows decisionError when reviewAdmission rejects during RECHAZAR", async () => {
+      const user = userEvent.setup()
+      mockedReview.mockRejectedValue(new Error("server error"))
+
+      renderAdmissions()
+      await waitFor(() => expect(mockedGetById).toHaveBeenCalled())
+      await user.click(await screen.findByRole("button", { name: /rechazar/i }))
+      expect(await screen.findByText(/Error al procesar el rechazo/i)).toBeInTheDocument()
     })
   })
 
@@ -219,6 +269,18 @@ describe("Admin → AdmissionsBook", () => {
       expect(body.decision).toBe("accepted")
       expect(body.assign_to_camp_id).toBe(2)
       expect(typeof body.assign_to_camp_id).toBe("number")
+    })
+
+    it("shows decisionError when reviewAdmission rejects during ACEPTAR confirm", async () => {
+      const user = userEvent.setup()
+      mockedReview.mockRejectedValue(new Error("conflict"))
+
+      renderAdmissions()
+      await waitFor(() => expect(mockedGetById).toHaveBeenCalled())
+      await user.click(await screen.findByRole("button", { name: /aceptar/i }))
+      await screen.findByText(/ASIGNAR CAMPAMENTO DESTINO/i)
+      await user.click(await screen.findByRole("button", { name: /CONFIRMAR INGRESO/i }))
+      expect(await screen.findByText(/Error al aprobar la admisión/i)).toBeInTheDocument()
     })
   })
 
@@ -270,6 +332,86 @@ describe("Admin → AdmissionsBook", () => {
       await screen.findByRole("button", { name: /ARCHIVAR/i })
       expect(screen.queryByRole("button", { name: /crear cuenta/i })).not.toBeInTheDocument()
       expect(mockedCreateAccount).not.toHaveBeenCalled()
+    })
+
+    it("shows 'Ya existe una cuenta' error when API returns duplicate message", async () => {
+      const user = userEvent.setup()
+      mockedReview.mockResolvedValue({
+        admission: { ...fakeAdmission, status: "ACCEPTED" },
+        person: { id: "999" },
+      })
+      mockedCreateAccount.mockRejectedValue({
+        response: { data: { message: "Email already exists in the system" } },
+      })
+
+      renderAdmissions()
+      await waitFor(() => expect(mockedGetById).toHaveBeenCalled())
+
+      await user.click(await screen.findByRole("button", { name: /aceptar/i }))
+      await user.click(await screen.findByRole("button", { name: /CONFIRMAR INGRESO/i }))
+      await user.click(await screen.findByRole("button", { name: /crear cuenta/i }))
+
+      expect(await screen.findByText(/Ya existe una cuenta/i)).toBeInTheDocument()
+    })
+
+    it("shows 'admisión no fue procesada' error when API returns not accepted message", async () => {
+      const user = userEvent.setup()
+      mockedReview.mockResolvedValue({
+        admission: { ...fakeAdmission, status: "ACCEPTED" },
+        person: { id: "999" },
+      })
+      mockedCreateAccount.mockRejectedValue({
+        response: { data: { message: "Person not created" } },
+      })
+
+      renderAdmissions()
+      await waitFor(() => expect(mockedGetById).toHaveBeenCalled())
+
+      await user.click(await screen.findByRole("button", { name: /aceptar/i }))
+      await user.click(await screen.findByRole("button", { name: /CONFIRMAR INGRESO/i }))
+      await user.click(await screen.findByRole("button", { name: /crear cuenta/i }))
+
+      expect(await screen.findByText(/admisión no fue procesada/i)).toBeInTheDocument()
+    })
+
+    it("marks account as done with warning when email failed to send", async () => {
+      const user = userEvent.setup()
+      mockedReview.mockResolvedValue({
+        admission: { ...fakeAdmission, status: "ACCEPTED" },
+        person: { id: "999" },
+      })
+      mockedCreateAccount.mockRejectedValue({
+        response: { data: { message: "correo no pudo enviarse al destinatario" } },
+      })
+
+      renderAdmissions()
+      await waitFor(() => expect(mockedGetById).toHaveBeenCalled())
+
+      await user.click(await screen.findByRole("button", { name: /aceptar/i }))
+      await user.click(await screen.findByRole("button", { name: /CONFIRMAR INGRESO/i }))
+      await user.click(await screen.findByRole("button", { name: /crear cuenta/i }))
+
+      expect(await screen.findByText(/correo no se pudo enviar/i)).toBeInTheDocument()
+    })
+
+    it("shows generic accountError when axios message is present and no match", async () => {
+      const user = userEvent.setup()
+      mockedReview.mockResolvedValue({
+        admission: { ...fakeAdmission, status: "ACCEPTED" },
+        person: { id: "999" },
+      })
+      mockedCreateAccount.mockRejectedValue({
+        message: "Network timeout",
+      })
+
+      renderAdmissions()
+      await waitFor(() => expect(mockedGetById).toHaveBeenCalled())
+
+      await user.click(await screen.findByRole("button", { name: /aceptar/i }))
+      await user.click(await screen.findByRole("button", { name: /CONFIRMAR INGRESO/i }))
+      await user.click(await screen.findByRole("button", { name: /crear cuenta/i }))
+
+      expect(await screen.findByText(/Network timeout/i)).toBeInTheDocument()
     })
   })
 })

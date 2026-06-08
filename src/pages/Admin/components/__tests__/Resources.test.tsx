@@ -198,6 +198,71 @@ describe("Admin → Resources", () => {
       ).toBeInTheDocument()
       await waitFor(() => expect(mockedGetMovements).toHaveBeenCalledWith("1", 30))
     })
+
+    it("shows 'SIN MOVIMIENTOS REGISTRADOS' when the list is empty", async () => {
+      const user = userEvent.setup()
+      mockedGetMovements.mockResolvedValue([])
+      renderResources()
+      await user.click(await screen.findByRole("button", { name: /^HISTORIAL$/i }))
+      expect(await screen.findByText(/SIN MOVIMIENTOS REGISTRADOS/i)).toBeInTheDocument()
+    })
+
+    it("renders movement rows when history has entries", async () => {
+      const user = userEvent.setup()
+      mockedGetMovements.mockResolvedValue([
+        {
+          id: "m1",
+          type: "addition",
+          resource_id: "1",
+          quantity: 50,
+          date: "2026-03-10T00:00:00.000Z",
+          description: "Reabastecimiento",
+          resource: { name: "Agua", unit: "litros" },
+        },
+      ])
+      renderResources()
+      await user.click(await screen.findByRole("button", { name: /^HISTORIAL$/i }))
+      const modal = (
+        await screen.findByRole("heading", { name: /HISTORIAL DE MOVIMIENTOS/i })
+      ).closest(".modal-card") as HTMLElement
+      expect(within(modal).getByText(/Reabastecimiento/i)).toBeInTheDocument()
+      expect(within(modal).getByText(/50/)).toBeInTheDocument()
+    })
+
+    it("includes description field in movement creation form", async () => {
+      const user = userEvent.setup()
+      mockedCreateMovement.mockResolvedValue({ id: "m99" })
+      renderResources()
+      await user.click(await screen.findByRole("button", { name: /\+ REGISTRAR MOVIMIENTO/i }))
+
+      const modal = (
+        await screen.findByRole("heading", { name: /^REGISTRAR MOVIMIENTO$/i })
+      ).closest(".modal-card") as HTMLElement
+
+      const selects = within(modal).getAllByRole("combobox")
+      await user.selectOptions(selects[0], "1")
+      await user.selectOptions(selects[1], "addition")
+      await user.type(within(modal).getByRole("spinbutton"), "10")
+      await user.type(within(modal).getByPlaceholderText(/Razón del movimiento/i), "Test desc")
+
+      await user.click(within(modal).getByRole("button", { name: /^REGISTRAR$/i }))
+      await waitFor(() => expect(mockedCreateMovement).toHaveBeenCalled())
+      const body = mockedCreateMovement.mock.calls[0][0]
+      expect(body.description).toBe("Test desc")
+    })
+
+    it("CANCELAR button in the movement modal closes the modal", async () => {
+      const user = userEvent.setup()
+      renderResources()
+      await user.click(await screen.findByRole("button", { name: /\+ REGISTRAR MOVIMIENTO/i }))
+      await screen.findByRole("heading", { name: /^REGISTRAR MOVIMIENTO$/i })
+      await user.click(screen.getByRole("button", { name: /^CANCELAR$/i }))
+      await waitFor(() => {
+        expect(
+          screen.queryByRole("heading", { name: /^REGISTRAR MOVIMIENTO$/i }),
+        ).not.toBeInTheDocument()
+      })
+    })
   })
 
   describe("daily process", () => {

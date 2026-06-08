@@ -54,3 +54,34 @@ export const switchCamp = async (body: SwitchCampBody): Promise<LoginResponse> =
   const { data } = await api.patch<LoginResponse>("/auth/switch-camp", body)
   return data
 }
+
+export interface UploadAvatarResponse {
+  url: string
+  publicId: string
+  thumbnailUrl: string
+}
+
+export const uploadAvatarImage = async (file: File): Promise<UploadAvatarResponse> => {
+  const formData = new FormData()
+  formData.append("file", file)
+  const { data } = await api.post<UploadAvatarResponse>("/upload/avatar", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  })
+  return data
+}
+
+export const updateMyAvatar = async (
+  avatarUrl: string,
+  avatarPublicId?: string,
+): Promise<{ avatar_url: string; avatar_public_id: string | null }> => {
+  const { data } = await api.patch<{ avatar_url: string; avatar_public_id: string | null }>(
+    "/users/me/avatar",
+    { avatar_url: avatarUrl, avatar_public_id: avatarPublicId },
+  )
+  return data
+}
+
+export const getMe = async (): Promise<{ avatar_url: string | null }> => {
+  const { data } = await api.get<{ avatar_url: string | null }>("/users/me")
+  return data
+}

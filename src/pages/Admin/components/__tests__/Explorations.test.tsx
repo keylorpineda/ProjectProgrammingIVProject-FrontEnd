@@ -261,5 +261,44 @@ describe("Admin → Explorations", () => {
       expect(body.found_resources?.[0].flow).toBe("in")
       expect(typeof body.found_resources?.[0].resource_id).toBe("number")
     })
+
+    it("removes a found resource row when the ✕ button is clicked", async () => {
+      const user = userEvent.setup()
+      mockedGetExplorations.mockResolvedValue([{ ...explorations[0], status: "in_progress" }])
+
+      renderExplorations()
+      await user.click(await screen.findByText(/Búsqueda zona norte/i))
+      await user.click(await screen.findByRole("button", { name: /REGISTRAR REGRESO/i }))
+
+      const returnModal = (
+        await screen.findByRole("heading", { name: /REGISTRAR REGRESO/i })
+      ).closest(".modal-card") as HTMLElement
+
+      await user.click(
+        within(returnModal).getByRole("button", { name: /\+ AGREGAR RECURSO ENCONTRADO/i }),
+      )
+      expect(within(returnModal).getAllByRole("combobox").length).toBeGreaterThan(0)
+
+      const allRemoveBtns = within(returnModal).getAllByRole("button", { name: /✕/i })
+      const removeBtn = allRemoveBtns[allRemoveBtns.length - 1]
+      await user.click(removeBtn)
+
+      expect(within(returnModal).queryByRole("combobox")).toBeNull()
+    })
+  })
+
+  describe("cancel-confirm modal", () => {
+    it("VOLVER button in the cancel-confirm modal returns to detail view", async () => {
+      const user = userEvent.setup()
+
+      renderExplorations()
+      await user.click(await screen.findByText(/Búsqueda zona norte/i))
+      await user.click(await screen.findByRole("button", { name: /CANCELAR EXPEDICIÓN/i }))
+      expect(await screen.findByRole("button", { name: /VOLVER/i })).toBeInTheDocument()
+      await user.click(screen.getByRole("button", { name: /VOLVER/i }))
+      expect(
+        await screen.findByRole("button", { name: /CANCELAR EXPEDICIÓN/i }),
+      ).toBeInTheDocument()
+    })
   })
 })

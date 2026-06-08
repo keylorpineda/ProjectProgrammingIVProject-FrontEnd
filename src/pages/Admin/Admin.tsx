@@ -1,6 +1,6 @@
 import { LogOut } from "lucide-react"
 import { useEffect, useState } from "react"
-import { Navigate, Route, Routes, useNavigate } from "react-router-dom"
+import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom"
 
 import AdminProfile from "./components/AdminProfile"
 import AdmissionsBook from "./components/AdmissionsBook"
@@ -9,6 +9,7 @@ import CampSelector from "./components/CampSelector"
 import Dashboard from "./components/Dashboard"
 import Explorations from "./components/Explorations"
 import InactivityWarning from "./components/InactivityWarning"
+import MapTest from "./components/MapTest"
 import People from "./components/People"
 import Resources from "./components/Resources"
 import Sidebar from "./components/Sidebar"
@@ -31,6 +32,8 @@ const RequireAdmin = ({ children }: { children: React.ReactNode }) => {
 const AdminLayout = () => {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+  const isMapRoute = location.pathname.endsWith("/mapa")
 
   const handleLogout = () => {
     void logout().finally(() => navigate("/login"))
@@ -135,8 +138,8 @@ const AdminLayout = () => {
           </header>
 
           <main
-            className="flex-1 overflow-y-auto bg-[#0d0c0b] relative admin-route-container"
-            style={{ padding: "16px" }}
+            className={`flex-1 bg-[#0d0c0b] relative admin-route-container${isMapRoute ? " map-test-mode" : " overflow-y-auto"}`}
+            style={isMapRoute ? {} : { padding: "16px" }}
           >
             <Routes>
               <Route path="dashboard" element={<Dashboard />} />
@@ -146,6 +149,7 @@ const AdminLayout = () => {
               <Route path="explorations" element={<Explorations />} />
               <Route path="resources" element={<Resources />} />
               <Route path="transfers" element={<Transfers />} />
+              <Route path="mapa" element={<MapTest />} />
               <Route path="profile" element={<AdminProfile />} />
               <Route path="*" element={<Navigate to="dashboard" replace />} />
             </Routes>
