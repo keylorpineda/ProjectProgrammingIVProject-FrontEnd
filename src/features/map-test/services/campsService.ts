@@ -1,4 +1,4 @@
-import axios, { type AxiosError, type AxiosResponse } from "axios"
+import axios, { type AxiosError } from "axios"
 
 import type { Camp, HazardArea, ProfessionStat, Resource, TransferLine } from "../types/camp"
 
@@ -236,7 +236,7 @@ const normalizeError = (error: unknown, fallbackMessage: string): TacticalMapApi
 export class CampsService {
   async getCamps(): Promise<Camp[]> {
     try {
-      const { data } = await api.get<unknown>("/camps")
+      const { data } = await api.get<unknown>("/camps/map")
       return asArray<UnknownRecord>(data).map(normalizeCamp)
     } catch (error) {
       throw normalizeError(error, "No se pudieron cargar los campamentos.")
@@ -252,16 +252,8 @@ export class CampsService {
     try {
       if (camps.length === 0) return []
 
-      const responses = await Promise.allSettled(
-        camps.map((camp) => api.get<unknown>(`/transfers/requests/camp/${camp.id}`)),
-      )
-
-      const transfers = responses
-        .filter(
-          (response): response is PromiseFulfilledResult<AxiosResponse<unknown>> =>
-            response.status === "fulfilled",
-        )
-        .flatMap((response) => asArray<RawTransfer>(response.value.data))
+      const { data } = await api.get<unknown>("/transfers/requests/map")
+      const transfers = asArray<RawTransfer>(data)
 
       const campById = new Map(camps.map((camp) => [camp.id, camp]))
 
