@@ -157,6 +157,12 @@ export default function TravelExplorations() {
     Array<{ resource_id: string; quantity: number }>
   >([])
 
+  const [visibleCount, setVisibleCount] = useState(50)
+
+  useEffect(() => {
+    setVisibleCount(50)
+  }, [search, filterStatus])
+
   // ── React Query ──────────────────────────────────────────────────────────
   const { data: explorations = [], error } = useQuery({
     queryKey: ["explorations", baseCampId],
@@ -629,7 +635,7 @@ export default function TravelExplorations() {
 
       <div className="flex-1 flex flex-col gap-3 overflow-hidden">
         {/* ── Filtros ── */}
-        <div className="flex flex-wrap gap-3 shrink-0 items-center bg-[#1c1208] p-3 border border-[#d4a373]/20 rounded-md">
+        <div className="flex flex-wrap gap-3 shrink-0 items-center bg-[#1c1208] p-3 border-2 border-black shadow-[2px_2px_0px_#000]">
           <div className="relative w-full md:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/30" />
             <input
@@ -645,7 +651,10 @@ export default function TravelExplorations() {
             <select
               className="bg-transparent text-xs font-mono text-[#c27c2f] font-black focus:outline-none uppercase cursor-pointer"
               value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
+              onChange={(e) => {
+                setFilterStatus(e.target.value)
+                setVisibleCount(50)
+              }}
             >
               <option value="">TODOS</option>
               {stats.map((s) => (
@@ -660,7 +669,7 @@ export default function TravelExplorations() {
         {/* ── Layout 3 columnas ── */}
         <div className="flex-1 flex gap-4 overflow-hidden">
           {/* LEFT: Lista fichero */}
-          <div className="w-[290px] flex flex-col gap-3 shrink-0 overflow-hidden bg-[#1c1208] p-4 border border-[#d4a373]/20 rounded-md shadow-lg">
+          <div className="w-[290px] flex flex-col gap-3 shrink-0 overflow-hidden bg-[#1c1208] p-4 border-2 border-black shadow-[3px_3px_0px_#000]">
             <div className="tm-folder-header-row mb-1">
               <h4 className="tm-folder-title">FICHERO OPERATIVO</h4>
               <span className="text-[10px] font-mono font-medium text-white/30 uppercase tracking-wider">
@@ -670,70 +679,81 @@ export default function TravelExplorations() {
 
             <div className="tm-op-list">
               {filteredExplorations.length > 0 ? (
-                filteredExplorations.map((exp) => (
-                  <motion.button
-                    key={exp.id}
-                    whileHover={{ x: 2 }}
-                    onClick={() => setSelectedId(exp.id)}
-                    className={`tm-op-row cursor-pointer transition-all ${getRowClass(exp.status)} ${
-                      selectedExp?.id === exp.id ? "selected" : ""
-                    }`}
-                  >
-                    {/* Header: ID + Status */}
-                    <div className="flex items-center justify-between w-full">
-                      <span className="px-2 py-0.5 bg-white/10 text-[8px] font-mono text-[#e8dcc8] font-bold tracking-wider rounded-sm">
-                        REF-{exp.id.slice(0, 4).toUpperCase()}
-                      </span>
-                      <span
-                        className={`text-[9px] font-mono font-bold uppercase tracking-wider ${getStatusColorClass(exp.status)}`}
-                      >
-                        {getStatusLabel(exp.status)}
-                      </span>
-                    </div>
-
-                    {/* Name: Crisp and Bolder */}
-                    <h5
-                      className={`text-[12px] font-mono font-bold uppercase tracking-tight truncate mt-0.5 w-full ${
-                        selectedExp?.id === exp.id ? "text-[#df8120]" : "text-white"
+                <>
+                  {filteredExplorations.slice(0, visibleCount).map((exp) => (
+                    <motion.button
+                      key={exp.id}
+                      whileHover={{ x: 2 }}
+                      onClick={() => setSelectedId(exp.id)}
+                      className={`tm-op-row cursor-pointer transition-all text-left ${getRowClass(exp.status)} ${
+                        selectedExp?.id === exp.id ? "selected" : ""
                       }`}
                     >
-                      {exp.name}
-                    </h5>
-
-                    {/* Destination Description */}
-                    <p className="text-[10px] font-mono text-[#faf4e6]/90 truncate flex items-center gap-1 w-full">
-                      <span className="text-[#df8120] font-bold">➔</span>{" "}
-                      {exp.destination_description}
-                    </p>
-
-                    {/* Footer: Crew + Duration */}
-                    <div className="flex justify-between items-center w-full mt-1.5">
-                      <div className="flex -space-x-1">
-                        {exp.explorationPersons.slice(0, 3).map((ep, i) => (
-                          <div
-                            key={i}
-                            className="w-5 h-5 rounded-full border border-[#121110] bg-[#4c6351] flex items-center justify-center shadow-sm z-10"
-                            title={ep.person?.first_name || "Explorador"}
-                          >
-                            <span className="text-[8px] font-mono font-black text-white uppercase">
-                              {(ep.person?.first_name || "X").substring(0, 2)}
-                            </span>
-                          </div>
-                        ))}
-                        {exp.explorationPersons.length > 3 && (
-                          <div className="w-5 h-5 rounded-full border border-[#121110] bg-black/40 flex items-center justify-center shadow-sm z-0">
-                            <span className="text-[7px] font-mono font-black text-white uppercase">
-                              +{exp.explorationPersons.length - 3}
-                            </span>
-                          </div>
-                        )}
+                      {/* Header: ID + Status */}
+                      <div className="flex items-center justify-between w-full">
+                        <span className="px-2 py-0.5 bg-white/10 text-[8px] font-mono text-[#e8dcc8] font-bold tracking-wider rounded-sm">
+                          REF-{exp.id.slice(0, 4).toUpperCase()}
+                        </span>
+                        <span
+                          className={`text-[9px] font-mono font-bold uppercase tracking-wider ${getStatusColorClass(exp.status)}`}
+                        >
+                          {getStatusLabel(exp.status)}
+                        </span>
                       </div>
-                      <span className="text-[8px] font-mono text-[#c8bfae] uppercase font-bold">
-                        Duración: {exp.estimated_days}d
-                      </span>
-                    </div>
-                  </motion.button>
-                ))
+
+                      {/* Name: Crisp and Bolder */}
+                      <h5
+                        className={`text-[12px] font-mono font-bold uppercase tracking-tight truncate mt-0.5 w-full ${
+                          selectedExp?.id === exp.id ? "text-[#df8120]" : "text-white"
+                        }`}
+                      >
+                        {exp.name}
+                      </h5>
+
+                      {/* Destination Description */}
+                      <p className="text-[10px] font-mono text-[#faf4e6]/90 truncate flex items-center gap-1 w-full">
+                        <span className="text-[#df8120] font-bold">➔</span>{" "}
+                        {exp.destination_description}
+                      </p>
+
+                      {/* Footer: Crew + Duration */}
+                      <div className="flex justify-between items-center w-full mt-1.5 border-t border-white/5 pt-1.5">
+                        <div className="flex -space-x-1">
+                          {exp.explorationPersons.slice(0, 3).map((ep, i) => (
+                            <div
+                              key={i}
+                              className="w-5 h-5 rounded-full border border-[#121110] bg-[#4c6351] flex items-center justify-center shadow-sm z-10"
+                              title={ep.person?.first_name || "Explorador"}
+                            >
+                              <span className="text-[8px] font-mono font-black text-white uppercase">
+                                {(ep.person?.first_name || "X").substring(0, 2)}
+                              </span>
+                            </div>
+                          ))}
+                          {exp.explorationPersons.length > 3 && (
+                            <div className="w-5 h-5 rounded-full border border-[#121110] bg-black/40 flex items-center justify-center shadow-sm z-0">
+                              <span className="text-[7px] font-mono font-black text-white uppercase">
+                                +{exp.explorationPersons.length - 3}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        <span className="text-[8px] font-mono text-[#c8bfae] uppercase font-bold">
+                          Duración: {exp.estimated_days}d
+                        </span>
+                      </div>
+                    </motion.button>
+                  ))}
+                  {visibleCount < filteredExplorations.length && (
+                    <button
+                      type="button"
+                      onClick={() => setVisibleCount((v) => v + 50)}
+                      className="tm-op-btn w-full text-[10px] mt-2 py-2"
+                    >
+                      CARGAR MÁS ({filteredExplorations.length - visibleCount} RESTANTES)
+                    </button>
+                  )}
+                </>
               ) : (
                 <div className="flex flex-col items-center justify-center py-20 text-center">
                   <Archive className="h-10 w-10 text-[#df8120]/15 mb-4" />
@@ -749,7 +769,7 @@ export default function TravelExplorations() {
           </div>
 
           {/* MIDDLE: Visualizador */}
-          <div className="flex-1 flex flex-col bg-[#1c1208] border border-[#d4a373]/20 rounded-md overflow-hidden shadow-lg">
+          <div className="flex-1 flex flex-col bg-[#1c1208] border-2 border-black overflow-hidden shadow-[3px_3px_0px_#000]">
             {selectedExp ? (
               <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header visualizador */}
@@ -1109,7 +1129,7 @@ export default function TravelExplorations() {
 
           {/* RIGHT: Team panel */}
           {selectedExp && (
-            <div className="w-[240px] flex flex-col gap-3 shrink-0 overflow-hidden bg-[#1c1208] p-4 border border-[#d4a373]/20 rounded-md shadow-lg">
+            <div className="w-[240px] flex flex-col gap-3 shrink-0 overflow-hidden bg-[#1c1208] p-4 border-2 border-black shadow-[3px_3px_0px_#000]">
               <div className="tm-folder-header-row mb-1">
                 <h4 className="tm-folder-title">EQUIPO ASIGNADO</h4>
                 <span className="text-[10px] font-mono font-medium text-[#df8120] uppercase tracking-wider">

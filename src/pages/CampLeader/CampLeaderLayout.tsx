@@ -5,7 +5,10 @@ import DashboardView from "./components/DashboardView"
 import ExplorationsView from "./components/ExplorationsView"
 import Footer from "./components/Footer"
 import InventoryView from "./components/InventoryView"
+import MembersView from "./components/MembersView"
+import OccupationsView from "./components/OccupationsView"
 import ProfileView from "./components/ProfileView"
+import RankingView from "./components/RankingView"
 import Sidebar from "./components/Sidebar"
 import Topbar from "./components/Topbar"
 import TransfersView from "./components/TransfersView"
@@ -61,50 +64,58 @@ export default function CampLeaderLayout() {
   const [camps, setCamps] = useState<Camp[]>([])
   const [resources, setResources] = useState<ResourceItem[]>([])
 
-  // Load all data from the real backend
+  // ── Data loading ──────────────────────────────────────────────────────────
   const reloadData = useCallback(async () => {
     if (!user) return
-    try {
-      const campId = Number(user.camp_id ?? 1)
+    const campId = Number(user.camp_id ?? 1)
+    const token = useTokenStore.getState().getToken() ?? ""
 
-      const [expList, trList, invList, balList, movList, resList, statVal, campsData, rVal] =
-        await Promise.all([
-          explorationsService.getExplorations(campId),
-          transfersService.getCampTransferRequests(campId),
-          resourcesService.getCampInventory(campId),
-          usersService.getCampBalances(campId),
-          resourcesService.getInventoryMovements(campId),
-          usersService.getCampPersons(campId),
-          usersService.getCampStatistics(campId),
-          // Load camps list from backend
-          fetch(`${import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1"}/camps`, {
-            credentials: "include",
-            headers: { Authorization: `Bearer ${useTokenStore.getState().getToken() ?? ""}` },
-          })
-            .then((r) => (r.ok ? r.json() : []))
-            .catch(() => []),
-          resourcesService.getAllResources(),
-        ])
+    // Phase 1 — critical data: render UI as soon as this resolves (6 requests, 0 duplicates)
+    try {
+      const [expList, trList, invList, dashboard, resList, campsRaw] = await Promise.all([
+        explorationsService.getExplorations(campId),
+        transfersService.getCampTransferRequests(campId),
+        resourcesService.getCampInventory(campId),
+        usersService.getCampDashboard(campId), // single /dashboard call
+        usersService.getCampPersons(campId),
+        fetch(`${import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1"}/camps`, {
+          credentials: "include",
+          headers: { Authorization: `Bearer ${token}` },
+        })
+          .then((r) => (r.ok ? r.json() : []))
+          .catch(() => []),
+      ])
 
       setExplorations(expList)
       setTransfers(trList)
       setInventory(invList)
-      setBalances(balList)
-      setMovements(movList)
+      setBalances(dashboard.balances)
+      setStatistics(dashboard.statistics)
       setResidents(resList)
-      setStatistics(statVal)
-      setCamps(Array.isArray(campsData) ? campsData : (campsData?.data ?? []))
-      setResources(rVal)
+      setCamps(Array.isArray(campsRaw) ? campsRaw : (campsRaw?.data ?? []))
     } catch (e) {
       console.error("Error loading camp leader data:", e)
     }
+
+    // Phase 2 — secondary data: movements + resource catalog (loads in background)
+    Promise.all([
+      resourcesService.getInventoryMovements(campId),
+      resourcesService.getAllResources(),
+    ])
+      .then(([movList, rVal]) => {
+        setMovements(movList)
+        setResources(rVal)
+      })
+      .catch(() => {
+        /* non-critical, silently skip */
+      })
   }, [user])
 
   useEffect(() => {
     const run = async () => {
       setLoading(true)
       await reloadData()
-      setLoading(false)
+      setLoading(false) // spinner off after Phase 1 only
     }
     run()
   }, [reloadData])
@@ -242,6 +253,12 @@ export default function CampLeaderLayout() {
         )
       case "inventory":
         return <InventoryView inventory={inventory} />
+      case "ranking":
+        return <RankingView campId={Number(user?.camp_id ?? 1)} />
+      case "members":
+        return <MembersView residents={residents} />
+      case "occupations":
+        return <OccupationsView residents={residents} />
       case "profile":
         return <ProfileView user={user} statistics={statistics} residents={residents} />
       default:
@@ -277,32 +294,26 @@ export default function CampLeaderLayout() {
 
             {/* SCROLLABLE MAIN AREA */}
             <main className="flex-1 overflow-y-auto overflow-x-hidden relative px-6 pt-4 pb-4">
-              <AnimatePresence mode="wait">
-                {loading ? (
-                  <div
-                    key="loading"
-                    className="flex flex-col items-center justify-center p-10 h-64"
-                  >
-                    <div className="relative flex h-8 w-8 mb-4">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#fca311] opacity-75" />
-                      <span className="relative inline-flex rounded-full h-8 w-8 bg-[#c27c2f]" />
-                    </div>
-                    <h3 className="font-typewriter text-sm tracking-widest text-[#fca311] animate-pulse">
-                      CARGANDO DATOS DEL CAMPAMENTO...
-                    </h3>
+              {loading ? (
+                <div className="flex flex-col items-center justify-center p-10 h-64">
+                  <div className="relative flex h-8 w-8 mb-4">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#fca311] opacity-75" />
+                    <span className="relative inline-flex rounded-full h-8 w-8 bg-[#c27c2f]" />
                   </div>
-                ) : (
-                  <motion.div
-                    key={activeTab}
-                    initial={{ opacity: 0, scale: 0.99, y: 3 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.99, y: -3 }}
-                    transition={{ type: "spring", stiffness: 220, damping: 25 }}
-                  >
-                    {getActiveView()}
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                  <h3 className="font-typewriter text-sm tracking-widest text-[#fca311] animate-pulse">
+                    CARGANDO DATOS DEL CAMPAMENTO...
+                  </h3>
+                </div>
+              ) : (
+                <motion.div
+                  key={activeTab}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.12 }}
+                >
+                  {getActiveView()}
+                </motion.div>
+              )}
             </main>
 
             {/* FOOTER */}

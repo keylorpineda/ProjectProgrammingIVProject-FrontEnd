@@ -13,6 +13,7 @@ import Login from "./pages/Login/Login"
 import Register from "./pages/Register/Register"
 import TravelDashboard from "./pages/TravelManager/components/TravelDashboard"
 import TravelExplorations from "./pages/TravelManager/components/TravelExplorations"
+import TravelProfile from "./pages/TravelManager/components/TravelProfile"
 import TravelResources from "./pages/TravelManager/components/TravelResources"
 import TravelTeam from "./pages/TravelManager/components/TravelTeam"
 import TravelTransfers from "./pages/TravelManager/components/TravelTransfers"
@@ -64,6 +65,7 @@ function App() {
           <Route path="personnel" element={<TravelTeam />} />
           <Route path="transfers" element={<TravelTransfers />} />
           <Route path="inventory" element={<TravelResources />} />
+          <Route path="profile" element={<TravelProfile />} />
           <Route path="" element={<Navigate to="dashboard" replace />} />
         </Route>
         <Route path="/register" element={<Register />} />

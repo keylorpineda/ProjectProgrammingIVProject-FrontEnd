@@ -4,7 +4,6 @@ import { useState } from "react"
 
 import type { Camp, Inventory, ResourceItem, Transfer, TransferStatus } from "../types"
 
-import { ExplorationZoneMap } from "@/features/map-test/components/ExplorationZoneMap"
 import { TransferRouteMap } from "@/features/map-test/components/TransferRouteMap"
 
 interface TransfersViewProps {
@@ -19,6 +18,8 @@ interface TransfersViewProps {
   onCancelTransferRequest: (id: number) => Promise<void>
   onArriveTransferRequest: (id: number) => Promise<void>
 }
+
+const DEFAULT_COORDS: [number, number] = [9.9281, -84.0907]
 
 const STATUS_LABELS: Record<string, string> = {
   ALL: "VER TODOS",
@@ -204,20 +205,20 @@ export default function TransfersView({
             const isOriginUs = t.origin_camp_id === myCampId
             const resItem = resources.find((r) => r.id === t.resource_id)
 
-            const originCamp = camps.find((c) => c.id === t.origin_camp_id)
-            const destCamp = camps.find((c) => c.id === t.destination_camp_id)
+            const originCamp = camps.find((c) => c.id === t.origin_camp_id) ?? t.origin_camp
+            const destCamp = camps.find((c) => c.id === t.destination_camp_id) ?? t.destination_camp
 
             const originCampName = originCamp?.name || "BASE DESCONOCIDA"
             const destCampName = destCamp?.name || "BASE DESCONOCIDA"
 
-            const originCoords: [number, number] | null =
+            const originCoords: [number, number] =
               originCamp?.latitude != null && originCamp?.longitude != null
                 ? [Number(originCamp.latitude), Number(originCamp.longitude)]
-                : null
-            const destCoords: [number, number] | null =
+                : DEFAULT_COORDS
+            const destCoords: [number, number] =
               destCamp?.latitude != null && destCamp?.longitude != null
                 ? [Number(destCamp.latitude), Number(destCamp.longitude)]
-                : null
+                : DEFAULT_COORDS
 
             const borderColor =
               t.status === "pending"
@@ -271,28 +272,16 @@ export default function TransfersView({
                 </div>
 
                 {/* MAPA DE RUTA INTER-CAMPAMENTO */}
-                {(originCoords || destCoords) && (
-                  <div className="mx-6 mb-3">
-                    {originCoords && destCoords ? (
-                      <div className="wv-transfer-minimap">
-                        <TransferRouteMap
-                          fromCoords={originCoords}
-                          toCoords={destCoords}
-                          fromName={originCampName}
-                          toName={destCampName}
-                        />
-                      </div>
-                    ) : (
-                      <div className="wv-exp-minimap">
-                        <ExplorationZoneMap
-                          originCoords={(originCoords ?? destCoords)!}
-                          originName={originCoords ? originCampName : destCampName}
-                          destinationLabel={`${originCampName} → ${destCampName}`}
-                        />
-                      </div>
-                    )}
+                <div className="mx-6 mb-3">
+                  <div className="wv-transfer-minimap">
+                    <TransferRouteMap
+                      fromCoords={originCoords}
+                      toCoords={destCoords}
+                      fromName={isOriginUs ? "NUESTRO BÚNKER" : originCampName}
+                      toName={!isOriginUs ? "NUESTRO BÚNKER" : destCampName}
+                    />
                   </div>
-                )}
+                </div>
 
                 {/* RECURSO */}
                 <div className="px-6 flex flex-col gap-3 flex-1">

@@ -158,6 +158,11 @@ export default function TravelTransfers() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [isNewModalOpen, setIsNewModalOpen] = useState(false)
   const [formError, setFormError] = useState("")
+  const [visibleCount, setVisibleCount] = useState(50)
+
+  useEffect(() => {
+    setVisibleCount(50)
+  }, [search, statusFilter, roleFilter])
 
   // Confirm dialog state
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -589,7 +594,7 @@ export default function TravelTransfers() {
 
       <div className="flex-1 flex flex-col gap-3 overflow-hidden">
         {/* ── Filtros ── */}
-        <div className="flex flex-wrap gap-3 shrink-0 items-center bg-[#1c1208] p-3 border border-[#d4a373]/20 rounded-md">
+        <div className="flex flex-wrap gap-3 shrink-0 items-center bg-[#1c1208] p-3 border-2 border-black shadow-[2px_2px_0px_#000]">
           <div className="relative w-full md:w-56">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/30" />
             <input
@@ -633,7 +638,7 @@ export default function TravelTransfers() {
         {/* ── Main layout ── */}
         <div className="flex-1 flex gap-4 overflow-hidden">
           {/* LEFT: Registro de Traslados */}
-          <div className="w-[290px] flex flex-col gap-3 shrink-0 overflow-hidden bg-[#1c1208] p-4 border border-[#d4a373]/20 rounded-md shadow-lg">
+          <div className="w-[290px] flex flex-col gap-3 shrink-0 overflow-hidden bg-[#1c1208] p-4 border-2 border-black shadow-[3px_3px_0px_#000]">
             <div className="tm-folder-header-row mb-1">
               <h4 className="tm-folder-title">REGISTRO DE TRASLADOS</h4>
               <span className="text-[10px] font-mono font-medium text-white/30 uppercase tracking-wider">
@@ -643,65 +648,76 @@ export default function TravelTransfers() {
 
             <div className="tm-op-list">
               {filteredTransfers.length > 0 ? (
-                filteredTransfers.map((transfer) => {
-                  const isOrigin = transfer.camp_origin_id === campId
-                  return (
-                    <motion.button
-                      key={transfer.id}
-                      whileHover={{ x: 2 }}
-                      onClick={() => setSelectedId(transfer.id)}
-                      className={`tm-op-row cursor-pointer transition-all ${
-                        transfer.status === "pending"
-                          ? "tm-row-pending"
-                          : transfer.status === "approved" || transfer.status === "in_transit"
-                            ? "tm-row-transit"
-                            : "tm-row-sched"
-                      } ${selectedTransfer?.id === transfer.id ? "selected" : ""}`}
+                <>
+                  {filteredTransfers.slice(0, visibleCount).map((transfer) => {
+                    const isOrigin = transfer.camp_origin_id === campId
+                    return (
+                      <motion.button
+                        key={transfer.id}
+                        whileHover={{ x: 2 }}
+                        onClick={() => setSelectedId(transfer.id)}
+                        className={`tm-op-row cursor-pointer transition-all ${
+                          transfer.status === "pending"
+                            ? "tm-row-pending"
+                            : transfer.status === "approved" || transfer.status === "in_transit"
+                              ? "tm-row-transit"
+                              : "tm-row-sched"
+                        } ${selectedTransfer?.id === transfer.id ? "selected" : ""}`}
+                      >
+                        {/* Header: Direction Indicator + Status */}
+                        <div className="flex items-center justify-between w-full">
+                          <span
+                            className={`px-1.5 py-0.5 text-[8px] font-mono font-bold tracking-wider rounded-sm ${
+                              isOrigin
+                                ? "bg-[#c27c2f]/20 text-[#c27c2f]"
+                                : "bg-accent-approved/20 text-accent-approved"
+                            }`}
+                          >
+                            {isOrigin ? "↑ ENVIADO" : "↓ RECIBIDO"}
+                          </span>
+                          <span
+                            className={`text-[9px] font-mono font-bold uppercase tracking-wider ${getTransferStatusColorClass(
+                              transfer.status,
+                            )}`}
+                          >
+                            {getTransferStatusLabel(transfer.status)}
+                          </span>
+                        </div>
+
+                        {/* Title: Origin/Destination base */}
+                        <h5 className="text-[12px] font-mono font-bold uppercase tracking-tight truncate mt-0.5 w-full text-white text-left">
+                          {isOrigin
+                            ? `➔ BASE ${transfer.camp_destination_id}`
+                            : `← BASE ${transfer.camp_origin_id}`}
+                        </h5>
+
+                        {/* Meta/Ref */}
+                        <p className="text-[10px] font-mono text-[#faf4e6]/80 truncate w-full text-left">
+                          REF: {transfer.id.slice(0, 8).toUpperCase()}
+                        </p>
+
+                        {/* Type Badge */}
+                        <div className="flex justify-between items-center w-full mt-1.5 border-t border-white/5 pt-1.5">
+                          <span className="text-[8px] font-mono text-[#c8bfae] uppercase font-bold">
+                            CARGA: {getTransferTypeBadge(transfer.type)}
+                          </span>
+                          <span className="text-[8px] font-mono text-white/30 font-bold uppercase">
+                            {transfer.travel_days}d VÍA
+                          </span>
+                        </div>
+                      </motion.button>
+                    )
+                  })}
+                  {visibleCount < filteredTransfers.length && (
+                    <button
+                      type="button"
+                      onClick={() => setVisibleCount((v) => v + 50)}
+                      className="tm-op-btn w-full text-[10px] mt-2 py-2"
                     >
-                      {/* Header: Direction Indicator + Status */}
-                      <div className="flex items-center justify-between w-full">
-                        <span
-                          className={`px-1.5 py-0.5 text-[8px] font-mono font-bold tracking-wider rounded-sm ${
-                            isOrigin
-                              ? "bg-[#c27c2f]/20 text-[#c27c2f]"
-                              : "bg-accent-approved/20 text-accent-approved"
-                          }`}
-                        >
-                          {isOrigin ? "↑ ENVIADO" : "↓ RECIBIDO"}
-                        </span>
-                        <span
-                          className={`text-[9px] font-mono font-bold uppercase tracking-wider ${getTransferStatusColorClass(
-                            transfer.status,
-                          )}`}
-                        >
-                          {getTransferStatusLabel(transfer.status)}
-                        </span>
-                      </div>
-
-                      {/* Title: Origin/Destination base */}
-                      <h5 className="text-[12px] font-mono font-bold uppercase tracking-tight truncate mt-0.5 w-full text-white">
-                        {isOrigin
-                          ? `➔ BASE ${transfer.camp_destination_id}`
-                          : `← BASE ${transfer.camp_origin_id}`}
-                      </h5>
-
-                      {/* Meta/Ref */}
-                      <p className="text-[10px] font-mono text-[#faf4e6]/80 truncate w-full">
-                        REF: {transfer.id.slice(0, 8).toUpperCase()}
-                      </p>
-
-                      {/* Type Badge */}
-                      <div className="flex justify-between items-center w-full mt-1.5 border-t border-white/5 pt-1.5">
-                        <span className="text-[8px] font-mono text-[#c8bfae] uppercase font-bold">
-                          CARGA: {getTransferTypeBadge(transfer.type)}
-                        </span>
-                        <span className="text-[8px] font-mono text-white/30 font-bold uppercase">
-                          {transfer.travel_days}d VÍA
-                        </span>
-                      </div>
-                    </motion.button>
-                  )
-                })
+                      CARGAR MÁS ({filteredTransfers.length - visibleCount} RESTANTES)
+                    </button>
+                  )}
+                </>
               ) : (
                 <div className="flex flex-col items-center justify-center py-20 text-center">
                   <Archive className="h-10 w-10 text-white/10 mb-4" />
@@ -717,7 +733,7 @@ export default function TravelTransfers() {
           </div>
 
           {/* MIDDLE: Visualizador */}
-          <div className="flex-1 flex flex-col bg-[#1c1208] border border-[#d4a373]/20 rounded-md overflow-hidden shadow-lg">
+          <div className="flex-1 flex flex-col bg-[#1c1208] border-2 border-black overflow-hidden shadow-[3px_3px_0px_#000]">
             {selectedTransfer ? (
               <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header visualizador */}
