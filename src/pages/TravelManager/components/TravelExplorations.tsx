@@ -41,6 +41,7 @@ function FitBounds({ bounds }: { bounds: L.LatLngBoundsExpression }) {
 import type { Exploration, Person, InventoryItem } from "@/types/api.types"
 import type { ReturnExplorationFormData } from "@/types/travel-comms.types"
 
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog"
 import {
   getExplorations,
   createExploration,
@@ -115,6 +116,23 @@ export default function TravelExplorations() {
   const [isReturnModalOpen, setIsReturnModalOpen] = useState(false)
   const [formError, setFormError] = useState("")
 
+  // Confirm dialog state
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean
+    title: string
+    message: string
+    type: "warning" | "danger" | "info"
+    hideCancel?: boolean
+    onConfirm: () => void
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "warning",
+    hideCancel: false,
+    onConfirm: () => {},
+  })
+
   // New exploration form state
   const [newName, setNewName] = useState("")
   const [newDestination, setNewDestination] = useState("")
@@ -138,6 +156,12 @@ export default function TravelExplorations() {
   const [returnFoundResources, setReturnFoundResources] = useState<
     Array<{ resource_id: string; quantity: number }>
   >([])
+
+  const [visibleCount, setVisibleCount] = useState(50)
+
+  useEffect(() => {
+    setVisibleCount(50)
+  }, [search, filterStatus])
 
   // ── React Query ──────────────────────────────────────────────────────────
   const { data: explorations = [], error } = useQuery({
@@ -168,6 +192,18 @@ export default function TravelExplorations() {
       void queryClient.invalidateQueries({ queryKey: ["explorations", baseCampId] })
       resetNewForm()
       setIsNewModalOpen(false)
+
+      setConfirmDialog({
+        isOpen: true,
+        title: "Expedición Creada",
+        message:
+          "La expedición ha sido registrada y programada exitosamente en el fichero operativo.",
+        type: "info",
+        hideCancel: true,
+        onConfirm: () => {
+          setConfirmDialog((prev) => ({ ...prev, isOpen: false }))
+        },
+      })
     },
     onError: (error: any) => {
       const msg = error.response?.data?.message || error.message
@@ -304,6 +340,10 @@ export default function TravelExplorations() {
       setFormError("Describa el destino exterior.")
       return
     }
+    if (destLat === null || destLng === null) {
+      setFormError("Seleccione un punto de destino en el mapa.")
+      return
+    }
     if (newSelectedPersons.length === 0) {
       setFormError("Incluya al menos un (1) miembro de equipo.")
       return
@@ -382,22 +422,33 @@ export default function TravelExplorations() {
     const exp = explorations.find((e) => e.id === id)
     if (exp && exp.departure_date) {
       if (new Date() < new Date(exp.departure_date)) {
-        if (
-          !window.confirm(
-            `La expedición está programada para ${new Date(exp.departure_date).toLocaleString()}. ¿Desea forzar la salida anticipada bajo su responsabilidad?`,
-          )
-        ) {
-          return
-        }
+        setConfirmDialog({
+          isOpen: true,
+          title: "Salida Anticipada",
+          message: `La expedición está programada para el ${new Date(exp.departure_date).toLocaleString()}. ¿Desea forzar la salida anticipada bajo su responsabilidad?`,
+          type: "warning",
+          onConfirm: () => {
+            setConfirmDialog((prev) => ({ ...prev, isOpen: false }))
+            departMutation.mutate(id)
+          },
+        })
+        return
       }
     }
     departMutation.mutate(id)
   }
 
   function handleCancelExploration(id: string) {
-    if (window.confirm("¿Confirmar la cancelación de esta expedición?")) {
-      cancelMutation.mutate(id)
-    }
+    setConfirmDialog({
+      isOpen: true,
+      title: "Cancelar Expedición",
+      message: "¿Confirmar la cancelación de esta expedición? Esta acción no se puede deshacer.",
+      type: "danger",
+      onConfirm: () => {
+        setConfirmDialog((prev) => ({ ...prev, isOpen: false }))
+        cancelMutation.mutate(id)
+      },
+    })
   }
 
   function handleRegisterReturn() {
@@ -412,6 +463,22 @@ export default function TravelExplorations() {
           flow: "in",
           quantity: r.quantity,
         })),
+      },
+    })
+  }
+
+  function handleDiscardNewDraft() {
+    setConfirmDialog({
+      isOpen: true,
+      title: "Descartar Expedición",
+      message:
+        "¿Estás seguro de que deseas descartar esta expedición? Se perderán todos los datos ingresados.",
+      type: "warning",
+      hideCancel: false,
+      onConfirm: () => {
+        setIsNewModalOpen(false)
+        resetNewForm()
+        setConfirmDialog((prev) => ({ ...prev, isOpen: false }))
       },
     })
   }
@@ -521,6 +588,16 @@ export default function TravelExplorations() {
 
   return (
     <div className="tm-container">
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        type={confirmDialog.type}
+        hideCancel={confirmDialog.hideCancel}
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={() => setConfirmDialog((prev) => ({ ...prev, isOpen: false }))}
+      />
+
       {/* ── Vista Header ── */}
       <div className="tm-board-header">
         <div className="tm-board-left">
@@ -574,7 +651,10 @@ export default function TravelExplorations() {
             <select
               className="bg-transparent text-xs font-mono text-[#c27c2f] font-black focus:outline-none uppercase cursor-pointer"
               value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
+              onChange={(e) => {
+                setFilterStatus(e.target.value)
+                setVisibleCount(50)
+              }}
             >
               <option value="">TODOS</option>
               {stats.map((s) => (
@@ -599,70 +679,81 @@ export default function TravelExplorations() {
 
             <div className="tm-op-list">
               {filteredExplorations.length > 0 ? (
-                filteredExplorations.map((exp) => (
-                  <motion.button
-                    key={exp.id}
-                    whileHover={{ x: 2 }}
-                    onClick={() => setSelectedId(exp.id)}
-                    className={`tm-op-row cursor-pointer transition-all ${getRowClass(exp.status)} ${
-                      selectedExp?.id === exp.id ? "selected" : ""
-                    }`}
-                  >
-                    {/* Header: ID + Status */}
-                    <div className="flex items-center justify-between w-full">
-                      <span className="px-2 py-0.5 bg-white/10 text-[8px] font-mono text-[#e8dcc8] font-bold tracking-wider rounded-sm">
-                        REF-{exp.id.slice(0, 4).toUpperCase()}
-                      </span>
-                      <span
-                        className={`text-[9px] font-mono font-bold uppercase tracking-wider ${getStatusColorClass(exp.status)}`}
-                      >
-                        {getStatusLabel(exp.status)}
-                      </span>
-                    </div>
-
-                    {/* Name: Crisp and Bolder */}
-                    <h5
-                      className={`text-[12px] font-mono font-bold uppercase tracking-tight truncate mt-0.5 w-full ${
-                        selectedExp?.id === exp.id ? "text-[#df8120]" : "text-white"
+                <>
+                  {filteredExplorations.slice(0, visibleCount).map((exp) => (
+                    <motion.button
+                      key={exp.id}
+                      whileHover={{ x: 2 }}
+                      onClick={() => setSelectedId(exp.id)}
+                      className={`tm-op-row cursor-pointer transition-all text-left ${getRowClass(exp.status)} ${
+                        selectedExp?.id === exp.id ? "selected" : ""
                       }`}
                     >
-                      {exp.name}
-                    </h5>
-
-                    {/* Destination Description */}
-                    <p className="text-[10px] font-mono text-[#faf4e6]/90 truncate flex items-center gap-1 w-full">
-                      <span className="text-[#df8120] font-bold">➔</span>{" "}
-                      {exp.destination_description}
-                    </p>
-
-                    {/* Footer: Crew + Duration */}
-                    <div className="flex justify-between items-center w-full mt-1.5">
-                      <div className="flex -space-x-1">
-                        {exp.explorationPersons.slice(0, 3).map((ep, i) => (
-                          <div
-                            key={i}
-                            className="w-5 h-5 rounded-full border border-[#121110] bg-[#4c6351] flex items-center justify-center shadow-sm z-10"
-                            title={ep.person?.first_name || "Explorador"}
-                          >
-                            <span className="text-[8px] font-mono font-black text-white uppercase">
-                              {(ep.person?.first_name || "X").substring(0, 2)}
-                            </span>
-                          </div>
-                        ))}
-                        {exp.explorationPersons.length > 3 && (
-                          <div className="w-5 h-5 rounded-full border border-[#121110] bg-black/40 flex items-center justify-center shadow-sm z-0">
-                            <span className="text-[7px] font-mono font-black text-white uppercase">
-                              +{exp.explorationPersons.length - 3}
-                            </span>
-                          </div>
-                        )}
+                      {/* Header: ID + Status */}
+                      <div className="flex items-center justify-between w-full">
+                        <span className="px-2 py-0.5 bg-white/10 text-[8px] font-mono text-[#e8dcc8] font-bold tracking-wider rounded-sm">
+                          REF-{exp.id.slice(0, 4).toUpperCase()}
+                        </span>
+                        <span
+                          className={`text-[9px] font-mono font-bold uppercase tracking-wider ${getStatusColorClass(exp.status)}`}
+                        >
+                          {getStatusLabel(exp.status)}
+                        </span>
                       </div>
-                      <span className="text-[8px] font-mono text-[#c8bfae] uppercase font-bold">
-                        Duración: {exp.estimated_days}d
-                      </span>
-                    </div>
-                  </motion.button>
-                ))
+
+                      {/* Name: Crisp and Bolder */}
+                      <h5
+                        className={`text-[12px] font-mono font-bold uppercase tracking-tight truncate mt-0.5 w-full ${
+                          selectedExp?.id === exp.id ? "text-[#df8120]" : "text-white"
+                        }`}
+                      >
+                        {exp.name}
+                      </h5>
+
+                      {/* Destination Description */}
+                      <p className="text-[10px] font-mono text-[#faf4e6]/90 truncate flex items-center gap-1 w-full">
+                        <span className="text-[#df8120] font-bold">➔</span>{" "}
+                        {exp.destination_description}
+                      </p>
+
+                      {/* Footer: Crew + Duration */}
+                      <div className="flex justify-between items-center w-full mt-1.5 border-t border-white/5 pt-1.5">
+                        <div className="flex -space-x-1">
+                          {exp.explorationPersons.slice(0, 3).map((ep, i) => (
+                            <div
+                              key={i}
+                              className="w-5 h-5 rounded-full border border-[#121110] bg-[#4c6351] flex items-center justify-center shadow-sm z-10"
+                              title={ep.person?.first_name || "Explorador"}
+                            >
+                              <span className="text-[8px] font-mono font-black text-white uppercase">
+                                {(ep.person?.first_name || "X").substring(0, 2)}
+                              </span>
+                            </div>
+                          ))}
+                          {exp.explorationPersons.length > 3 && (
+                            <div className="w-5 h-5 rounded-full border border-[#121110] bg-black/40 flex items-center justify-center shadow-sm z-0">
+                              <span className="text-[7px] font-mono font-black text-white uppercase">
+                                +{exp.explorationPersons.length - 3}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        <span className="text-[8px] font-mono text-[#c8bfae] uppercase font-bold">
+                          Duración: {exp.estimated_days}d
+                        </span>
+                      </div>
+                    </motion.button>
+                  ))}
+                  {visibleCount < filteredExplorations.length && (
+                    <button
+                      type="button"
+                      onClick={() => setVisibleCount((v) => v + 50)}
+                      className="tm-op-btn w-full text-[10px] mt-2 py-2"
+                    >
+                      CARGAR MÁS ({filteredExplorations.length - visibleCount} RESTANTES)
+                    </button>
+                  )}
+                </>
               ) : (
                 <div className="flex flex-col items-center justify-center py-20 text-center">
                   <Archive className="h-10 w-10 text-[#df8120]/15 mb-4" />
@@ -1096,10 +1187,7 @@ export default function TravelExplorations() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => {
-                    setIsNewModalOpen(false)
-                    resetNewForm()
-                  }}
+                  onClick={handleDiscardNewDraft}
                   className="text-ink-soft hover:text-ink transition-colors"
                 >
                   <X className="h-5 w-5" />
@@ -1423,10 +1511,7 @@ export default function TravelExplorations() {
                 <div className="p-6 border-t-2 border-dashed border-ink/20 flex justify-end gap-6 bg-black/5">
                   <button
                     type="button"
-                    onClick={() => {
-                      setIsNewModalOpen(false)
-                      resetNewForm()
-                    }}
+                    onClick={handleDiscardNewDraft}
                     className="tm-action-btn tm-action-btn-danger"
                     style={{ padding: "8px 16px", borderRadius: "4px" }}
                   >
