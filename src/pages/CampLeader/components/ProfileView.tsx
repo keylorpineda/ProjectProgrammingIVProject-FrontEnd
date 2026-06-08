@@ -112,7 +112,7 @@ export default function ProfileView({ user, statistics, residents }: ProfileView
         {/* COL 1: COMANDANTE */}
         <div
           id="commander-manifest-card"
-          className="bg-[#e8dcc8] border-2 border-black shadow-[5px_5px_0_#000] p-6 flex flex-col gap-5"
+          className="bg-[#e8dcc8] text-black border-2 border-black shadow-[5px_5px_0_#000] p-6 flex flex-col gap-5"
           style={{ borderLeft: `6px solid ${rank.color}` }}
         >
           <div>
@@ -184,7 +184,7 @@ export default function ProfileView({ user, statistics, residents }: ProfileView
         {/* COL 2-3: ESTADÍSTICAS */}
         <div
           id="bunker-audit-card"
-          className="bg-[#e8dcc8] border-2 border-black shadow-[5px_5px_0_#000] p-6 flex flex-col gap-6 col-span-1 lg:col-span-2"
+          className="bg-[#e8dcc8] text-black border-2 border-black shadow-[5px_5px_0_#000] p-6 flex flex-col gap-6 col-span-1 lg:col-span-2"
           style={{ borderLeft: "6px solid #4c6351" }}
         >
           <div className="flex items-center gap-3 border-b-2 border-black/15 pb-4">
@@ -292,7 +292,7 @@ export default function ProfileView({ user, statistics, residents }: ProfileView
                 tabIndex={0}
                 onClick={() => setSelectedPerson(p)}
                 onKeyDown={(e) => e.key === "Enter" && setSelectedPerson(p)}
-                className="bg-[#e8dcc8] border-2 border-black shadow-[3px_3px_0_#000] p-5 flex gap-4 hover:shadow-[5px_5px_0_#000] hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all cursor-pointer select-none"
+                className="bg-[#e8dcc8] text-black border-2 border-black shadow-[3px_3px_0_#000] p-5 flex gap-4 hover:shadow-[5px_5px_0_#000] hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all cursor-pointer select-none"
               >
                 {/* Avatar */}
                 <div className="w-14 h-14 border-2 border-black shrink-0 flex items-center justify-center overflow-hidden bg-black/10">

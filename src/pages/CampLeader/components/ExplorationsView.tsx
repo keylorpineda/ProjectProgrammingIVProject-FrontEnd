@@ -5,7 +5,6 @@ import {
   Compass,
   MapPin,
   Play,
-  Plus,
   Search,
   TriangleAlert,
   XSquare,
@@ -79,19 +78,19 @@ export default function ExplorationsView({
   const [selectedPeople, setSelectedPeople] = useState<number[]>([])
   const [destLat, setDestLat] = useState<number | null>(null)
   const [destLng, setDestLng] = useState<number | null>(null)
-  const [provisionStocks, setProvisionStocks] = useState<{ [key: number]: number }>({
-    1: 10, // Default 10 Comida
-    2: 10, // Default 10 Agua
+  const [provisionStocks, setProvisionStocks] = useState<{ food: number; water: number }>({
+    food: 10,
+    water: 10,
   })
 
   // Form Fields - Return Expedition
   const [returnNotes, setReturnNotes] = useState("")
-  const [salvagedResources, setSalvagedResources] = useState<{ [key: number]: number }>({
-    1: 40, // Found Food
-    2: 30, // Found Water
-    3: 5, // Found Medicine
-    4: 2, // Found Parts
-    5: 100, // Found Ammo
+  const [salvagedResources, setSalvagedResources] = useState<{ [key: string]: number }>({
+    food: 40,
+    water: 30,
+    medicine: 5,
+    parts: 2,
+    weapons: 0,
   })
 
   const [formError, setFormError] = useState<string | null>(null)
@@ -105,6 +104,11 @@ export default function ExplorationsView({
       exp.destination_description.toLowerCase().includes(searchQuery.toLowerCase())
     return matchStatus && matchSearch
   })
+
+  const getResourceId = (category: string, fallback: number) => {
+    const found = resources.find((r) => r.category?.toLowerCase() === category || r.name.toLowerCase().includes(category))
+    return found?.id ?? fallback
+  }
 
   // Handle New Expedition Submission
   const handleCreate = async (e: FormEvent) => {
@@ -122,15 +126,23 @@ export default function ExplorationsView({
       return
     }
 
+    const foodId = getResourceId("food", 1)
+    const waterId = getResourceId("water", 2)
+
     // Check inventory stock supplies — only if inventory loaded and resource qty > 0
     let stockOk = true
     if (inventory.length > 0) {
-      Object.entries(provisionStocks).forEach(([resId, reqQty]) => {
-        if ((reqQty as number) <= 0) return // skip resources not requested
-        const dbInv = inventory.find((i) => i.resource_id === Number(resId))
-        if (!dbInv || dbInv.current_quantity < (reqQty as number)) {
+      const checks = [
+        { id: foodId, qty: provisionStocks.food, name: "COMIDA" },
+        { id: waterId, qty: provisionStocks.water, name: "AGUA" }
+      ]
+      
+      checks.forEach(({id, qty, name}) => {
+        if (qty <= 0) return
+        const dbInv = inventory.find((i) => i.resource_id === id)
+        if (!dbInv || dbInv.current_quantity < qty) {
           setFormError(
-            `RECURSOS INSUFICIENTES: se requieren ${reqQty} unidades del recurso #${resId} pero solo hay ${dbInv?.current_quantity ?? 0}.`,
+            `RECURSOS INSUFICIENTES: se requieren ${qty} unidades de ${name} pero solo hay ${dbInv?.current_quantity ?? 0}.`,
           )
           stockOk = false
         }
@@ -141,10 +153,10 @@ export default function ExplorationsView({
 
     try {
       setIsSubmitting(true)
-      const resourceConsumptions = Object.entries(provisionStocks).map(([key, value]) => ({
-        resource_id: Number(key),
-        quantity: value,
-      }))
+      const resourceConsumptions = [
+        { resource_id: foodId, quantity: provisionStocks.food },
+        { resource_id: waterId, quantity: provisionStocks.water }
+      ].filter(rc => rc.quantity > 0)
 
       // Embed coordinates in description if picked on map
       const coordSuffix =
@@ -190,10 +202,17 @@ export default function ExplorationsView({
 
     try {
       setIsSubmitting(true)
-      const foundList = Object.entries(salvagedResources).map(([key, value]) => ({
-        resource_id: Number(key),
-        quantity: value,
-      }))
+      
+      const categoryToFallback: Record<string, number> = {
+        food: 1, water: 2, medicine: 3, tools: 4, weapons: 5
+      }
+
+      const foundList = Object.entries(salvagedResources)
+        .filter(([, qty]) => qty > 0)
+        .map(([category, qty]) => ({
+          resource_id: getResourceId(category, categoryToFallback[category] || 1),
+          quantity: qty,
+        }))
 
       await onReturnExploration(selectedExplorationId, {
         notes: returnNotes,
@@ -217,17 +236,17 @@ export default function ExplorationsView({
     }
   }
 
-  const handleProvisionChange = (resId: number, qty: number) => {
+  const handleProvisionChange = (type: "food" | "water", qty: number) => {
     setProvisionStocks({
       ...provisionStocks,
-      [resId]: Math.max(0, qty),
+      [type]: Math.max(0, qty),
     })
   }
 
-  const handleSalvageChange = (resId: number, qty: number) => {
+  const handleSalvageChange = (category: string | number, qty: number) => {
     setSalvagedResources({
       ...salvagedResources,
-      [resId]: Math.max(0, qty),
+      [category.toString()]: Math.max(0, qty),
     })
   }
 
@@ -243,16 +262,6 @@ export default function ExplorationsView({
             PATRULLAS DE CAMPO · ZONA MUERTA
           </p>
         </div>
-        <button
-          onClick={() => {
-            setFormError(null)
-            setIsNewModalOpen(true)
-          }}
-          className="bg-[#c27c2f] text-black font-typewriter text-sm font-bold uppercase py-3 px-6 border-2 border-black shadow-[3px_3px_0_#000] hover:bg-[#df8120] active:shadow-none active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer flex items-center gap-2 shrink-0"
-        >
-          <Plus className="w-4 h-4" />
-          NUEVA EXPLORACIÓN
-        </button>
       </div>
 
       {/* FILTERS */}
@@ -731,8 +740,8 @@ export default function ExplorationsView({
                         type="number"
                         min={0}
                         className="w-full bg-[#111111]/90 border border-[#3b4d3e] text-white text-xs font-mono py-2 px-3 rounded uppercase focus:outline-none focus:border-[#c27c2f] focus:ring-1 focus:ring-[#c27c2f] transition-colors w-full"
-                        value={provisionStocks[1] || 0}
-                        onChange={(e) => handleProvisionChange(1, Number(e.target.value))}
+                        value={provisionStocks.food || 0}
+                        onChange={(e) => handleProvisionChange("food", Number(e.target.value))}
                       />
                     </div>
                     <div>
@@ -743,8 +752,8 @@ export default function ExplorationsView({
                         type="number"
                         min={0}
                         className="w-full bg-[#111111]/90 border border-[#3b4d3e] text-white text-xs font-mono py-2 px-3 rounded uppercase focus:outline-none focus:border-[#c27c2f] focus:ring-1 focus:ring-[#c27c2f] transition-colors w-full"
-                        value={provisionStocks[2] || 0}
-                        onChange={(e) => handleProvisionChange(2, Number(e.target.value))}
+                        value={provisionStocks.water || 0}
+                        onChange={(e) => handleProvisionChange("water", Number(e.target.value))}
                       />
                     </div>
                   </div>

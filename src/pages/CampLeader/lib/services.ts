@@ -171,18 +171,16 @@ export const resourcesService = {
   async getCampInventory(campId: number) {
     try {
       const { data } = await api.get(`/resources/inventory/${campId}`)
+      const items = Array.isArray(data) ? data : (data?.inventory_items ?? [])
       // Normalize to the shape the UI expects
-      return Array.isArray(data)
-        ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          data.map((item: any) => ({
-            camp_id: item.camp_id ?? campId,
-            resource_id: item.resource?.id ?? item.resource_id,
-            current_quantity: Number(item.current_quantity ?? 0),
-            minimum_stock_required: Number(item.minimum_stock_required ?? 0),
-            alert_active: item.alert_active ?? false,
-            resource: item.resource,
-          }))
-        : []
+      return items.map((item: any) => ({
+        camp_id: item.camp_id ?? campId,
+        resource_id: item.resource?.id ?? item.resource_id,
+        current_quantity: Number(item.current_quantity ?? 0),
+        minimum_stock_required: Number(item.minimum_stock_required ?? 0),
+        alert_active: item.alert_active ?? false,
+        resource: item.resource,
+      }))
     } catch {
       return []
     }
@@ -239,7 +237,9 @@ export const usersService = {
             can_explore: p.profession.can_explore ?? false,
           }
         : { id: 0, name: "Desconocida", can_explore: false },
-      achievements: p.achievements ?? [],
+      achievements: Array.isArray(p.achievements) 
+        ? p.achievements.map((a: any) => typeof a === 'string' ? a : a?.achievement_name).filter(Boolean)
+        : [],
       previous_skills: p.previous_skills ?? "",
       photo_url: p.photo_url ?? undefined,
     }))
@@ -283,7 +283,7 @@ export const usersService = {
           ? Math.round(((camp.total_people ?? 0) / camp.camp_capacity) * 100)
           : 0,
         explorations_completed: camp.explorations_completed ?? 0,
-        survival_score: data?.survival_score ?? 0,
+        survival_score: camp?.survival_score ?? data?.survival_score ?? 0,
       }
     } catch {
       return {

@@ -1,11 +1,11 @@
-import React, { ReactNode } from "react"
+import { ReactNode } from "react"
 import { motion, HTMLMotionProps } from "framer-motion"
 
 import "@/pages/worker/WorkerViews.css"
 
 export type PinColor = "amber" | "green" | "red" | "gold" | "none" | string
 
-interface PinnedCardProps extends HTMLMotionProps<"div"> {
+interface PinnedCardProps extends Omit<HTMLMotionProps<"div">, "title"> {
   title?: ReactNode
   value?: ReactNode
   label?: ReactNode

@@ -1,9 +1,9 @@
-import React, { ReactNode } from "react"
+import { ReactNode } from "react"
 import { motion, HTMLMotionProps } from "framer-motion"
 
 import "@/pages/worker/WorkerViews.css"
 
-interface CorkBoardProps extends HTMLMotionProps<"div"> {
+interface CorkBoardProps extends Omit<HTMLMotionProps<"div">, "title"> {
   title: ReactNode
   rightElement?: ReactNode
   children: ReactNode

@@ -1,8 +1,14 @@
 import { motion } from "framer-motion"
 import { User } from "lucide-react"
+import { useEffect, useState } from "react"
 
 import { CorkBoard } from "@/components/ui/CorkBoard"
 import { PinnedCard } from "@/components/ui/PinnedCard"
+
+const formatTime = () => {
+  const now = new Date()
+  return now.toISOString().split("T")[1].split(".")[0] + "Z"
+}
 
 import type {
   CampBalance,
@@ -21,6 +27,59 @@ interface DashboardViewProps {
   movements: InventoryMovement[]
   statistics: CampStatistics
   onNavigate: (tab: string) => void
+}
+
+function BalanceBar({
+  label,
+  production,
+  consumption,
+}: {
+  label: string
+  production: number
+  consumption: number
+}) {
+  const max = Math.max(production, consumption, 1)
+  const prodPct = Math.min((production / max) * 100, 100)
+  const consPct = Math.min((consumption / max) * 100, 100)
+  const net = production - consumption
+  const netPositive = net >= 0
+
+  return (
+    <div className="wv-balance-bar-row">
+      <div className="wv-balance-label">{label}</div>
+      <div className="wv-balance-bars">
+        <div className="wv-balance-track-label">PROD.</div>
+        <div className="wv-balance-track">
+          <motion.div
+            className="wv-balance-fill wv-balance-prod"
+            initial={{ width: 0 }}
+            animate={{ width: `${prodPct}%` }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+          />
+        </div>
+        <span className="wv-balance-number">{production}</span>
+      </div>
+      <div className="wv-balance-bars">
+        <div className="wv-balance-track-label">CONS.</div>
+        <div className="wv-balance-track">
+          <motion.div
+            className="wv-balance-fill wv-balance-cons"
+            initial={{ width: 0 }}
+            animate={{ width: `${consPct}%` }}
+            transition={{ duration: 0.8, ease: "easeOut", delay: 0.1 }}
+          />
+        </div>
+        <span className="wv-balance-number">{consumption}</span>
+      </div>
+      <div
+        className="wv-balance-net"
+        style={{ color: netPositive ? "var(--accent-approved)" : "var(--accent-critical)" }}
+      >
+        {netPositive ? "+" : ""}
+        {net}
+      </div>
+    </div>
+  )
 }
 
 function getRankInfo(score: number) {
@@ -53,6 +112,13 @@ export default function DashboardView({
   statistics,
   onNavigate,
 }: DashboardViewProps) {
+  const [time, setTime] = useState(formatTime())
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setTime(formatTime()), 1000)
+    return () => window.clearInterval(timer)
+  }, [])
+
   const activeExplorations = explorations.filter((e) => e.status === "in_progress")
   const pendingTransfers = transfers.filter((t) => t.status === "pending")
 
@@ -85,7 +151,7 @@ export default function DashboardView({
       initial="hidden"
       animate="show"
       title="TABLERO DE MANDO - RESUMEN OPERATIVO"
-      rightElement={<div className="vintage-tape shrink-0 text-sm px-4 py-2">CONTROL ACTIVO</div>}
+      rightElement={<span className="wv-board-time">{time}</span>}
     >
 
       {/* CUATRO MÉTRICAS */}
@@ -150,134 +216,114 @@ export default function DashboardView({
         </PinnedCard>
       </div>
 
-      {/* COLUMNAS: EXCURSIONISTAS ACTIVOS + BALANCE */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-        {/* Panel izquierdo: excursionistas en zona */}
-        <motion.div
-          variants={itemVariants}
-          className="wv-paper p-6 lg:col-span-8"
-        >
-          <div className="wv-section-title-row">
-            <h3 className="wv-section-title" style={{ marginBottom: 0 }}>
-              EXCURSIONISTAS EN ZONA MUERTA
-            </h3>
-            <span className="text-xl select-none">🧭</span>
-          </div>
+      {/* EXCURSIONISTAS ACTIVOS */}
+      <motion.div
+        variants={itemVariants}
+        className="wv-paper p-6"
+      >
+        <div className="wv-section-title-row">
+          <h3 className="wv-section-title" style={{ marginBottom: 0 }}>
+            EXCURSIONISTAS EN ZONA MUERTA
+          </h3>
+          <span className="text-xl select-none">🧭</span>
+        </div>
 
-          {activeExplorations.length === 0 ? (
-            <div className="border-2 border-dashed border-black/20 text-center py-10">
-              <p className="font-mono text-xs text-black/40 uppercase font-bold">
-                NINGÚN EQUIPO EN OPERACIÓN EXTERIOR
-              </p>
-              <button
-                type="button"
-                className="font-mono text-xs text-[#c27c2f] mt-2 cursor-pointer hover:underline bg-transparent border-none p-0 inline-block"
-                onClick={() => onNavigate("explorations")}
-              >
-                ORGANIZAR NUEVA BÚSQUEDA &gt;&gt;
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-3 mt-4">
-              {activeExplorations.map((exp) => {
-                const crewNames = exp.explorationPersons.map((p) => p.person.first_name).join(", ")
-                return (
-                  <div
-                    key={exp.id}
-                    className="bg-black/5 border border-black/15 p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-3"
-                    style={{ borderLeft: "4px solid #c27c2f" }}
-                  >
-                    <div className="pl-1">
-                      <span className="font-mono text-xs text-[#c27c2f] font-bold tracking-widest block">
-                        MISIÓN #{exp.id} &bull; {exp.departure_date.split("T")[0]}
-                      </span>
-                      <h4 className="font-typewriter text-sm text-black font-bold uppercase mt-0.5">
-                        {exp.name}
-                      </h4>
-                      <p className="font-mono text-xs text-black/60 mt-1 uppercase">
-                        DESTINO: {cleanDesc(exp.destination_description)}
-                      </p>
-                      <div className="flex items-center gap-1.5 mt-1.5">
-                        <User className="w-3.5 h-3.5 text-black/40 shrink-0" />
-                        <span className="font-mono text-xs text-black/60">
-                          CONTINGENTE: <span className="font-bold text-black">{crewNames}</span>
-                        </span>
-                      </div>
-                    </div>
-                    <div className="text-left md:text-right shrink-0">
-                      <span className="font-typewriter text-sm font-bold text-[#c27c2f] block">
-                        {exp.estimated_days}D (+{exp.grace_days}G)
-                      </span>
-                      <span className="font-mono text-[10px] text-black/50 uppercase block mt-1">
-                        RETORNO ESTIMADO
-                      </span>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </motion.div>
-
-        {/* Panel derecho: balance diario */}
-        <motion.div
-          variants={itemVariants}
-          className="wv-paper p-6 lg:col-span-4"
-        >
-          <div className="wv-section-title-row">
-            <h3 className="wv-section-title" style={{ marginBottom: 0 }}>
-              BALANCE DIARIO
-            </h3>
-            <span className="text-xl select-none">⚖️</span>
-          </div>
-
-          <p className="font-mono text-xs text-black/40 uppercase font-bold mb-3 mt-2">
-            CONSUMO VS PRODUCCIÓN
-          </p>
-
-          {balances.length === 0 ? (
-            <p className="font-mono text-xs text-black/40 text-center py-6 uppercase font-bold">
-              SIN DATOS DE BALANCE
+        {activeExplorations.length === 0 ? (
+          <div className="border-2 border-dashed border-black/20 text-center py-10">
+            <p className="font-mono text-xs text-black/40 uppercase font-bold">
+              NINGÚN EQUIPO EN OPERACIÓN EXTERIOR
             </p>
-          ) : (
-            <div className="space-y-4">
-              {balances.map((bal) => {
-                const isPositive = bal.net >= 0
-                return (
-                  <div key={bal.resource_id} className="bg-black/5 border border-black/15 p-3">
-                    <div className="flex justify-between items-center font-mono text-sm">
-                      <span className="text-black font-bold uppercase">{bal.resource_name}</span>
-                      <span
-                        className={`font-bold ${isPositive ? "text-[#4c6351]" : "text-[#9c2720]"}`}
-                      >
-                        {isPositive ? `+${bal.net}` : bal.net} / DÍA
+          </div>
+        ) : (
+          <div className="space-y-3 mt-4">
+            {activeExplorations.map((exp) => {
+              const crewNames = exp.explorationPersons.map((p) => p.person.first_name).join(", ")
+              return (
+                <div
+                  key={exp.id}
+                  className="bg-black/5 border border-black/15 p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-3"
+                  style={{ borderLeft: "4px solid #c27c2f" }}
+                >
+                  <div className="pl-1">
+                    <span className="font-mono text-xs text-[#c27c2f] font-bold tracking-widest block">
+                      MISIÓN #{exp.id} &bull; {exp.departure_date.split("T")[0]}
+                    </span>
+                    <h4 className="font-typewriter text-sm text-black font-bold uppercase mt-0.5">
+                      {exp.name}
+                    </h4>
+                    <p className="font-mono text-xs text-black/60 mt-1 uppercase">
+                      DESTINO: {cleanDesc(exp.destination_description)}
+                    </p>
+                    <div className="flex items-center gap-1.5 mt-1.5">
+                      <User className="w-3.5 h-3.5 text-black/40 shrink-0" />
+                      <span className="font-mono text-xs text-black/60">
+                        CONTINGENTE: <span className="font-bold text-black">{crewNames}</span>
                       </span>
                     </div>
-                    <div className="w-full h-2 bg-black/10 border border-black/15 mt-2 overflow-hidden flex">
-                      <div
-                        className="bg-[#9c2720] h-full"
-                        style={{
-                          width: `${Math.min(100, (bal.consumption / (bal.production + bal.consumption || 1)) * 100)}%`,
-                        }}
-                      />
-                      <div
-                        className="bg-[#4c6351] h-full"
-                        style={{
-                          width: `${Math.min(100, (bal.production / (bal.production + bal.consumption || 1)) * 100)}%`,
-                        }}
-                      />
-                    </div>
-                    <div className="flex justify-between text-xs font-mono text-black/50 mt-1">
-                      <span>CONSUMO: -{bal.consumption}</span>
-                      <span>PROD: +{bal.production}</span>
-                    </div>
                   </div>
-                )
-              })}
+                  <div className="text-left md:text-right shrink-0">
+                    <span className="font-typewriter text-sm font-bold text-[#c27c2f] block">
+                      {exp.estimated_days}D (+{exp.grace_days}G)
+                    </span>
+                    <span className="font-mono text-[10px] text-black/50 uppercase block mt-1">
+                      RETORNO ESTIMADO
+                    </span>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </motion.div>
+
+      {/* BALANCE DIARIO */}
+      <motion.div
+        variants={itemVariants}
+        className="wv-paper p-6"
+      >
+        <div className="wv-section-title-row">
+          <h3 className="wv-section-title" style={{ marginBottom: 0 }}>
+            BALANCE DIARIO DEL SECTOR
+          </h3>
+          <span className="wv-section-count">{activeExplorations.length} EQUIPOS EN OPERACIÓN</span>
+        </div>
+
+        {balances.length === 0 ? (
+          <p className="font-mono text-xs text-black/40 text-center py-6 uppercase font-bold">
+            SIN DATOS DE BALANCE
+          </p>
+        ) : (
+          <>
+            <div style={{ marginTop: 20, display: "flex", flexDirection: "column", gap: 16 }}>
+              {balances.map((bal) => (
+                <BalanceBar
+                  key={bal.resource_id}
+                  label={bal.resource_name.toUpperCase()}
+                  production={bal.production}
+                  consumption={bal.consumption}
+                />
+              ))}
             </div>
-          )}
-        </motion.div>
-      </div>
+            <div className="wv-balance-summary">
+              {balances.map((bal) => (
+                <div
+                  key={`summary-${bal.resource_id}`}
+                  className="wv-balance-summary-item"
+                  style={{
+                    color: bal.net >= 0 ? "var(--accent-approved)" : "var(--accent-critical)",
+                  }}
+                >
+                  {bal.resource_name.toUpperCase()} NET:{" "}
+                  <strong>
+                    {bal.net >= 0 ? "+" : ""}
+                    {bal.net}
+                  </strong>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </motion.div>
 
       {/* HISTORIAL DE MOVIMIENTOS */}
       <motion.div
