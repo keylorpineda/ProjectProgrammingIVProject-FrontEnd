@@ -1225,7 +1225,7 @@ export default function TravelTransfers() {
                       setIsNewModalOpen(false)
                       resetForm()
                     }}
-                    className="tm-op-btn tm-op-btn-danger"
+                    className="tm-action-btn tm-action-btn-danger"
                     style={{ padding: "10px 20px" }}
                   >
                     Cancelar

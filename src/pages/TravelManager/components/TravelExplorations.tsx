@@ -943,7 +943,7 @@ export default function TravelExplorations() {
                         type="button"
                         onClick={() => handleCancelExploration(selectedExp.id)}
                         disabled={cancelMutation.isPending}
-                        className="tm-action-btn"
+                        className="tm-action-btn tm-action-btn-danger"
                         style={{ padding: "8px 16px", borderRadius: "4px" }}
                       >
                         <span className="tm-action-label flex items-center gap-2">
@@ -1380,7 +1380,7 @@ export default function TravelExplorations() {
                       setIsNewModalOpen(false)
                       resetNewForm()
                     }}
-                    className="tm-btn"
+                    className="tm-action-btn tm-action-btn-danger"
                     style={{ padding: "8px 16px", borderRadius: "4px" }}
                   >
                     Cancelar
@@ -1546,7 +1546,7 @@ export default function TravelExplorations() {
                 <button
                   type="button"
                   onClick={() => setIsReturnModalOpen(false)}
-                  className="tm-btn"
+                  className="tm-action-btn tm-action-btn-danger"
                   style={{ padding: "8px 16px", borderRadius: "4px" }}
                 >
                   Cancelar
