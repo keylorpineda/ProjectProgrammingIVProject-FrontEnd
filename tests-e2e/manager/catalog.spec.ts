@@ -20,15 +20,15 @@ test.describe("Manager Catalog E2E", () => {
     await expect(page.locator("text=REGISTRAR NUEVO RECURSO")).toBeVisible()
 
     // Fill form
-    await page.fill("input#name", "Balas 9mm")
-    await page.selectOption("select#category", "weapon")
-    await page.fill("input#base_unit", "Unidades")
-    await page.fill("input#description", "Munición estándar")
+    await page.fill("input#catalog-name", "Balas 9mm")
+    await page.selectOption("select#catalog-category", "weapons")
+    await page.fill("input#catalog-unit", "Unidades")
+    await page.fill("textarea#catalog-desc", "Munición estándar")
 
     // Submit
-    await page.click('button:has-text("CREAR REGISTRO")')
+    await page.click('button:has-text("REGISTRAR")')
 
     // Success response
-    await expect(page.locator("text=CREAR REGISTRO DE RECURSO")).not.toBeVisible()
+    await expect(page.locator("text=REGISTRAR NUEVO RECURSO")).not.toBeVisible()
   })
 })

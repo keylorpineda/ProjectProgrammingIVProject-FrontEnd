@@ -18,7 +18,7 @@ test.describe("Manager Inventory E2E", () => {
     await expect(page.locator("text=Agua").first()).toBeVisible()
     await expect(page.getByText("10", { exact: true }).first()).toBeVisible() // stock
     // Water is below minimum (10 < 50), so CRÍTICO badge should appear
-    await expect(page.locator("text=CRÍTICO")).toBeVisible()
+    await expect(page.locator("text=⚠ CRÍTICO")).toBeVisible()
   })
 
   test("should edit minimum stock", async ({ page }) => {

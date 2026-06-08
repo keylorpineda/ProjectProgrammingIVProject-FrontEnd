@@ -2,40 +2,22 @@ import type { Page } from "@playwright/test"
 
 export async function mockManagerApis(page: Page) {
   // Catch-all to prevent real network requests from leaking and causing 401 logouts
-  await page.route("**/api/**", async (route) => {
+  await page.route(/doomsday-system-api|\/api\/|localhost:3000/, async (route) => {
     const url = route.request().url()
     const method = route.request().method()
 
     // --------------------------------------------------------
     // DASHBOARD / OVERVIEW
     // --------------------------------------------------------
-    if (url.includes("/users/camp/") && url.includes("/balance")) {
+    if (url.includes("/dashboard/")) {
       return route.fulfill({
         status: 200,
         json: {
-          camp_id: "1",
-          role: "camp_leader",
-          generated_at: new Date().toISOString(),
-          camp: {
-            total_people: 100,
-            active_workers: 80,
-            unavailable_people: 20,
-            camp_capacity: 150,
-            occupancy_rate: 66,
-            active_explorations: 2,
-            empty_professions: [],
-          },
-          warehouse: {
-            total_resource_types: 10,
-            resources_with_alerts: 1,
-            inventory_total_quantity: 1000,
-            critical_resources: [],
-          },
-          transfers: {
-            pending_transfers: 1,
-            approved_transfers: 2,
-            completed_transfers: 3,
-          },
+          balances: [
+            { camp_id: 1, resource: { name: "Agua" }, current_quantity: 10 },
+            { camp_id: 1, resource: { name: "Gasolina" }, current_quantity: 136 },
+          ],
+          statistics: { total_persons: 10 },
         },
       })
     }
@@ -60,17 +42,17 @@ export async function mockManagerApis(page: Page) {
           status: 200,
           json: [
             {
-              id: "1",
-              resource_id: "1",
-              resource: { name: "Gasolina", category: "combustible", unit: "Galón" },
+              id: 1,
+              resource_id: 1,
+              resource: { id: 1, name: "Gasolina", category: "combustible", unit: "Galón" },
               current_quantity: 136,
               minimum_stock_required: 50,
               alert_active: false,
             },
             {
-              id: "2",
-              resource_id: "2",
-              resource: { name: "Agua", category: "food", unit: "Litros" },
+              id: 2,
+              resource_id: 2,
+              resource: { id: 2, name: "Agua", category: "food", unit: "Litros" },
               current_quantity: 10,
               minimum_stock_required: 50,
               alert_active: true,
@@ -180,6 +162,53 @@ export async function mockManagerApis(page: Page) {
     }
 
     // --------------------------------------------------------
+    // EXPLORATIONS
+    // --------------------------------------------------------
+    if (url.includes("/explorations")) {
+      if (url.includes("/return") && method === "PATCH") {
+        return route.fulfill({ status: 200, json: { success: true } })
+      }
+      if (method === "GET") {
+        return route.fulfill({
+          status: 200,
+          json: [
+            {
+              id: 1,
+              camp_id: 1,
+              name: "Expedición Alpha",
+              destination_description: "Ciudad Abandonada",
+              status: "in_progress",
+              departure_date: "2026-06-08T10:00:00Z",
+              estimated_days: 3,
+              grace_days: 1,
+              explorationPersons: [],
+              explorationResources: [],
+            },
+            {
+              id: 2,
+              camp_id: 1,
+              name: "Búsqueda de Suministros",
+              destination_description: "Bosque Oscuro",
+              status: "in_progress",
+              departure_date: "2026-06-08T08:00:00Z",
+              estimated_days: 2,
+              grace_days: 0,
+              explorationPersons: [
+                {
+                  person: { first_name: "Ana", last_name: "Gomez" },
+                  is_leader: true,
+                },
+              ],
+              explorationResources: [],
+            },
+          ],
+        })
+      } else if (method === "POST" || method === "PUT" || method === "PATCH") {
+        return route.fulfill({ status: 200, json: { success: true } })
+      }
+    }
+
+    // --------------------------------------------------------
     // WORKFORCE
     // --------------------------------------------------------
     if (url.includes("/users/persons")) {
@@ -189,10 +218,10 @@ export async function mockManagerApis(page: Page) {
           json: {
             data: [
               {
-                id: "1",
+                id: 1,
                 first_name: "Juan",
                 last_name: "Perez",
-                profession: { name: "Mechanic" },
+                profession: { name: "Mechanic", can_explore: true },
                 status: "active",
                 role: "worker",
               },
@@ -220,16 +249,100 @@ export async function mockManagerApis(page: Page) {
       return route.fulfill({
         status: 200,
         json: [
-          { id: "1", name: "Bunker Norte" },
-          { id: "2", name: "Bunker Sur" },
+          { id: 1, name: "Bunker Norte" },
+          { id: 2, name: "Bunker Sur" },
         ],
       })
     }
 
+    // --------------------------------------------------------
+    // EXPLORATIONS
+    // --------------------------------------------------------
+    if (url.includes("/explorations")) {
+      if (method === "GET") {
+        return route.fulfill({
+          status: 200,
+          json: [
+            {
+              id: 1,
+              camp_id: 1,
+              name: "Expedición Alpha",
+              destination_description: "Ciudad Abandonada",
+              status: "in_progress",
+              departure_date: "2026-06-08T10:00:00Z",
+              estimated_days: 3,
+              grace_days: 1,
+              explorationPersons: [],
+              explorationResources: [],
+            },
+            {
+              id: 2,
+              camp_id: 1,
+              name: "Búsqueda de Suministros",
+              destination_description: "Bosque Oscuro",
+              status: "in_progress",
+              departure_date: "2026-06-08T08:00:00Z",
+              estimated_days: 2,
+              grace_days: 0,
+              explorationPersons: [
+                {
+                  person: { first_name: "Ana", last_name: "Gomez" },
+                  is_leader: true,
+                },
+              ],
+              explorationResources: [],
+            },
+          ],
+        })
+      } else if (method === "POST") {
+        return route.fulfill({ status: 201, json: { success: true } })
+      } else if (method === "PUT" || method === "PATCH") {
+        return route.fulfill({ status: 200, json: { success: true } })
+      }
+    }
+
     if (url.includes("/transfers/requests")) {
       if (method === "GET") {
-        return route.fulfill({ status: 200, json: [] })
-      } else if (method === "POST") {
+        return route.fulfill({
+          status: 200,
+          json: [
+            {
+              id: 1,
+              camp_origin_id: 1,
+              camp_destination_id: 2,
+              resource_id: 1,
+              quantity: 50,
+              status: "pending",
+              notes: "Necesitamos agua urgente",
+              requested_by_user_id: 1,
+              resourceDetails: [
+                {
+                  resource_id: 1,
+                  requested_quantity: 50,
+                  resource: { name: "Gasolina", category: "combustible", unit: "Galón" },
+                },
+              ],
+            },
+            {
+              id: 2,
+              camp_origin_id: 2,
+              camp_destination_id: 1,
+              resource_id: 2,
+              quantity: 50,
+              status: "in_transit",
+              notes: "Enviando suministros",
+              requested_by_user_id: 1,
+              resourceDetails: [
+                {
+                  resource_id: 2,
+                  requested_quantity: 50,
+                  resource: { name: "Agua", category: "food", unit: "Litros" },
+                },
+              ],
+            },
+          ],
+        })
+      } else if (method === "POST" || method === "PATCH" || method === "PUT") {
         return route.fulfill({ status: 201, json: { success: true } })
       }
     }
