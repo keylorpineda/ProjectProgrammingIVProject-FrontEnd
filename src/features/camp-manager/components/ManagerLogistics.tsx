@@ -29,7 +29,10 @@ const STATUS_STAMP: Record<string, { label: string; color: string; bg: string; r
   {
     pending: { label: "PENDIENTE", color: "#b86a1a", bg: "#f0e8d0", rotation: -3 },
     approved: { label: "AUTORIZADO", color: "#2a5a35", bg: "#d4e8d4", rotation: 2 },
+    in_transit: { label: "EN TRÁNSITO", color: "#1a4a7a", bg: "#d0e0f0", rotation: -1 },
+    completed: { label: "COMPLETADO", color: "#4a4a6a", bg: "#d8d8e8", rotation: 3 },
     rejected: { label: "RECHAZADO", color: "#9c2720", bg: "#f0d4d0", rotation: -2 },
+    cancelled: { label: "CANCELADO", color: "#6a4a1a", bg: "#e8e0d0", rotation: 1 },
     arrived: { label: "RECIBIDO", color: "#4a4a6a", bg: "#d8d8e8", rotation: 3 },
   }
 
@@ -49,12 +52,14 @@ export default function ManagerLogistics({
     queryKey: ["managerLogistics", campId],
     queryFn: async () => {
       const res = await api.get(`/transfers/requests/camp/${campId}`)
-      return res.data as IntercampRequest[]
+      const raw = res.data
+      return (Array.isArray(raw) ? raw : (raw?.data ?? [])) as IntercampRequest[]
     },
     staleTime: 1000 * 60 * 2,
   })
 
   const [errorState, setErrorState] = useState<string | null>(null)
+  const [modalError, setModalError] = useState<string | null>(null)
   const error = queryError
     ? (queryError as any).message || "Error al descargar bitácora de transferencias."
     : errorState
@@ -62,6 +67,11 @@ export default function ManagerLogistics({
   useEffect(() => {
     if (refreshTrigger > 0) refetch()
   }, [refreshTrigger, refetch])
+
+  // Limpiar error del modal cada vez que se abre
+  useEffect(() => {
+    if (showModal) setModalError(null)
+  }, [showModal])
 
   const [selectedResource, setSelectedResource] = useState<string>("")
   const [requestAmount, setRequestAmount] = useState<number>(50)
@@ -84,6 +94,7 @@ export default function ManagerLogistics({
 
     setSubmittingRequest(true)
     setErrorState(null)
+    setModalError(null)
     try {
       await api.post("/transfers/requests", {
         camp_origin_id: Number(sourceBunker),
@@ -102,7 +113,9 @@ export default function ManagerLogistics({
       refetch()
       onDataChanged()
     } catch (err: any) {
-      setErrorState(err?.response?.data?.message || err?.message || "Fallo de enlace de solicitud.")
+      const msg = err?.response?.data?.message || err?.message || "Fallo de enlace de solicitud."
+      setModalError(msg)
+      setErrorState(msg)
     } finally {
       setSubmittingRequest(false)
     }
@@ -122,15 +135,23 @@ export default function ManagerLogistics({
     }
   }
 
-  const handleArrive = async (id: string) => {
+  const handleArrive = async (id: string, currentStatus: string) => {
     setActionId(id)
     setErrorState(null)
     try {
+      // Backend state machine: approved → in_transit (depart) → completed (arrive)
+      // If still "approved", the convoy hasn't departed yet — call /depart first,
+      // then /arrive. If already "in_transit", go straight to /arrive.
+      if (currentStatus === "approved") {
+        await api.patch(`/transfers/requests/${id}/depart`)
+      }
       await api.patch(`/transfers/requests/${id}/arrive`)
       refetch()
       onDataChanged()
     } catch (err: any) {
-      setErrorState(err?.message || "Error de descarga física del flete.")
+      const msg =
+        err?.response?.data?.message || err?.message || "Error de descarga física del flete."
+      setErrorState(msg)
     } finally {
       setActionId(null)
     }
@@ -472,11 +493,11 @@ export default function ManagerLogistics({
                         </>
                       )}
 
-                      {req.status === "approved" && (
+                      {(req.status === "approved" || req.status === "in_transit") && (
                         <button
                           type="button"
                           disabled={actionId !== null}
-                          onClick={() => handleArrive(req.id)}
+                          onClick={() => handleArrive(req.id, req.status)}
                           style={{
                             width: "100%",
                             border: "1px solid #2a5a35",
@@ -730,6 +751,15 @@ export default function ManagerLogistics({
                 SOLICITUD DE EXPEDICIÓN EXTRAORDINARIA
               </h4>
             </div>
+
+            {modalError && (
+              <div className="mb-4 border-2 border-[#9c2720] bg-[#9c2720]/20 text-red-300 font-mono text-xs p-3 flex items-start gap-3">
+                <ShieldAlert className="h-4 w-4 shrink-0 text-red-400 mt-0.5" />
+                <div>
+                  <span className="font-bold uppercase">ORDEN RECHAZADA:</span> {modalError}
+                </div>
+              </div>
+            )}
 
             <form onSubmit={handleCreateRequest} className="space-y-6">
               <div className="space-y-2">

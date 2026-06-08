@@ -387,11 +387,11 @@ export default function AdminProfile() {
   const activeCamp = camps.find((c) => c.id === activeCampId)
 
   const stats: AdminStats = {
-    totalPeople: data?.camp.total_people ?? 0,
-    activeWorkers: data?.camp.active_workers ?? 0,
-    activeExplorations: data?.camp.active_explorations ?? 0,
-    completedTransfers: data?.transfers.completed_transfers ?? 0,
-    pendingTransfers: data?.transfers.pending_transfers ?? 0,
+    totalPeople: data?.camp?.total_people ?? 0,
+    activeWorkers: data?.camp?.active_workers ?? 0,
+    activeExplorations: data?.camp?.active_explorations ?? 0,
+    completedTransfers: data?.transfers?.completed_transfers ?? 0,
+    pendingTransfers: data?.transfers?.pending_transfers ?? 0,
   }
 
   const rankScore = stats.completedTransfers

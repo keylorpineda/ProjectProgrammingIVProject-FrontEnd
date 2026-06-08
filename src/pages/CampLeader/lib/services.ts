@@ -20,7 +20,7 @@ export const explorationsService = {
     const params: Record<string, unknown> = { campId }
     if (status) params.status = status
     const { data } = await api.get("/explorations", { params })
-    return data
+    return Array.isArray(data) ? data : (data?.data ?? [])
   },
 
   async getExplorationById(id: number) {
@@ -112,7 +112,7 @@ export const transfersService = {
       params: filters,
     })
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const list: any[] = Array.isArray(data) ? data : []
+    const list: any[] = Array.isArray(data) ? data : (data?.data ?? [])
     return list.map((t) => ({
       id: t.id,
       origin_camp_id: t.camp_origin_id ?? t.origin_camp_id,
