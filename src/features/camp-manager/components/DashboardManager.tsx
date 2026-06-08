@@ -27,7 +27,9 @@ import ManagerRanking from "./ManagerRanking"
 import ManagerWorkforce from "./ManagerWorkforce"
 import { useAuthStore } from "../store/useAuthStore"
 
+import AlertsBanner from "@/components/ui/AlertsBanner"
 import InactivityGuard from "@/components/ui/InactivityGuard"
+import { useAlertSocket } from "@/hooks/useAlertSocket"
 import { useAuthStore as useGlobalAuthStore } from "@/store/useAuthStore"
 
 type TabID = "overview" | "inventory" | "catalog" | "ranking" | "workforce" | "logistics"
@@ -41,6 +43,7 @@ export default function DashboardManager() {
   const globalUser = useGlobalAuthStore((state) => state.user)
   // Use real camp_id from the JWT-authenticated global store; fall back to local store
   const campId = globalUser ? globalUser.camp_id : user?.campId
+  useAlertSocket(String(campId ?? ""))
 
   // Sync local store from global user when local is null (e.g. after logout + re-login)
   useEffect(() => {
@@ -439,6 +442,7 @@ export default function DashboardManager() {
             </main>
           </div>
         </div>
+        <AlertsBanner campId={campId ?? ""} />
       </div>
     </InactivityGuard>
   )

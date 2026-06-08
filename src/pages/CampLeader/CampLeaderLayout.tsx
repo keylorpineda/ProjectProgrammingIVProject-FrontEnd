@@ -31,13 +31,17 @@ import type {
   Transfer,
 } from "./types"
 
+import AlertsBanner from "@/components/ui/AlertsBanner"
 import InactivityGuard from "@/components/ui/InactivityGuard"
+import { useAlertSocket } from "@/hooks/useAlertSocket"
 import { useAuthStore, useTokenStore } from "@/store/useAuthStore"
 
 import "./campleader.css"
 
 export default function CampLeaderLayout() {
   const { user, logout } = useAuthStore()
+  const campId = String(user?.camp_id ?? "")
+  useAlertSocket(campId)
   const [activeTab, setActiveTab] = useState("dashboard")
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(false)
@@ -320,6 +324,8 @@ export default function CampLeaderLayout() {
             <Footer />
           </div>
         </div>
+
+        <AlertsBanner campId={campId} />
 
         {/* ACTION LOADING OVERLAY */}
         <AnimatePresence>

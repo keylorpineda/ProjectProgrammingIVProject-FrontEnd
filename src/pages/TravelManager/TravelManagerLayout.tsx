@@ -12,12 +12,16 @@ import {
 import { useState, useEffect } from "react"
 import { Outlet, useNavigate, NavLink } from "react-router-dom"
 
+import AlertsBanner from "@/components/ui/AlertsBanner"
 import InactivityGuard from "@/components/ui/InactivityGuard"
+import { useAlertSocket } from "@/hooks/useAlertSocket"
 import { useAuthStore } from "@/store/useAuthStore"
 import "./TravelManagerViews.css"
 
 export default function TravelManagerLayout() {
   const { user, logout } = useAuthStore()
+  const campId = String(user?.camp_id ?? "")
+  useAlertSocket(campId)
   const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [utcTime, setUtcTime] = useState("")
@@ -241,6 +245,8 @@ export default function TravelManagerLayout() {
             </main>
           </div>
         </div>
+
+        <AlertsBanner campId={campId} />
 
         {/* MOBILE SIDEBAR MODAL */}
         {sidebarOpen && (

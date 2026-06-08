@@ -15,8 +15,11 @@ import Resources from "./components/Resources"
 import Sidebar from "./components/Sidebar"
 import Transfers from "./components/Transfers"
 import { AuthProvider, useAuth } from "./context/AuthContext"
-import { CampProvider } from "./context/CampContext"
+import { CampProvider, useCamp } from "./context/CampContext"
 import { SessionProvider } from "./context/SessionContext"
+
+import AlertsBanner from "@/components/ui/AlertsBanner"
+import { useAlertSocket } from "@/hooks/useAlertSocket"
 import "./AdminTheme.css"
 import "./Admin.css"
 
@@ -31,6 +34,8 @@ const RequireAdmin = ({ children }: { children: React.ReactNode }) => {
 
 const AdminLayout = () => {
   const { user, logout } = useAuth()
+  const { activeCampId } = useCamp()
+  useAlertSocket(activeCampId)
   const navigate = useNavigate()
   const location = useLocation()
   const isMapRoute = location.pathname.endsWith("/mapa")
@@ -156,6 +161,7 @@ const AdminLayout = () => {
           </main>
         </div>
       </div>
+      <AlertsBanner campId={activeCampId} />
       <InactivityWarning />
     </div>
   )

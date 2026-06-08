@@ -58,6 +58,7 @@ const DEMO_ADMISSIONS: AdmissionDetail[] = [
     rulesApplied: ["CRITICAL_ROLE_NEEDED", "HEALTH_SCORE_OK"],
     aiRecommendation: "accept",
     contactEmail: "mateo.vargas@demo.com",
+    admissionStatus: "PENDING_REVIEW",
   },
   {
     id: "DEMO-02",
@@ -73,6 +74,7 @@ const DEMO_ADMISSIONS: AdmissionDetail[] = [
     rulesApplied: ["HEALTH_SCORE_OK"],
     aiRecommendation: "reject",
     contactEmail: null,
+    admissionStatus: "PENDING_REVIEW",
   },
   {
     id: "DEMO-03",
@@ -88,6 +90,7 @@ const DEMO_ADMISSIONS: AdmissionDetail[] = [
     rulesApplied: ["CRITICAL_ROLE_NEEDED"],
     aiRecommendation: "review",
     contactEmail: "hector.cruz@demo.com",
+    admissionStatus: "PENDING_REVIEW",
   },
 ]
 

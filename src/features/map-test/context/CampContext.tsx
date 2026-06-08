@@ -4,6 +4,16 @@ import { campsService, TacticalMapApiError } from "../services/campsService"
 
 import type { Camp, ExpeditionEvent, HazardArea, TransferLine } from "../types/camp"
 
+import api from "@/config/api"
+import { useAlertsStore } from "@/store/useAlertsStore"
+
+interface RawInventoryAlert {
+  resource_id: number
+  resource_name?: string
+  current_quantity: number
+  minimum_stock_required: number
+}
+
 interface CampContextType {
   camps: Camp[]
   transfers: TransferLine[]
@@ -27,18 +37,65 @@ export const CampProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  const setInventoryAlerts = useAlertsStore((s) => s.setInventoryAlerts)
+
+  const applyAlertsToCamps = (
+    campList: Camp[],
+    alertsByCampId: Record<string, RawInventoryAlert[]>,
+  ): Camp[] =>
+    campList.map((camp) => {
+      const campAlerts = alertsByCampId[String(camp.id)] ?? []
+      return {
+        ...camp,
+        hasAlert: campAlerts.length > 0,
+        dangerLevel:
+          campAlerts.length >= 3 ? "critical" : campAlerts.length >= 1 ? "high" : camp.dangerLevel,
+      }
+    })
+
   const loadData = async () => {
     setLoading(true)
     setError(null)
 
     try {
       const fetchedCamps = await campsService.getCamps()
+
+      // Fetch real inventory alerts for all camps in parallel (best-effort)
+      const alertsResults = await Promise.allSettled(
+        fetchedCamps.map((camp) =>
+          api
+            .get<RawInventoryAlert[]>(`/resources/inventory/${camp.id}/alerts`)
+            .then((res) => ({
+              campId: String(camp.id),
+              alerts: Array.isArray(res.data) ? res.data : [],
+            })),
+        ),
+      )
+
+      const alertsByCampId: Record<string, RawInventoryAlert[]> = {}
+      for (const result of alertsResults) {
+        if (result.status === "fulfilled") {
+          const { campId, alerts } = result.value
+          alertsByCampId[campId] = alerts
+          // Seed the global store so socket updates can diff correctly
+          setInventoryAlerts(
+            campId,
+            alerts.map((a) => ({
+              ...a,
+              resource_name: a.resource_name ?? `Recurso ${a.resource_id}`,
+            })),
+          )
+        }
+      }
+
+      const campsWithAlerts = applyAlertsToCamps(fetchedCamps, alertsByCampId)
+
       const [fetchedTransfers, fetchedHazards] = await Promise.all([
         campsService.getTransfers(fetchedCamps),
-        campsService.getHazardAreas(fetchedCamps),
+        campsService.getHazardAreas(campsWithAlerts),
       ])
 
-      setCamps(fetchedCamps)
+      setCamps(campsWithAlerts)
       setTransfers(fetchedTransfers)
       setHazardAreas(fetchedHazards)
     } catch (err) {
@@ -56,21 +113,20 @@ export const CampProvider = ({ children }: { children: React.ReactNode }) => {
     void loadData()
   }, [])
 
+  // Sync camp alert state whenever the global store receives socket events
+  const inventoryAlerts = useAlertsStore((s) => s.inventoryAlerts)
+  useEffect(() => {
+    if (Object.keys(inventoryAlerts).length === 0) return
+    setCamps((currentCamps) => {
+      if (currentCamps.length === 0) return currentCamps
+      return applyAlertsToCamps(currentCamps, inventoryAlerts)
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inventoryAlerts])
+
   useEffect(() => {
     const interval = window.setInterval(() => {
-      setCamps((currentCamps) => {
-        if (Math.random() <= 0.7 || currentCamps.length === 0) return currentCamps
-
-        const targetIndex = Math.floor(Math.random() * currentCamps.length)
-        const next = [...currentCamps]
-        const target = next[targetIndex]
-        next[targetIndex] = {
-          ...target,
-          hasAlert: Math.random() > 0.5,
-        }
-        return next
-      })
-
+      // Expedition simulation (visual only — no fake alerts)
       setExpeditions((currentExpeditions) => {
         if (Math.random() <= 0.65 || camps.length === 0) return currentExpeditions
 

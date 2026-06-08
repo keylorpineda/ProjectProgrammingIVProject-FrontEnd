@@ -7,16 +7,20 @@ import WorkerProfessions from "./WorkerProfessions"
 import WorkerProfile from "./WorkerProfile"
 import WorkerResources from "./WorkerResources"
 
+import AlertsBanner from "@/components/ui/AlertsBanner"
 import FirstLoginAchievement from "@/components/ui/FirstLoginAchievement"
 import InactivityGuard from "@/components/ui/InactivityGuard"
 import WorkerSidebar from "@/components/ui/WorkerSidebar"
 import WorkerTopBar from "@/components/ui/WorkerTopBar"
 import { useCamp } from "@/features/worker/hooks/useWorkerAPI"
+import { useAlertSocket } from "@/hooks/useAlertSocket"
 import { useAuth } from "@/pages/Admin/context/AuthContext"
 import "./worker.css"
 
 export default function WorkerLayout() {
   const { user, logout } = useAuth()
+  const campId = String(user?.camp_id ?? "")
+  useAlertSocket(campId)
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -83,6 +87,8 @@ export default function WorkerLayout() {
 
           {/* First-login achievement modal */}
           {user ? <FirstLoginAchievement userId={user.id} userName={user.username} /> : null}
+
+          <AlertsBanner campId={campId} />
 
           <footer className="worker-footer">
             <p>GESTIÓN DEL FIN — PROTOCOLO DE SUPERVIVENCIA ACTIVO</p>
