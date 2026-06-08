@@ -462,7 +462,7 @@ export default function TravelResources() {
       {/* ── STAT CARDS ──────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 shrink-0">
         <motion.div
-          className="bg-[#1c1208] border border-[#d4a373]/20 rounded-md p-4 flex flex-col gap-1 relative overflow-hidden"
+          className="bg-[#1c1208] border-2 border-black shadow-[3px_3px_0px_#000] p-4 flex flex-col gap-1 relative overflow-hidden"
           initial={{ scale: 0.85, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.05, type: "spring", stiffness: 160 }}
@@ -477,7 +477,7 @@ export default function TravelResources() {
         </motion.div>
 
         <motion.div
-          className="bg-[#1c1208] border border-[#d4a373]/20 rounded-md p-4 flex flex-col gap-1 relative overflow-hidden"
+          className="bg-[#1c1208] border-2 border-black shadow-[3px_3px_0px_#000] p-4 flex flex-col gap-1 relative overflow-hidden"
           initial={{ scale: 0.85, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.1, type: "spring", stiffness: 160 }}
@@ -494,7 +494,7 @@ export default function TravelResources() {
         </motion.div>
 
         <motion.div
-          className="bg-[#1c1208] border border-[#d4a373]/20 rounded-md p-4 flex flex-col gap-1 relative overflow-hidden"
+          className="bg-[#1c1208] border-2 border-black shadow-[3px_3px_0px_#000] p-4 flex flex-col gap-1 relative overflow-hidden"
           initial={{ scale: 0.85, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.15, type: "spring", stiffness: 160 }}
@@ -517,7 +517,7 @@ export default function TravelResources() {
         </motion.div>
 
         <motion.div
-          className="bg-[#1c1208] border border-[#d4a373]/20 rounded-md p-4 flex flex-col gap-1 relative overflow-hidden"
+          className="bg-[#1c1208] border-2 border-black shadow-[3px_3px_0px_#000] p-4 flex flex-col gap-1 relative overflow-hidden"
           initial={{ scale: 0.85, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.2, type: "spring", stiffness: 160 }}
@@ -535,7 +535,7 @@ export default function TravelResources() {
       </div>
 
       {/* 2. Filtros */}
-      <div className="flex flex-wrap gap-3 shrink-0 items-center bg-[#1c1208] p-3 border border-[#d4a373]/20 rounded-md">
+      <div className="flex flex-wrap gap-3 shrink-0 items-center bg-[#1c1208] p-3 border-2 border-black shadow-[2px_2px_0px_#000]">
         <div className="relative w-full md:w-64">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/30" />
           <input
@@ -720,7 +720,7 @@ export default function TravelResources() {
         </div>
 
         {/* RIGHT: Preparación de Viaje */}
-        <div className="hidden lg:flex w-80 flex-col gap-4 shrink-0 overflow-hidden bg-[#121110] p-4 border border-[#d4a373]/20 rounded-md shadow-lg justify-between">
+        <div className="hidden lg:flex w-80 flex-col gap-4 shrink-0 overflow-hidden bg-[#121110] p-4 border-2 border-black shadow-[3px_3px_0px_#000] justify-between">
           <div className="flex flex-col gap-5 overflow-y-auto pr-1 custom-scrollbar">
             <h3 className="text-xs font-mono font-black text-[#df8120] uppercase tracking-wider mb-2 flex items-center gap-2 border-b border-[#d4a373]/15 pb-2.5">
               <Navigation className="h-4 w-4" /> Preparación de Viaje

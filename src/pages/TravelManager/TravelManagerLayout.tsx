@@ -5,6 +5,7 @@ import {
   Users,
   ArrowLeftRight,
   Package,
+  UserCircle,
   Menu,
   X,
 } from "lucide-react"
@@ -48,6 +49,7 @@ export default function TravelManagerLayout() {
       path: "/travel-manager/transfers",
     },
     { id: "inventory", label: "RECURSOS", icon: Package, path: "/travel-manager/inventory" },
+    { id: "profile", label: "PERFIL", icon: UserCircle, path: "/travel-manager/profile" },
   ]
 
   const handleLogout = () => {

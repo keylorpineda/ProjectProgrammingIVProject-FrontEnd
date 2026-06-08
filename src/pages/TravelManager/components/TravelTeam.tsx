@@ -31,7 +31,6 @@ const containerVariants: Variants = {
   },
 }
 
-
 export default function TravelTeam() {
   const { user } = useAuthStore()
   const baseCampId = user?.camp_id ?? ""
@@ -67,8 +66,14 @@ export default function TravelTeam() {
   // ── Derived State ──────────────────────────────────────────────────────────
   const filteredTeam = useMemo(() => {
     return persons.filter((p) => {
-      const pStatus = String(p.status ?? "").toLowerCase().replace(/\s+/g, "_")
-      if (activeStatus !== "all" && pStatus !== String(activeStatus).toLowerCase().replace(/\s+/g, "_")) return false
+      const pStatus = String(p.status ?? "")
+        .toLowerCase()
+        .replace(/\s+/g, "_")
+      if (
+        activeStatus !== "all" &&
+        pStatus !== String(activeStatus).toLowerCase().replace(/\s+/g, "_")
+      )
+        return false
 
       const pProfession = p.profession?.name || "Desconocido"
       if (professionFilter !== "all" && pProfession !== professionFilter) return false
@@ -93,17 +98,23 @@ export default function TravelTeam() {
   }, [persons])
 
   const activeCount = persons.filter((p) => {
-    const key = String(p.status ?? "").toLowerCase().replace(/\s+/g, "_")
+    const key = String(p.status ?? "")
+      .toLowerCase()
+      .replace(/\s+/g, "_")
     return key === "active" || key === "idle"
   }).length
 
   const inFieldCount = persons.filter((p) => {
-    const key = String(p.status ?? "").toLowerCase().replace(/\s+/g, "_")
+    const key = String(p.status ?? "")
+      .toLowerCase()
+      .replace(/\s+/g, "_")
     return key === "exploring"
   }).length
 
   const injuredCount = persons.filter((p) => {
-    const key = String(p.status ?? "").toLowerCase().replace(/\s+/g, "_")
+    const key = String(p.status ?? "")
+      .toLowerCase()
+      .replace(/\s+/g, "_")
     return key === "injured"
   }).length
 
@@ -163,7 +174,9 @@ export default function TravelTeam() {
           <div className="tm-online-dot" />
           <div>
             <h2 className="tm-board-title leading-none">Personal Operativo</h2>
-            <p className="tm-board-sub mt-1">Base: {baseCamp?.name?.toUpperCase() ?? baseCampId.toUpperCase()}</p>
+            <p className="tm-board-sub mt-1">
+              Base: {baseCamp?.name?.toUpperCase() ?? baseCampId.toUpperCase()}
+            </p>
           </div>
         </div>
 
@@ -176,19 +189,29 @@ export default function TravelTeam() {
               TODOS ({persons.length})
             </button>
             <button
-              onClick={() => setActiveStatus(activeStatus === PersonStatus.Active ? "all" : PersonStatus.Active)}
+              onClick={() =>
+                setActiveStatus(activeStatus === PersonStatus.Active ? "all" : PersonStatus.Active)
+              }
               className={`tm-tab ${activeStatus === PersonStatus.Active ? "tm-tab-active" : ""}`}
             >
               DISPONIBLES ({activeCount})
             </button>
             <button
-              onClick={() => setActiveStatus(activeStatus === PersonStatus.Exploring ? "all" : PersonStatus.Exploring)}
+              onClick={() =>
+                setActiveStatus(
+                  activeStatus === PersonStatus.Exploring ? "all" : PersonStatus.Exploring,
+                )
+              }
               className={`tm-tab ${activeStatus === PersonStatus.Exploring ? "tm-tab-active" : ""}`}
             >
               EN CAMPO ({inFieldCount})
             </button>
             <button
-              onClick={() => setActiveStatus(activeStatus === PersonStatus.Injured ? "all" : PersonStatus.Injured)}
+              onClick={() =>
+                setActiveStatus(
+                  activeStatus === PersonStatus.Injured ? "all" : PersonStatus.Injured,
+                )
+              }
               className={`tm-tab ${activeStatus === PersonStatus.Injured ? "tm-tab-active" : ""}`}
             >
               HERIDOS ({injuredCount})
@@ -210,7 +233,7 @@ export default function TravelTeam() {
       {/* 2. OPERATIONAL GRID */}
       <div className="flex-1 flex gap-4 overflow-hidden">
         {/* LEFT: Roster de Personal */}
-        <div className="w-[290px] flex flex-col gap-3 shrink-0 overflow-hidden bg-[#1c1208] p-4 border border-[#d4a373]/20 rounded-md shadow-lg">
+        <div className="w-[290px] flex flex-col gap-3 shrink-0 overflow-hidden bg-[#1c1208] p-4 border-2 border-black shadow-[3px_3px_0px_#000]">
           <div className="tm-folder-header-row mb-1">
             <h4 className="tm-folder-title">REGISTRO DE PERSONAL</h4>
             <span className="text-[10px] font-mono font-medium text-white/30 uppercase tracking-wider">
@@ -251,9 +274,12 @@ export default function TravelTeam() {
             <AnimatePresence>
               {filteredTeam.map((person) => {
                 const pStatus = (person.status || "idle") as PersonStatus
-                const rowStatusClass = (pStatus === PersonStatus.Active || pStatus === PersonStatus.Idle) ? "tm-row-active"
-                                     : (pStatus === PersonStatus.Exploring || pStatus === PersonStatus.Traveling) ? "tm-row-transit"
-                                     : "tm-row-pending"
+                const rowStatusClass =
+                  pStatus === PersonStatus.Active || pStatus === PersonStatus.Idle
+                    ? "tm-row-active"
+                    : pStatus === PersonStatus.Exploring || pStatus === PersonStatus.Traveling
+                      ? "tm-row-transit"
+                      : "tm-row-pending"
                 return (
                   <motion.button
                     key={person.id}
@@ -269,20 +295,28 @@ export default function TravelTeam() {
                       <span className="px-2 py-0.5 bg-white/10 text-[8px] font-mono text-[#e8dcc8] font-bold tracking-wider rounded-sm">
                         COD-{String(person.id).substring(0, 6).toUpperCase()}
                       </span>
-                      <span className={`text-[9px] font-mono font-bold uppercase tracking-wider ${getStatusColor(pStatus)}`}>
+                      <span
+                        className={`text-[9px] font-mono font-bold uppercase tracking-wider ${getStatusColor(pStatus)}`}
+                      >
                         {getStatusLabel(pStatus).toUpperCase()}
                       </span>
                     </div>
 
-                    <h5 className={`text-[12px] font-mono font-bold uppercase tracking-tight truncate mt-0.5 w-full ${
-                      selectedId === person.id ? "text-[#df8120]" : "text-white"
-                    }`}>
+                    <h5
+                      className={`text-[12px] font-mono font-bold uppercase tracking-tight truncate mt-0.5 w-full ${
+                        selectedId === person.id ? "text-[#df8120]" : "text-white"
+                      }`}
+                    >
                       {person.first_name} {person.last_name}
                     </h5>
 
                     <div className="flex justify-between items-center w-full mt-1.5 text-[8px] font-mono text-white/40 uppercase">
-                      <span className="truncate max-w-[140px]">{person.profession?.name || "SIN PROFESIÓN"}</span>
-                      <span className="text-[#c8bfae] font-bold shrink-0">NIVEL {person.experience_level || 1}</span>
+                      <span className="truncate max-w-[140px]">
+                        {person.profession?.name || "SIN PROFESIÓN"}
+                      </span>
+                      <span className="text-[#c8bfae] font-bold shrink-0">
+                        NIVEL {person.experience_level || 1}
+                      </span>
                     </div>
                   </motion.button>
                 )
@@ -301,7 +335,7 @@ export default function TravelTeam() {
         </div>
 
         {/* MIDDLE: Visualizador */}
-        <div className="flex-1 flex flex-col bg-[#1c1208] border border-[#d4a373]/20 rounded-md overflow-hidden shadow-lg">
+        <div className="flex-1 flex flex-col bg-[#1c1208] border-2 border-black overflow-hidden shadow-[3px_3px_0px_#000]">
           <AnimatePresence mode="wait">
             {selectedPerson ? (
               <motion.div
@@ -340,9 +374,13 @@ export default function TravelTeam() {
                     {/* Sello confidencial */}
                     <div className="absolute top-10 right-10 flex flex-col items-center rotate-12 select-none opacity-15 pointer-events-none z-10">
                       <div className="border-4 border-ink p-1 mb-0.5">
-                        <span className="text-base font-black font-mono px-2 tracking-widest">CONFIDENCIAL</span>
+                        <span className="text-base font-black font-mono px-2 tracking-widest">
+                          CONFIDENCIAL
+                        </span>
                       </div>
-                      <span className="text-[9px] font-mono font-black italic text-ink">COMITÉ DE RESISTENCIA</span>
+                      <span className="text-[9px] font-mono font-black italic text-ink">
+                        COMITÉ DE RESISTENCIA
+                      </span>
                     </div>
 
                     {/* Header con foto + datos básicos */}
@@ -356,26 +394,31 @@ export default function TravelTeam() {
                               alt={`${selectedPerson.first_name} ${selectedPerson.last_name}`}
                               className="w-full h-full object-cover object-top"
                               onError={(e) => {
-                                (e.target as HTMLImageElement).style.display = "none"
+                                ;(e.target as HTMLImageElement).style.display = "none"
                               }}
                             />
                           ) : (
                             <div className="flex flex-col items-center justify-center w-full h-full text-ink/20">
                               <svg className="w-16 h-16" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
+                                <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z" />
                               </svg>
-                              <span className="text-[9px] font-mono font-black uppercase mt-2 opacity-50">SIN FOTO</span>
+                              <span className="text-[9px] font-mono font-black uppercase mt-2 opacity-50">
+                                SIN FOTO
+                              </span>
                             </div>
                           )}
                         </div>
                         {/* Badge de estado debajo de la foto */}
-                        <span className={`text-xs font-mono font-black uppercase px-4 py-1.5 border rounded-sm tracking-wider ${
-                          (selectedPerson.status === "active" || selectedPerson.status === "idle")
-                            ? "text-green-700 border-green-700/40 bg-green-700/8"
-                            : (selectedPerson.status === "exploring" || selectedPerson.status === "traveling")
-                            ? "text-[#c27c2f] border-[#c27c2f]/40 bg-[#c27c2f]/8"
-                            : "text-[#9c2720] border-[#9c2720]/40 bg-[#9c2720]/8"
-                        }`}>
+                        <span
+                          className={`text-xs font-mono font-black uppercase px-4 py-1.5 border rounded-sm tracking-wider ${
+                            selectedPerson.status === "active" || selectedPerson.status === "idle"
+                              ? "text-green-700 border-green-700/40 bg-green-700/8"
+                              : selectedPerson.status === "exploring" ||
+                                  selectedPerson.status === "traveling"
+                                ? "text-[#c27c2f] border-[#c27c2f]/40 bg-[#c27c2f]/8"
+                                : "text-[#9c2720] border-[#9c2720]/40 bg-[#9c2720]/8"
+                          }`}
+                        >
                           {getStatusLabel(selectedPerson.status || "idle").toUpperCase()}
                         </span>
                       </div>
@@ -401,18 +444,59 @@ export default function TravelTeam() {
                         {/* Campos como tarjetas */}
                         <div className="grid grid-cols-3 gap-4">
                           {[
-                            ...(selectedPerson.identification_code ? [{ label: "Cód. Identificación", value: selectedPerson.identification_code, color: "text-ink" }] : []),
-                            ...(selectedPerson.birth_date ? [{ label: "Fecha Nacimiento", value: new Date(selectedPerson.birth_date).toLocaleDateString(), color: "text-ink" }] : []),
-                            ...(selectedPerson.join_date ? [{ label: "Ingreso al Refugio", value: new Date(selectedPerson.join_date).toLocaleDateString(), color: "text-ink" }] : []),
-                            { label: "Base de Enlace", value: getCampName(selectedPerson.camp_id ?? ""), color: "text-ink" },
-                            { label: "Capacidad Laboral", value: selectedPerson.can_work ? "APTO" : "RESTRINGIDO", color: selectedPerson.can_work ? "text-green-700" : "text-red-700" },
-                            { label: "Puntos de Exp.", value: `${selectedPerson.experience_points ?? 0} XP`, color: "text-[#df8120]" },
+                            ...(selectedPerson.identification_code
+                              ? [
+                                  {
+                                    label: "Cód. Identificación",
+                                    value: selectedPerson.identification_code,
+                                    color: "text-ink",
+                                  },
+                                ]
+                              : []),
+                            ...(selectedPerson.birth_date
+                              ? [
+                                  {
+                                    label: "Fecha Nacimiento",
+                                    value: new Date(selectedPerson.birth_date).toLocaleDateString(),
+                                    color: "text-ink",
+                                  },
+                                ]
+                              : []),
+                            ...(selectedPerson.join_date
+                              ? [
+                                  {
+                                    label: "Ingreso al Refugio",
+                                    value: new Date(selectedPerson.join_date).toLocaleDateString(),
+                                    color: "text-ink",
+                                  },
+                                ]
+                              : []),
+                            {
+                              label: "Base de Enlace",
+                              value: getCampName(selectedPerson.camp_id ?? ""),
+                              color: "text-ink",
+                            },
+                            {
+                              label: "Capacidad Laboral",
+                              value: selectedPerson.can_work ? "APTO" : "RESTRINGIDO",
+                              color: selectedPerson.can_work ? "text-green-700" : "text-red-700",
+                            },
+                            {
+                              label: "Puntos de Exp.",
+                              value: `${selectedPerson.experience_points ?? 0} XP`,
+                              color: "text-[#df8120]",
+                            },
                           ].map((field) => (
-                            <div key={field.label} className="bg-ink/4 border border-ink/10 rounded-sm px-4 py-3">
+                            <div
+                              key={field.label}
+                              className="bg-ink/4 border border-ink/10 rounded-sm px-4 py-3"
+                            >
                               <span className="text-[9px] font-mono text-ink-soft/50 uppercase tracking-widest font-black block mb-1.5 leading-none">
                                 {field.label}
                               </span>
-                              <span className={`text-sm font-mono font-black ${field.color} leading-tight uppercase`}>
+                              <span
+                                className={`text-sm font-mono font-black ${field.color} leading-tight uppercase`}
+                              >
                                 {field.value}
                               </span>
                             </div>
@@ -449,13 +533,38 @@ export default function TravelTeam() {
                         </h4>
                         <div className="space-y-3 font-mono">
                           {[
-                            { label: "Estado Vital", value: getStatusLabel(selectedPerson.status || "idle").toUpperCase(), color: getStatusColor(selectedPerson.status || ("idle" as PersonStatus)) },
-                            { label: "Capacidad", value: selectedPerson.can_work ? "OPERATIVO" : "INACTIVO", color: selectedPerson.can_work ? "text-green-700" : "text-red-700" },
-                            { label: "Explorador", value: selectedPerson.profession?.can_explore ? "AUTORIZADO" : "NO AUTORIZADO", color: selectedPerson.profession?.can_explore ? "text-[#df8120]" : "text-ink-soft/50" },
+                            {
+                              label: "Estado Vital",
+                              value: getStatusLabel(selectedPerson.status || "idle").toUpperCase(),
+                              color: getStatusColor(
+                                selectedPerson.status || ("idle" as PersonStatus),
+                              ),
+                            },
+                            {
+                              label: "Capacidad",
+                              value: selectedPerson.can_work ? "OPERATIVO" : "INACTIVO",
+                              color: selectedPerson.can_work ? "text-green-700" : "text-red-700",
+                            },
+                            {
+                              label: "Explorador",
+                              value: selectedPerson.profession?.can_explore
+                                ? "AUTORIZADO"
+                                : "NO AUTORIZADO",
+                              color: selectedPerson.profession?.can_explore
+                                ? "text-[#df8120]"
+                                : "text-ink-soft/50",
+                            },
                           ].map((row) => (
-                            <div key={row.label} className="flex justify-between items-center bg-ink/4 border border-ink/10 rounded-sm px-4 py-3">
-                              <span className="text-ink-soft/60 font-bold text-xs">{row.label}</span>
-                              <span className={`font-black uppercase text-sm ${row.color}`}>{row.value}</span>
+                            <div
+                              key={row.label}
+                              className="flex justify-between items-center bg-ink/4 border border-ink/10 rounded-sm px-4 py-3"
+                            >
+                              <span className="text-ink-soft/60 font-bold text-xs">
+                                {row.label}
+                              </span>
+                              <span className={`font-black uppercase text-sm ${row.color}`}>
+                                {row.value}
+                              </span>
                             </div>
                           ))}
                         </div>
@@ -497,8 +606,12 @@ export default function TravelTeam() {
 
                     {/* Footer */}
                     <div className="px-10 py-5 flex justify-between items-center text-ink-soft/40 font-mono text-[10px] uppercase tracking-[0.15em] mt-auto">
-                      <span>Registro: {new Date(selectedPerson.created_at).toLocaleDateString()}</span>
-                      <span>Actualizado: {new Date(selectedPerson.updated_at).toLocaleDateString()}</span>
+                      <span>
+                        Registro: {new Date(selectedPerson.created_at).toLocaleDateString()}
+                      </span>
+                      <span>
+                        Actualizado: {new Date(selectedPerson.updated_at).toLocaleDateString()}
+                      </span>
                       <span className="border border-dashed border-ink/20 px-4 py-1.5">
                         ID: {String(selectedPerson.id).substring(0, 12).toUpperCase()}
                       </span>
