@@ -160,7 +160,9 @@
     "Lleaflet",
     "Btns",
     "Reabastecimiento",
-    "sched"
+    "sched",
+    "ALMACEN",
+    "Vigia"
   ],
   "ignorePaths": [
     "node_modules",
