@@ -93,171 +93,176 @@ export default function ProfileView({ user, statistics, residents }: ProfileView
   }
 
   return (
-    <div className="mx-4 my-4 flex flex-col gap-5">
+    <div className="p-5 lg:p-6 flex flex-col gap-6">
       {/* HEADER */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 bg-black/40 border border-[#d4be8c]/15 border-l-[3px] border-l-[#c27c2f] px-4 py-3">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b-4 border-[#c27c2f] pb-5">
         <div>
-          <h2 className="font-typewriter text-base font-bold tracking-widest text-[#df8120] uppercase">
-            EXPEDIENTE DEL REFUGIO Y COMBATIENTES
+          <h2 className="font-typewriter text-2xl lg:text-3xl font-bold text-[#fca311] uppercase tracking-wider">
+            EXPEDIENTE DEL REFUGIO
           </h2>
-          <p className="font-mono text-[10px] text-[#9a8a74] uppercase tracking-wider mt-0.5">
+          <p className="font-mono text-sm text-[#9a8a74] uppercase tracking-wider mt-1">
             REGISTRO VITAL · BUNKER ALFA
           </p>
         </div>
-        <div className="vintage-tape shrink-0">CONFIDENCIAL</div>
+        <div className="vintage-tape shrink-0 text-sm px-4 py-2">CONFIDENCIAL</div>
       </div>
 
       {/* COMANDANTE + ESTADÍSTICAS */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* COL 1: COMANDANTE */}
         <div
           id="commander-manifest-card"
-          className="bg-[#141312] border border-[#d4be8c]/10 border-l-4 border-l-[#c27c2f] relative overflow-hidden p-4 flex flex-col justify-between"
+          className="bg-[#e8dcc8] border-2 border-black shadow-[5px_5px_0_#000] p-6 flex flex-col gap-5"
+          style={{ borderLeft: `6px solid ${rank.color}` }}
         >
           <div>
-            <span className="font-mono text-[10px] font-bold text-[#9a8a74] block uppercase tracking-wider">
+            <span className="font-mono text-xs font-bold text-black/40 block uppercase tracking-widest">
               IDENTIFICACIÓN — CONSEJO MILITAR
             </span>
-            <h3 className="font-typewriter text-sm font-bold text-[#df8120] uppercase mt-1">
+            <h3 className="font-typewriter text-xl font-bold text-black uppercase mt-1">
               COMANDANCIA ALFA
             </h3>
+          </div>
 
-            <div className="border border-dashed border-[#d4be8c]/20 p-3 bg-black/20 mt-3 space-y-1.5 text-[11px] font-mono">
-              <p className="flex justify-between">
-                <span className="text-[#9a8a74] uppercase">NOMBRE:</span>
-                <span className="font-bold text-[#e8dcc8] uppercase truncate ml-2">
-                  {user?.username}
-                </span>
-              </p>
-              <p className="flex justify-between">
-                <span className="text-[#9a8a74] uppercase">CRÉDITO:</span>
-                <span className="font-bold text-[#e8dcc8]">LÍDER DE CAMPAMENTO</span>
-              </p>
-              <p className="flex justify-between">
-                <span className="text-[#9a8a74] uppercase">BASE:</span>
-                <span className="font-bold text-[#9c2720]">REFUGIO CENTRAL</span>
-              </p>
-              <p className="flex justify-between">
-                <span className="text-[#9a8a74] uppercase">RANGO:</span>
-                <span className="font-bold uppercase" style={{ color: rank.color }}>
-                  {rank.label}
-                </span>
-              </p>
+          <div className="border-2 border-black/20 p-4 bg-black/5 space-y-3 font-mono text-sm">
+            <div className="flex justify-between">
+              <span className="text-black/50 uppercase font-bold">NOMBRE:</span>
+              <span className="font-bold text-black uppercase truncate ml-3">{user?.username}</span>
             </div>
-
-            {/* PUNTUACIÓN */}
-            <div className="mt-3 border border-[#d4be8c]/15 p-3 bg-black/20">
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-mono text-[9px] uppercase font-bold text-[#9a8a74]">
-                  PUNTUACIÓN DE SUPERVIVENCIA
-                </span>
-                <Trophy className="w-3.5 h-3.5 text-[#c27c2f]" />
-              </div>
-              <div className="flex items-end gap-2">
-                <span className="font-typewriter text-3xl font-black" style={{ color: rank.color }}>
-                  {statistics.survival_score}
-                </span>
-                <span className="font-mono text-[9px] text-[#9a8a74] uppercase mb-1">PTS</span>
-              </div>
-              <div className="w-full h-1.5 bg-black/40 overflow-hidden mt-1">
-                <div
-                  className="h-full transition-all duration-700"
-                  style={{ width: `${rankProgress}%`, backgroundColor: rank.color }}
-                />
-              </div>
-              {rank.nextThreshold !== null && (
-                <p className="font-mono text-[9px] text-[#9a8a74] mt-1 uppercase">
-                  FALTAN {rank.nextThreshold - statistics.survival_score} PTS PARA{" "}
-                  {getRankInfo(rank.nextThreshold).label}
-                </p>
-              )}
+            <div className="flex justify-between">
+              <span className="text-black/50 uppercase font-bold">ROL:</span>
+              <span className="font-bold text-black">LÍDER DE CAMPAMENTO</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-black/50 uppercase font-bold">BASE:</span>
+              <span className="font-bold text-[#9c2720]">REFUGIO CENTRAL</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-black/50 uppercase font-bold">RANGO:</span>
+              <span className="font-bold uppercase" style={{ color: rank.color }}>
+                {rank.label}
+              </span>
             </div>
           </div>
 
-          <div className="mt-3 border-t border-white/5 pt-3 flex items-center gap-2">
-            <Shield className="w-5 h-5 text-[#c27c2f] shrink-0" />
-            <p className="text-[10px] font-mono text-[#9a8a74] uppercase leading-4">
+          {/* PUNTUACIÓN */}
+          <div className="border-2 border-black/20 p-4 bg-black/5">
+            <div className="flex items-center justify-between mb-3">
+              <span className="font-mono text-xs font-bold text-black/50 uppercase tracking-wider">
+                PUNTUACIÓN DE SUPERVIVENCIA
+              </span>
+              <Trophy className="w-4 h-4 text-black/40" />
+            </div>
+            <div className="flex items-end gap-2 mb-3">
+              <span className="font-typewriter text-5xl font-black" style={{ color: rank.color }}>
+                {statistics.survival_score}
+              </span>
+              <span className="font-mono text-sm text-black/50 uppercase mb-1">PTS</span>
+            </div>
+            <div className="w-full h-2.5 bg-black/15 border border-black/20 overflow-hidden">
+              <div
+                className="h-full transition-all duration-700"
+                style={{ width: `${rankProgress}%`, backgroundColor: rank.color }}
+              />
+            </div>
+            {rank.nextThreshold !== null && (
+              <p className="font-mono text-xs text-black/50 mt-2 uppercase">
+                FALTAN {rank.nextThreshold - statistics.survival_score} PTS PARA{" "}
+                {getRankInfo(rank.nextThreshold).label}
+              </p>
+            )}
+          </div>
+
+          <div className="flex items-start gap-3 border-t-2 border-black/15 pt-4 mt-auto">
+            <Shield className="w-5 h-5 text-black/40 shrink-0 mt-0.5" />
+            <p className="text-sm font-mono text-black/60 uppercase leading-5">
               EL COMANDANTE ASUME RESPONSABILIDAD POR LAS BAJAS EN ZONA MUERTA.
             </p>
           </div>
         </div>
 
-        {/* COL 2: ESTADÍSTICAS */}
+        {/* COL 2-3: ESTADÍSTICAS */}
         <div
           id="bunker-audit-card"
-          className="bg-[#141312] border border-[#d4be8c]/10 border-l-4 border-l-[#4c6351] p-4 flex flex-col gap-4 col-span-2"
+          className="bg-[#e8dcc8] border-2 border-black shadow-[5px_5px_0_#000] p-6 flex flex-col gap-6 col-span-1 lg:col-span-2"
+          style={{ borderLeft: "6px solid #4c6351" }}
         >
-          <div className="flex items-center gap-2 border-b border-white/5 pb-3">
-            <Users className="w-4 h-4 text-[#4c6351] animate-pulse" />
-            <h3 className="font-typewriter text-sm text-[#df8120] font-bold tracking-widest">
+          <div className="flex items-center gap-3 border-b-2 border-black/15 pb-4">
+            <Users className="w-5 h-5 text-black/40" />
+            <h3 className="font-typewriter text-xl font-bold text-black uppercase tracking-wider">
               INFORME BUNKER ALFA-01
             </h3>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {[
               {
                 label: "POBLACIÓN",
                 value: statistics.total_persons,
                 sub: "SOBREVIVIENTES",
-                color: "text-[#fca311]",
+                color: "#c27c2f",
               },
               {
                 label: "MANO DE OBRA",
                 value: statistics.active_workers,
                 sub: "ACTIVOS",
-                color: "text-[#4c6351]",
+                color: "#4c6351",
               },
               {
                 label: "EN EXPEDICIÓN",
                 value: statistics.exploring,
                 sub: "EMBARCADOS",
-                color: "text-blue-400",
+                color: "#3b6fa0",
               },
               {
                 label: "BAJAS / HERIDOS",
                 value: statistics.injured_or_sick,
                 sub: "EN CUIDADOS",
-                color: "text-[#9c2720]",
+                color: "#9c2720",
               },
             ].map((s) => (
-              <div key={s.label} className="bg-black/30 border border-white/5 p-3 text-center">
-                <span className="text-[10px] font-mono text-[#9a8a74] block uppercase mb-1">
+              <div key={s.label} className="border-2 border-black/20 p-4 text-center bg-black/5">
+                <span className="text-xs font-mono text-black/50 block uppercase mb-2 font-bold">
                   {s.label}
                 </span>
-                <span className={`font-typewriter text-3xl font-bold ${s.color}`}>{s.value}</span>
-                <span className="text-[10px] font-mono text-[#6e5f4d] block uppercase mt-1">
+                <span
+                  className="font-typewriter text-4xl font-bold block"
+                  style={{ color: s.color }}
+                >
+                  {s.value}
+                </span>
+                <span className="text-xs font-mono text-black/40 block uppercase mt-2">
                   {s.sub}
                 </span>
               </div>
             ))}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 border-t border-white/5 pt-3">
-            <div className="flex gap-2 items-center">
-              <TrendingUp className="w-4 h-4 text-[#c27c2f] shrink-0" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-t-2 border-black/15 pt-4">
+            <div className="flex gap-3 items-center">
+              <TrendingUp className="w-5 h-5 text-black/40 shrink-0" />
               <div className="flex-1">
-                <span className="text-[10px] text-[#9a8a74] font-mono block uppercase">
+                <span className="text-sm font-mono text-black/50 font-bold block uppercase mb-2">
                   OCUPACIÓN BUNKER
                 </span>
-                <div className="w-full h-1 bg-black/50 mt-1 overflow-hidden">
+                <div className="w-full h-2.5 bg-black/15 border border-black/20 overflow-hidden">
                   <div
                     className="bg-[#c27c2f] h-full"
                     style={{ width: `${statistics.occupancy_rate}%` }}
                   />
                 </div>
-                <span className="text-[9px] text-[#6e5f4d] font-mono">
+                <span className="text-xs text-black/50 font-mono mt-1 block">
                   {statistics.occupancy_rate}% OCUPADO
                 </span>
               </div>
             </div>
-            <div className="flex gap-2 items-center justify-end">
-              <Award className="w-4 h-4 text-[#4c6351]" />
+            <div className="flex gap-3 items-center justify-end">
+              <Award className="w-5 h-5 text-black/40" />
               <div className="text-right">
-                <span className="text-[10px] text-[#9a8a74] font-mono block uppercase">
+                <span className="text-sm font-mono text-black/50 font-bold block uppercase">
                   EXPEDICIONES EXITOSAS
                 </span>
-                <span className="font-typewriter text-lg font-bold text-[#e8dcc8]">
+                <span className="font-typewriter text-3xl font-bold text-black">
                   {statistics.explorations_completed}
                 </span>
               </div>
@@ -267,21 +272,16 @@ export default function ProfileView({ user, statistics, residents }: ProfileView
       </div>
 
       {/* PERSONAL DEL BUNKER */}
-      <div
-        id="citizens-manifest-section"
-        className="bg-[#141312] border border-[#d4be8c]/10 border-l-4 border-l-[#9a8a74] p-4"
-      >
-        <div className="flex items-center gap-2 border-b border-white/5 pb-3 mb-4">
-          <CheckCircle className="w-4 h-4 text-[#c27c2f]" />
-          <h3 className="font-typewriter text-sm font-bold tracking-widest text-[#df8120] uppercase">
+      <div id="citizens-manifest-section" className="flex flex-col gap-4">
+        <div className="flex items-center gap-3">
+          <CheckCircle className="w-5 h-5 text-[#c27c2f]" />
+          <h3 className="font-typewriter text-xl font-bold tracking-wider text-[#fca311] uppercase">
             PERSONAL EN BUNKER ALFA
           </h3>
-          <span className="ml-auto text-[10px] font-mono text-[#9a8a74]">
-            {residents.length} REG.
-          </span>
+          <span className="ml-auto font-mono text-sm text-[#9a8a74]">{residents.length} REG.</span>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {residents.map((p) => {
             const levelStars = Array.from({ length: p.experience_level ?? 0 }, (_, i) => i)
 
@@ -292,14 +292,10 @@ export default function ProfileView({ user, statistics, residents }: ProfileView
                 tabIndex={0}
                 onClick={() => setSelectedPerson(p)}
                 onKeyDown={(e) => e.key === "Enter" && setSelectedPerson(p)}
-                className="bg-black/30 border border-white/5 p-3 flex gap-3 relative hover:border-[#c27c2f]/40 hover:bg-black/50 transition-all cursor-pointer group select-none"
+                className="bg-[#e8dcc8] border-2 border-black shadow-[3px_3px_0_#000] p-5 flex gap-4 hover:shadow-[5px_5px_0_#000] hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all cursor-pointer select-none"
               >
-                <div className="absolute top-2 right-2 text-[9px] font-mono text-[#6e5f4d]">
-                  #{p.id}
-                </div>
-
                 {/* Avatar */}
-                <div className="w-12 h-12 bg-black/40 border border-white/10 shrink-0 flex items-center justify-center overflow-hidden">
+                <div className="w-14 h-14 border-2 border-black shrink-0 flex items-center justify-center overflow-hidden bg-black/10">
                   {p.photo_url ? (
                     <img
                       src={p.photo_url}
@@ -308,37 +304,36 @@ export default function ProfileView({ user, statistics, residents }: ProfileView
                       className="w-full h-full object-cover filter contrast-110 saturate-50"
                     />
                   ) : (
-                    <User className="w-5 h-5 text-[#6e5f4d]" />
+                    <User className="w-6 h-6 text-black/40" />
                   )}
                 </div>
 
                 {/* Info */}
-                <div className="flex-1 min-w-0 font-mono text-xs">
+                <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap mb-1">
-                    <h4 className="font-typewriter text-xs font-bold text-[#e8dcc8] uppercase group-hover:text-[#fca311] transition-colors truncate">
+                    <h4 className="font-typewriter text-base font-bold text-black uppercase truncate">
                       {p.first_name} {p.last_name}
                     </h4>
                     {getStatusBadge(p.status)}
                   </div>
 
-                  <p className="text-[10px] text-[#9a8a74] uppercase">
+                  <p className="font-mono text-xs text-black/60 uppercase mb-2">
                     {p.profession?.name ?? "Desconocida"}
                   </p>
 
-                  <div className="flex justify-between items-center text-[10px] mt-1">
+                  <div className="flex justify-between items-center">
                     <div className="flex gap-0.5 text-[#c27c2f]">
                       {levelStars.map((s) => (
-                        <Star key={s} className="w-2.5 h-2.5 fill-current" />
+                        <Star key={s} className="w-3.5 h-3.5 fill-current" />
                       ))}
                     </div>
-                    <span className="text-[#9a8a74]">
-                      EXPED:{" "}
-                      <span className="text-[#e8dcc8] font-bold">{p.expeditionsSurvived}</span>
+                    <span className="font-mono text-xs text-black/50">
+                      EXPED: <span className="font-bold text-black">{p.expeditionsSurvived}</span>
                     </span>
                   </div>
 
                   {p.achievements && p.achievements.length > 0 && (
-                    <div className="flex flex-wrap gap-0.5 mt-1">
+                    <div className="flex flex-wrap gap-1 mt-2">
                       {p.achievements.slice(0, 3).map((ach) => (
                         <Badge key={ach} code={ach} showText={false} />
                       ))}

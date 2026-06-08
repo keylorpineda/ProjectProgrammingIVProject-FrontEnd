@@ -1,5 +1,5 @@
 import { motion } from "framer-motion"
-import { Compass, AlertOctagon, Scale, History, User, ArrowRight, Trophy } from "lucide-react"
+import { ArrowRight, User } from "lucide-react"
 
 import type {
   CampBalance,
@@ -23,7 +23,7 @@ interface DashboardViewProps {
 function getRankInfo(score: number) {
   if (score >= 900)
     return {
-      label: "LEYENDA DEL PARAMO",
+      label: "LEYENDA DEL PÁRAMO",
       color: "#fca311",
       nextThreshold: null,
       prevThreshold: 900,
@@ -35,6 +35,10 @@ function getRankInfo(score: number) {
   if (score >= 100)
     return { label: "EXPLORADOR", color: "#3b7a5a", nextThreshold: 300, prevThreshold: 100 }
   return { label: "RECLUTA", color: "#71717a", nextThreshold: 100, prevThreshold: 0 }
+}
+
+function cleanDesc(desc: string): string {
+  return desc.replace(/\s*\[(-?\d+\.\d+),\s*(-?\d+\.\d+)\]/, "").trim()
 }
 
 export default function DashboardView({
@@ -70,279 +74,255 @@ export default function DashboardView({
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
-      transition: { staggerChildren: 0.08, type: "spring" as const, stiffness: 100 },
+      transition: { staggerChildren: 0.07, type: "spring" as const, stiffness: 100 },
     },
   }
 
   const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    show: { y: 0, opacity: 1, transition: { type: "spring" as const, stiffness: 120 } },
+    hidden: { y: 16, opacity: 0 },
+    show: { y: 0, opacity: 1, transition: { type: "spring" as const, stiffness: 140 } },
   }
 
   return (
     <motion.div
-      className="p-5 lg:p-6 space-y-6"
+      className="p-5 lg:p-6 flex flex-col gap-5"
       variants={containerVariants}
       initial="hidden"
       animate="show"
     >
-      {/* TITULO */}
-      <div className="border-b border-[#c27c2f]/30 pb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+      {/* ENCABEZADO */}
+      <div className="border-b-4 border-[#c27c2f] pb-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
         <div>
-          <h2 className="font-typewriter text-2xl font-bold tracking-wider text-[#fca311] uppercase">
+          <h2 className="font-typewriter text-2xl lg:text-3xl font-bold tracking-wider text-[#fca311] uppercase">
             Tablero de Mando
           </h2>
-          <p className="font-mono text-xs text-[#fca311]/60 uppercase tracking-widest">
+          <p className="font-mono text-sm text-[#9a8a74] uppercase tracking-widest mt-1">
             Resumen operativo del campamento
           </p>
         </div>
-        <div className="vintage-tape">CONTROL MILITAR ACTIVO</div>
+        <div className="vintage-tape shrink-0 text-sm px-4 py-2">CONTROL ACTIVO</div>
       </div>
 
-      {/* METRICS GRID */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* CARD 1: EXPLORACIONES EN CURSO */}
+      {/* CUATRO MÉTRICAS */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+        {/* Card 1: Exploraciones */}
         <motion.div
           variants={itemVariants}
           onClick={() => onNavigate("explorations")}
-          className="bg-[#9a9080] border border-black p-6 relative overflow-hidden text-black transition-transform hover:scale-[1.01] flex flex-col justify-between group min-h-[190px] cursor-pointer"
-          style={{ transform: "rotate(0.4deg)" }}
+          className="bg-[#e8dcc8] border-2 border-black shadow-[5px_5px_0_#000] p-5 flex flex-col gap-3 cursor-pointer group hover:-translate-y-0.5 hover:shadow-[7px_7px_0_#000] transition-all"
+          style={{ borderLeft: "6px solid #c27c2f" }}
         >
           <div className="flex justify-between items-start">
-            <span className="font-mono text-xs uppercase font-bold text-zinc-800 tracking-wider">
-              [EQUIPOS EN ZONA MUERTA]
+            <span className="font-mono text-xs font-bold text-black/50 uppercase tracking-wider">
+              EQUIPOS EN CAMPO
             </span>
-            <span className="p-1 px-2 text-[11px] font-mono font-bold bg-amber-950/20 text-amber-900 border border-amber-900/40 rounded">
-              ZONA NEGRA
-            </span>
+            <span className="text-xl select-none">🧭</span>
           </div>
-
-          <div className="my-3">
-            <span className="font-typewriter text-4xl font-bold block">
+          <div>
+            <span className="font-typewriter text-5xl font-black text-black block">
               {activeExplorations.length}
             </span>
-            <span className="font-mono text-xs text-zinc-900 uppercase font-medium">
-              EQUIPOS ACTIVOS RASTREANDO
+            <span className="font-mono text-xs text-black/60 uppercase">
+              EQUIPOS EN ZONA MUERTA
             </span>
           </div>
-
-          <div className="text-xs font-mono text-zinc-800 border-t border-black/20 pt-2 flex items-center justify-between">
-            <span>VER EXPEDICIONES EN ACTIVIDAD</span>
-            <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+          <div className="border-t-2 border-black/15 pt-3 flex items-center justify-between">
+            <span className="font-mono text-xs text-black/60 uppercase">VER EXPEDICIONES</span>
+            <ArrowRight className="w-4 h-4 text-black/50 group-hover:translate-x-1 transition-transform" />
           </div>
         </motion.div>
 
-        {/* CARD 2: TRASLADOS PENDIENTES */}
+        {/* Card 2: Traslados */}
         <motion.div
           variants={itemVariants}
           onClick={() => onNavigate("transfers")}
-          className="bg-amber-100/90 border border-black p-6 relative overflow-hidden text-black transition-transform hover:scale-[1.01] flex flex-col justify-between group min-h-[190px] cursor-pointer"
-          style={{ transform: "rotate(0.5deg)" }}
+          className="bg-[#e8dcc8] border-2 border-black shadow-[5px_5px_0_#000] p-5 flex flex-col gap-3 cursor-pointer group hover:-translate-y-0.5 hover:shadow-[7px_7px_0_#000] transition-all"
+          style={{ borderLeft: "6px solid #4c6351" }}
         >
           <div className="flex justify-between items-start">
-            <span className="font-mono text-xs uppercase font-bold text-zinc-800 tracking-wider">
-              [CONVOYES SOLICITADOS]
+            <span className="font-mono text-xs font-bold text-black/50 uppercase tracking-wider">
+              CONVOYES PENDIENTES
             </span>
-            <span className="p-1 px-2 text-[11px] font-mono font-bold bg-zinc-950 text-white rounded animate-pulse">
-              PENDIENTES
-            </span>
+            <span className="text-xl select-none">🚛</span>
           </div>
-
-          <div className="my-3">
-            <span className="font-typewriter text-4xl font-bold block">
+          <div>
+            <span className="font-typewriter text-5xl font-black text-black block">
               {pendingTransfers.length}
             </span>
-            <span className="font-mono text-xs text-zinc-900 uppercase font-medium">
-              TRASLADOS INTER-BUNKER
-            </span>
+            <span className="font-mono text-xs text-black/60 uppercase">TRASLADOS EN ESPERA</span>
           </div>
-
-          <div className="text-xs font-mono text-zinc-800 border-t border-black/20 pt-2 flex items-center justify-between">
-            <span>REVISAR SOLICITUDES EN COLA</span>
-            <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+          <div className="border-t-2 border-black/15 pt-3 flex items-center justify-between">
+            <span className="font-mono text-xs text-black/60 uppercase">REVISAR COLA</span>
+            <ArrowRight className="w-4 h-4 text-black/50 group-hover:translate-x-1 transition-transform" />
           </div>
         </motion.div>
 
-        {/* CARD 3: ALERTAS DE INVENTARIO */}
+        {/* Card 3: Alertas de bodega */}
         <motion.div
           variants={itemVariants}
           onClick={() => onNavigate("inventory")}
-          className={`border border-black p-6 relative overflow-hidden text-black transition-transform hover:scale-[1.01] flex flex-col justify-between group min-h-[190px] cursor-pointer ${
-            criticalStocks.length > 0
-              ? "warning-card text-[#9c2720]"
-              : "bg-emerald-200/95 text-[#2b4c33] border-emerald-900"
-          }`}
-          style={{ transform: "rotate(-0.5deg)" }}
+          className="bg-[#e8dcc8] border-2 border-black shadow-[5px_5px_0_#000] p-5 flex flex-col gap-3 cursor-pointer group hover:-translate-y-0.5 hover:shadow-[7px_7px_0_#000] transition-all"
+          style={{ borderLeft: `6px solid ${criticalStocks.length > 0 ? "#9c2720" : "#4c6351"}` }}
         >
           <div className="flex justify-between items-start">
-            <span className="font-mono text-xs uppercase font-bold tracking-wider opacity-85">
-              [ALERTA DE SUMINISTROS]
+            <span className="font-mono text-xs font-bold text-black/50 uppercase tracking-wider">
+              ALERTAS DE BODEGA
             </span>
-            <AlertOctagon
-              className={`w-4 h-4 ${criticalStocks.length > 0 ? "animate-bounce" : ""}`}
-            />
+            <span className="text-xl select-none">{criticalStocks.length > 0 ? "⚠️" : "✅"}</span>
           </div>
-
-          <div className="my-3">
+          <div>
             {criticalStocks.length > 0 ? (
               <>
-                <span className="font-typewriter text-4xl font-bold block">
+                <span className="font-typewriter text-5xl font-black text-[#9c2720] block">
                   {criticalStocks.length}
                 </span>
-                <span className="font-mono text-[11px] uppercase font-bold block pt-1">
-                  SUMINISTROS BAJO MINIMO
+                <span className="font-mono text-xs text-[#9c2720] uppercase font-bold">
+                  RECURSOS BAJO MÍNIMO
                 </span>
               </>
             ) : (
               <>
-                <span className="font-typewriter text-lg font-bold block leading-5 uppercase">
-                  BODEGA SEGURA
+                <span className="font-typewriter text-2xl font-black text-[#4c6351] block uppercase">
+                  SEGURO
                 </span>
-                <span className="font-mono text-xs uppercase block opacity-85">
-                  RACIONES Y AGUA ESTABLES
-                </span>
+                <span className="font-mono text-xs text-black/60 uppercase">RACIONES ESTABLES</span>
               </>
             )}
           </div>
-
-          <div className="text-xs font-mono border-t border-black/20 pt-2 flex items-center justify-between">
-            <span>VER KITS DE BODEGA</span>
-            <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+          <div className="border-t-2 border-black/15 pt-3 flex items-center justify-between">
+            <span className="font-mono text-xs text-black/60 uppercase">VER INVENTARIO</span>
+            <ArrowRight className="w-4 h-4 text-black/50 group-hover:translate-x-1 transition-transform" />
           </div>
         </motion.div>
 
-        {/* CARD 4: RANGO Y PUNTUACIÓN */}
+        {/* Card 4: Puntuación */}
         <motion.div
           variants={itemVariants}
           onClick={() => onNavigate("profile")}
-          className="bg-[#9a9080] border border-black p-6 relative overflow-hidden text-black transition-transform hover:scale-[1.01] flex flex-col justify-between group min-h-[190px] cursor-pointer"
-          style={{ transform: "rotate(1deg)" }}
+          className="bg-[#e8dcc8] border-2 border-black shadow-[5px_5px_0_#000] p-5 flex flex-col gap-3 cursor-pointer group hover:-translate-y-0.5 hover:shadow-[7px_7px_0_#000] transition-all"
+          style={{ borderLeft: `6px solid ${rank.color}` }}
         >
           <div className="flex justify-between items-start">
-            <span className="font-mono text-xs uppercase font-bold text-zinc-800 tracking-wider">
-              [PUNTUACIÓN CAMPAMENTO]
+            <span className="font-mono text-xs font-bold text-black/50 uppercase tracking-wider">
+              PUNTUACIÓN
             </span>
-            <Trophy className="w-4 h-4 text-amber-800" />
+            <span className="text-xl select-none">🏆</span>
           </div>
-
-          <div className="my-2">
+          <div>
             <span
-              className="font-typewriter text-4xl font-bold block"
+              className="font-typewriter text-5xl font-black block"
               style={{ color: rank.color }}
             >
               {statistics.survival_score}
             </span>
-            <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-zinc-700 block">
-              PTS DE SUPERVIVENCIA
-            </span>
-            <div className="mt-2 w-full h-2 bg-black/20 rounded-sm overflow-hidden">
-              <div
-                className="h-full rounded-sm transition-all duration-500"
-                style={{ width: `${rankProgress}%`, backgroundColor: rank.color }}
-              />
-            </div>
-            <span
-              className="font-typewriter text-xs font-bold uppercase block mt-1"
-              style={{ color: rank.color }}
-            >
+            <span className="font-mono text-xs uppercase font-bold" style={{ color: rank.color }}>
               {rank.label}
             </span>
           </div>
-
-          <div className="text-xs font-mono text-zinc-800 border-t border-black/20 pt-2 flex items-center justify-between">
-            <span>{statistics.explorations_completed} EXPEDICIONES EXITOSAS</span>
-            <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+          <div className="w-full h-2 bg-black/15 border border-black/20 overflow-hidden">
+            <div
+              className="h-full transition-all duration-500"
+              style={{ width: `${rankProgress}%`, backgroundColor: rank.color }}
+            />
+          </div>
+          <div className="border-t-2 border-black/15 pt-2 flex items-center justify-between">
+            <span className="font-mono text-xs text-black/60 uppercase">
+              {statistics.explorations_completed} EXPEDICIONES
+            </span>
+            <ArrowRight className="w-4 h-4 text-black/50 group-hover:translate-x-1 transition-transform" />
           </div>
         </motion.div>
       </div>
 
-      {/* COLUMNAS: EQUIPOS ACTIVOS & BALANCES */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* COL-LEFT: EQUIPOS EN ZONA MUERTA */}
-        <div className="bg-black/30 border border-[#3b4d3e] rounded-lg p-6 backdrop-blur-sm shadow-md lg:col-span-8">
-          <div className="flex items-center gap-3 border-b border-[#c27c2f]/20 pb-4 mb-5">
-            <Compass className="w-5 h-5 text-amber-500 shrink-0" />
-            <h3 className="font-typewriter text-lg font-bold tracking-wider text-[#fca311] uppercase">
-              SITUACION DE EXCURSIONISTAS EN ZONA MUERTA
+      {/* COLUMNAS: EXCURSIONISTAS ACTIVOS + BALANCE */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        {/* Panel izquierdo: excursionistas en zona */}
+        <motion.div
+          variants={itemVariants}
+          className="bg-[#e8dcc8] border-2 border-black shadow-[5px_5px_0_#000] p-6 lg:col-span-8"
+          style={{ borderLeft: "6px solid #c27c2f" }}
+        >
+          <div className="flex items-center gap-3 border-b-2 border-black/15 pb-4 mb-4">
+            <span className="text-xl select-none">🧭</span>
+            <h3 className="font-typewriter text-lg font-bold tracking-wider text-black uppercase">
+              Excursionistas en Zona Muerta
             </h3>
           </div>
 
           {activeExplorations.length === 0 ? (
-            <div className="border border-dashed border-zinc-800 text-center py-10 rounded">
-              <span className="font-mono text-xs opacity-50 block uppercase text-[#ab9e8b]">
-                [NINGUN EQUIPO DE COMBATE EN RAD-OUT EXTERIOR]
-              </span>
+            <div className="border-2 border-dashed border-black/20 text-center py-10">
+              <p className="font-mono text-xs text-black/40 uppercase font-bold">
+                NINGÚN EQUIPO EN OPERACIÓN EXTERIOR
+              </p>
               <button
                 type="button"
-                className="font-mono text-xs text-amber-500 mt-1 cursor-pointer hover:underline bg-transparent border-none p-0 inline-block"
+                className="font-mono text-xs text-[#c27c2f] mt-2 cursor-pointer hover:underline bg-transparent border-none p-0 inline-block"
                 onClick={() => onNavigate("explorations")}
               >
-                ORGANIZAR NUEVA BUSQUEDA DE RECURSOS &gt;&gt;
+                ORGANIZAR NUEVA BÚSQUEDA &gt;&gt;
               </button>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {activeExplorations.map((exp) => {
                 const crewNames = exp.explorationPersons.map((p) => p.person.first_name).join(", ")
-
                 return (
                   <div
                     key={exp.id}
-                    className="border border-[#3b4d3e]/45 bg-black/40 p-4 rounded-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-3 relative overflow-hidden"
+                    className="bg-black/5 border border-black/15 p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-3"
+                    style={{ borderLeft: "4px solid #c27c2f" }}
                   >
-                    <div className="absolute top-0 left-0 bottom-0 w-1 bg-amber-500" />
-                    <div className="pl-3">
-                      <span className="font-mono text-xs text-amber-500 font-bold tracking-widest block">
-                        MISION ID: #{exp.id} &bull; {exp.departure_date.split("T")[0]}
+                    <div className="pl-1">
+                      <span className="font-mono text-xs text-[#c27c2f] font-bold tracking-widest block">
+                        MISIÓN #{exp.id} &bull; {exp.departure_date.split("T")[0]}
                       </span>
-                      <h4 className="font-typewriter text-sm text-white font-bold uppercase mt-0.5">
+                      <h4 className="font-typewriter text-sm text-black font-bold uppercase mt-0.5">
                         {exp.name}
                       </h4>
-                      <p className="font-mono text-xs text-[#ab9e8b] mt-1">
-                        DESTINO: <span className="text-white">{exp.destination_description}</span>
+                      <p className="font-mono text-xs text-black/60 mt-1 uppercase">
+                        DESTINO: {cleanDesc(exp.destination_description)}
                       </p>
-                      <div className="flex items-center gap-2 mt-2">
-                        <User className="w-3.5 h-3.5 text-amber-500" />
-                        <span className="font-mono text-xs text-zinc-300">
-                          CONTINGENTE: <span className="text-white font-bold">{crewNames}</span>
+                      <div className="flex items-center gap-1.5 mt-1.5">
+                        <User className="w-3.5 h-3.5 text-black/40 shrink-0" />
+                        <span className="font-mono text-xs text-black/60">
+                          CONTINGENTE: <span className="font-bold text-black">{crewNames}</span>
                         </span>
                       </div>
                     </div>
-
                     <div className="text-left md:text-right shrink-0">
-                      <span className="font-mono text-xs text-[#ab9e8b] block">
-                        DIAS ESTIMADOS:
+                      <span className="font-typewriter text-sm font-bold text-[#c27c2f] block">
+                        {exp.estimated_days}D (+{exp.grace_days}G)
                       </span>
-                      <span className="font-typewriter text-amber-500 font-bold block animate-pulse">
-                        {exp.estimated_days} DIAS (+{exp.grace_days} G)
+                      <span className="font-mono text-[10px] text-black/50 uppercase block mt-1">
+                        RETORNO ESTIMADO
                       </span>
-                      <div className="inline-flex items-center gap-1.5 bg-amber-900/40 text-amber-400 border border-amber-500/30 text-[9px] font-mono px-2 py-0.5 rounded mt-1.5">
-                        <span className="h-1.5 w-1.5 bg-amber-500 rounded-full animate-ping" />
-                        EXCURSION EN CURSO
-                      </div>
                     </div>
                   </div>
                 )
               })}
             </div>
           )}
-        </div>
+        </motion.div>
 
-        {/* COL-RIGHT: BALANCE DIARIO */}
-        <div className="bg-black/30 border border-[#3b4d3e] rounded-lg p-6 backdrop-blur-sm shadow-md lg:col-span-4">
-          <div className="flex items-center gap-3 border-b border-[#c27c2f]/20 pb-3 mb-4">
-            <Scale className="w-5 h-5 text-amber-500 shrink-0" />
-            <h3 className="font-typewriter text-lg font-bold tracking-wider text-[#fca311] uppercase">
-              BALANCE DIARIO
+        {/* Panel derecho: balance diario */}
+        <motion.div
+          variants={itemVariants}
+          className="bg-[#e8dcc8] border-2 border-black shadow-[5px_5px_0_#000] p-6 lg:col-span-4"
+          style={{ borderLeft: "6px solid #4c6351" }}
+        >
+          <div className="flex items-center gap-3 border-b-2 border-black/15 pb-4 mb-4">
+            <span className="text-xl select-none">⚖️</span>
+            <h3 className="font-typewriter text-lg font-bold tracking-wider text-black uppercase">
+              Balance Diario
             </h3>
           </div>
 
-          <p className="font-mono text-[10px] text-[#ab9e8b]/70 uppercase leading-4 border-b border-zinc-900 pb-2 mb-3">
-            CONSUMO PUBLICO VS PRODUCCION COSECHADA
+          <p className="font-mono text-xs text-black/40 uppercase font-bold mb-3">
+            CONSUMO VS PRODUCCIÓN
           </p>
 
           {balances.length === 0 ? (
-            <p className="font-mono text-xs text-zinc-600 text-center py-6 uppercase">
+            <p className="font-mono text-xs text-black/40 text-center py-6 uppercase font-bold">
               SIN DATOS DE BALANCE
             </p>
           ) : (
@@ -350,35 +330,30 @@ export default function DashboardView({
               {balances.map((bal) => {
                 const isPositive = bal.net >= 0
                 return (
-                  <div
-                    key={bal.resource_id}
-                    className="border border-zinc-900 p-2.5 rounded bg-black/20"
-                  >
-                    <div className="flex justify-between items-center text-[11px] font-mono">
-                      <span className="text-white font-bold uppercase">{bal.resource_name}</span>
+                  <div key={bal.resource_id} className="bg-black/5 border border-black/15 p-3">
+                    <div className="flex justify-between items-center font-mono text-sm">
+                      <span className="text-black font-bold uppercase">{bal.resource_name}</span>
                       <span
-                        className={`font-bold ${isPositive ? "text-emerald-500" : "text-red-500 animate-pulse"}`}
+                        className={`font-bold ${isPositive ? "text-[#4c6351]" : "text-[#9c2720]"}`}
                       >
-                        {isPositive ? `+${bal.net}` : bal.net} / DIA
+                        {isPositive ? `+${bal.net}` : bal.net} / DÍA
                       </span>
                     </div>
-
-                    <div className="w-full h-1.5 bg-zinc-800 rounded mt-2 overflow-hidden flex">
+                    <div className="w-full h-2 bg-black/10 border border-black/15 mt-2 overflow-hidden flex">
                       <div
-                        className="bg-red-500 h-full"
+                        className="bg-[#9c2720] h-full"
                         style={{
                           width: `${Math.min(100, (bal.consumption / (bal.production + bal.consumption || 1)) * 100)}%`,
                         }}
                       />
                       <div
-                        className="bg-emerald-500 h-full"
+                        className="bg-[#4c6351] h-full"
                         style={{
                           width: `${Math.min(100, (bal.production / (bal.production + bal.consumption || 1)) * 100)}%`,
                         }}
                       />
                     </div>
-
-                    <div className="flex justify-between text-[11px] font-mono text-zinc-500 mt-1">
+                    <div className="flex justify-between text-xs font-mono text-black/50 mt-1">
                       <span>CONSUMO: -{bal.consumption}</span>
                       <span>PROD: +{bal.production}</span>
                     </div>
@@ -387,65 +362,68 @@ export default function DashboardView({
               })}
             </div>
           )}
-        </div>
+        </motion.div>
       </div>
 
-      {/* REGISTRO DE MOVIMIENTOS RECIENTES */}
-      <div className="bg-black/45 border border-[#3b4d3e] p-5 font-mono text-[11px] leading-relaxed rounded overflow-hidden">
-        <div className="flex items-center gap-3 border-b border-[#c27c2f]/20 pb-3 mb-4">
-          <History className="w-5 h-5 text-amber-500 shrink-0" />
-          <h3 className="font-typewriter text-lg font-bold tracking-wider text-[#fca311] uppercase">
-            HISTORIAL DE LOGS DE RESERVA
+      {/* HISTORIAL DE MOVIMIENTOS */}
+      <motion.div
+        variants={itemVariants}
+        className="bg-[#e8dcc8] border-2 border-black shadow-[5px_5px_0_#000] p-6"
+        style={{ borderLeft: "6px solid #5a5040" }}
+      >
+        <div className="flex items-center gap-3 border-b-2 border-black/15 pb-4 mb-4">
+          <span className="text-xl select-none">📋</span>
+          <h3 className="font-typewriter text-lg font-bold tracking-wider text-black uppercase">
+            Historial de Logs de Reserva
           </h3>
         </div>
 
         {movements.length === 0 ? (
-          <p className="text-zinc-600 text-center py-6 uppercase font-bold">
+          <p className="font-mono text-xs text-black/40 text-center py-6 uppercase font-bold">
             SIN MOVIMIENTOS REGISTRADOS
           </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left font-mono text-xs">
               <thead>
-                <tr className="border-b border-[#3b4d3e]/40 text-amber-600/80">
-                  <th className="pb-2 pr-4">FECHA</th>
-                  <th className="pb-2 pr-4">LOG ID</th>
-                  <th className="pb-2 pr-4">RECURSO</th>
-                  <th className="pb-2 pr-4">CANTIDAD</th>
-                  <th className="pb-2 pr-4">TIPO</th>
-                  <th className="pb-2">NOTAS</th>
+                <tr className="border-b-2 border-black/15">
+                  <th className="pb-2 pr-4 text-black/50 uppercase font-bold">FECHA</th>
+                  <th className="pb-2 pr-4 text-black/50 uppercase font-bold">LOG ID</th>
+                  <th className="pb-2 pr-4 text-black/50 uppercase font-bold">RECURSO</th>
+                  <th className="pb-2 pr-4 text-black/50 uppercase font-bold">CANTIDAD</th>
+                  <th className="pb-2 pr-4 text-black/50 uppercase font-bold">TIPO</th>
+                  <th className="pb-2 text-black/50 uppercase font-bold">NOTAS</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#3b4d3e]/20">
+              <tbody className="divide-y divide-black/10">
                 {movements.slice(0, 5).map((mov) => {
                   const isAddition = mov.quantity > 0
                   const resourceName =
                     resourceNameMap.get(mov.resource_id) ?? `RECURSO #${mov.resource_id}`
-
                   return (
-                    <tr key={mov.id} className="text-zinc-300 hover:bg-black/40">
-                      <td className="py-2.5 pr-4 opacity-60">
+                    <tr key={mov.id} className="text-black/70 hover:bg-black/5">
+                      <td className="py-2.5 pr-4 text-black/50">
                         {mov.created_at.replace("T", " ").substring(0, 19)}
                       </td>
-                      <td className="py-2.5 pr-4 text-amber-500">#L-{mov.id}</td>
-                      <td className="py-2.5 pr-4 font-bold uppercase">{resourceName}</td>
+                      <td className="py-2.5 pr-4 font-bold text-[#c27c2f]">#L-{mov.id}</td>
+                      <td className="py-2.5 pr-4 font-bold uppercase text-black">{resourceName}</td>
                       <td
-                        className={`py-2.5 pr-4 font-bold ${isAddition ? "text-emerald-500" : "text-red-500"}`}
+                        className={`py-2.5 pr-4 font-bold ${isAddition ? "text-[#4c6351]" : "text-[#9c2720]"}`}
                       >
                         {isAddition ? `+${mov.quantity}` : `${mov.quantity}`}
                       </td>
                       <td className="py-2.5 pr-4">
                         <span
-                          className={`px-1.5 py-0.5 rounded uppercase ${
+                          className={`px-2 py-0.5 border border-black/20 uppercase font-bold ${
                             isAddition
-                              ? "bg-emerald-950/40 text-emerald-400"
-                              : "bg-red-950/40 text-red-400"
+                              ? "bg-[#4c6351]/10 text-[#4c6351]"
+                              : "bg-[#9c2720]/10 text-[#9c2720]"
                           }`}
                         >
                           {mov.type.replace("_", " ")}
                         </span>
                       </td>
-                      <td className="py-2.5 text-zinc-400">{mov.notes}</td>
+                      <td className="py-2.5 text-black/50">{mov.notes}</td>
                     </tr>
                   )
                 })}
@@ -453,7 +431,7 @@ export default function DashboardView({
             </table>
           </div>
         )}
-      </div>
+      </motion.div>
     </motion.div>
   )
 }

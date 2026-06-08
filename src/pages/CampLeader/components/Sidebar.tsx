@@ -59,7 +59,7 @@ export default function Sidebar({ activeTab, setActiveTab, survivalScore = 0 }: 
                 onClick={() => setActiveTab(tab.id)}
                 aria-label={tab.label}
                 aria-pressed={isActive}
-                className="w-full text-left relative flex items-center justify-center md:justify-start gap-3 md:gap-4 py-4 px-4 md:px-5 rounded-xl transition-all duration-150 border cursor-pointer shrink-0 hover:translate-x-1 active:translate-y-0.5 min-w-[140px] md:min-w-0 mx-1 md:mx-0"
+                className="w-full text-left text-black relative flex items-center justify-center md:justify-start gap-3 md:gap-4 py-4 px-4 md:px-5 rounded-xl transition-all duration-150 border cursor-pointer shrink-0 hover:translate-x-1 active:translate-y-0.5 min-w-[140px] md:min-w-0 mx-1 md:mx-0"
                 style={{
                   backgroundColor: isActive ? "#c27c2f" : "#9a9080",
                   borderColor: "#000000",

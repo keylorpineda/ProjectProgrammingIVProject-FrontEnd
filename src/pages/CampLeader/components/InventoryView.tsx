@@ -1,4 +1,4 @@
-import { AlertTriangle, Boxes, Droplet, Flame, HeartPulse, Sword, Wrench } from "lucide-react"
+import { AlertTriangle } from "lucide-react"
 import { useState } from "react"
 
 import type { Inventory, ResourceCategory } from "../types"
@@ -6,6 +6,23 @@ import type { Inventory, ResourceCategory } from "../types"
 interface InventoryViewProps {
   inventory: Inventory[]
 }
+
+const CATEGORY_EMOJI: Record<string, string> = {
+  food: "🌽",
+  water: "💧",
+  medicine: "💊",
+  tools: "🔧",
+  weapons: "⚔️",
+  fuel: "⛽",
+}
+
+const CATEGORY_FILTERS = [
+  { id: "food" as ResourceCategory, label: "COMIDA", icon: "🌽" },
+  { id: "water" as ResourceCategory, label: "AGUA", icon: "💧" },
+  { id: "medicine" as ResourceCategory, label: "MEDICINA", icon: "💊" },
+  { id: "tools" as ResourceCategory, label: "HERRAMIENTAS", icon: "🔧" },
+  { id: "weapons" as ResourceCategory, label: "ARMAMENTO", icon: "⚔️" },
+]
 
 export default function InventoryView({ inventory }: InventoryViewProps) {
   const [filterCategory, setFilterCategory] = useState<ResourceCategory | "ALL">("ALL")
@@ -15,25 +32,8 @@ export default function InventoryView({ inventory }: InventoryViewProps) {
     return filterCategory === "ALL" || inv.resource.category === filterCategory
   })
 
-  const getCategoryIcon = (category: ResourceCategory) => {
-    switch (category) {
-      case "food":
-        return <Flame className="w-5 h-5 text-amber-500" />
-      case "water":
-        return <Droplet className="w-5 h-5 text-blue-400" />
-      case "medicine":
-        return <HeartPulse className="w-5 h-5 text-rose-500 animate-pulse" />
-      case "tools":
-        return <Wrench className="w-5 h-5 text-zinc-400" />
-      case "weapons":
-        return <Sword className="w-5 h-5 text-[#9c2720]" />
-      default:
-        return <Boxes className="w-5 h-5 text-amber-500" />
-    }
-  }
-
   return (
-    <div className="p-8 lg:p-10 flex flex-col gap-8">
+    <div className="p-5 lg:p-6 flex flex-col gap-6">
       {/* HEADER */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b-4 border-[#c27c2f] pb-6">
         <div>
@@ -53,35 +53,28 @@ export default function InventoryView({ inventory }: InventoryViewProps) {
           onClick={() => setFilterCategory("ALL")}
           className={`px-4 py-2.5 font-mono text-xs uppercase font-bold tracking-wider border-2 cursor-pointer transition-all flex items-center gap-2 ${
             filterCategory === "ALL"
-              ? "bg-[#c27c2f] text-black border-black shadow-[2px_2px_0_#000]"
-              : "bg-transparent border-[#9a8a74]/50 text-[#9a8a74] hover:border-[#c27c2f] hover:text-[#fca311]"
+              ? "bg-[#c27c2f] text-white border-[#c27c2f] shadow-[2px_2px_0_rgba(0,0,0,0.6)]"
+              : "bg-transparent border-[#9a8a74]/60 text-[#c8bfae] hover:border-[#c27c2f] hover:text-[#fca311]"
           }`}
         >
           TODO
         </button>
 
-        {[
-          { id: "food", label: "COMIDA", icon: Flame },
-          { id: "water", label: "AGUA", icon: Droplet },
-          { id: "medicine", label: "MEDICINA", icon: HeartPulse },
-          { id: "tools", label: "HERRAMIENTAS", icon: Wrench },
-          { id: "weapons", label: "ARMAMENTO", icon: Sword },
-        ].map((cat) => {
-          const IconComp = cat.icon
+        {CATEGORY_FILTERS.map((cat) => {
           const isActive = filterCategory === cat.id
 
           return (
             <button
               key={cat.id}
-              onClick={() => setFilterCategory(cat.id as ResourceCategory)}
+              onClick={() => setFilterCategory(cat.id)}
               aria-pressed={isActive}
               className={`px-4 py-2.5 font-mono text-xs uppercase font-bold tracking-wider border-2 flex items-center gap-2 cursor-pointer transition-all ${
                 isActive
-                  ? "bg-[#e8dcc8] text-black border-black shadow-[2px_2px_0_#000]"
-                  : "bg-transparent border-[#9a8a74]/50 text-[#9a8a74] hover:border-[#9a8a74] hover:text-[#c8bfae]"
+                  ? "bg-[#c27c2f] text-white border-[#c27c2f] shadow-[2px_2px_0_rgba(0,0,0,0.6)]"
+                  : "bg-transparent border-[#9a8a74]/60 text-[#c8bfae] hover:border-[#c27c2f] hover:text-[#fca311]"
               }`}
             >
-              <IconComp className="w-4 h-4" />
+              <span>{cat.icon}</span>
               {cat.label}
             </button>
           )
@@ -105,8 +98,8 @@ export default function InventoryView({ inventory }: InventoryViewProps) {
               {/* CABECERA */}
               <div className="flex justify-between items-start">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 border-2 border-black flex items-center justify-center bg-black/10 shrink-0">
-                    {getCategoryIcon(inv.resource.category)}
+                  <div className="w-12 h-12 border-2 border-black flex items-center justify-center bg-black/10 shrink-0 text-2xl">
+                    {CATEGORY_EMOJI[inv.resource.category] ?? "📦"}
                   </div>
                   <div>
                     <span className="font-mono text-xs font-bold text-black/50 block uppercase tracking-wider">

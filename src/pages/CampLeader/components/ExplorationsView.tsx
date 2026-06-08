@@ -12,15 +12,25 @@ import {
 } from "lucide-react"
 import { type FormEvent, useState } from "react"
 
-import type { Exploration, ExplorationStatus, Inventory, Person, ResourceItem } from "../types"
+import type {
+  Camp,
+  Exploration,
+  ExplorationStatus,
+  Inventory,
+  Person,
+  ResourceItem,
+} from "../types"
 
+import { ExplorationZoneMap } from "@/features/map-test/components/ExplorationZoneMap"
 import { MapCoordPicker } from "@/features/map-test/components/MapCoordPicker"
+import { TransferRouteMap } from "@/features/map-test/components/TransferRouteMap"
 
 interface ExplorationsViewProps {
   explorations: Exploration[]
   activePersons: Person[]
   inventory: Inventory[]
   resources: ResourceItem[]
+  camps: Camp[]
   myCampId: number
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onCreateExploration: (data: any) => Promise<void>
@@ -30,11 +40,22 @@ interface ExplorationsViewProps {
   onCancelExploration: (id: number) => Promise<void>
 }
 
+function parseDestCoords(desc: string): [number, number] | null {
+  const match = desc.match(/\[(-?\d+\.\d+),\s*(-?\d+\.\d+)\]/)
+  if (!match) return null
+  return [parseFloat(match[1]), parseFloat(match[2])]
+}
+
+function cleanDestDescription(desc: string): string {
+  return desc.replace(/\s*\[(-?\d+\.\d+),\s*(-?\d+\.\d+)\]/, "").trim()
+}
+
 export default function ExplorationsView({
   explorations,
   activePersons,
   inventory,
   resources,
+  camps,
   myCampId,
   onCreateExploration,
   onDepartExploration,
@@ -211,9 +232,9 @@ export default function ExplorationsView({
   }
 
   return (
-    <div className="p-8 lg:p-10 flex flex-col gap-8">
+    <div className="p-5 lg:p-6 flex flex-col gap-6">
       {/* HEADER */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b-4 border-[#c27c2f] pb-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b-4 border-[#c27c2f] pb-5">
         <div>
           <h2 className="font-typewriter text-2xl lg:text-3xl font-bold text-[#fca311] uppercase tracking-wider">
             EXPLORACIONES EN LA ZONA MUERTA
@@ -251,8 +272,8 @@ export default function ExplorationsView({
               onClick={() => setFilterStatus(key as ExplorationStatus | "ALL")}
               className={`px-4 py-2 font-mono text-xs uppercase font-bold tracking-wider border-2 cursor-pointer transition-all ${
                 filterStatus === key
-                  ? "bg-[#c27c2f] text-black border-black shadow-[2px_2px_0_#000]"
-                  : "bg-transparent border-[#9a8a74]/50 text-[#9a8a74] hover:border-[#c27c2f] hover:text-[#fca311]"
+                  ? "bg-[#c27c2f] text-white border-[#c27c2f] shadow-[2px_2px_0_rgba(0,0,0,0.6)]"
+                  : "bg-transparent border-[#9a8a74]/60 text-[#c8bfae] hover:border-[#c27c2f] hover:text-[#fca311]"
               }`}
             >
               {label}
@@ -261,13 +282,13 @@ export default function ExplorationsView({
         </div>
 
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9a8a74]" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black/40" />
           <input
             type="text"
             placeholder="BUSCAR RUTA/ZONA..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full md:w-72 pl-10 pr-4 py-2.5 bg-black/40 border-2 border-[#3b4d3e]/70 text-white font-mono text-sm uppercase focus:outline-none focus:border-[#c27c2f]"
+            className="w-full md:w-72 pl-10 pr-4 py-2.5 bg-[#d4c9b0] border-2 border-black/30 text-black font-mono text-sm uppercase focus:outline-none focus:border-[#c27c2f]"
           />
         </div>
       </div>
@@ -294,6 +315,15 @@ export default function ExplorationsView({
             const leaderName =
               exp.explorationPersons.find((ep) => ep.is_leader)?.person.first_name || "SIN ASIGNAR"
             const membersList = exp.explorationPersons.map((ep) => ep.person.first_name).join(", ")
+
+            const destCoords = parseDestCoords(exp.destination_description)
+            const cleanDesc = cleanDestDescription(exp.destination_description)
+
+            const myCamp = camps.find((c) => c.id === myCampId)
+            const campCoords: [number, number] | null =
+              myCamp?.latitude != null && myCamp?.longitude != null
+                ? [Number(myCamp.latitude), Number(myCamp.longitude)]
+                : null
 
             const borderColor = isInProgress
               ? "#4c6351"
@@ -342,12 +372,36 @@ export default function ExplorationsView({
                   </span>
                 </div>
 
+                {/* MINIMAP: ruta desde campamento hasta zona de exploración */}
+                {campCoords && (
+                  <div className="mx-4 mb-2">
+                    {destCoords ? (
+                      <div className="wv-transfer-minimap">
+                        <TransferRouteMap
+                          fromCoords={campCoords}
+                          toCoords={destCoords}
+                          fromName="BASE"
+                          toName={cleanDesc.slice(0, 20) || "ZONA"}
+                        />
+                      </div>
+                    ) : (
+                      <div className="wv-exp-minimap">
+                        <ExplorationZoneMap
+                          originCoords={campCoords}
+                          originName="BASE"
+                          destinationLabel={cleanDesc.slice(0, 40) || "ZONA DE EXPLORACIÓN"}
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* DETALLES */}
                 <div className="px-6 flex flex-col gap-4 flex-1">
                   <div className="flex items-start gap-2">
                     <MapPin className="w-4 h-4 text-black/50 shrink-0 mt-0.5" />
                     <span className="font-mono text-sm text-black uppercase leading-5">
-                      {exp.destination_description}
+                      {cleanDesc || exp.destination_description}
                     </span>
                   </div>
 

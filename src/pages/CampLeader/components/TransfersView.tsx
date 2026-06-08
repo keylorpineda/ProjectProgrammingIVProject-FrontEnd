@@ -4,6 +4,9 @@ import { useState } from "react"
 
 import type { Camp, Inventory, ResourceItem, Transfer, TransferStatus } from "../types"
 
+import { ExplorationZoneMap } from "@/features/map-test/components/ExplorationZoneMap"
+import { TransferRouteMap } from "@/features/map-test/components/TransferRouteMap"
+
 interface TransfersViewProps {
   transfers: Transfer[]
   camps: Camp[]
@@ -120,9 +123,9 @@ export default function TransfersView({
   }
 
   return (
-    <div className="p-8 lg:p-10 flex flex-col gap-8">
+    <div className="p-5 lg:p-6 flex flex-col gap-6">
       {/* HEADER */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b-4 border-[#c27c2f] pb-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b-4 border-[#c27c2f] pb-5">
         <div>
           <h2 className="font-typewriter text-2xl lg:text-3xl font-bold text-[#fca311] uppercase tracking-wider">
             TRASLADOS INTER-CAMPAMENTOS
@@ -156,8 +159,8 @@ export default function TransfersView({
               onClick={() => setFilterRole(opt.key as "ALL" | "origin" | "destination")}
               className={`px-4 py-2 font-mono text-xs uppercase font-bold tracking-wider border-2 cursor-pointer transition-all ${
                 filterRole === opt.key
-                  ? "bg-[#c27c2f] text-black border-black shadow-[2px_2px_0_#000]"
-                  : "bg-transparent border-[#9a8a74]/50 text-[#9a8a74] hover:border-[#c27c2f] hover:text-[#fca311]"
+                  ? "bg-[#c27c2f] text-white border-[#c27c2f] shadow-[2px_2px_0_rgba(0,0,0,0.6)]"
+                  : "bg-transparent border-[#9a8a74]/60 text-[#c8bfae] hover:border-[#c27c2f] hover:text-[#fca311]"
               }`}
             >
               {opt.label}
@@ -173,8 +176,8 @@ export default function TransfersView({
                 onClick={() => setFilterStatus(st as TransferStatus | "ALL")}
                 className={`px-3 py-1.5 font-mono text-xs uppercase border-2 cursor-pointer transition-all ${
                   filterStatus === st
-                    ? "bg-[#e8dcc8] text-black border-black shadow-[2px_2px_0_#000] font-bold"
-                    : "bg-transparent border-[#9a8a74]/40 text-[#9a8a74] hover:border-[#9a8a74] hover:text-[#c8bfae]"
+                    ? "bg-[#c27c2f] text-white border-[#c27c2f] shadow-[2px_2px_0_rgba(0,0,0,0.6)] font-bold"
+                    : "bg-transparent border-[#9a8a74]/60 text-[#c8bfae] hover:border-[#c27c2f] hover:text-[#fca311]"
                 }`}
               >
                 {STATUS_LABELS[st] ?? st}
@@ -201,10 +204,20 @@ export default function TransfersView({
             const isOriginUs = t.origin_camp_id === myCampId
             const resItem = resources.find((r) => r.id === t.resource_id)
 
-            const originCampName =
-              camps.find((c) => c.id === t.origin_camp_id)?.name || "BASE DESCONOCIDA"
-            const destCampName =
-              camps.find((c) => c.id === t.destination_camp_id)?.name || "BASE DESCONOCIDA"
+            const originCamp = camps.find((c) => c.id === t.origin_camp_id)
+            const destCamp = camps.find((c) => c.id === t.destination_camp_id)
+
+            const originCampName = originCamp?.name || "BASE DESCONOCIDA"
+            const destCampName = destCamp?.name || "BASE DESCONOCIDA"
+
+            const originCoords: [number, number] | null =
+              originCamp?.latitude != null && originCamp?.longitude != null
+                ? [Number(originCamp.latitude), Number(originCamp.longitude)]
+                : null
+            const destCoords: [number, number] | null =
+              destCamp?.latitude != null && destCamp?.longitude != null
+                ? [Number(destCamp.latitude), Number(destCamp.longitude)]
+                : null
 
             const borderColor =
               t.status === "pending"
@@ -247,7 +260,7 @@ export default function TransfersView({
                 </div>
 
                 {/* RUTA */}
-                <div className="mx-6 mb-4 flex items-center gap-3 bg-black/10 border border-black/15 px-4 py-3">
+                <div className="mx-6 mb-2 flex items-center gap-3 bg-black/10 border border-black/15 px-4 py-3">
                   <span className="font-typewriter text-sm font-bold text-black truncate">
                     {isOriginUs ? "NUESTRO BÚNKER" : originCampName}
                   </span>
@@ -256,6 +269,30 @@ export default function TransfersView({
                     {!isOriginUs ? "NUESTRO BÚNKER" : destCampName}
                   </span>
                 </div>
+
+                {/* MAPA DE RUTA INTER-CAMPAMENTO */}
+                {(originCoords || destCoords) && (
+                  <div className="mx-6 mb-3">
+                    {originCoords && destCoords ? (
+                      <div className="wv-transfer-minimap">
+                        <TransferRouteMap
+                          fromCoords={originCoords}
+                          toCoords={destCoords}
+                          fromName={originCampName}
+                          toName={destCampName}
+                        />
+                      </div>
+                    ) : (
+                      <div className="wv-exp-minimap">
+                        <ExplorationZoneMap
+                          originCoords={(originCoords ?? destCoords)!}
+                          originName={originCoords ? originCampName : destCampName}
+                          destinationLabel={`${originCampName} → ${destCampName}`}
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* RECURSO */}
                 <div className="px-6 flex flex-col gap-3 flex-1">

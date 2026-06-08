@@ -93,6 +93,15 @@
   height: 120px;
 }
 
+/* Transfer route minimap in cards — smaller height, no extra top margin */
+.wv-transfer-minimap .route-map-container {
+  margin-top: 0;
+}
+
+.wv-transfer-minimap .route-map {
+  height: 130px;
+}
+
 @keyframes widget-route-dash {
   from {
     stroke-dashoffset: 200;

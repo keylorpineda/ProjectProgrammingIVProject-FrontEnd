@@ -32,6 +32,9 @@ export interface Camp {
   id: number
   name: string
   location?: string
+  location_description?: string
+  latitude?: number | string
+  longitude?: number | string
   survival_score?: number
 }
 

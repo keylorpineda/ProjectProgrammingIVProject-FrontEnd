@@ -218,6 +218,7 @@ export default function CampLeaderLayout() {
             activePersons={activeHealthyResidents}
             inventory={inventory}
             resources={resources}
+            camps={camps}
             myCampId={Number(user?.camp_id ?? 1)}
             onCreateExploration={handleCreateExploration}
             onDepartExploration={handleDepartExploration}
@@ -275,7 +276,7 @@ export default function CampLeaderLayout() {
             <Topbar survivalScore={statistics.survival_score} />
 
             {/* SCROLLABLE MAIN AREA */}
-            <main className="flex-1 overflow-y-auto overflow-x-hidden relative">
+            <main className="flex-1 overflow-y-auto overflow-x-hidden relative px-6 pt-4 pb-4">
               <AnimatePresence mode="wait">
                 {loading ? (
                   <div
