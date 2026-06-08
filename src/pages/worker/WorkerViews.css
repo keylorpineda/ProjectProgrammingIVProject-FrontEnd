@@ -5,14 +5,14 @@
 
 .worker-layout {
   /* ── Palette ── */
-  --panel: #0e0d0b;
+  --panel: #161513;
   --panel-alt: #080806;
   --panel-border: rgba(179, 133, 54, 0.28);
   --panel-border-bright: rgba(179, 133, 54, 0.55);
   --bg-deep: #0a0907;
   --text-primary: rgba(212, 190, 140, 0.92);
   --text-secondary: rgba(154, 144, 128, 0.55);
-  --text-amber: #c8a84b;
+  --text-amber: #c27c2f;
   --text-dim: rgba(154, 144, 128, 0.35);
   --accent-amber: #b38536;
   --accent-warning: #c27c2f;
@@ -21,7 +21,7 @@
   --accent-emergency: #b38536;
   --accent-tape: rgba(179, 133, 54, 0.15);
   /* Legacy aliases (kept for shared components) */
-  --bg-paper: #0e0d0b;
+  --bg-paper: #161513;
   --bg-paper-dark: #080806;
   --bg-paper-shadow: #050503;
   --ink: rgba(212, 190, 140, 0.88);
@@ -144,8 +144,7 @@
   position: relative;
   box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.8);
   background-image:
-    radial-gradient(#635b50 15%, transparent 16%),
-    radial-gradient(#635b50 15%, transparent 16%);
+    radial-gradient(#635b50 15%, transparent 16%), radial-gradient(#635b50 15%, transparent 16%);
   background-size: 8px 8px;
   background-position:
     0 0,
@@ -163,7 +162,7 @@
   background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
   padding: 30px 24px 24px;
   position: relative;
-  box-shadow: 
+  box-shadow:
     0 1px 3px rgba(0, 0, 0, 0.4),
     -4px 8px 15px rgba(0, 0, 0, 0.6);
   border-radius: 1px;
@@ -173,7 +172,7 @@
 }
 
 .wv-pinned:nth-child(even) {
-  box-shadow: 
+  box-shadow:
     0 1px 3px rgba(0, 0, 0, 0.4),
     4px 8px 15px rgba(0, 0, 0, 0.6);
 }
@@ -814,7 +813,6 @@
 }
 
 @keyframes wv-pulse {
-
   0%,
   100% {
     box-shadow: 0 0 5px var(--accent-approved);
@@ -1483,7 +1481,6 @@
 }
 
 @keyframes wv-pulse-amber {
-
   0%,
   100% {
     opacity: 0.7;
@@ -1857,11 +1854,13 @@
 .worker-route-container {
   background:
     radial-gradient(ellipse at center, rgba(194, 124, 47, 0.08) 0%, #161513 68%),
-    repeating-linear-gradient(0deg,
+    repeating-linear-gradient(
+      0deg,
       transparent,
       transparent 2px,
       rgba(194, 124, 47, 0.05) 2px,
-      rgba(194, 124, 47, 0.05) 4px),
+      rgba(194, 124, 47, 0.05) 4px
+    ),
     #161513 !important;
 }
 
@@ -2199,16 +2198,16 @@
    ========================================================================== */
 
 .worker-layout {
-  --terminal-bg: #0e0d0b;
-  --terminal-panel: #1a1509;
-  --terminal-gold: #d4a843;
-  --terminal-gold-dim: #5a4820;
-  --document-bg: #c8b89a;
-  --document-border: #8a7355;
-  --document-ink: #2a1f0a;
-  --document-muted: #5a4830;
-  --critical-red: #8b2020;
-  --critical-text: #c0392b;
+  --terminal-bg: #161513;
+  --terminal-panel: #161513;
+  --terminal-gold: #c27c2f;
+  --terminal-gold-dim: #635b50;
+  --document-bg: #9a9080;
+  --document-border: #000000;
+  --document-ink: #000000;
+  --document-muted: #635b50;
+  --critical-red: #9c2720;
+  --critical-text: #9c2720;
   --exit-bg: #3d1a0a;
   --exit-text: #e8714a;
   --entry-bg: #0d2e15;
@@ -2237,7 +2236,7 @@
 
 .worker-sidebar {
   background: var(--terminal-bg);
-  border-right: 1px solid rgba(212, 168, 67, 0.16);
+  border-right: 1px solid rgba(194, 124, 47, 0.16);
 }
 
 .worker-sidebar-title,
@@ -2248,18 +2247,18 @@
 .worker-sidebar-subtitle,
 .worker-sidebar-camp,
 .worker-sidebar-rank {
-  color: rgba(212, 168, 67, 0.55);
+  color: rgba(194, 124, 47, 0.55);
 }
 
 .worker-sidebar-camp,
 .worker-sidebar-id {
-  background: #1a1509;
-  border-color: rgba(212, 168, 67, 0.24);
+  background: #161513;
+  border-color: rgba(194, 124, 47, 0.24);
 }
 
 .worker-sidebar-tab {
   background: transparent;
-  color: rgba(212, 168, 67, 0.58);
+  color: rgba(194, 124, 47, 0.58);
   border: 0;
   border-left: 3px solid transparent;
   border-radius: 0;
@@ -2280,7 +2279,7 @@
   color: var(--terminal-gold);
   border-left-color: var(--terminal-gold);
   border-right: 0;
-  box-shadow: inset 0 0 0 1px rgba(212, 168, 67, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(194, 124, 47, 0.08);
   transform: translateX(4px);
 }
 
@@ -2303,7 +2302,7 @@
 }
 
 .wv-page-header {
-  border-bottom-color: rgba(212, 168, 67, 0.18);
+  border-bottom-color: rgba(194, 124, 47, 0.18);
 }
 
 .wv-page-header h2,
@@ -2313,14 +2312,14 @@
 
 .wv-page-header .wv-breadcrumb,
 .wv-board-time {
-  background: #1a1509;
-  border-color: rgba(212, 168, 67, 0.24);
+  background: #161513;
+  border-color: rgba(194, 124, 47, 0.24);
   color: var(--terminal-gold) !important;
 }
 
 .wv-board-header {
   background: var(--terminal-bg);
-  border-color: rgba(212, 168, 67, 0.18);
+  border-color: rgba(194, 124, 47, 0.18);
 }
 
 .wv-pinned,
@@ -2401,7 +2400,7 @@
 
 .wv-prof-warning,
 .wv-resource-row:has(.wv-badge-warning) {
-  background: #bd9b6f !important;
+  background: #a35a20 !important;
   color: var(--document-ink) !important;
   border-color: #a35a20 !important;
 }
@@ -2425,13 +2424,13 @@
 }
 
 .wv-movement-row {
-  background: rgba(42, 31, 10, 0.08);
-  border-left-color: rgba(42, 31, 10, 0.28);
+  background: rgba(0, 0, 0, 0.08);
+  border-left-color: rgba(0, 0, 0, 0.28);
   color: var(--document-ink);
 }
 
 .wv-movement-row:hover {
-  background: rgba(42, 31, 10, 0.14);
+  background: rgba(0, 0, 0, 0.14);
   border-left-color: var(--terminal-gold);
 }
 
@@ -2441,9 +2440,9 @@
 }
 
 .wv-mv-type {
-  background: #1a1509;
+  background: #161513;
   color: var(--terminal-gold);
-  border-color: rgba(212, 168, 67, 0.24);
+  border-color: rgba(194, 124, 47, 0.24);
 }
 
 .wv-mv-type-addition,
@@ -2464,7 +2463,7 @@
 
 .worker-footer {
   background: var(--terminal-bg) !important;
-  border-top-color: rgba(212, 168, 67, 0.14) !important;
+  border-top-color: rgba(194, 124, 47, 0.14) !important;
 }
 
 .worker-footer p,
@@ -2480,7 +2479,7 @@
 .wv-empty,
 .wv-loading,
 .wv-empty-badges {
-  color: rgba(212, 168, 67, 0.52);
+  color: rgba(194, 124, 47, 0.52);
 }
 
 /* ==========================================================================
@@ -2502,13 +2501,13 @@
 }
 
 .worker-sidebar-tab:hover {
-  background: #c8b89a;
+  background: #9a9080;
   color: #000;
   transform: translateX(5px);
 }
 
 .worker-sidebar-tab.active {
-  background: #c8b89a;
+  background: #9a9080;
   color: #000;
   border-left: none;
   border-right: 2px dashed #c27c2f;
@@ -2517,7 +2516,7 @@
 }
 
 .worker-sidebar-tab .worker-sidebar-icon {
-  color: #2a1f0a;
+  color: #000000;
 }
 
 .wv-prof-critical,
@@ -2546,7 +2545,7 @@
 }
 
 .wv-alert-banner {
-  background: #1a1509 !important;
+  background: #161513 !important;
   color: var(--exit-text) !important;
   border: 1px solid rgba(139, 32, 32, 0.75) !important;
   box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.72);
@@ -2557,21 +2556,21 @@
    ========================================================================== */
 
 .worker-sidebar-tab:hover {
-  background: #c8b89a;
-  color: #d4a843;
-  text-shadow: 1px 1px 0 #2a1f0a;
+  background: #9a9080;
+  color: #c27c2f;
+  text-shadow: 1px 1px 0 #000000;
   transform: translateX(5px);
   box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.6);
 }
 
 .worker-sidebar-tab:hover .worker-sidebar-icon {
-  color: #d4a843;
-  filter: drop-shadow(1px 1px 0 #2a1f0a);
+  color: #c27c2f;
+  filter: drop-shadow(1px 1px 0 #000000);
 }
 
 .worker-sidebar-tab.active:hover {
-  background: #c8b89a;
-  color: #d4a843;
+  background: #9a9080;
+  color: #c27c2f;
 }
 
 .wv-resource-row,
@@ -2589,32 +2588,34 @@
 .wv-id-card {
   background:
     linear-gradient(135deg, rgba(194, 124, 47, 0.16) 0%, transparent 34%),
-    linear-gradient(145deg, #c8b89a 0%, #c8b89a 68%, #b99f74 100%) !important;
+    linear-gradient(145deg, #9a9080 0%, #9a9080 68%, #817769 100%) !important;
   border-top: 4px solid #c27c2f !important;
 }
 
 .wv-id-left {
   background:
-    repeating-linear-gradient(0deg,
-      rgba(42, 31, 10, 0.045),
-      rgba(42, 31, 10, 0.045) 1px,
+    repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.045),
+      rgba(0, 0, 0, 0.045) 1px,
       transparent 1px,
-      transparent 7px),
-    rgba(42, 31, 10, 0.08) !important;
-  border-right: 1px dashed #8a7355 !important;
+      transparent 7px
+    ),
+    rgba(0, 0, 0, 0.08) !important;
+  border-right: 1px dashed #000000 !important;
 }
 
 .wv-id-classified-tag {
   background: rgba(139, 32, 32, 0.08) !important;
   border-color: rgba(139, 32, 32, 0.45) !important;
-  color: #8b2020 !important;
+  color: #9c2720 !important;
 }
 
 .wv-rank-chip,
 .wv-badge-count-pill {
-  background: #1a1509 !important;
-  border-color: #8a7355 !important;
-  color: #d4a843 !important;
+  background: #161513 !important;
+  border-color: #000000 !important;
+  color: #c27c2f !important;
 }
 
 .wv-status-line {
@@ -2657,7 +2658,7 @@
 
 .worker-sidebar-id {
   border-left: 3px solid #4c6351;
-  box-shadow: inset 0 0 0 1px rgba(212, 168, 67, 0.06);
+  box-shadow: inset 0 0 0 1px rgba(194, 124, 47, 0.06);
 }
 
 .worker-sidebar-status {
@@ -2688,8 +2689,8 @@
 .wv-rank-chip {
   min-width: 92px;
   text-align: center;
-  color: #d4a843 !important;
-  border-color: #8a7355 !important;
+  color: #c27c2f !important;
+  border-color: #000000 !important;
   white-space: nowrap;
 }
 
@@ -2701,7 +2702,7 @@
   .wv-profile-page .wv-id-left {
     min-width: 0;
     border-right: 0 !important;
-    border-bottom: 1px dashed #8a7355 !important;
+    border-bottom: 1px dashed #000000 !important;
   }
 }
 
@@ -2716,10 +2717,10 @@
   height: 120px;
   background:
     radial-gradient(circle at 50% 38%, rgba(194, 124, 47, 0.18), transparent 58%),
-    rgba(42, 31, 10, 0.12);
-  border: 2px solid #8a7355;
+    rgba(0, 0, 0, 0.12);
+  border: 2px solid #000000;
   box-shadow:
-    inset 0 0 18px rgba(42, 31, 10, 0.12),
+    inset 0 0 18px rgba(0, 0, 0, 0.12),
     3px 3px 0 rgba(0, 0, 0, 0.45);
 }
 
@@ -2730,7 +2731,7 @@
 }
 
 .wv-profile-page .wv-avatar-letter {
-  color: #2a1f0a;
+  color: #000000;
   font-size: 4rem;
   text-shadow: 1px 1px 0 rgba(194, 124, 47, 0.45);
 }
@@ -2738,10 +2739,10 @@
 .wv-profile-page .wv-id-code,
 .wv-profile-page .wv-rank-chip,
 .wv-profile-page .wv-badge-count-pill {
-  background: rgba(200, 184, 154, 0.58) !important;
-  border: 1px solid #8a7355 !important;
-  color: #2a1f0a !important;
-  box-shadow: inset 0 0 10px rgba(42, 31, 10, 0.08);
+  background: rgba(99, 91, 80, 0.58) !important;
+  border: 1px solid #000000 !important;
+  color: #000000 !important;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.08);
 }
 
 .wv-profile-page .wv-id-code {
@@ -2772,9 +2773,9 @@
   width: fit-content;
   margin: 0 auto;
   padding: 12px 18px;
-  background: #1a1509;
-  border: 1px solid rgba(212, 168, 67, 0.32);
-  color: #d4a843 !important;
+  background: #161513;
+  border: 1px solid rgba(194, 124, 47, 0.32);
+  color: #c27c2f !important;
   font-weight: 700;
   box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.55);
 }
@@ -2809,10 +2810,10 @@
   padding: 15px 12px 13px;
   overflow: hidden;
   background:
-    radial-gradient(circle at 50% 32%, rgba(179, 133, 54, 0.22), transparent 42%), #1a1712 !important;
+    radial-gradient(circle at 50% 32%, rgba(179, 133, 54, 0.22), transparent 42%), #161513 !important;
   border: 2px solid #b38536 !important;
   border-left-width: 2px !important;
-  color: #c8a84b !important;
+  color: #c27c2f !important;
   box-shadow:
     0 0 28px rgba(179, 133, 54, 0.12),
     4px 4px 0 rgba(0, 0, 0, 0.72) !important;
@@ -2843,7 +2844,7 @@
 
 .wv-profile-page .wv-badge-card:hover {
   background:
-    radial-gradient(circle at 50% 32%, rgba(179, 133, 54, 0.3), transparent 44%), #211d16 !important;
+    radial-gradient(circle at 50% 32%, rgba(179, 133, 54, 0.3), transparent 44%), #161513 !important;
   box-shadow:
     0 0 38px rgba(179, 133, 54, 0.22),
     7px 7px 0 rgba(0, 0, 0, 0.78) !important;
@@ -2875,7 +2876,7 @@
   justify-content: center;
   border: 3px solid #b38536;
   border-radius: 50%;
-  background: #c8a84b;
+  background: #c27c2f;
   color: #ffe080 !important;
   font-size: 1.95rem;
   text-shadow: 0 0 8px rgba(122, 92, 30, 0.9);
@@ -2885,7 +2886,7 @@
 }
 
 .wv-profile-page .wv-badge-name {
-  color: #c8a84b !important;
+  color: #c27c2f !important;
   font-family: var(--font-typewriter);
   font-size: 0.82rem;
   letter-spacing: 1.6px;
@@ -2905,7 +2906,7 @@
 .wv-profile-page .wv-badge-rarity-label,
 .wv-profile-page .wv-badge-date,
 .wv-profile-page .wv-badge-displayed-tag {
-  color: rgba(200, 168, 75, 0.62) !important;
+  color: rgba(194, 124, 47, 0.62) !important;
   font-family: var(--font-mono);
 }
 
@@ -2935,7 +2936,7 @@
   flex-direction: column;
   align-items: center;
   padding: 36px 28px 28px;
-  background: #1a1712;
+  background: #161513;
   border: 2px solid #b38536;
   box-shadow:
     0 0 60px rgba(179, 133, 54, 0.35),
@@ -3007,7 +3008,7 @@
 
 .wv-achievement-title {
   margin-bottom: 6px;
-  color: #c8a84b;
+  color: #c27c2f;
   font-family: var(--font-typewriter);
   font-size: 1.35rem;
   letter-spacing: 3px;
@@ -3042,7 +3043,7 @@
   margin-bottom: 20px;
   padding-bottom: 18px;
   border-bottom: 1px solid rgba(179, 133, 54, 0.35);
-  color: rgba(200, 168, 75, 0.52);
+  color: rgba(194, 124, 47, 0.52);
   font-family: var(--font-mono);
   font-size: 0.58rem;
   letter-spacing: 1.5px;
@@ -3054,7 +3055,7 @@
   padding: 10px 40px;
   border: 1px solid rgba(179, 133, 54, 0.5);
   background: transparent;
-  color: #c8a84b;
+  color: #c27c2f;
   font-family: var(--font-typewriter);
   font-size: 0.85rem;
   letter-spacing: 3px;
@@ -3083,12 +3084,12 @@
 .worker-sidebar-id {
   padding: 12px 13px;
   border-left: 3px solid #4c6351;
-  background: #1a1509 !important;
+  background: #161513 !important;
 }
 
 .worker-sidebar-status,
 .worker-sidebar-rank {
-  color: #5a4820 !important;
+  color: #635b50 !important;
   font-size: 9px !important;
   line-height: 1.4;
   letter-spacing: 1.6px;
@@ -3103,7 +3104,7 @@
   position: relative;
   margin: 7px 0 9px;
   padding-bottom: 8px;
-  color: #d4a843 !important;
+  color: #c27c2f !important;
   font-size: 16px !important;
   line-height: 1.1;
   letter-spacing: 1.4px;
@@ -3116,14 +3117,14 @@
   right: 0;
   bottom: 0;
   height: 1px;
-  background: linear-gradient(to right, rgba(212, 168, 67, 0.28), transparent);
+  background: linear-gradient(to right, rgba(194, 124, 47, 0.28), transparent);
 }
 
 .wv-header-action {
   padding: 5px 11px;
-  border: 1px solid rgba(212, 168, 67, 0.28);
-  background: #1a1509;
-  color: #d4a843;
+  border: 1px solid rgba(194, 124, 47, 0.28);
+  background: #161513;
+  color: #c27c2f;
   font-family: var(--font-mono);
   font-size: 0.62rem;
   font-weight: 700;
@@ -3136,17 +3137,35 @@
 }
 
 .wv-header-action:hover {
-  border-color: rgba(212, 168, 67, 0.55);
+  border-color: rgba(194, 124, 47, 0.55);
   transform: translateX(2px);
 }
 
 .wv-xp-track {
   height: 6px !important;
   border: 0 !important;
-  background: rgba(184, 168, 130, 0.4) !important;
+  background: rgba(0, 0, 0, 0.4) !important;
 }
 
 .wv-xp-fill {
-  background: #d4a843 !important;
+  background: #c27c2f !important;
   box-shadow: none !important;
+}
+
+/* ==========================================================================
+   ADMIN PARITY — keep sidebar tabs reading exactly like Admin's:
+   beige paper tab, black ink text at all times, dashed-orange active marker.
+   ========================================================================== */
+.worker-sidebar-tab,
+.worker-sidebar-tab:hover,
+.worker-sidebar-tab.active,
+.worker-sidebar-tab.active:hover {
+  color: #000 !important;
+  text-shadow: none !important;
+}
+
+.worker-sidebar-tab .worker-sidebar-icon,
+.worker-sidebar-tab:hover .worker-sidebar-icon {
+  color: #000 !important;
+  filter: none !important;
 }
