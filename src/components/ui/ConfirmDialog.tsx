@@ -12,6 +12,7 @@ interface ConfirmDialogProps {
   type?: ConfirmDialogType
   confirmLabel?: string
   cancelLabel?: string
+  hideCancel?: boolean
   onConfirm: () => void
   onCancel: () => void
 }
@@ -23,6 +24,7 @@ export function ConfirmDialog({
   type = "warning",
   confirmLabel = "Aceptar",
   cancelLabel = "Cancelar",
+  hideCancel = false,
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
@@ -82,13 +84,15 @@ export function ConfirmDialog({
             </div>
 
             <div className="p-5 border-t border-white/5 bg-black/20 flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={onCancel}
-                className="px-4 py-2 font-mono text-xs font-bold uppercase tracking-wider text-white/70 border border-white/20 hover:bg-white/10 hover:text-white transition-colors"
-              >
-                {cancelLabel}
-              </button>
+              {!hideCancel && (
+                <button
+                  type="button"
+                  onClick={onCancel}
+                  className="px-4 py-2 font-mono text-xs font-bold uppercase tracking-wider text-white/70 border border-white/20 hover:bg-white/10 hover:text-white transition-colors"
+                >
+                  {cancelLabel}
+                </button>
+              )}
               <button
                 type="button"
                 onClick={onConfirm}

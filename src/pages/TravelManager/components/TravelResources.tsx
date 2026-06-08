@@ -9,7 +9,7 @@ import {
   AlertCircle,
   Users,
 } from "lucide-react"
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 
 import { getCamps } from "@/features/camps/services/camps.service"
@@ -69,6 +69,11 @@ export default function TravelResources() {
   const [searchQuery, setSearchQuery] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("all")
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [visibleCount, setVisibleCount] = useState(50)
+
+  useEffect(() => {
+    setVisibleCount(50)
+  }, [activeStatus, categoryFilter, searchQuery])
   const navigate = useNavigate()
 
   // Consultas asíncronas reales
@@ -601,108 +606,128 @@ export default function TravelResources() {
                 </thead>
                 <tbody>
                   {filteredResources.length > 0 ? (
-                    filteredResources.map((resource) => {
-                      const statusLabel = getStatusLabel(resource.status).toUpperCase()
-                      const statusColorClass = getStatusColor(resource.status)
-                      const levelColorClass = getLevelColor(resource.status)
-                      const max = Math.max((resource.minThreshold || 100) * 2, resource.quantity, 1)
-                      const pct = Math.min((resource.quantity / max) * 100, 100)
-                      const minPct = ((resource.minThreshold || 0) / max) * 100
+                    <>
+                      {filteredResources.slice(0, visibleCount).map((resource) => {
+                        const statusLabel = getStatusLabel(resource.status).toUpperCase()
+                        const statusColorClass = getStatusColor(resource.status)
+                        const levelColorClass = getLevelColor(resource.status)
+                        const max = Math.max(
+                          (resource.minThreshold || 100) * 2,
+                          resource.quantity,
+                          1,
+                        )
+                        const pct = Math.min((resource.quantity / max) * 100, 100)
+                        const minPct = ((resource.minThreshold || 0) / max) * 100
 
-                      return (
-                        <motion.tr
-                          key={resource.id}
-                          whileHover={{ backgroundColor: "rgba(26, 15, 5, 0.04)" }}
-                          onClick={() => setSelectedId(resource.id)}
-                          className="border-b border-dashed border-ink/10 cursor-pointer hover:bg-ink/5 transition-colors"
-                        >
-                          {/* REF ID */}
-                          <td className="py-3.5 px-2 font-mono font-bold text-ink/70">
-                            REF-{resource.id.slice(0, 4).toUpperCase()}
-                          </td>
+                        return (
+                          <motion.tr
+                            key={resource.id}
+                            whileHover={{ backgroundColor: "rgba(26, 15, 5, 0.04)" }}
+                            onClick={() => setSelectedId(resource.id)}
+                            className="border-b border-dashed border-ink/10 cursor-pointer hover:bg-ink/5 transition-colors"
+                          >
+                            {/* REF ID */}
+                            <td className="py-3.5 px-2 font-mono font-bold text-ink/70">
+                              REF-{resource.id.slice(0, 4).toUpperCase()}
+                            </td>
 
-                          {/* DESCRIPCIÓN */}
-                          <td className="py-3.5 px-2">
-                            <div className="flex items-center gap-2.5">
-                              <span className="text-lg flex-shrink-0">
-                                {getCategoryInfo(resource.category).icon}
+                            {/* DESCRIPCIÓN */}
+                            <td className="py-3.5 px-2">
+                              <div className="flex items-center gap-2.5">
+                                <span className="text-lg flex-shrink-0">
+                                  {getCategoryInfo(resource.category).icon}
+                                </span>
+                                <div>
+                                  <div className="font-mono font-bold text-ink text-sm uppercase leading-tight">
+                                    {resource.name}
+                                  </div>
+                                  <div className="text-[10px] font-mono text-ink-soft/60 uppercase leading-none mt-1">
+                                    {getCategoryInfo(resource.category).label.toUpperCase()}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* STOCK */}
+                            <td className="py-3.5 px-2" style={{ minWidth: "180px" }}>
+                              <div className="flex flex-col gap-1.5">
+                                <div className="flex items-baseline gap-1 font-mono font-bold text-ink">
+                                  <span className={`text-sm ${statusColorClass}`}>
+                                    {resource.quantity}
+                                  </span>
+                                  <span className="text-[10px] text-ink-soft/70 uppercase font-normal">
+                                    {resource.unit.toUpperCase()}
+                                  </span>
+                                  <span className="text-[9px] text-ink-soft/40 uppercase ml-2 font-normal">
+                                    / mín {resource.minThreshold || 0}
+                                  </span>
+                                </div>
+                                <div className="h-1.5 w-full bg-ink/5 border border-ink/10 relative rounded-sm overflow-hidden">
+                                  <div
+                                    className="absolute top-0 bottom-0 z-10"
+                                    style={{
+                                      left: `${minPct}%`,
+                                      width: "2px",
+                                      backgroundColor: "rgba(26, 15, 5, 0.25)",
+                                    }}
+                                    title="Stock Mínimo"
+                                  />
+                                  <motion.div
+                                    className={`h-full ${levelColorClass} opacity-80`}
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${pct}%` }}
+                                    transition={{ duration: 0.8, ease: "easeOut" }}
+                                  />
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* ESTADO */}
+                            <td className="py-3.5 px-2">
+                              <span
+                                className={`tm-op-chip ${
+                                  resource.status === "sufficient"
+                                    ? "tm-chip-active"
+                                    : resource.status === "low"
+                                      ? "tm-chip-transit"
+                                      : "tm-chip-pending"
+                                } text-[9px] px-2 py-0.5 font-bold uppercase`}
+                              >
+                                {statusLabel}
                               </span>
-                              <div>
-                                <div className="font-mono font-bold text-ink text-sm uppercase leading-tight">
-                                  {resource.name}
-                                </div>
-                                <div className="text-[10px] font-mono text-ink-soft/60 uppercase leading-none mt-1">
-                                  {getCategoryInfo(resource.category).label.toUpperCase()}
-                                </div>
-                              </div>
-                            </div>
-                          </td>
+                            </td>
 
-                          {/* STOCK */}
-                          <td className="py-3.5 px-2" style={{ minWidth: "180px" }}>
-                            <div className="flex flex-col gap-1.5">
-                              <div className="flex items-baseline gap-1 font-mono font-bold text-ink">
-                                <span className={`text-sm ${statusColorClass}`}>
-                                  {resource.quantity}
-                                </span>
-                                <span className="text-[10px] text-ink-soft/70 uppercase font-normal">
-                                  {resource.unit.toUpperCase()}
-                                </span>
-                                <span className="text-[9px] text-ink-soft/40 uppercase ml-2 font-normal">
-                                  / mín {resource.minThreshold || 0}
-                                </span>
-                              </div>
-                              <div className="h-1.5 w-full bg-ink/5 border border-ink/10 relative rounded-sm overflow-hidden">
-                                <div
-                                  className="absolute top-0 bottom-0 z-10"
-                                  style={{
-                                    left: `${minPct}%`,
-                                    width: "2px",
-                                    backgroundColor: "rgba(26, 15, 5, 0.25)",
-                                  }}
-                                  title="Stock Mínimo"
-                                />
-                                <motion.div
-                                  className={`h-full ${levelColorClass} opacity-80`}
-                                  initial={{ width: 0 }}
-                                  animate={{ width: `${pct}%` }}
-                                  transition={{ duration: 0.8, ease: "easeOut" }}
-                                />
-                              </div>
-                            </div>
-                          </td>
-
-                          {/* ESTADO */}
-                          <td className="py-3.5 px-2">
-                            <span
-                              className={`tm-op-chip ${
-                                resource.status === "sufficient"
-                                  ? "tm-chip-active"
-                                  : resource.status === "low"
-                                    ? "tm-chip-transit"
-                                    : "tm-chip-pending"
-                              } text-[9px] px-2 py-0.5 font-bold uppercase`}
-                            >
-                              {statusLabel}
-                            </span>
-                          </td>
-
-                          {/* ACCIONES */}
-                          <td className="py-3.5 px-2 text-right">
+                            {/* ACCIONES */}
+                            <td className="py-3.5 px-2 text-right">
+                              <button
+                                type="button"
+                                className="tm-op-btn text-[10px]"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setSelectedId(resource.id)
+                                }}
+                              >
+                                Ver Ficha
+                              </button>
+                            </td>
+                          </motion.tr>
+                        )
+                      })}
+                      {visibleCount < filteredResources.length && (
+                        <tr>
+                          <td colSpan={5} className="py-6 text-center">
                             <button
                               type="button"
-                              className="tm-op-btn text-[10px]"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                setSelectedId(resource.id)
-                              }}
+                              onClick={() => setVisibleCount((v) => v + 50)}
+                              className="tm-op-btn text-[10px] px-6 py-2"
                             >
-                              Ver Ficha
+                              CARGAR MÁS RECURSOS ({filteredResources.length - visibleCount}{" "}
+                              RESTANTES)
                             </button>
                           </td>
-                        </motion.tr>
-                      )
-                    })
+                        </tr>
+                      )}
+                    </>
                   ) : (
                     <tr>
                       <td
@@ -925,102 +950,119 @@ export default function TravelResources() {
               </button>
 
               <div className="flex-1 flex flex-col justify-between">
-                <div className="border-b-2 border-dashed border-ink/20 pb-3 mb-6">
-                  <span className="text-[10px] font-mono text-ink-soft uppercase tracking-widest font-black block mb-1">
-                    EXPEDIENTE DE SUMINISTROS
-                  </span>
-                  <h2 className="font-typewriter text-2xl font-black text-ink uppercase leading-none">
-                    {selectedResource.name}
-                  </h2>
+                <div className="flex gap-6 border-b-2 border-dashed border-ink/20 pb-5 mb-6 items-start">
+                  {/* Icon Area */}
+                  <div className="w-16 h-16 shrink-0 bg-ink/5 border-2 border-ink/10 flex items-center justify-center rounded-sm text-3xl">
+                    {getCategoryInfo(selectedResource.category).icon}
+                  </div>
+                  <div className="flex-1 min-w-0 pt-1">
+                    <span className="text-[10px] font-mono text-[#c27c2f] uppercase tracking-widest font-black block mb-1">
+                      EXPEDIENTE DE SUMINISTROS
+                    </span>
+                    <h2 className="font-typewriter text-3xl font-black text-ink uppercase leading-none truncate">
+                      {selectedResource.name}
+                    </h2>
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                  <div className="space-y-4 font-mono text-xs text-ink/80">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
+                  {/* Left Column: Details */}
+                  <div className="md:col-span-1 flex flex-col gap-4 font-mono text-xs text-ink/80 bg-ink/5 border border-ink/10 p-5 rounded-sm">
                     <div>
-                      <span className="text-[10px] text-ink-soft uppercase tracking-wider block font-bold">
+                      <span className="text-[10px] text-ink-soft uppercase tracking-wider block font-bold mb-1 border-b border-ink/10 pb-1">
                         Clasificación
                       </span>
-                      <span className="text-sm font-bold text-ink uppercase">
+                      <span className="text-sm font-black text-ink uppercase">
                         {getCategoryInfo(selectedResource.category).label}
                       </span>
                     </div>
                     <div>
-                      <span className="text-[10px] text-ink-soft uppercase tracking-wider block font-bold">
-                        Unidad de Medida
+                      <span className="text-[10px] text-ink-soft uppercase tracking-wider block font-bold mb-1 border-b border-ink/10 pb-1">
+                        Asignado a Base
                       </span>
-                      <span className="text-sm font-bold text-ink uppercase">
-                        {selectedResource.unit}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-[10px] text-ink-soft uppercase tracking-wider block font-bold">
-                        Asignado a
-                      </span>
-                      <span className="text-sm font-bold text-ink uppercase">
+                      <span className="text-sm font-black text-ink uppercase">
                         {getCampName(selectedResource.campId)}
                       </span>
                     </div>
-                  </div>
-
-                  <div className="bg-[#f5ecd7] p-5 rounded-sm border border-[#d4c4a8]/50 flex flex-col items-center justify-center relative overflow-hidden">
-                    <span className="text-[10px] font-mono text-ink-soft uppercase tracking-wider mb-2 font-bold">
-                      Stock Vital
-                    </span>
-                    <div className="text-5xl font-typewriter font-bold text-ink leading-none mb-1 tabular-nums">
-                      {selectedResource.quantity}
-                    </div>
-                    <span className="text-[10px] font-mono text-ink-soft uppercase tracking-widest font-bold">
-                      {selectedResource.unit.toUpperCase()}
-                    </span>
-                    <div
-                      className={`mt-4 px-3 py-1 border font-mono font-bold text-xs uppercase ${getStatusColor(selectedResource.status).replace("text-", "border-").replace("text-[#c27c2f]", "border-[#c27c2f]")}`}
-                    >
-                      {getStatusLabel(selectedResource.status).toUpperCase()}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-6 space-y-4">
-                  <div className="bg-[#faf4e6]/50 p-4 border border-dashed border-ink/20 rounded-sm">
-                    <div className="flex justify-between items-center text-xs font-mono mb-2">
-                      <span className="text-ink-soft uppercase font-bold">
-                        Umbral Crítico Mínimo
+                    <div>
+                      <span className="text-[10px] text-ink-soft uppercase tracking-wider block font-bold mb-1 border-b border-ink/10 pb-1">
+                        Unidad de Medida
                       </span>
-                      <span className="font-bold text-ink">
-                        {selectedResource.minThreshold || 0} {selectedResource.unit.toUpperCase()}
+                      <span className="text-sm font-black text-[#df8120] uppercase bg-[#df8120]/10 px-2 py-0.5 rounded-sm">
+                        {selectedResource.unit}
                       </span>
                     </div>
-                    <div className="h-4 w-full bg-ink/5 border border-ink/20 relative rounded-sm overflow-hidden">
+                  </div>
+
+                  {/* Middle & Right Column: Vital Stock & Progress */}
+                  <div className="md:col-span-2 flex flex-col gap-4">
+                    {/* Vital Stock Box */}
+                    <div className="bg-[#f5ecd7] flex-1 p-5 rounded-sm border border-[#d4c4a8]/50 flex items-center justify-between relative overflow-hidden shadow-inner">
+                      <div className="flex flex-col z-10">
+                        <span className="text-[10px] font-mono text-ink-soft uppercase tracking-wider mb-1 font-black">
+                          Inventario Disponible
+                        </span>
+                        <div className="flex items-baseline gap-2">
+                          <div className="text-5xl font-typewriter font-black text-ink leading-none tracking-tighter">
+                            {selectedResource.quantity}
+                          </div>
+                          <span className="text-xs font-mono font-black text-ink-soft uppercase">
+                            {selectedResource.unit}
+                          </span>
+                        </div>
+                      </div>
                       <div
-                        className={`h-full ${getLevelColor(selectedResource.status)} opacity-60 shadow-inner`}
-                        style={{
-                          width: `${Math.min((selectedResource.quantity / (selectedResource.minThreshold || 1)) * 50, 100)}%`,
-                        }}
-                      />
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-[8px] font-mono font-black text-ink-soft uppercase tracking-widest">
-                          NIVEL_RECURSO_ACTUAL
+                        className={`z-10 px-4 py-2 border-2 font-mono font-black text-xs uppercase shadow-sm bg-white/50 backdrop-blur-sm ${getStatusColor(selectedResource.status).replace("text-", "border-").replace("text-[#c27c2f]", "border-[#df8120]").replace("text-[#4c6351]", "border-[#4c6351]")}`}
+                      >
+                        <span className={getStatusColor(selectedResource.status)}>
+                          {getStatusLabel(selectedResource.status)}
                         </span>
                       </div>
                     </div>
-                  </div>
 
-                  <div>
-                    <span className="text-[10px] font-mono text-ink-soft uppercase tracking-wider block font-bold mb-1.5">
-                      Recomendación de Uso y Observaciones
-                    </span>
-                    <div className="p-4 bg-white/40 border border-ink/10 rounded-sm italic font-typewriter text-xs text-ink/80 leading-relaxed min-h-[60px]">
-                      {selectedResource.usageNotes ||
-                        selectedResource.description ||
-                        "Sin instrucciones adicionales de uso operativo registrado para este recurso."}
+                    {/* Threshold Bar */}
+                    <div className="bg-[#faf4e6]/50 p-4 border border-dashed border-ink/20 rounded-sm">
+                      <div className="flex justify-between items-center text-xs font-mono mb-2">
+                        <span className="text-ink-soft uppercase font-bold flex items-center gap-1.5">
+                          <AlertTriangle className="w-3.5 h-3.5 text-[#df8120]" />
+                          Umbral Crítico Mínimo
+                        </span>
+                        <span className="font-black text-ink">
+                          {selectedResource.minThreshold || 0} {selectedResource.unit.toUpperCase()}
+                        </span>
+                      </div>
+                      <div className="h-4 w-full bg-ink/5 border border-ink/20 relative rounded-sm overflow-hidden">
+                        <div
+                          className={`h-full ${getLevelColor(selectedResource.status)} opacity-80 shadow-inner`}
+                          style={{
+                            width: `${Math.min((selectedResource.quantity / (selectedResource.minThreshold || 1)) * 50, 100)}%`,
+                          }}
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                          <span className="text-[8px] font-mono font-black text-ink/40 uppercase tracking-[0.3em]">
+                            NIVEL_RECURSO_ACTUAL
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="border-t border-ink/15 pt-3 mt-6 flex justify-between items-center text-ink-soft/70 font-mono text-[9px] uppercase tracking-wider">
+                <div className="mt-6">
+                  <span className="text-[10px] font-mono text-ink-soft uppercase tracking-wider block font-bold mb-1.5">
+                    Recomendación de Uso y Observaciones
+                  </span>
+                  <div className="p-4 bg-white/40 border border-ink/10 border-l-4 border-l-[#c27c2f] rounded-sm italic font-typewriter text-xs text-ink/80 leading-relaxed min-h-[60px] shadow-sm">
+                    {selectedResource.usageNotes ||
+                      selectedResource.description ||
+                      "Sin instrucciones adicionales de uso operativo registrado para este recurso."}
+                  </div>
+                </div>
+
+                <div className="border-t border-ink/15 pt-3 mt-6 flex justify-between items-center text-ink-soft/70 font-mono text-[9px] uppercase tracking-wider font-bold">
                   <span>Actualizado: {new Date().toLocaleDateString("es-CR")}</span>
-                  <span className="border border-dashed border-ink/30 px-2 py-0.5">
-                    Ref. {selectedResource.id}
+                  <span className="border border-dashed border-ink/30 px-3 py-1">
+                    Ref. {selectedResource.id.slice(0, 8)}
                   </span>
                 </div>
               </div>
