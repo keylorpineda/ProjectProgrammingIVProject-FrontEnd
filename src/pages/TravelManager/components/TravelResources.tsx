@@ -9,7 +9,7 @@ import {
   AlertCircle,
   Users,
 } from "lucide-react"
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 
 import { getCamps } from "@/features/camps/services/camps.service"
@@ -69,6 +69,11 @@ export default function TravelResources() {
   const [searchQuery, setSearchQuery] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("all")
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [visibleCount, setVisibleCount] = useState(50)
+
+  useEffect(() => {
+    setVisibleCount(50)
+  }, [activeStatus, categoryFilter, searchQuery])
   const navigate = useNavigate()
 
   // Consultas asíncronas reales
@@ -601,108 +606,128 @@ export default function TravelResources() {
                 </thead>
                 <tbody>
                   {filteredResources.length > 0 ? (
-                    filteredResources.map((resource) => {
-                      const statusLabel = getStatusLabel(resource.status).toUpperCase()
-                      const statusColorClass = getStatusColor(resource.status)
-                      const levelColorClass = getLevelColor(resource.status)
-                      const max = Math.max((resource.minThreshold || 100) * 2, resource.quantity, 1)
-                      const pct = Math.min((resource.quantity / max) * 100, 100)
-                      const minPct = ((resource.minThreshold || 0) / max) * 100
+                    <>
+                      {filteredResources.slice(0, visibleCount).map((resource) => {
+                        const statusLabel = getStatusLabel(resource.status).toUpperCase()
+                        const statusColorClass = getStatusColor(resource.status)
+                        const levelColorClass = getLevelColor(resource.status)
+                        const max = Math.max(
+                          (resource.minThreshold || 100) * 2,
+                          resource.quantity,
+                          1,
+                        )
+                        const pct = Math.min((resource.quantity / max) * 100, 100)
+                        const minPct = ((resource.minThreshold || 0) / max) * 100
 
-                      return (
-                        <motion.tr
-                          key={resource.id}
-                          whileHover={{ backgroundColor: "rgba(26, 15, 5, 0.04)" }}
-                          onClick={() => setSelectedId(resource.id)}
-                          className="border-b border-dashed border-ink/10 cursor-pointer hover:bg-ink/5 transition-colors"
-                        >
-                          {/* REF ID */}
-                          <td className="py-3.5 px-2 font-mono font-bold text-ink/70">
-                            REF-{resource.id.slice(0, 4).toUpperCase()}
-                          </td>
+                        return (
+                          <motion.tr
+                            key={resource.id}
+                            whileHover={{ backgroundColor: "rgba(26, 15, 5, 0.04)" }}
+                            onClick={() => setSelectedId(resource.id)}
+                            className="border-b border-dashed border-ink/10 cursor-pointer hover:bg-ink/5 transition-colors"
+                          >
+                            {/* REF ID */}
+                            <td className="py-3.5 px-2 font-mono font-bold text-ink/70">
+                              REF-{resource.id.slice(0, 4).toUpperCase()}
+                            </td>
 
-                          {/* DESCRIPCIÓN */}
-                          <td className="py-3.5 px-2">
-                            <div className="flex items-center gap-2.5">
-                              <span className="text-lg flex-shrink-0">
-                                {getCategoryInfo(resource.category).icon}
+                            {/* DESCRIPCIÓN */}
+                            <td className="py-3.5 px-2">
+                              <div className="flex items-center gap-2.5">
+                                <span className="text-lg flex-shrink-0">
+                                  {getCategoryInfo(resource.category).icon}
+                                </span>
+                                <div>
+                                  <div className="font-mono font-bold text-ink text-sm uppercase leading-tight">
+                                    {resource.name}
+                                  </div>
+                                  <div className="text-[10px] font-mono text-ink-soft/60 uppercase leading-none mt-1">
+                                    {getCategoryInfo(resource.category).label.toUpperCase()}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* STOCK */}
+                            <td className="py-3.5 px-2" style={{ minWidth: "180px" }}>
+                              <div className="flex flex-col gap-1.5">
+                                <div className="flex items-baseline gap-1 font-mono font-bold text-ink">
+                                  <span className={`text-sm ${statusColorClass}`}>
+                                    {resource.quantity}
+                                  </span>
+                                  <span className="text-[10px] text-ink-soft/70 uppercase font-normal">
+                                    {resource.unit.toUpperCase()}
+                                  </span>
+                                  <span className="text-[9px] text-ink-soft/40 uppercase ml-2 font-normal">
+                                    / mín {resource.minThreshold || 0}
+                                  </span>
+                                </div>
+                                <div className="h-1.5 w-full bg-ink/5 border border-ink/10 relative rounded-sm overflow-hidden">
+                                  <div
+                                    className="absolute top-0 bottom-0 z-10"
+                                    style={{
+                                      left: `${minPct}%`,
+                                      width: "2px",
+                                      backgroundColor: "rgba(26, 15, 5, 0.25)",
+                                    }}
+                                    title="Stock Mínimo"
+                                  />
+                                  <motion.div
+                                    className={`h-full ${levelColorClass} opacity-80`}
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${pct}%` }}
+                                    transition={{ duration: 0.8, ease: "easeOut" }}
+                                  />
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* ESTADO */}
+                            <td className="py-3.5 px-2">
+                              <span
+                                className={`tm-op-chip ${
+                                  resource.status === "sufficient"
+                                    ? "tm-chip-active"
+                                    : resource.status === "low"
+                                      ? "tm-chip-transit"
+                                      : "tm-chip-pending"
+                                } text-[9px] px-2 py-0.5 font-bold uppercase`}
+                              >
+                                {statusLabel}
                               </span>
-                              <div>
-                                <div className="font-mono font-bold text-ink text-sm uppercase leading-tight">
-                                  {resource.name}
-                                </div>
-                                <div className="text-[10px] font-mono text-ink-soft/60 uppercase leading-none mt-1">
-                                  {getCategoryInfo(resource.category).label.toUpperCase()}
-                                </div>
-                              </div>
-                            </div>
-                          </td>
+                            </td>
 
-                          {/* STOCK */}
-                          <td className="py-3.5 px-2" style={{ minWidth: "180px" }}>
-                            <div className="flex flex-col gap-1.5">
-                              <div className="flex items-baseline gap-1 font-mono font-bold text-ink">
-                                <span className={`text-sm ${statusColorClass}`}>
-                                  {resource.quantity}
-                                </span>
-                                <span className="text-[10px] text-ink-soft/70 uppercase font-normal">
-                                  {resource.unit.toUpperCase()}
-                                </span>
-                                <span className="text-[9px] text-ink-soft/40 uppercase ml-2 font-normal">
-                                  / mín {resource.minThreshold || 0}
-                                </span>
-                              </div>
-                              <div className="h-1.5 w-full bg-ink/5 border border-ink/10 relative rounded-sm overflow-hidden">
-                                <div
-                                  className="absolute top-0 bottom-0 z-10"
-                                  style={{
-                                    left: `${minPct}%`,
-                                    width: "2px",
-                                    backgroundColor: "rgba(26, 15, 5, 0.25)",
-                                  }}
-                                  title="Stock Mínimo"
-                                />
-                                <motion.div
-                                  className={`h-full ${levelColorClass} opacity-80`}
-                                  initial={{ width: 0 }}
-                                  animate={{ width: `${pct}%` }}
-                                  transition={{ duration: 0.8, ease: "easeOut" }}
-                                />
-                              </div>
-                            </div>
-                          </td>
-
-                          {/* ESTADO */}
-                          <td className="py-3.5 px-2">
-                            <span
-                              className={`tm-op-chip ${
-                                resource.status === "sufficient"
-                                  ? "tm-chip-active"
-                                  : resource.status === "low"
-                                    ? "tm-chip-transit"
-                                    : "tm-chip-pending"
-                              } text-[9px] px-2 py-0.5 font-bold uppercase`}
-                            >
-                              {statusLabel}
-                            </span>
-                          </td>
-
-                          {/* ACCIONES */}
-                          <td className="py-3.5 px-2 text-right">
+                            {/* ACCIONES */}
+                            <td className="py-3.5 px-2 text-right">
+                              <button
+                                type="button"
+                                className="tm-op-btn text-[10px]"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setSelectedId(resource.id)
+                                }}
+                              >
+                                Ver Ficha
+                              </button>
+                            </td>
+                          </motion.tr>
+                        )
+                      })}
+                      {visibleCount < filteredResources.length && (
+                        <tr>
+                          <td colSpan={5} className="py-6 text-center">
                             <button
                               type="button"
-                              className="tm-op-btn text-[10px]"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                setSelectedId(resource.id)
-                              }}
+                              onClick={() => setVisibleCount((v) => v + 50)}
+                              className="tm-op-btn text-[10px] px-6 py-2"
                             >
-                              Ver Ficha
+                              CARGAR MÁS RECURSOS ({filteredResources.length - visibleCount}{" "}
+                              RESTANTES)
                             </button>
                           </td>
-                        </motion.tr>
-                      )
-                    })
+                        </tr>
+                      )}
+                    </>
                   ) : (
                     <tr>
                       <td

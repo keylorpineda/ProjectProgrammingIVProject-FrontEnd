@@ -158,6 +158,11 @@ export default function TravelTransfers() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [isNewModalOpen, setIsNewModalOpen] = useState(false)
   const [formError, setFormError] = useState("")
+  const [visibleCount, setVisibleCount] = useState(50)
+
+  useEffect(() => {
+    setVisibleCount(50)
+  }, [search, statusFilter, roleFilter])
 
   // Confirm dialog state
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -643,65 +648,76 @@ export default function TravelTransfers() {
 
             <div className="tm-op-list">
               {filteredTransfers.length > 0 ? (
-                filteredTransfers.map((transfer) => {
-                  const isOrigin = transfer.camp_origin_id === campId
-                  return (
-                    <motion.button
-                      key={transfer.id}
-                      whileHover={{ x: 2 }}
-                      onClick={() => setSelectedId(transfer.id)}
-                      className={`tm-op-row cursor-pointer transition-all ${
-                        transfer.status === "pending"
-                          ? "tm-row-pending"
-                          : transfer.status === "approved" || transfer.status === "in_transit"
-                            ? "tm-row-transit"
-                            : "tm-row-sched"
-                      } ${selectedTransfer?.id === transfer.id ? "selected" : ""}`}
+                <>
+                  {filteredTransfers.slice(0, visibleCount).map((transfer) => {
+                    const isOrigin = transfer.camp_origin_id === campId
+                    return (
+                      <motion.button
+                        key={transfer.id}
+                        whileHover={{ x: 2 }}
+                        onClick={() => setSelectedId(transfer.id)}
+                        className={`tm-op-row cursor-pointer transition-all ${
+                          transfer.status === "pending"
+                            ? "tm-row-pending"
+                            : transfer.status === "approved" || transfer.status === "in_transit"
+                              ? "tm-row-transit"
+                              : "tm-row-sched"
+                        } ${selectedTransfer?.id === transfer.id ? "selected" : ""}`}
+                      >
+                        {/* Header: Direction Indicator + Status */}
+                        <div className="flex items-center justify-between w-full">
+                          <span
+                            className={`px-1.5 py-0.5 text-[8px] font-mono font-bold tracking-wider rounded-sm ${
+                              isOrigin
+                                ? "bg-[#c27c2f]/20 text-[#c27c2f]"
+                                : "bg-accent-approved/20 text-accent-approved"
+                            }`}
+                          >
+                            {isOrigin ? "↑ ENVIADO" : "↓ RECIBIDO"}
+                          </span>
+                          <span
+                            className={`text-[9px] font-mono font-bold uppercase tracking-wider ${getTransferStatusColorClass(
+                              transfer.status,
+                            )}`}
+                          >
+                            {getTransferStatusLabel(transfer.status)}
+                          </span>
+                        </div>
+
+                        {/* Title: Origin/Destination base */}
+                        <h5 className="text-[12px] font-mono font-bold uppercase tracking-tight truncate mt-0.5 w-full text-white text-left">
+                          {isOrigin
+                            ? `➔ BASE ${transfer.camp_destination_id}`
+                            : `← BASE ${transfer.camp_origin_id}`}
+                        </h5>
+
+                        {/* Meta/Ref */}
+                        <p className="text-[10px] font-mono text-[#faf4e6]/80 truncate w-full text-left">
+                          REF: {transfer.id.slice(0, 8).toUpperCase()}
+                        </p>
+
+                        {/* Type Badge */}
+                        <div className="flex justify-between items-center w-full mt-1.5 border-t border-white/5 pt-1.5">
+                          <span className="text-[8px] font-mono text-[#c8bfae] uppercase font-bold">
+                            CARGA: {getTransferTypeBadge(transfer.type)}
+                          </span>
+                          <span className="text-[8px] font-mono text-white/30 font-bold uppercase">
+                            {transfer.travel_days}d VÍA
+                          </span>
+                        </div>
+                      </motion.button>
+                    )
+                  })}
+                  {visibleCount < filteredTransfers.length && (
+                    <button
+                      type="button"
+                      onClick={() => setVisibleCount((v) => v + 50)}
+                      className="tm-op-btn w-full text-[10px] mt-2 py-2"
                     >
-                      {/* Header: Direction Indicator + Status */}
-                      <div className="flex items-center justify-between w-full">
-                        <span
-                          className={`px-1.5 py-0.5 text-[8px] font-mono font-bold tracking-wider rounded-sm ${
-                            isOrigin
-                              ? "bg-[#c27c2f]/20 text-[#c27c2f]"
-                              : "bg-accent-approved/20 text-accent-approved"
-                          }`}
-                        >
-                          {isOrigin ? "↑ ENVIADO" : "↓ RECIBIDO"}
-                        </span>
-                        <span
-                          className={`text-[9px] font-mono font-bold uppercase tracking-wider ${getTransferStatusColorClass(
-                            transfer.status,
-                          )}`}
-                        >
-                          {getTransferStatusLabel(transfer.status)}
-                        </span>
-                      </div>
-
-                      {/* Title: Origin/Destination base */}
-                      <h5 className="text-[12px] font-mono font-bold uppercase tracking-tight truncate mt-0.5 w-full text-white">
-                        {isOrigin
-                          ? `➔ BASE ${transfer.camp_destination_id}`
-                          : `← BASE ${transfer.camp_origin_id}`}
-                      </h5>
-
-                      {/* Meta/Ref */}
-                      <p className="text-[10px] font-mono text-[#faf4e6]/80 truncate w-full">
-                        REF: {transfer.id.slice(0, 8).toUpperCase()}
-                      </p>
-
-                      {/* Type Badge */}
-                      <div className="flex justify-between items-center w-full mt-1.5 border-t border-white/5 pt-1.5">
-                        <span className="text-[8px] font-mono text-[#c8bfae] uppercase font-bold">
-                          CARGA: {getTransferTypeBadge(transfer.type)}
-                        </span>
-                        <span className="text-[8px] font-mono text-white/30 font-bold uppercase">
-                          {transfer.travel_days}d VÍA
-                        </span>
-                      </div>
-                    </motion.button>
-                  )
-                })
+                      CARGAR MÁS ({filteredTransfers.length - visibleCount} RESTANTES)
+                    </button>
+                  )}
+                </>
               ) : (
                 <div className="flex flex-col items-center justify-center py-20 text-center">
                   <Archive className="h-10 w-10 text-white/10 mb-4" />
