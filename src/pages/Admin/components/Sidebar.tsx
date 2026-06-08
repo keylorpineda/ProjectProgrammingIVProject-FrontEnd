@@ -25,10 +25,10 @@ export default function Sidebar() {
   ]
 
   return (
-    <aside className="w-full md:w-72 bg-[#121110] border-b-2 md:border-b-0 md:border-r-2 border-black p-4 flex flex-col justify-between shrink-0 z-20 select-none font-mono">
-      <div>
+    <aside className="w-full md:w-72 bg-[#121110] border-b-2 md:border-b-0 md:border-r-2 border-black p-4 flex flex-col justify-between shrink-0 z-20 select-none font-mono md:overflow-hidden">
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
         {/* BRAND HEADER */}
-        <div className="mb-6 pb-4 border-b-2 border-black">
+        <div className="mb-4 pb-3 border-b-2 border-black shrink-0">
           <div className="flex items-center gap-4">
             <span className="text-[#9c2720] text-xl animate-pulse font-bold">★</span>
             <span className="text-lg font-black text-[#df8120] tracking-widest uppercase">
@@ -41,7 +41,7 @@ export default function Sidebar() {
         </div>
 
         {/* NAVIGATION MENU */}
-        <nav className="flex flex-row md:flex-col overflow-x-auto md:overflow-x-visible pb-2 md:pb-0 scrollbar-none shrink-0 font-mono">
+        <nav className="flex flex-row md:flex-col overflow-x-auto md:overflow-x-hidden md:overflow-y-auto pb-2 md:pb-0 scrollbar-none shrink-0 font-mono">
           {tabs.map((tab) => {
             const Icon = tab.icon
 
@@ -59,8 +59,8 @@ export default function Sidebar() {
                   borderWidth: "2px",
                   color: "#000000",
                   boxShadow: "3px 3px 0px #000000",
-                  padding: "20px 20px",
-                  marginBottom: "16px",
+                  padding: "13px 16px",
+                  marginBottom: "8px",
                 }}
               >
                 <Icon className="w-6 h-6 shrink-0 text-black font-extrabold" />

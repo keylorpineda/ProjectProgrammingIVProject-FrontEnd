@@ -16,7 +16,8 @@ export default function CampSelector() {
     try {
       await switchActiveCamp(nextId)
     } catch {
-      // Server rejected the switch — leave the selector as-is so the user can retry.
+      // intentional
+    } finally {
       setIsSwitching(false)
     }
   }

@@ -162,7 +162,9 @@
     "Reabastecimiento",
     "sched",
     "ALMACEN",
-    "Vigia"
+    "Vigia",
+    "metodo",
+    "unstub"
   ],
   "ignorePaths": [
     "node_modules",

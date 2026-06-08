@@ -7,8 +7,10 @@ import { useCamp } from "../context/CampContext"
 import type { AiAdmission } from "@/types/api.types"
 
 import {
+  archiveAdmission as archiveAdmissionApi,
   createAdmissionAccount,
   getAdmissionById,
+  getAutoDecidedAdmissions,
   getPendingAdmissions,
   reviewAdmission,
 } from "@/features/admissions/services/admissions.service"
@@ -33,6 +35,7 @@ type AdmissionDetail = AdmissionSummary & {
   rulesApplied: string[]
   aiRecommendation: AiRecommendation
   contactEmail: string | null
+  admissionStatus: string
 }
 
 // Default role assigned to newly admitted survivors. Matches `worker` role in
@@ -430,6 +433,7 @@ const mapAdmissionDetail = (admission: AiAdmission): AdmissionDetail => {
     rulesApplied,
     aiRecommendation,
     contactEmail: candidate.contact_email ?? null,
+    admissionStatus: admission.status ?? "PENDING_REVIEW",
   }
 }
 
@@ -457,18 +461,21 @@ export default function AdmissionsBook() {
   const [accountError, setAccountError] = useState("")
   const [accountDone, setAccountDone] = useState(false)
 
-  // Load ALL admissions (no camp filter — admin sees everything)
+  // Load pending (human review) + auto-decided admissions
   useEffect(() => {
     let isMounted = true
 
     const loadAdmissions = async () => {
       setLoading(true)
       try {
-        const response = await getPendingAdmissions({ page: 1, limit: 100 })
+        const [pendingResponse, autoDecided] = await Promise.all([
+          getPendingAdmissions({ page: 1, limit: 100 }),
+          getAutoDecidedAdmissions(),
+        ])
         if (!isMounted) return
-        const items = response.data ?? []
-        if (items.length > 0) {
-          setAdmissions(items.map(mapAdmissionSummary))
+        const all = [...(pendingResponse.data ?? []), ...autoDecided]
+        if (all.length > 0) {
+          setAdmissions(all.map(mapAdmissionSummary))
           setIsDemoData(false)
           setCurrentIndex(0)
         } else if (DEMO_ADMISSIONS_ENABLED) {
@@ -533,6 +540,7 @@ export default function AdmissionsBook() {
           rulesApplied: [],
           aiRecommendation: "review",
           contactEmail: null,
+          admissionStatus: "PENDING_REVIEW",
         }
         setDetailData(fallback)
       } finally {
@@ -571,7 +579,12 @@ export default function AdmissionsBook() {
     }
   }
 
-  const archiveAdmission = () => {
+  const archiveAdmission = (callBackendArchive = false) => {
+    if (callBackendArchive && detailData && !isDemoData) {
+      void archiveAdmissionApi(detailData.id).catch(() => {
+        // already-archived errors are acceptable here
+      })
+    }
     setAdmissions((previous) => {
       const next = [...previous]
       next.splice(currentIndex, 1)
@@ -584,6 +597,24 @@ export default function AdmissionsBook() {
     setAccountDone(false)
     setAccountError("")
     setAccountUsername("")
+  }
+
+  // ARCHIVE — for auto-decided admissions (AUTO_ACCEPTED / AUTO_REJECTED)
+  const handleArchiveAutoDecided = async () => {
+    if (!detailData) return
+    setIsProcessing(true)
+    setDecisionError("")
+    if (!isDemoData) {
+      try {
+        await archiveAdmissionApi(detailData.id)
+      } catch {
+        setDecisionError("Error al archivar el expediente. Intente de nuevo.")
+        setIsProcessing(false)
+        return
+      }
+    }
+    setIsProcessing(false)
+    archiveAdmission()
   }
 
   // REJECT — immediate, no camp picker needed
@@ -868,8 +899,39 @@ export default function AdmissionsBook() {
                 {!showingProcessed ? (
                   <>
                     <div className="binder-header" style={{ marginBottom: "10px" }}>
-                      REVISIÓN DE IA
+                      {detailData.admissionStatus === "AUTO_ACCEPTED" ||
+                      detailData.admissionStatus === "AUTO_REJECTED"
+                        ? "DECISIÓN AUTOMÁTICA"
+                        : "REVISIÓN DE IA"}
                     </div>
+
+                    {(detailData.admissionStatus === "AUTO_ACCEPTED" ||
+                      detailData.admissionStatus === "AUTO_REJECTED") && (
+                      <div
+                        style={{
+                          background:
+                            detailData.admissionStatus === "AUTO_ACCEPTED"
+                              ? "rgba(76,99,81,0.15)"
+                              : "rgba(156,39,32,0.12)",
+                          border: `1px solid ${detailData.admissionStatus === "AUTO_ACCEPTED" ? "var(--accent-mil)" : "var(--accent-critical)"}`,
+                          color:
+                            detailData.admissionStatus === "AUTO_ACCEPTED"
+                              ? "var(--accent-mil)"
+                              : "var(--accent-critical)",
+                          fontFamily: "var(--font-mono)",
+                          fontSize: "0.7rem",
+                          fontWeight: "bold",
+                          padding: "6px 10px",
+                          marginBottom: "10px",
+                          letterSpacing: "0.1em",
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        {detailData.admissionStatus === "AUTO_ACCEPTED"
+                          ? "⚡ El sistema aprobó esta solicitud automáticamente. Solo puede archivarla."
+                          : "⛔ El sistema rechazó esta solicitud automáticamente. Solo puede archivarla."}
+                      </div>
+                    )}
 
                     {/* Contenedor escroleable para que los botones nunca se escondan */}
                     <div
@@ -940,26 +1002,29 @@ export default function AdmissionsBook() {
                         </div>
                       </div>
 
-                      <div className="binder-header" style={{ marginTop: "12px" }}>
-                        RESOLUCIÓN OFICIAL
-                      </div>
-
-                      <div className="form-field comments-field" style={{ marginTop: "10px" }}>
-                        <label
-                          htmlFor="field-912"
-                          style={{ display: "block", marginBottom: "5px" }}
-                        >
-                          COMENTARIOS (OPCIONAL):
-                        </label>
-                        <textarea
-                          id="field-912"
-                          className="vintage-input"
-                          value={adminNotes}
-                          onChange={(event) => setAdminNotes(event.target.value)}
-                          placeholder="Escriba observaciones..."
-                          style={{ width: "100%", height: "48px", resize: "none" }}
-                        />
-                      </div>
+                      {detailData.admissionStatus === "PENDING_REVIEW" && (
+                        <>
+                          <div className="binder-header" style={{ marginTop: "12px" }}>
+                            RESOLUCIÓN OFICIAL
+                          </div>
+                          <div className="form-field comments-field" style={{ marginTop: "10px" }}>
+                            <label
+                              htmlFor="field-912"
+                              style={{ display: "block", marginBottom: "5px" }}
+                            >
+                              COMENTARIOS (OPCIONAL):
+                            </label>
+                            <textarea
+                              id="field-912"
+                              className="vintage-input"
+                              value={adminNotes}
+                              onChange={(event) => setAdminNotes(event.target.value)}
+                              placeholder="Escriba observaciones..."
+                              style={{ width: "100%", height: "48px", resize: "none" }}
+                            />
+                          </div>
+                        </>
+                      )}
                     </div>
 
                     {decisionError && (
@@ -978,20 +1043,46 @@ export default function AdmissionsBook() {
                         ⚠ {decisionError}
                       </div>
                     )}
-                    <div className="binder-footer decision-footer">
-                      <StampButton
-                        label="RECHAZAR"
-                        type="reject"
-                        onClick={handleReject}
-                        disabled={!!decision || isProcessing}
-                      />
-                      <StampButton
-                        label="ACEPTAR"
-                        type="accept"
-                        onClick={handleAcceptClick}
-                        disabled={!!decision || isProcessing}
-                      />
-                    </div>
+
+                    {detailData.admissionStatus === "PENDING_REVIEW" ? (
+                      <div className="binder-footer decision-footer">
+                        <StampButton
+                          label="RECHAZAR"
+                          type="reject"
+                          onClick={handleReject}
+                          disabled={!!decision || isProcessing}
+                        />
+                        <StampButton
+                          label="ACEPTAR"
+                          type="accept"
+                          onClick={handleAcceptClick}
+                          disabled={!!decision || isProcessing}
+                        />
+                      </div>
+                    ) : (
+                      <div
+                        className="binder-footer"
+                        style={{ justifyContent: "center", gap: "12px" }}
+                      >
+                        {detailData.admissionStatus === "AUTO_ACCEPTED" &&
+                          detailData.contactEmail && (
+                            <button
+                              className="book-archive-btn"
+                              onClick={() => setShowingProcessed(true)}
+                              disabled={isProcessing}
+                            >
+                              CREAR CUENTA Y ARCHIVAR
+                            </button>
+                          )}
+                        <button
+                          className="book-archive-btn book-archive-btn--secondary"
+                          onClick={() => void handleArchiveAutoDecided()}
+                          disabled={isProcessing}
+                        >
+                          {isProcessing ? "ARCHIVANDO..." : "ARCHIVAR EXPEDIENTE"}
+                        </button>
+                      </div>
+                    )}
                   </>
                 ) : (
                   <div
@@ -1121,7 +1212,9 @@ export default function AdmissionsBook() {
                               </button>
                               <button
                                 className="book-archive-btn book-archive-btn--secondary"
-                                onClick={archiveAdmission}
+                                onClick={() =>
+                                  archiveAdmission(detailData?.admissionStatus === "AUTO_ACCEPTED")
+                                }
                               >
                                 ARCHIVAR SIN CUENTA
                               </button>
@@ -1147,7 +1240,12 @@ export default function AdmissionsBook() {
                                 justifyContent: "center",
                               }}
                             >
-                              <button className="book-archive-btn" onClick={archiveAdmission}>
+                              <button
+                                className="book-archive-btn"
+                                onClick={() =>
+                                  archiveAdmission(detailData?.admissionStatus === "AUTO_ACCEPTED")
+                                }
+                              >
                                 ARCHIVAR EXPEDIENTE
                               </button>
                             </div>
@@ -1199,7 +1297,12 @@ export default function AdmissionsBook() {
                             justifyContent: "center",
                           }}
                         >
-                          <button className="book-archive-btn" onClick={archiveAdmission}>
+                          <button
+                            className="book-archive-btn"
+                            onClick={() =>
+                              archiveAdmission(detailData?.admissionStatus === "AUTO_ACCEPTED")
+                            }
+                          >
                             ARCHIVAR Y CONTINUAR
                           </button>
                         </div>

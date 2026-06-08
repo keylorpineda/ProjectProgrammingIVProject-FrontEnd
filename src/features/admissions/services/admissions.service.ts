@@ -73,6 +73,15 @@ export const getPendingAdmissions = async (
   return data
 }
 
+export const getAutoDecidedAdmissions = async (): Promise<AiAdmission[]> => {
+  const { data } = await api.get<AiAdmission[]>("/ai/admissions/auto-decided")
+  return Array.isArray(data) ? data : []
+}
+
+export const archiveAdmission = async (id: string): Promise<void> => {
+  await api.patch(`/ai/admissions/${id}/archive`)
+}
+
 export const getAdmissionById = async (id: string): Promise<AiAdmission> => {
   const { data } = await api.get<AiAdmission>(`/ai/admissions/${id}`)
   return data

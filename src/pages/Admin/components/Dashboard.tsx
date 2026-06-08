@@ -33,7 +33,7 @@ export default function Dashboard() {
       if (!activeCampId) return null
       const [metricsResponse, admissions] = await Promise.all([
         getDashboardMetrics(activeCampId),
-        getPendingAdmissions({ campId: activeCampId, page: 1, limit: 100 }),
+        getPendingAdmissions({ campId: activeCampId, page: 1, limit: 1 }),
       ])
       return {
         metrics: metricsResponse,
@@ -139,6 +139,7 @@ export default function Dashboard() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
+      transition={{ duration: 0.15 }}
     >
       <div className="board-header">
         <h2>TABLERO DE SITUACIÓN</h2>
@@ -167,7 +168,7 @@ export default function Dashboard() {
               className={`pinned-card ${card.className}`}
               initial={{ scale: 0, rotate: -20, opacity: 0 }}
               animate={{ scale: 1, rotate: index % 2 === 0 ? -1 : 2, opacity: 1 }}
-              transition={{ type: "spring", stiffness: 120, delay: index * 0.15 }}
+              transition={{ type: "spring", stiffness: 200, damping: 20, delay: index * 0.04 }}
               whileHover={{ scale: 1.05, rotate: 0, zIndex: 10 }}
             >
               <div className={`pin ${card.pinClass ?? ""}`}></div>
