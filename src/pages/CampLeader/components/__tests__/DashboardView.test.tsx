@@ -212,6 +212,109 @@ describe("DashboardView Component", () => {
     expect(screen.getByText("RECURSOS BAJO MÍNIMO")).toBeInTheDocument()
   })
 
+  it("renders movement with negative quantity without plus prefix", () => {
+    const negativeMovement: InventoryMovement[] = [
+      {
+        id: 202,
+        camp_id: 1,
+        resource_id: 10,
+        quantity: -15,
+        type: "consumption",
+        notes: "Used supplies",
+        created_at: "2026-06-08T11:00:00Z",
+      },
+    ]
+    render(
+      <DashboardView
+        explorations={[]}
+        transfers={[]}
+        inventory={mockInventory}
+        balances={[]}
+        movements={negativeMovement}
+        statistics={mockStats}
+        onNavigate={() => {}}
+      />,
+    )
+    expect(screen.getAllByText("-15").length).toBeGreaterThan(0)
+    expect(screen.queryByText("+-15")).not.toBeInTheDocument()
+  })
+
+  it("renders RECURSO fallback name when resource_id not in inventory map", () => {
+    const unknownResourceMovement: InventoryMovement[] = [
+      {
+        id: 203,
+        camp_id: 1,
+        resource_id: 999,
+        quantity: 10,
+        type: "input_manual",
+        notes: "Unknown item",
+        created_at: "2026-06-08T12:00:00Z",
+      },
+    ]
+    render(
+      <DashboardView
+        explorations={[]}
+        transfers={[]}
+        inventory={[]}
+        balances={[]}
+        movements={unknownResourceMovement}
+        statistics={mockStats}
+        onNavigate={() => {}}
+      />,
+    )
+    expect(screen.getByText("RECURSO #999")).toBeInTheDocument()
+  })
+
+  it("renders negative balance net without plus prefix", () => {
+    const negativeBalance: CampBalance[] = [
+      {
+        resource_id: 10,
+        resource_name: "Agua",
+        production: 5,
+        consumption: 20,
+        net: -15,
+      },
+    ]
+    render(
+      <DashboardView
+        explorations={[]}
+        transfers={[]}
+        inventory={mockInventory}
+        balances={negativeBalance}
+        movements={[]}
+        statistics={mockStats}
+        onNavigate={() => {}}
+      />,
+    )
+    expect(screen.getAllByText("-15").length).toBeGreaterThan(0)
+    expect(screen.queryByText("+-15")).not.toBeInTheDocument()
+  })
+
+  it("renders critical food stock alert", () => {
+    const foodCritical: Inventory[] = [
+      {
+        camp_id: 1,
+        resource_id: 2,
+        current_quantity: 3,
+        minimum_stock_required: 50,
+        alert_active: true,
+        resource: { id: 2, name: "Comida", unit: "Raciones", category: "food" },
+      },
+    ]
+    render(
+      <DashboardView
+        explorations={[]}
+        transfers={[]}
+        inventory={foodCritical}
+        balances={[]}
+        movements={[]}
+        statistics={mockStats}
+        onNavigate={() => {}}
+      />,
+    )
+    expect(screen.getByText("RECURSOS BAJO MÍNIMO")).toBeInTheDocument()
+  })
+
   it("renders correct ranks based on survival score", () => {
     const checkRank = (score: number, expectedLabel: string) => {
       const stats = { ...mockStats, survival_score: score }
@@ -231,7 +334,7 @@ describe("DashboardView Component", () => {
       render(<div></div>)
     }
 
-    checkRank(800, "LEYENDA")
+    checkRank(900, "LEYENDA")
     checkRank(700, "COMANDANTE")
     checkRank(350, "VETERANO")
     checkRank(150, "EXPLORADOR")

@@ -422,6 +422,81 @@ describe("ExplorationsView Component", () => {
     })
   })
 
+  it("shows NO APTO PARA ZONA badge for person with can_explore false", () => {
+    const nonExplorerPerson: Person = {
+      id: 20,
+      first_name: "Bill",
+      last_name: "Town",
+      status: "active",
+      can_work: true,
+      profession: { id: 2, name: "Farmer", can_explore: false },
+    } as Person
+
+    render(
+      <ExplorationsView
+        explorations={[]}
+        activePersons={[mockPersons[0], nonExplorerPerson]}
+        inventory={mockInventory}
+        resources={mockResources}
+        camps={mockCamps}
+        myCampId={1}
+        onCreateExploration={onCreate}
+        onDepartExploration={onDepart}
+        onReturnExploration={onReturn}
+        onCancelExploration={onCancel}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: /nueva expedición/i }))
+    expect(screen.getByText("NO APTO PARA ZONA")).toBeInTheDocument()
+  })
+
+  it("uses hardcoded fallback resource IDs when resources array is empty", async () => {
+    const { container } = render(
+      <ExplorationsView
+        explorations={[]}
+        activePersons={mockPersons}
+        inventory={[]}
+        resources={[]}
+        camps={mockCamps}
+        myCampId={1}
+        onCreateExploration={onCreate}
+        onDepartExploration={onDepart}
+        onReturnExploration={onReturn}
+        onCancelExploration={onCancel}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: /nueva expedición/i }))
+
+    fireEvent.change(screen.getByPlaceholderText(/búsqueda de antíxidas/i), {
+      target: { value: "Mision Beta" },
+    })
+    fireEvent.change(screen.getByPlaceholderText(/hospital universitario/i), {
+      target: { value: "Zona Norte" },
+    })
+
+    fireEvent.click(screen.getByText("Joel Miller").closest("div")!)
+
+    const numberInputs = container.querySelectorAll("input[type='number']")
+    fireEvent.change(numberInputs[2] as HTMLInputElement, { target: { value: "10" } })
+    fireEvent.change(numberInputs[3] as HTMLInputElement, { target: { value: "10" } })
+
+    const form = screen.getByText("REGISTRAR PLAN EN CENTRAL").closest("form")!
+    fireEvent.submit(form)
+
+    await waitFor(() => {
+      expect(onCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          resourceConsumptions: expect.arrayContaining([
+            { resource_id: 1, quantity: 10 },
+            { resource_id: 2, quantity: 10 },
+          ]),
+        }),
+      )
+    })
+  })
+
   it("handles API error when returning an exploration", async () => {
     onReturn.mockRejectedValueOnce(new Error("Return API Error"))
 

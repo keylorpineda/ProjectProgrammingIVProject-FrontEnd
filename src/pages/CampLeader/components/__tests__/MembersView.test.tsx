@@ -106,4 +106,60 @@ describe("MembersView Component", () => {
 
     expect(screen.getByText("SIN REGISTROS QUE COINCIDAN")).toBeInTheDocument()
   })
+
+  it("renders LESIONADO and FALLECIDO status labels", () => {
+    const extraResidents: Person[] = [
+      ...mockResidents,
+      {
+        id: 4,
+        first_name: "Tommy",
+        last_name: "Miller",
+        status: "injured",
+        can_work: false,
+        role: "guardia",
+        campId: 1,
+        experience_points: 80,
+        expeditionsSurvived: 1,
+        experience_level: 1,
+        profession: { id: 3, name: "Guardia", can_explore: false },
+        achievements: [],
+        previous_skills: "",
+      },
+      {
+        id: 5,
+        first_name: "Tess",
+        last_name: "X",
+        status: "deceased",
+        can_work: false,
+        role: "explorador",
+        campId: 1,
+        experience_points: 0,
+        expeditionsSurvived: 0,
+        experience_level: 1,
+        profession: { id: 2, name: "Explorador", can_explore: true },
+        achievements: [],
+        previous_skills: "",
+      },
+    ]
+    render(<MembersView residents={extraResidents} />)
+    expect(screen.getByText("LESIONADO")).toBeInTheDocument()
+    expect(screen.getByText("FALLECIDO")).toBeInTheDocument()
+  })
+
+  it("renders a photo img tag when photo_url is present", () => {
+    render(<MembersView residents={mockResidents} />)
+    const joelImg = screen.getByRole("img", { name: /joel/i })
+    expect(joelImg).toHaveAttribute("src", "http://example.com/joel.jpg")
+  })
+
+  it("resets filter to all members when TODOS is clicked after filtering", () => {
+    render(<MembersView residents={mockResidents} />)
+
+    fireEvent.click(screen.getByRole("button", { name: /en campo/i }))
+    expect(screen.queryByText("Joel")).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole("button", { name: /todos/i }))
+    expect(screen.getByText("Joel")).toBeInTheDocument()
+    expect(screen.getByText("Ellie")).toBeInTheDocument()
+  })
 })
