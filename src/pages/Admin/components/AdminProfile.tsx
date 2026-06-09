@@ -407,7 +407,10 @@ export default function AdminProfile() {
 
   return (
     <div className="worker-layout" style={{ background: "transparent" }}>
-      <div className="wv-page wv-profile-page" style={{ fontFamily: "var(--font-mono)" }}>
+      <div
+        className="wv-profile-page"
+        style={{ fontFamily: "var(--font-mono)", padding: "32px 32px 80px" }}
+      >
         {/* ── HEADER ── */}
         <div className="wv-page-header">
           <h2>EXPEDIENTE DEL ADMINISTRADOR</h2>

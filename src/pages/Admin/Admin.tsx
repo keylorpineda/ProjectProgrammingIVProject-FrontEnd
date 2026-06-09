@@ -70,7 +70,7 @@ const AdminLayout = () => {
 
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
         <Sidebar />
-        <div className="flex-1 flex flex-col overflow-hidden min-w-0 relative">
+        <div className="flex-1 flex flex-col overflow-hidden min-w-0 min-h-0 relative">
           <header className="bg-[#121110] border-b-2 border-black flex flex-col sm:flex-row justify-between items-center px-4 md:px-6 py-3 gap-4 shrink-0 font-mono select-none z-10 shadow-md">
             {/* Left Portal Badges */}
             <div className="flex items-center gap-3.5 w-full sm:w-auto">
@@ -143,7 +143,7 @@ const AdminLayout = () => {
           </header>
 
           <main
-            className={`flex-1 bg-[#0d0c0b] relative admin-route-container${isMapRoute ? " map-test-mode" : " overflow-y-auto"}`}
+            className={`flex-1 min-h-0 bg-[#0d0c0b] relative admin-route-container${isMapRoute ? " map-test-mode" : " overflow-y-auto"}`}
             style={isMapRoute ? {} : { padding: "16px" }}
           >
             <Routes>
