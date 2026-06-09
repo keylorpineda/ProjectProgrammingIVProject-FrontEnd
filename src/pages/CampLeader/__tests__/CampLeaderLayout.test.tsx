@@ -4,7 +4,12 @@ import { beforeEach, afterEach, describe, expect, it, vi } from "vitest"
 import { campLeaderUser } from "../../../test/fixtures"
 import { renderWithProviders } from "../../../test/test-utils"
 import CampLeaderLayout from "../CampLeaderLayout"
-import { explorationsService, transfersService, usersService } from "../lib/services"
+import {
+  explorationsService,
+  resourcesService,
+  transfersService,
+  usersService,
+} from "../lib/services"
 
 import type {
   DashboardViewProps,
@@ -340,5 +345,54 @@ describe("CampLeaderLayout Page", () => {
       expect(screen.queryByText(/cargando datos del campamento/i)).not.toBeInTheDocument()
     })
     expect(screen.getByTestId("mock-dashboard-view")).toBeInTheDocument()
+  })
+
+  it("silently ignores phase 2 data loading failures", async () => {
+    vi.mocked(resourcesService.getInventoryMovements).mockRejectedValueOnce(
+      new Error("Phase 2 fail"),
+    )
+    renderLayout()
+    await waitFor(() => {
+      expect(screen.queryByText(/cargando datos del campamento/i)).not.toBeInTheDocument()
+    })
+    expect(screen.getByTestId("mock-dashboard-view")).toBeInTheDocument()
+  })
+
+  it("handles campsRaw as paginated object with .data property", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ data: [{ id: "2", name: "Camp Beta" }] }),
+    })
+    renderLayout()
+    await waitFor(() => {
+      expect(screen.queryByText(/cargando datos del campamento/i)).not.toBeInTheDocument()
+    })
+    expect(screen.getByTestId("mock-dashboard-view")).toBeInTheDocument()
+  })
+
+  it("shows ACTUALIZANDO overlay while an action is pending", async () => {
+    let resolveCreate!: (v: unknown) => void
+    vi.mocked(explorationsService.createExploration).mockImplementationOnce(
+      () => new Promise((res) => (resolveCreate = res)),
+    )
+
+    renderLayout()
+    await waitFor(() => {
+      expect(screen.queryByText(/cargando datos del campamento/i)).not.toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByRole("button", { name: "EXPLORACIONES" }))
+
+    act(() => {
+      capturedExplorationsProps!.onCreateExploration({ name: "Test" })
+    })
+
+    await waitFor(() => {
+      expect(screen.getByText(/ACTUALIZANDO REGISTRO CENTRAL/i)).toBeInTheDocument()
+    })
+
+    await act(async () => {
+      resolveCreate({})
+    })
   })
 })

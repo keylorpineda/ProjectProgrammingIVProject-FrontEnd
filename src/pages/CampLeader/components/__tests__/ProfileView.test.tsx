@@ -80,4 +80,47 @@ describe("ProfileView Component", () => {
     fireEvent.keyDown(trophyBtn, { key: "Enter" })
     expect(screen.getByText(/desbloqueado/i)).toBeInTheDocument()
   })
+
+  it("renders fallback values when user is null", () => {
+    render(<ProfileView user={null} statistics={mockStats} residents={[]} />)
+    expect(screen.getByText("CLR-LDR-0000")).toBeInTheDocument()
+    expect(screen.getByText("N/D")).toBeInTheDocument()
+    expect(screen.getByText("#?")).toBeInTheDocument()
+  })
+
+  it("shows RANGO MÁXIMO when survival_score is >= 900", () => {
+    const maxStats = { ...mockStats, survival_score: 900 }
+    render(<ProfileView user={mockUser} statistics={maxStats} residents={[]} />)
+    expect(screen.getByText("RANGO MÁXIMO")).toBeInTheDocument()
+  })
+
+  it("closes the trophy modal via the CERRAR button", () => {
+    render(<ProfileView user={mockUser} statistics={mockStats} residents={[]} />)
+
+    fireEvent.click(screen.getByRole("button", { name: /primer mando/i }))
+    expect(screen.getByText("Accediste al sistema como Líder de Campamento.")).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole("button", { name: "CERRAR" }))
+    expect(
+      screen.queryByText("Accediste al sistema como Líder de Campamento."),
+    ).not.toBeInTheDocument()
+  })
+
+  it("falls back to RECLUTA rank for negative survival scores", () => {
+    const negativeStats = { ...mockStats, survival_score: -1 }
+    render(<ProfileView user={mockUser} statistics={negativeStats} residents={[]} />)
+    expect(screen.getAllByText("RECLUTA").length).toBeGreaterThan(0)
+  })
+
+  it("shows BLOQUEADO state and progress bar for a locked trophy", () => {
+    // FUERZA LABORAL requires 10+ active_workers; mockStats has 6
+    render(<ProfileView user={mockUser} statistics={mockStats} residents={[]} />)
+
+    const lockedTrophy = screen.getByRole("button", { name: /fuerza laboral/i })
+    fireEvent.click(lockedTrophy)
+
+    expect(screen.getByText(/BLOQUEADO/i)).toBeInTheDocument()
+    expect(screen.getByText("PROGRESO")).toBeInTheDocument()
+    expect(screen.getByText("6/10")).toBeInTheDocument()
+  })
 })

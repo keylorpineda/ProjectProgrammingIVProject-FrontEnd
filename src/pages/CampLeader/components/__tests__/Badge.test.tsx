@@ -24,4 +24,13 @@ describe("Badge Component", () => {
     render(<Badge code="VETERANO_PARAMO" showText={true} />)
     expect(screen.getByText(/Veterano del Paramo/i)).toBeInTheDocument()
   })
+
+  it("renders PRIMEROS_AUXILIOS_AVANZADOS badge with correct icon and color", () => {
+    render(<Badge code="PRIMEROS_AUXILIOS_AVANZADOS" />)
+    const badge = screen.getByTitle(/Primeros Auxilios Avanzados/i)
+    expect(badge).toBeInTheDocument()
+    expect(badge).toHaveStyle({ color: "#10b981" })
+    expect(screen.getByText("💉")).toBeInTheDocument()
+    expect(screen.queryByText(/Primeros Auxilios Avanzados/i)).not.toBeInTheDocument()
+  })
 })

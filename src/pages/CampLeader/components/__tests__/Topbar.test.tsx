@@ -49,6 +49,13 @@ describe("Topbar Component", () => {
     })
   })
 
+  it("renders fallback values when no user is authenticated", () => {
+    // store is already logged out in beforeEach
+    render(<Topbar survivalScore={0} />)
+    expect(screen.getByText(/CAMPAMENTO #1/i)).toBeInTheDocument()
+    expect(screen.getByText("LEADER")).toBeInTheDocument()
+  })
+
   it("triggers logout and navigates to login when clicking SALIR", () => {
     act(() => {
       useAuthStore.getState().setAuth("fake-token", {

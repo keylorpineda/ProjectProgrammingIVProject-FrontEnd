@@ -272,6 +272,168 @@ describe("TransfersView Component", () => {
     fireEvent.click(screen.getByRole("button", { name: "RETORNAR" }))
   })
 
+  it("renders completed, rejected, cancelled, in-transit-outgoing status labels", () => {
+    const variedTransfers: Transfer[] = [
+      {
+        id: 201,
+        origin_camp_id: 1,
+        destination_camp_id: 2,
+        resource_id: 1,
+        quantity: 20,
+        status: "completed",
+        requested_by_user_id: 1,
+        notes: "",
+        origin_camp: mockCamps[0],
+        destination_camp: mockCamps[1],
+      },
+      {
+        id: 202,
+        origin_camp_id: 1,
+        destination_camp_id: 2,
+        resource_id: 1,
+        quantity: 20,
+        status: "rejected",
+        requested_by_user_id: 1,
+        notes: "",
+        origin_camp: mockCamps[0],
+        destination_camp: mockCamps[1],
+      },
+      {
+        id: 203,
+        origin_camp_id: 1,
+        destination_camp_id: 2,
+        resource_id: 1,
+        quantity: 20,
+        status: "cancelled",
+        requested_by_user_id: 1,
+        notes: "",
+        origin_camp: mockCamps[0],
+        destination_camp: mockCamps[1],
+      },
+      {
+        id: 204,
+        origin_camp_id: 1,
+        destination_camp_id: 2,
+        resource_id: 1,
+        quantity: 20,
+        status: "in_transit",
+        requested_by_user_id: 1,
+        notes: "",
+        origin_camp: mockCamps[0],
+        destination_camp: mockCamps[1],
+      },
+    ]
+    render(
+      <TransfersView
+        transfers={variedTransfers}
+        camps={mockCamps}
+        resources={mockResources}
+        inventory={mockInventory}
+        myCampId={1}
+        onCreateTransferRequest={onCreate}
+        onApproveTransferRequest={onApprove}
+        onCancelTransferRequest={onCancel}
+        onArriveTransferRequest={onArrive}
+      />,
+    )
+    expect(screen.getByText("ENTREGADO — ARCHIVADO")).toBeInTheDocument()
+    expect(screen.getByText("TRASLADO RECHAZADO")).toBeInTheDocument()
+    expect(screen.getByText("— CONVOY CANCELADO —")).toBeInTheDocument()
+    expect(screen.getByText("CONVOY EN RUTA")).toBeInTheDocument()
+  })
+
+  it("shows CONFIRMAR LLEGADA for approved incoming transfer", () => {
+    const approvedIncoming: Transfer[] = [
+      {
+        id: 205,
+        origin_camp_id: 2,
+        destination_camp_id: 1,
+        resource_id: 1,
+        quantity: 30,
+        status: "approved",
+        requested_by_user_id: 1,
+        notes: "",
+        origin_camp: mockCamps[1],
+        destination_camp: mockCamps[0],
+      },
+    ]
+    render(
+      <TransfersView
+        transfers={approvedIncoming}
+        camps={mockCamps}
+        resources={mockResources}
+        inventory={mockInventory}
+        myCampId={1}
+        onCreateTransferRequest={onCreate}
+        onApproveTransferRequest={onApprove}
+        onCancelTransferRequest={onCancel}
+        onArriveTransferRequest={onArrive}
+      />,
+    )
+    expect(screen.getByRole("button", { name: /confirmar llegada/i })).toBeInTheDocument()
+  })
+
+  it("shows BASE DESCONOCIDA when camp not found in camps array and t.origin_camp is absent", () => {
+    const unknownCampTransfer: Transfer[] = [
+      {
+        id: 206,
+        origin_camp_id: 99,
+        destination_camp_id: 1,
+        resource_id: 1,
+        quantity: 10,
+        status: "pending",
+        requested_by_user_id: 1,
+        notes: "",
+      },
+    ]
+    render(
+      <TransfersView
+        transfers={unknownCampTransfer}
+        camps={mockCamps}
+        resources={mockResources}
+        inventory={mockInventory}
+        myCampId={1}
+        onCreateTransferRequest={onCreate}
+        onApproveTransferRequest={onApprove}
+        onCancelTransferRequest={onCancel}
+        onArriveTransferRequest={onArrive}
+      />,
+    )
+    expect(screen.getByText("BASE DESCONOCIDA")).toBeInTheDocument()
+  })
+
+  it("shows t.resource.name when resource is not found in resources prop", () => {
+    const noResItemTransfer: Transfer[] = [
+      {
+        id: 207,
+        origin_camp_id: 2,
+        destination_camp_id: 1,
+        resource_id: 999,
+        quantity: 5,
+        status: "pending",
+        requested_by_user_id: 1,
+        notes: "",
+        resource: { id: 999, name: "Medicamentos", unit: "Unidades", category: "medical" } as any,
+        origin_camp: mockCamps[1],
+        destination_camp: mockCamps[0],
+      },
+    ]
+    render(
+      <TransfersView
+        transfers={noResItemTransfer}
+        camps={mockCamps}
+        resources={mockResources}
+        inventory={mockInventory}
+        myCampId={1}
+        onCreateTransferRequest={onCreate}
+        onApproveTransferRequest={onApprove}
+        onCancelTransferRequest={onCancel}
+        onArriveTransferRequest={onArrive}
+      />,
+    )
+    expect(screen.getByText("Medicamentos")).toBeInTheDocument()
+  })
+
   it("handles creation error catch and target camp/notes changing", async () => {
     onCreate.mockRejectedValueOnce(new Error("API Error"))
     render(

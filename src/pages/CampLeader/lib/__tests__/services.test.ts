@@ -69,6 +69,12 @@ describe("CampLeader Services", () => {
       })
     })
 
+    it("getExplorations returns data.data array when response is paginated", async () => {
+      mockAxiosInstance.get.mockResolvedValueOnce({ data: { data: [{ id: 5 }] } })
+      const res = await explorationsService.getExplorations(1)
+      expect(res).toEqual([{ id: 5 }])
+    })
+
     it("getExplorationById calls get with correct URL", async () => {
       mockAxiosInstance.get.mockResolvedValueOnce({ data: { id: 2 } })
       const res = await explorationsService.getExplorationById(2)
@@ -357,6 +363,12 @@ describe("CampLeader Services", () => {
       const res = await resourcesService.getAllResources()
       expect(res).toEqual([])
     })
+
+    it("getAllResources returns empty array when data has no .data property", async () => {
+      mockAxiosInstance.get.mockResolvedValueOnce({ data: {} })
+      const res = await resourcesService.getAllResources()
+      expect(res).toEqual([])
+    })
   })
 
   describe("usersService", () => {
@@ -461,6 +473,190 @@ describe("CampLeader Services", () => {
       const res = await usersService.getCampDashboard(1)
       expect(res.balances).toEqual([])
       expect(res.statistics.total_persons).toBe(0)
+    })
+
+    it("getCampPersons omits campId param when called without argument", async () => {
+      mockAxiosInstance.get.mockResolvedValueOnce({ data: [] })
+      await usersService.getCampPersons()
+      expect(mockAxiosInstance.get).toHaveBeenCalledWith("/users/persons", {
+        params: { limit: 200 },
+      })
+    })
+
+    it("getCampPersons handles paginated response with data.data array", async () => {
+      mockAxiosInstance.get.mockResolvedValueOnce({
+        data: {
+          data: [
+            {
+              id: 5,
+              first_name: "Ana",
+              last_name: "Lopez",
+              status: "active",
+              experience_points: 50,
+              expeditions_survived: 0,
+              profession: { id: 1, name: "Guardia", can_explore: false },
+              achievements: [],
+              previous_skills: "",
+            },
+          ],
+        },
+      })
+      const res = await usersService.getCampPersons(1)
+      expect(res).toHaveLength(1)
+      expect(res[0].first_name).toBe("Ana")
+    })
+
+    it("getCampPersons uses fallback profession when profession is null", async () => {
+      mockAxiosInstance.get.mockResolvedValueOnce({
+        data: [
+          {
+            id: 1,
+            first_name: "X",
+            last_name: "Y",
+            status: "active",
+            experience_points: 0,
+            expeditions_survived: 0,
+            profession: null,
+            achievements: [],
+            previous_skills: "",
+          },
+        ],
+      })
+      const res = await usersService.getCampPersons(1)
+      expect(res[0].profession).toEqual({ id: 0, name: "Desconocida", can_explore: false })
+    })
+
+    it("getCampPersons defaults status to active when status field is absent", async () => {
+      mockAxiosInstance.get.mockResolvedValueOnce({
+        data: [
+          {
+            id: 1,
+            first_name: "A",
+            last_name: "B",
+            experience_points: 0,
+            expeditions_survived: 0,
+            profession: { id: 1, name: "X", can_explore: false },
+            achievements: [],
+            previous_skills: "",
+          },
+        ],
+      })
+      const res = await usersService.getCampPersons(1)
+      expect(res[0].status).toBe("active")
+    })
+
+    it("getCampPersons caps experience_level at 5 for XP >= 400", async () => {
+      mockAxiosInstance.get.mockResolvedValueOnce({
+        data: [
+          {
+            id: 1,
+            first_name: "A",
+            last_name: "B",
+            status: "active",
+            experience_points: 600,
+            expeditions_survived: 0,
+            profession: { id: 1, name: "X", can_explore: false },
+            achievements: [],
+            previous_skills: "",
+          },
+        ],
+      })
+      const res = await usersService.getCampPersons(1)
+      expect(res[0].experience_level).toBe(5)
+    })
+
+    it("getCampPersons returns empty achievements array when field is not an array", async () => {
+      mockAxiosInstance.get.mockResolvedValueOnce({
+        data: [
+          {
+            id: 1,
+            first_name: "A",
+            last_name: "B",
+            status: "active",
+            experience_points: 0,
+            expeditions_survived: 0,
+            profession: { id: 1, name: "X", can_explore: false },
+            achievements: null,
+            previous_skills: "",
+          },
+        ],
+      })
+      const res = await usersService.getCampPersons(1)
+      expect(res[0].achievements).toEqual([])
+    })
+
+    it("getCampDashboard falls back to data.survival_score when camp.survival_score is absent", async () => {
+      mockAxiosInstance.get.mockResolvedValueOnce({
+        data: {
+          camp: {
+            total_people: 5,
+            active_workers: 3,
+            sick_or_injured: 0,
+            exploring: 0,
+            deceased: 0,
+          },
+          warehouse: { inventory: [] },
+          survival_score: 350,
+        },
+      })
+      const res = await usersService.getCampDashboard(1)
+      expect(res.statistics.survival_score).toBe(350)
+    })
+
+    it("getCampDashboard handles null camp and null warehouse with zero fallbacks", async () => {
+      mockAxiosInstance.get.mockResolvedValueOnce({ data: { camp: null, warehouse: null } })
+      const res = await usersService.getCampDashboard(1)
+      expect(res.statistics.total_persons).toBe(0)
+      expect(res.statistics.survival_score).toBe(0)
+      expect(res.balances).toEqual([])
+    })
+
+    it("getCampDashboard uses zero for all stats when camp is empty object", async () => {
+      mockAxiosInstance.get.mockResolvedValueOnce({
+        data: {
+          camp: {},
+          warehouse: { inventory: [] },
+        },
+      })
+      const res = await usersService.getCampDashboard(1)
+      expect(res.statistics.total_persons).toBe(0)
+      expect(res.statistics.active_workers).toBe(0)
+      expect(res.statistics.injured_or_sick).toBe(0)
+      expect(res.statistics.occupancy_rate).toBe(0)
+      expect(res.statistics.survival_score).toBe(0)
+    })
+
+    it("getCampDashboard calculates occupancy_rate when camp_capacity is provided", async () => {
+      mockAxiosInstance.get.mockResolvedValueOnce({
+        data: {
+          camp: { total_people: 10, camp_capacity: 20 },
+          warehouse: { inventory: [] },
+        },
+      })
+      const res = await usersService.getCampDashboard(1)
+      expect(res.statistics.occupancy_rate).toBe(50)
+    })
+
+    it("getCampDashboard uses fallback resource_name and zero production when fields are null", async () => {
+      mockAxiosInstance.get.mockResolvedValueOnce({
+        data: {
+          camp: { total_people: 1 },
+          warehouse: {
+            inventory: [
+              {
+                resource_id: 1,
+                resource_name: null,
+                daily_production: null,
+                daily_consumption: null,
+              },
+            ],
+          },
+        },
+      })
+      const res = await usersService.getCampDashboard(1)
+      expect(res.balances[0].resource_name).toBe("Recurso")
+      expect(res.balances[0].production).toBe(0)
+      expect(res.balances[0].consumption).toBe(0)
     })
 
     it("deprecated getCampBalances and getCampStatistics call getCampDashboard", async () => {
