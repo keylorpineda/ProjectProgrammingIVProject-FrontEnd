@@ -132,6 +132,13 @@ describe("workerService", () => {
       expect(apiMock.get).toHaveBeenCalledWith("/users/professions")
     })
 
+    it("getProfessions returns a bare array or [] for an empty envelope", async () => {
+      ok([{ id: "2" }])
+      await expect(workerService.getProfessions()).resolves.toEqual([{ id: "2" }])
+      ok({})
+      await expect(workerService.getProfessions()).resolves.toEqual([])
+    })
+
     it("getResources forwards pagination + category params", async () => {
       ok([{ id: "r1" }])
       await expect(workerService.getResources(2, 10, "food")).resolves.toEqual([{ id: "r1" }])
@@ -151,16 +158,37 @@ describe("workerService", () => {
       expect(apiMock.get).toHaveBeenCalledWith("/resources/inventory/1")
     })
 
+    it("getInventory returns a bare array or [] for an empty envelope", async () => {
+      ok([{ resource_id: "10" }])
+      await expect(workerService.getInventory(1)).resolves.toEqual([{ resource_id: "10" }])
+      ok({})
+      await expect(workerService.getInventory(1)).resolves.toEqual([])
+    })
+
     it("getInventoryMovements forwards the limit and unwraps { movements }", async () => {
       ok({ movements: [{ id: "m1" }] })
       await expect(workerService.getInventoryMovements(1, 25)).resolves.toEqual([{ id: "m1" }])
       expect(apiMock.get).toHaveBeenCalledWith("/resources/movements/1", { params: { limit: 25 } })
     })
 
+    it("getInventoryMovements returns a bare array or [] for an empty envelope", async () => {
+      ok([{ id: "m2" }])
+      await expect(workerService.getInventoryMovements(1)).resolves.toEqual([{ id: "m2" }])
+      ok({})
+      await expect(workerService.getInventoryMovements(1)).resolves.toEqual([])
+    })
+
     it("getMyBadges unwraps { badges }", async () => {
       ok({ badges: [{ id: 1 }] })
       await expect(workerService.getMyBadges()).resolves.toEqual([{ id: 1 }])
       expect(apiMock.get).toHaveBeenCalledWith("/users/me/badges")
+    })
+
+    it("getMyBadges returns a bare array or [] for an empty envelope", async () => {
+      ok([{ id: 2 }])
+      await expect(workerService.getMyBadges()).resolves.toEqual([{ id: 2 }])
+      ok({})
+      await expect(workerService.getMyBadges()).resolves.toEqual([])
     })
 
     it("getDailyBalance returns the raw object", async () => {
@@ -191,6 +219,13 @@ describe("workerService", () => {
       ok({ data: [{ id: "e1" }] })
       await expect(workerService.getCampExplorations("4")).resolves.toEqual([{ id: "e1" }])
       expect(apiMock.get).toHaveBeenCalledWith("/explorations", { params: { campId: 4 } })
+    })
+
+    it("getCampExplorations returns a bare array or [] for an empty envelope", async () => {
+      ok([{ id: "e2" }])
+      await expect(workerService.getCampExplorations(4)).resolves.toEqual([{ id: "e2" }])
+      ok({})
+      await expect(workerService.getCampExplorations(4)).resolves.toEqual([])
     })
 
     it("getMyAchievements returns the array or [] for a non-array body", async () => {
