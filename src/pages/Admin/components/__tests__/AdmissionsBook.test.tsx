@@ -10,8 +10,10 @@ import { CampProvider } from "../../context/CampContext"
 import AdmissionsBook from "../AdmissionsBook"
 
 import {
+  archiveAdmission,
   createAdmissionAccount,
   getAdmissionById,
+  getAutoDecidedAdmissions,
   getPendingAdmissions,
   reviewAdmission,
 } from "@/features/admissions/services/admissions.service"
@@ -20,6 +22,8 @@ import { useAuthStore, useTokenStore } from "@/store/useAuthStore"
 
 vi.mock("@/features/admissions/services/admissions.service", () => ({
   getPendingAdmissions: vi.fn(),
+  getAutoDecidedAdmissions: vi.fn(),
+  archiveAdmission: vi.fn(),
   getAdmissionById: vi.fn(),
   reviewAdmission: vi.fn(),
   createAdmissionAccount: vi.fn(),
@@ -35,6 +39,8 @@ vi.mock("@/features/auth/services/auth.service", () => ({
 }))
 
 const mockedGetPending = getPendingAdmissions as unknown as ReturnType<typeof vi.fn>
+const mockedGetAutoDecided = getAutoDecidedAdmissions as unknown as ReturnType<typeof vi.fn>
+const mockedArchive = archiveAdmission as unknown as ReturnType<typeof vi.fn>
 const mockedGetById = getAdmissionById as unknown as ReturnType<typeof vi.fn>
 const mockedReview = reviewAdmission as unknown as ReturnType<typeof vi.fn>
 const mockedCreateAccount = createAdmissionAccount as unknown as ReturnType<typeof vi.fn>
@@ -86,11 +92,15 @@ describe("Admin → AdmissionsBook", () => {
     useTokenStore.getState().setToken("tk")
     useAuthStore.getState().setAuth("tk", adminUser)
     mockedGetPending.mockReset()
+    mockedGetAutoDecided.mockReset()
+    mockedArchive.mockReset()
     mockedGetById.mockReset()
     mockedReview.mockReset()
     mockedCreateAccount.mockReset()
     mockedGetCamps.mockReset()
 
+    mockedGetAutoDecided.mockResolvedValue([])
+    mockedArchive.mockResolvedValue(undefined)
     mockedGetCamps.mockResolvedValue(camps)
     mockedGetPending.mockResolvedValue({
       data: [fakeAdmission],
