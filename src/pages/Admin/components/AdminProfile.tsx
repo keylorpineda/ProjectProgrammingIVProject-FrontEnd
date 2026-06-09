@@ -586,7 +586,7 @@ export default function AdminProfile() {
               >
                 {trophy.unlocked && <div className="wv-badge-rarity-corner wv-rarity-1" />}
                 <div className="wv-badge-img-wrap">
-                  <div style={{ fontSize: "2rem", lineHeight: 1 }}>{trophy.icon}</div>
+                  <div className="wv-badge-icon-placeholder">{trophy.icon}</div>
                 </div>
                 <div className="wv-badge-name">{trophy.name}</div>
                 <div className="wv-badge-stars">
