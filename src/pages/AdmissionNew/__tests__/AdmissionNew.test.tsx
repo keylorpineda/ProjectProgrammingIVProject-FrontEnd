@@ -207,6 +207,117 @@ describe("AdmissionNew — error clearing on user interaction", () => {
   })
 })
 
+describe("AdmissionNew — intro phase", () => {
+  it("shows the 'SISTEMA EN ESPERA' prompt before the user clicks", () => {
+    renderForm()
+    expect(screen.getByText(/sistema en espera/i)).toBeInTheDocument()
+  })
+
+  it("transitions to the form phase when the intro overlay is clicked", async () => {
+    const user = userEvent.setup()
+    renderForm()
+    const overlay = screen.getByRole("button", { name: /haga clic/i })
+    await user.click(overlay)
+    await waitFor(() => {
+      expect(screen.queryByText(/sistema en espera/i)).not.toBeInTheDocument()
+    })
+  })
+})
+
+describe("AdmissionNew — age validation", () => {
+  beforeEach(() => {
+    mockedSubmit.mockReset()
+  })
+
+  it("shows age error for a non-integer value of 0", async () => {
+    const user = userEvent.setup()
+    renderForm()
+    await user.type(screen.getByLabelText(/edad/i), "0")
+    submitForm()
+    await waitFor(() => {
+      expect(screen.getByText("La edad debe ser un entero mayor o igual a 1")).toBeInTheDocument()
+    })
+  })
+})
+
+describe("AdmissionNew — photo validation", () => {
+  beforeEach(() => {
+    mockedSubmit.mockReset()
+    mockedUpload.mockReset()
+  })
+
+  it("shows 'Debes adjuntar una imagen valida' for a non-image file", async () => {
+    renderForm()
+    const nonImageFile = new File(["content"], "document.pdf", { type: "application/pdf" })
+    const fileInput = document.getElementById("foto") as HTMLInputElement
+    // user-event respects accept="image/*" and would filter the PDF — use fireEvent instead
+    Object.defineProperty(fileInput, "files", { value: [nonImageFile], configurable: true })
+    fireEvent.change(fileInput)
+    submitForm()
+    await waitFor(() => {
+      expect(screen.getByText("Debes adjuntar una imagen valida")).toBeInTheDocument()
+    })
+  })
+})
+
+describe("AdmissionNew — API error handling", () => {
+  beforeEach(() => {
+    mockedUpload.mockResolvedValue({ url: "https://cdn.example.com/photo.jpg" })
+    vi.stubGlobal(
+      "Image",
+      class {
+        onload: (() => void) | null = null
+        onerror: (() => void) | null = null
+        width = 0
+        height = 0
+        set src(_url: string) {
+          setTimeout(() => this.onerror?.(), 0)
+        }
+      },
+    )
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    mockedSubmit.mockReset()
+    mockedUpload.mockReset()
+  })
+
+  const fillAllFields = async (user: ReturnType<typeof userEvent.setup>) => {
+    await user.type(screen.getByLabelText(/nombre completo/i), "Joel Miller")
+    await user.type(screen.getByLabelText(/metodo de contacto/i), "joel@example.com")
+    await user.type(screen.getByLabelText(/cedula/i), "123456789")
+    await user.type(screen.getByLabelText(/edad/i), "35")
+    await user.type(screen.getByLabelText(/salud \(detalles\)/i), "Buena salud")
+    await user.type(screen.getByLabelText(/condicion fisica \(detalles\)/i), "Excelente")
+    await user.type(screen.getByLabelText(/habilidades/i), "medicina")
+    const fileInput = document.getElementById("foto") as HTMLInputElement
+    await user.upload(fileInput, new File(["pixel"], "photo.jpg", { type: "image/jpeg" }))
+  }
+
+  it("shows an API error message when submitAdmission rejects", async () => {
+    const user = userEvent.setup()
+    mockedSubmit.mockRejectedValueOnce(new Error("network error"))
+    renderForm()
+    await fillAllFields(user)
+    submitForm()
+    await waitFor(
+      () => expect(screen.getByText(/no se pudo registrar la admision/i)).toBeInTheDocument(),
+      { timeout: 5000 },
+    )
+  }, 10000)
+})
+
+describe("AdmissionNew — criminal_record checkbox", () => {
+  it("toggles the antecedentes label text when the checkbox is checked", async () => {
+    const user = userEvent.setup()
+    renderForm()
+    expect(screen.getByText(/sin antecedentes/i)).toBeInTheDocument()
+    await user.click(screen.getByLabelText(/sin antecedentes/i))
+    expect(screen.getByText(/antecedentes penales/i)).toBeInTheDocument()
+  })
+})
+
 describe("AdmissionNew — successful submission", () => {
   beforeEach(() => {
     mockedUpload.mockResolvedValue({ url: "https://cdn.example.com/photo.jpg" })

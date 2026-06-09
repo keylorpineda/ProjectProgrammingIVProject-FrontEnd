@@ -227,4 +227,36 @@ describe("Login page", () => {
       expect(navigateMock).toHaveBeenCalledWith("/admissions/new")
     })
   })
+
+  describe("password visibility toggle", () => {
+    it("password field is type=password by default", async () => {
+      renderLogin()
+      await enableForm()
+      expect(screen.getByLabelText(/contraseña/i)).toHaveAttribute("type", "password")
+    })
+
+    it("reveals password text when the toggle button is clicked", async () => {
+      const user = userEvent.setup()
+      renderLogin()
+      await enableForm()
+      const toggleBtn = screen
+        .getAllByRole("button")
+        .find((btn) => !btn.textContent?.match(/iniciar|unirse/i))
+      expect(toggleBtn).toBeDefined()
+      await user.click(toggleBtn!)
+      expect(screen.getByLabelText(/contraseña/i)).toHaveAttribute("type", "text")
+    })
+
+    it("hides password again when the toggle is clicked a second time", async () => {
+      const user = userEvent.setup()
+      renderLogin()
+      await enableForm()
+      const toggleBtn = screen
+        .getAllByRole("button")
+        .find((btn) => !btn.textContent?.match(/iniciar|unirse/i))!
+      await user.click(toggleBtn)
+      await user.click(toggleBtn)
+      expect(screen.getByLabelText(/contraseña/i)).toHaveAttribute("type", "password")
+    })
+  })
 })
