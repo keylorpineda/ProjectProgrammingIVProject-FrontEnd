@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion"
+import * as L from "leaflet"
 import {
   Activity,
   AlertTriangle,
@@ -14,17 +15,23 @@ import {
   X,
   Zap,
 } from "lucide-react"
-import { useEffect, useState } from "react"
-import { Circle, MapContainer, Polyline, TileLayer, useMap } from "react-leaflet"
+import { useCallback, useEffect, useMemo, useState } from "react"
+import { Circle, MapContainer, Polyline, TileLayer, useMap, useMapEvents } from "react-leaflet"
+import MarkerClusterGroup from "react-leaflet-cluster"
 
 import { AnimatedMarker } from "./AnimatedMarker"
 import { HazardZone } from "./HazardZone"
 import { useCamps } from "../context/CampContext"
 import { aiEvaluationService } from "../services/aiEvaluationService"
 
-import type { Camp } from "../types/camp"
+import type { Camp, ExpeditionEvent, HazardArea, TransferLine } from "../types/camp"
 import "leaflet/dist/leaflet.css"
 import "../styles/map-effects.css"
+
+// Caps to avoid rendering thousands of SVG elements
+const MAX_VISIBLE_TRANSFERS = 50
+const HAZARD_MIN_ZOOM = 11
+const VIEWPORT_PADDING = 0.5
 
 const MapController = ({ selectedCoords }: { selectedCoords: [number, number] | null }) => {
   const map = useMap()
@@ -54,6 +61,119 @@ const RadarPing = ({
   )
 }
 
+interface MapInnerProps {
+  camps: Camp[]
+  transfers: TransferLine[]
+  expeditions: ExpeditionEvent[]
+  hazardAreas: HazardArea[]
+  selectedCamp: Camp | null
+  onCampClick: (camp: Camp) => void
+}
+
+// Separate inner component so it can use useMap / useMapEvents (must be inside MapContainer)
+const MapInner = ({
+  camps,
+  transfers,
+  expeditions,
+  hazardAreas,
+  selectedCamp,
+  onCampClick,
+}: MapInnerProps) => {
+  const map = useMap()
+  const [zoom, setZoom] = useState(() => map.getZoom())
+  const [bounds, setBounds] = useState(() => map.getBounds())
+
+  useMapEvents({
+    zoomend: () => {
+      setZoom(map.getZoom())
+      setBounds(map.getBounds())
+    },
+    moveend: () => setBounds(map.getBounds()),
+  })
+
+  // Only mount markers within (or just outside) the current viewport
+  const visibleCamps = useMemo(() => {
+    const padded = bounds.pad(VIEWPORT_PADDING)
+    return camps.filter((c) => padded.contains(c.coords as L.LatLngExpression))
+  }, [camps, bounds])
+
+  // Only show hazard zones at sufficient zoom and within viewport
+  const visibleHazards = useMemo(() => {
+    if (zoom < HAZARD_MIN_ZOOM) return []
+    const padded = bounds.pad(0.3)
+    return hazardAreas.filter((h) => padded.contains(h.coords as L.LatLngExpression))
+  }, [hazardAreas, bounds, zoom])
+
+  // Cap transfer polylines to avoid thousands of SVG paths
+  const visibleTransfers = useMemo(() => transfers.slice(0, MAX_VISIBLE_TRANSFERS), [transfers])
+
+  return (
+    <>
+      <MapController selectedCoords={selectedCamp?.coords || null} />
+
+      {visibleHazards.map((area) => (
+        <HazardZone
+          key={`hazard-area-${area.id}`}
+          coords={area.coords}
+          radius={area.radius}
+          dangerLevel={area.dangerLevel}
+          name={area.name}
+        />
+      ))}
+
+      {visibleTransfers.map((line) => (
+        <Polyline
+          key={line.id}
+          positions={[line.from, line.to]}
+          pathOptions={{
+            color: line.resourceType === "food" ? "var(--primary-color)" : "var(--accent-critical)",
+            weight: 3,
+            opacity: 0.8,
+            dashArray: "10, 10",
+          }}
+          className="marching-ants"
+        />
+      ))}
+
+      {expeditions.map((expedition) => {
+        const origin = camps.find((camp) => camp.id === expedition.originId)
+        if (!origin) return null
+
+        return (
+          <Polyline
+            key={`line-${expedition.id}`}
+            positions={[origin.coords, expedition.coords]}
+            pathOptions={{ color: "var(--ink)", weight: 1, dashArray: "4, 4", opacity: 0.5 }}
+          />
+        )
+      })}
+
+      {/* Clustering groups nearby markers — dramatically reduces DOM nodes at low zoom */}
+      <MarkerClusterGroup
+        chunkedLoading
+        disableClusteringAtZoom={15}
+        maxClusterRadius={60}
+        iconCreateFunction={(cluster: { getChildCount: () => number }) =>
+          L.divIcon({
+            html: `<div class="tactical-cluster"><span>${cluster.getChildCount()}</span></div>`,
+            className: "",
+            iconSize: [44, 44],
+            iconAnchor: [22, 22],
+          })
+        }
+      >
+        {visibleCamps.map((camp) => (
+          <AnimatedMarker key={camp.id} camp={camp} onClick={onCampClick} />
+        ))}
+      </MarkerClusterGroup>
+
+      {expeditions.map((expedition) => (
+        <RadarPing key={expedition.id} coords={expedition.coords} color="var(--primary-color)" />
+      ))}
+    </>
+  )
+}
+
 export const MapDashboard = () => {
   const { camps, transfers, expeditions, hazardAreas, selectedCamp, setSelectedCamp } = useCamps()
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null)
@@ -66,6 +186,15 @@ export const MapDashboard = () => {
     setAiAnalysis(result)
     setAnalyzing(false)
   }
+
+  // Stable reference so AnimatedMarker.memo comparison stays valid
+  const handleCampClick = useCallback(
+    (camp: Camp) => {
+      setSelectedCamp(camp)
+      setAiAnalysis(null)
+    },
+    [setSelectedCamp],
+  )
 
   return (
     <div className="h-full w-full relative flex overflow-hidden bg-[var(--bg-deep)] text-[var(--text-primary)] font-sans tactical-map-container cursor-default">
@@ -86,64 +215,14 @@ export const MapDashboard = () => {
             url="https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png"
           />
 
-          <MapController selectedCoords={selectedCamp?.coords || null} />
-
-          {hazardAreas.map((area) => (
-            <HazardZone
-              key={`hazard-area-${area.id}`}
-              coords={area.coords}
-              radius={area.radius}
-              dangerLevel={area.dangerLevel}
-              name={area.name}
-            />
-          ))}
-
-          {transfers.map((line) => (
-            <Polyline
-              key={line.id}
-              positions={[line.from, line.to]}
-              pathOptions={{
-                color:
-                  line.resourceType === "food" ? "var(--primary-color)" : "var(--accent-critical)",
-                weight: 3,
-                opacity: 0.8,
-                dashArray: "10, 10",
-              }}
-              className="marching-ants"
-            />
-          ))}
-
-          {expeditions.map((expedition) => {
-            const origin = camps.find((camp) => camp.id === expedition.originId)
-            if (!origin) return null
-
-            return (
-              <Polyline
-                key={`line-${expedition.id}`}
-                positions={[origin.coords, expedition.coords]}
-                pathOptions={{ color: "var(--ink)", weight: 1, dashArray: "4, 4", opacity: 0.5 }}
-              />
-            )
-          })}
-
-          {camps.map((camp) => (
-            <AnimatedMarker
-              key={camp.id}
-              camp={camp}
-              onClick={(nextCamp) => {
-                setSelectedCamp(nextCamp)
-                setAiAnalysis(null)
-              }}
-            />
-          ))}
-
-          {expeditions.map((expedition) => (
-            <RadarPing
-              key={expedition.id}
-              coords={expedition.coords}
-              color="var(--primary-color)"
-            />
-          ))}
+          <MapInner
+            camps={camps}
+            transfers={transfers}
+            expeditions={expeditions}
+            hazardAreas={hazardAreas}
+            selectedCamp={selectedCamp}
+            onCampClick={handleCampClick}
+          />
         </MapContainer>
       </main>
 

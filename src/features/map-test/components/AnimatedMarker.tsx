@@ -1,6 +1,6 @@
 import { motion } from "framer-motion"
 import * as L from "leaflet"
-import { useMemo } from "react"
+import { memo, useMemo } from "react"
 import { createPortal } from "react-dom"
 import { Marker, Popup } from "react-leaflet"
 
@@ -25,7 +25,7 @@ const DANGER_GLOW: Record<string, string> = {
   critical: "rgba(156,39,32,0.8)",
 }
 
-export const AnimatedMarker = ({ camp, onClick }: AnimatedMarkerProps) => {
+const AnimatedMarkerInner = ({ camp, onClick }: AnimatedMarkerProps) => {
   const iconElement = useMemo(() => {
     const element = document.createElement("div")
     element.className = "custom-marker-container"
@@ -134,3 +134,18 @@ export const AnimatedMarker = ({ camp, onClick }: AnimatedMarkerProps) => {
     </>
   )
 }
+
+// Only re-render if visible properties that affect the marker changed
+export const AnimatedMarker = memo(AnimatedMarkerInner, (prev, next) => {
+  return (
+    prev.camp.id === next.camp.id &&
+    prev.camp.dangerLevel === next.camp.dangerLevel &&
+    prev.camp.hasAlert === next.camp.hasAlert &&
+    prev.camp.population === next.camp.population &&
+    prev.camp.thumbnailUrl === next.camp.thumbnailUrl &&
+    prev.camp.coords[0] === next.camp.coords[0] &&
+    prev.camp.coords[1] === next.camp.coords[1] &&
+    prev.camp.resources === next.camp.resources &&
+    prev.onClick === next.onClick
+  )
+})
