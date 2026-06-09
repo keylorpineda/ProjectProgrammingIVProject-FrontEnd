@@ -1,11 +1,13 @@
-import { screen } from "@testing-library/react"
+import { screen, waitFor } from "@testing-library/react"
 import { Route, Routes } from "react-router-dom"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import WorkerLayout from "../WorkerLayout"
 
+import type { ReactNode } from "react"
+
 import { workerUser } from "@/test/fixtures"
-import { renderWithProviders } from "@/test/test-utils"
+import { renderWithProviders, userEvent } from "@/test/test-utils"
 import {
   workerBadges,
   workerBalance,
@@ -28,6 +30,17 @@ const svc = vi.hoisted(() => ({
   getMyAchievements: vi.fn(),
 }))
 
+vi.mock("@/components/ui/InactivityGuard", () => ({
+  default: ({ children, onLogout }: { children: ReactNode; onLogout: () => void }) => (
+    <div>
+      <button type="button" onClick={onLogout}>
+        IDLE LOGOUT
+      </button>
+      {children}
+    </div>
+  ),
+}))
+
 vi.mock("@/features/worker/services/workerService", () => ({
   default: svc,
   workerService: svc,
@@ -35,12 +48,12 @@ vi.mock("@/features/worker/services/workerService", () => ({
   handleApiError: vi.fn(),
 }))
 
-const renderLayout = () =>
+const renderLayout = (route = "/worker/dashboard") =>
   renderWithProviders(
     <Routes>
       <Route path="/worker/*" element={<WorkerLayout />} />
     </Routes>,
-    { user: workerUser, token: "tk", route: "/worker/dashboard" },
+    { user: workerUser, token: "tk", route },
   )
 
 describe("Worker → Layout", () => {
@@ -65,5 +78,44 @@ describe("Worker → Layout", () => {
   it("mounts the nested dashboard route inside the layout", async () => {
     renderLayout()
     expect(await screen.findByText(/TABLERO - Campamento Alpha/i)).toBeInTheDocument()
+  })
+
+  it("navigates from the sidebar to another worker section", async () => {
+    svc.getInventoryMovements.mockResolvedValue([])
+
+    renderLayout()
+
+    await userEvent.click(screen.getByRole("button", { name: /ALMACEN/i }))
+    expect(
+      await screen.findByRole("heading", { name: /MANIFIESTO DE ALMACÉN/i }),
+    ).toBeInTheDocument()
+  })
+
+  it("redirects unknown worker routes to the dashboard", async () => {
+    renderLayout("/worker/unknown")
+    expect(await screen.findByText(/TABLERO - Campamento Alpha/i)).toBeInTheDocument()
+  })
+
+  it("uses the camp id fallback when camp details are unavailable", async () => {
+    svc.getCampById.mockResolvedValue({ camp: null, metrics: workerCamp.metrics })
+
+    renderLayout("/worker/profile")
+
+    expect(await screen.findByText("CAMPAMENTO #1")).toBeInTheDocument()
+    expect(await screen.findByText("#1")).toBeInTheDocument()
+  })
+
+  it("handles topbar logout", async () => {
+    renderLayout()
+
+    await userEvent.click(screen.getByRole("button", { name: /CERRAR/i }))
+    await waitFor(() => expect(screen.queryByText("ID-AUTH: VALIDADO")).not.toBeInTheDocument())
+  })
+
+  it("handles inactivity logout", async () => {
+    renderLayout()
+
+    await userEvent.click(screen.getByRole("button", { name: "IDLE LOGOUT" }))
+    await waitFor(() => expect(screen.queryByText("ID-AUTH: VALIDADO")).not.toBeInTheDocument())
   })
 })

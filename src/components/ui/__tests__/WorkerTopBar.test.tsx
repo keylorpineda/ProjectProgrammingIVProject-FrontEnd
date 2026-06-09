@@ -67,6 +67,7 @@ describe("WorkerTopBar", () => {
   })
 
   it.each([
+    [0, "RECLUTA"],
     [2, "SOLDADO"],
     [4, "VETERANO"],
     [7, "ELITE"],
@@ -78,5 +79,28 @@ describe("WorkerTopBar", () => {
       token: "tk",
     })
     expect(await screen.findByText(new RegExp(label))).toBeInTheDocument()
+  })
+
+  it("uses camp, label and user fallbacks", async () => {
+    renderWithProviders(<WorkerTopBar />, {
+      user: null,
+      token: null,
+    })
+
+    expect(screen.getByText("-")).toBeInTheDocument()
+    expect(screen.getByText("TABLERO")).toBeInTheDocument()
+    expect(screen.getByText("WORKER")).toBeInTheDocument()
+    expect(screen.getByText("W")).toBeInTheDocument()
+    expect(await screen.findByText(/RECLUTA/)).toBeInTheDocument()
+  })
+
+  it("uses the id initial and id label when username is absent", () => {
+    renderWithProviders(<WorkerTopBar campName="Alpha" activeLabel="TABLERO" />, {
+      user: { ...workerUser, username: "", id: "worker-77" },
+      token: "tk",
+    })
+
+    expect(screen.getByText("W")).toBeInTheDocument()
+    expect(screen.getByText("WORKER-77")).toBeInTheDocument()
   })
 })

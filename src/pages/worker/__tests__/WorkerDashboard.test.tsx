@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react"
+import { screen, waitFor } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import WorkerDashboard from "../WorkerDashboard"
@@ -71,5 +71,20 @@ describe("Worker → Dashboard", () => {
     expect(screen.getByText(/12 PERSONAS EN OPERACIÓN/i)).toBeInTheDocument()
     expect(screen.getByText(/COMIDA NET/i)).toBeInTheDocument()
     expect(screen.getByText(/AGUA NET/i)).toBeInTheDocument()
+  })
+  it("uses fallback camp and zero counters when data is sparse", async () => {
+    svc.getInventory.mockResolvedValue([])
+    svc.getProfessions.mockResolvedValue([])
+    svc.getDailyBalance.mockResolvedValue(null)
+    svc.getMyBadges.mockResolvedValue([])
+    svc.getCampById.mockResolvedValue({ camp: null, metrics: workerCamp.metrics })
+
+    renderPage()
+
+    expect(await screen.findByText(/TABLERO - CAMPAMENTO #1/i)).toBeInTheDocument()
+    await waitFor(() =>
+      expect(screen.queryByText("BALANCE DIARIO DEL SECTOR")).not.toBeInTheDocument(),
+    )
+    await waitFor(() => expect(screen.getByText("0 criticas / 0 en deficit")).toBeInTheDocument())
   })
 })
