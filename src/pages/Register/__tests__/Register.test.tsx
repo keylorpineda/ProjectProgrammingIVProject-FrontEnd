@@ -246,4 +246,47 @@ describe("Register page", () => {
       mockedLogin.mockResolvedValueOnce({ access_token: "tk", user: workerUser })
     })
   })
+
+  describe("background motion", () => {
+    it("updates motion values on mousemove through requestAnimationFrame", () => {
+      const originalInnerWidth = window.innerWidth
+      const originalInnerHeight = window.innerHeight
+      Object.defineProperty(window, "innerWidth", { configurable: true, value: 1200 })
+      Object.defineProperty(window, "innerHeight", { configurable: true, value: 600 })
+      const requestSpy = vi
+        .spyOn(window, "requestAnimationFrame")
+        .mockImplementation((callback) => {
+          callback(1)
+          return 1
+        })
+
+      renderRegister()
+      document.dispatchEvent(new MouseEvent("mousemove", { clientX: 900, clientY: 150 }))
+
+      expect(requestSpy).toHaveBeenCalledTimes(1)
+
+      requestSpy.mockRestore()
+      Object.defineProperty(window, "innerWidth", { configurable: true, value: originalInnerWidth })
+      Object.defineProperty(window, "innerHeight", {
+        configurable: true,
+        value: originalInnerHeight,
+      })
+    })
+
+    it("ignores mousemove while a frame is pending and cancels it on unmount", () => {
+      const requestSpy = vi.spyOn(window, "requestAnimationFrame").mockReturnValue(77)
+      const cancelSpy = vi.spyOn(window, "cancelAnimationFrame").mockImplementation(() => {})
+
+      const { unmount } = renderRegister()
+      document.dispatchEvent(new MouseEvent("mousemove", { clientX: 10, clientY: 10 }))
+      document.dispatchEvent(new MouseEvent("mousemove", { clientX: 20, clientY: 20 }))
+      unmount()
+
+      expect(requestSpy).toHaveBeenCalledTimes(1)
+      expect(cancelSpy).toHaveBeenCalledWith(77)
+
+      requestSpy.mockRestore()
+      cancelSpy.mockRestore()
+    })
+  })
 })

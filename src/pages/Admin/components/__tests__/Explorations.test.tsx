@@ -97,7 +97,7 @@ describe("Admin → Explorations", () => {
       expect(
         await screen.findByRole("heading", { name: /BITÁCORAS DE CAMPO/i }),
       ).toBeInTheDocument()
-      expect(screen.getByRole("button", { name: /\+ NUEVA EXPEDICIÓN/i })).toBeInTheDocument()
+      expect(screen.getByRole("button", { name: /\+ NUEVA/i })).toBeInTheDocument()
     })
 
     it("shows the scheduled exploration", async () => {
@@ -119,8 +119,8 @@ describe("Admin → Explorations", () => {
       mockedCreate.mockResolvedValue({ ...explorations[0], id: "999" })
 
       renderExplorations()
-      await user.click(await screen.findByRole("button", { name: /\+ NUEVA EXPEDICIÓN/i }))
-      const modal = (await screen.findByRole("heading", { name: /^NUEVA EXPEDICIÓN$/i })).closest(
+      await user.click(await screen.findByRole("button", { name: /\+ NUEVA/i }))
+      const modal = (await screen.findByRole("heading", { name: /^NUEVA/i })).closest(
         ".modal-card",
       ) as HTMLElement
 
@@ -160,8 +160,8 @@ describe("Admin → Explorations", () => {
     it("blocks submit when name is missing", async () => {
       const user = userEvent.setup()
       renderExplorations()
-      await user.click(await screen.findByRole("button", { name: /\+ NUEVA EXPEDICIÓN/i }))
-      const modal = (await screen.findByRole("heading", { name: /^NUEVA EXPEDICIÓN$/i })).closest(
+      await user.click(await screen.findByRole("button", { name: /\+ NUEVA/i }))
+      const modal = (await screen.findByRole("heading", { name: /^NUEVA/i })).closest(
         ".modal-card",
       ) as HTMLElement
       await user.click(within(modal).getByRole("button", { name: /CREAR EXPEDICIÓN/i }))
@@ -169,6 +169,77 @@ describe("Admin → Explorations", () => {
         within(modal).getByText(/El nombre de la expedición es obligatorio/i),
       ).toBeInTheDocument()
       expect(mockedCreate).not.toHaveBeenCalled()
+    })
+
+    it("validates missing departure date, invalid estimated days, and missing team", async () => {
+      const user = userEvent.setup()
+      renderExplorations()
+      await user.click(await screen.findByRole("button", { name: /\+ NUEVA/i }))
+      const modal = (await screen.findByRole("heading", { name: /^NUEVA/i })).closest(
+        ".modal-card",
+      ) as HTMLElement
+
+      await user.type(within(modal).getByPlaceholderText(/Ej:/i), "Test exp")
+      await user.click(within(modal).getByRole("button", { name: /CREAR/i }))
+      expect(within(modal).getByText(/La fecha de salida es obligatoria/i)).toBeInTheDocument()
+
+      const dateInputs = within(modal)
+        .getAllByDisplayValue("")
+        .filter((el) => (el as HTMLInputElement).type === "date") as HTMLInputElement[]
+      await user.type(dateInputs[0], "2026-03-01")
+      await user.click(within(modal).getByRole("button", { name: /CREAR/i }))
+      expect(
+        within(modal).getByText(/Los d.*as estimados deben ser al menos 1/i),
+      ).toBeInTheDocument()
+
+      const numberInputs = within(modal).getAllByRole("spinbutton") as HTMLInputElement[]
+      await user.clear(numberInputs[0])
+      await user.type(numberInputs[0], "2")
+      await user.click(within(modal).getByRole("button", { name: /CREAR/i }))
+      expect(
+        within(modal).getByText(/Agrega al menos un integrante del equipo/i),
+      ).toBeInTheDocument()
+      expect(mockedCreate).not.toHaveBeenCalled()
+    })
+
+    it("adds and removes team/resource rows before creating", async () => {
+      const user = userEvent.setup()
+      renderExplorations()
+      await user.click(await screen.findByRole("button", { name: /\+ NUEVA/i }))
+      const modal = (await screen.findByRole("heading", { name: /^NUEVA/i })).closest(
+        ".modal-card",
+      ) as HTMLElement
+
+      await user.click(within(modal).getByRole("button", { name: /\+ AGREGAR INTEGRANTE/i }))
+      expect(within(modal).getAllByRole("combobox").length).toBeGreaterThanOrEqual(2)
+      await user.click(within(modal).getAllByRole("button", { name: /✕/i })[0])
+
+      expect(within(modal).getAllByRole("combobox").length).toBeGreaterThanOrEqual(1)
+    })
+
+    it("shows an error when createExploration rejects", async () => {
+      const user = userEvent.setup()
+      mockedCreate.mockRejectedValue(new Error("server"))
+
+      renderExplorations()
+      await user.click(await screen.findByRole("button", { name: /\+ NUEVA/i }))
+      const modal = (await screen.findByRole("heading", { name: /^NUEVA/i })).closest(
+        ".modal-card",
+      ) as HTMLElement
+
+      await user.type(within(modal).getByPlaceholderText(/Ej:/i), "Test exp")
+      const dateInputs = within(modal)
+        .getAllByDisplayValue("")
+        .filter((el) => (el as HTMLInputElement).type === "date") as HTMLInputElement[]
+      await user.type(dateInputs[0], "2026-03-01")
+      const numberInputs = within(modal).getAllByRole("spinbutton") as HTMLInputElement[]
+      await user.clear(numberInputs[0])
+      await user.type(numberInputs[0], "2")
+      await user.selectOptions(within(modal).getAllByRole("combobox")[0], "10")
+
+      await user.click(within(modal).getByRole("button", { name: /CREAR/i }))
+
+      expect(await within(modal).findByText(/No se pudo crear/i)).toBeInTheDocument()
     })
   })
 
@@ -190,6 +261,20 @@ describe("Admin → Explorations", () => {
       await user.click(await screen.findByRole("button", { name: /CANCELAR EXPEDICIÓN/i }))
       await user.click(await screen.findByRole("button", { name: /CONFIRMAR CANCELACIÓN/i }))
       await waitFor(() => expect(mockedCancel).toHaveBeenCalledWith("200"))
+    })
+    it("shows errors for failed scheduled actions", async () => {
+      const user = userEvent.setup()
+
+      mockedDepart.mockRejectedValueOnce(new Error("depart failed"))
+      renderExplorations()
+      await user.click(await screen.findByText(/zona norte/i))
+      await user.click(await screen.findByRole("button", { name: /MARCAR SALIDA/i }))
+      expect(await screen.findByText(/No se pudo marcar la salida/i)).toBeInTheDocument()
+
+      mockedCancel.mockRejectedValueOnce(new Error("cancel failed"))
+      await user.click(await screen.findByRole("button", { name: /CANCELAR/i }))
+      await user.click(await screen.findByRole("button", { name: /CONFIRMAR/i }))
+      expect(await screen.findByText(/No se pudo cancelar/i)).toBeInTheDocument()
     })
   })
 

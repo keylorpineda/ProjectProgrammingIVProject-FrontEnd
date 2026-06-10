@@ -366,5 +366,114 @@ describe("Admin → AdmissionsBook (coverage of uncovered branches)", () => {
       expect(screen.getByText(/Detalle general/i)).toBeInTheDocument()
       expect(screen.getByText(/Texto final adicional/i)).toBeInTheDocument()
     })
+
+    it("translates common English AI phrases before rendering the analysis", async () => {
+      const translated = {
+        ...baseAdmission,
+        id: "901",
+        justification:
+          "Overall assessment: The candidate has strong health. Recommendation: Approved. Warning: low confidence.",
+      }
+      mockedGetPending.mockResolvedValue({
+        data: [translated],
+        total: 1,
+        page: 1,
+        limit: 100,
+        totalPages: 1,
+      })
+      mockedGetById.mockResolvedValue(translated)
+
+      renderAdmissions()
+
+      expect(await screen.findByText(/general/i)).toBeInTheDocument()
+      expect(screen.getByText(/El candidato tiene/i)).toBeInTheDocument()
+      expect(screen.getByText(/Aprobado/i)).toBeInTheDocument()
+      expect(screen.getByText(/Advertencia/i)).toBeInTheDocument()
+    })
+  })
+
+  describe("camp assignment modal", () => {
+    it("can close the camp picker with CANCELAR", async () => {
+      const user = userEvent.setup()
+
+      renderAdmissions()
+      await waitFor(() => expect(mockedGetById).toHaveBeenCalled())
+
+      await user.click(await screen.findByRole("button", { name: /aceptar/i }))
+      expect(await screen.findByText(/ASIGNAR CAMPAMENTO DESTINO/i)).toBeInTheDocument()
+
+      await user.click(screen.getByRole("button", { name: /^CANCELAR$/i }))
+
+      await waitFor(() =>
+        expect(screen.queryByText(/ASIGNAR CAMPAMENTO DESTINO/i)).not.toBeInTheDocument(),
+      )
+      expect(screen.getByRole("button", { name: /aceptar/i })).toBeInTheDocument()
+    })
+
+    it("selects another camp from the keyboard before confirming", async () => {
+      const user = userEvent.setup()
+      mockedReview.mockResolvedValue({
+        admission: { ...baseAdmission, status: "ACCEPTED" },
+        person: { id: "999" },
+      })
+
+      renderAdmissions()
+      await waitFor(() => expect(mockedGetById).toHaveBeenCalled())
+
+      await user.click(await screen.findByRole("button", { name: /aceptar/i }))
+      const campOptions = await screen.findAllByRole("button")
+      const campOption = campOptions.find((button) =>
+        button.textContent?.toLowerCase().includes("campamento"),
+      )
+      expect(campOption).toBeTruthy()
+      campOption?.focus()
+      await user.keyboard("{Enter}")
+      await user.click(screen.getByRole("button", { name: /CONFIRMAR INGRESO/i }))
+
+      await waitFor(() => expect(mockedReview).toHaveBeenCalled())
+      const [, body] = mockedReview.mock.calls[0]
+      expect(body.decision).toBe("accepted")
+      expect(body.assign_to_camp_id).toEqual(expect.any(Number))
+    })
+  })
+
+  describe("account creation edge cases", () => {
+    it("shows the no-email processed view and archives without calling createAdmissionAccount", async () => {
+      const user = userEvent.setup()
+      mockedReview.mockResolvedValue({
+        admission: { ...baseAdmission, status: "ACCEPTED" },
+        person: { id: "999" },
+      })
+      mockedGetPending.mockResolvedValue({
+        data: [
+          {
+            ...baseAdmission,
+            candidate_data: { ...baseCandidate, contact_email: null },
+          },
+        ],
+        total: 1,
+        page: 1,
+        limit: 100,
+        totalPages: 1,
+      })
+      mockedGetById.mockResolvedValue({
+        ...baseAdmission,
+        candidate_data: { ...baseCandidate, contact_email: null },
+      })
+
+      renderAdmissions()
+      await waitFor(() => expect(mockedGetById).toHaveBeenCalled())
+
+      await user.click(await screen.findByRole("button", { name: /aceptar/i }))
+      await user.click(await screen.findByRole("button", { name: /CONFIRMAR INGRESO/i }))
+
+      expect(await screen.findByText(/Sin correo registrado/i)).toBeInTheDocument()
+      await user.click(await screen.findByRole("button", { name: /ARCHIVAR EXPEDIENTE/i }))
+
+      expect(
+        await screen.findByText(/NO HAY ADMISIONES PENDIENTES EN EL SISTEMA/i),
+      ).toBeInTheDocument()
+      expect(mockedCreateAccount).not.toHaveBeenCalled()
+    })
   })
 })

@@ -228,6 +228,49 @@ describe("Login page", () => {
     })
   })
 
+  describe("background motion", () => {
+    it("updates motion values on mousemove through requestAnimationFrame", () => {
+      const originalInnerWidth = window.innerWidth
+      const originalInnerHeight = window.innerHeight
+      Object.defineProperty(window, "innerWidth", { configurable: true, value: 1000 })
+      Object.defineProperty(window, "innerHeight", { configurable: true, value: 500 })
+      const requestSpy = vi
+        .spyOn(window, "requestAnimationFrame")
+        .mockImplementation((callback) => {
+          callback(1)
+          return 1
+        })
+
+      renderLogin()
+      document.dispatchEvent(new MouseEvent("mousemove", { clientX: 750, clientY: 125 }))
+
+      expect(requestSpy).toHaveBeenCalledTimes(1)
+
+      requestSpy.mockRestore()
+      Object.defineProperty(window, "innerWidth", { configurable: true, value: originalInnerWidth })
+      Object.defineProperty(window, "innerHeight", {
+        configurable: true,
+        value: originalInnerHeight,
+      })
+    })
+
+    it("ignores mousemove while a frame is pending and cancels it on unmount", () => {
+      const requestSpy = vi.spyOn(window, "requestAnimationFrame").mockReturnValue(99)
+      const cancelSpy = vi.spyOn(window, "cancelAnimationFrame").mockImplementation(() => {})
+
+      const { unmount } = renderLogin()
+      document.dispatchEvent(new MouseEvent("mousemove", { clientX: 10, clientY: 10 }))
+      document.dispatchEvent(new MouseEvent("mousemove", { clientX: 20, clientY: 20 }))
+      unmount()
+
+      expect(requestSpy).toHaveBeenCalledTimes(1)
+      expect(cancelSpy).toHaveBeenCalledWith(99)
+
+      requestSpy.mockRestore()
+      cancelSpy.mockRestore()
+    })
+  })
+
   describe("password visibility toggle", () => {
     it("password field is type=password by default", async () => {
       renderLogin()
