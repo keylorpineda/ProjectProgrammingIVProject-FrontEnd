@@ -92,6 +92,22 @@ describe("Admin → Explorations", () => {
   })
 
   describe("listing", () => {
+    it("shows the loading state while explorations are pending", async () => {
+      mockedGetExplorations.mockImplementation(() => new Promise(() => {}))
+
+      renderExplorations()
+
+      expect(await screen.findByText(/CARGANDO BIT/i)).toBeInTheDocument()
+    })
+
+    it("shows an error when explorations cannot be loaded", async () => {
+      mockedGetExplorations.mockRejectedValue(new Error("offline"))
+
+      renderExplorations()
+
+      expect(await screen.findByText(/No se pudieron cargar/i)).toBeInTheDocument()
+    })
+
     it("renders the page heading and 'NUEVA EXPEDICIÓN' button", async () => {
       renderExplorations()
       expect(
@@ -104,6 +120,39 @@ describe("Admin → Explorations", () => {
       renderExplorations()
       expect(await screen.findByText(/Búsqueda zona norte/i)).toBeInTheDocument()
       expect(screen.getAllByText(/PROGRAMADA/i).length).toBeGreaterThanOrEqual(1)
+    })
+
+    it("renders fallback values for unknown status, invalid date, and detached catalog data", async () => {
+      const user = userEvent.setup()
+      mockedGetExplorations.mockResolvedValue([
+        {
+          ...explorations[0],
+          id: "fallback-1",
+          name: "Ruta sin catalogo",
+          status: "mystery",
+          departure_date: "fecha-desconocida",
+          destination_description: "Zona escrita a mano",
+          notes: null,
+          explorationPersons: [{ person_id: "P-404", person: null }],
+          explorationResources: [
+            {
+              resource_id: "R-404",
+              resource: null,
+              flow: "out",
+              quantity: 2,
+            },
+          ],
+        },
+      ])
+
+      renderExplorations()
+
+      await user.click(await screen.findByText(/Ruta sin catalogo/i))
+      expect(screen.getByText(/\[MYSTERY\]/i)).toBeInTheDocument()
+      expect(screen.getByText(/SALIDA: fecha-desconocida/i)).toBeInTheDocument()
+      expect(screen.getAllByText(/P-404/i).length).toBeGreaterThan(0)
+      expect(screen.getAllByText(/R-404/i).length).toBeGreaterThan(0)
+      expect(screen.getAllByText(/Zona escrita a mano/i).length).toBeGreaterThan(0)
     })
 
     it("renders 'SIN EXPEDICIONES REGISTRADAS' on empty list", async () => {
@@ -369,6 +418,30 @@ describe("Admin → Explorations", () => {
       await user.click(removeBtn)
 
       expect(within(returnModal).queryByRole("combobox")).toBeNull()
+    })
+
+    it("shows an error when returnExploration rejects", async () => {
+      const user = userEvent.setup()
+      mockedGetExplorations.mockResolvedValue([{ ...explorations[0], status: "in_progress" }])
+      mockedReturn.mockRejectedValue(new Error("return failed"))
+
+      renderExplorations()
+      await user.click(await screen.findByText(/zona norte/i))
+      await user.click(await screen.findByRole("button", { name: /REGISTRAR REGRESO/i }))
+
+      const returnModal = (
+        await screen.findByRole("heading", { name: /REGISTRAR REGRESO/i })
+      ).closest(".modal-card") as HTMLElement
+
+      await user.type(
+        within(returnModal).getByPlaceholderText(/Observaciones del retorno/i),
+        "Sin novedades.",
+      )
+      await user.click(within(returnModal).getByRole("button", { name: /CONFIRMAR REGRESO/i }))
+
+      expect(
+        await within(returnModal).findByText(/No se pudo registrar el regreso/i),
+      ).toBeInTheDocument()
     })
   })
 

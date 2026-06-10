@@ -412,6 +412,15 @@ describe("TravelExplorations", () => {
     expect(screen.getByText(/Sin personal capacitado/i)).toBeInTheDocument()
   })
 
+  it("shows the loading-personnel state when the people list is empty", async () => {
+    personsData = []
+
+    renderExplorations()
+    await openNewExplorationModal()
+
+    expect(screen.getByText(/Cargando personas disponibles/i)).toBeInTheDocument()
+  })
+
   it("handles form submission for a new exploration", async () => {
     renderExplorations()
     await openNewExplorationModal()
@@ -544,6 +553,24 @@ describe("TravelExplorations", () => {
     fireEvent.click(screen.getByText(/Cancelar/i))
     fireEvent.click(screen.getByText("Aceptar"))
     expect(mutationMocks.cancel).toHaveBeenCalledWith("e2")
+  })
+
+  it("marks departure immediately when the scheduled departure date has passed", () => {
+    explorationsData = [
+      {
+        ...baseExplorations[1],
+        id: "past-scheduled",
+        name: "Past Scheduled",
+        departure_date: "2020-01-01T00:00:00.000Z",
+      },
+    ]
+
+    renderExplorations()
+
+    fireEvent.click(screen.getAllByText(/Past Scheduled/i)[0])
+    fireEvent.click(screen.getByText(/Marcar Salida/i))
+
+    expect(mutationMocks.depart).toHaveBeenCalledWith("past-scheduled")
   })
 
   it("closes an exploration confirmation dialog without confirming", () => {

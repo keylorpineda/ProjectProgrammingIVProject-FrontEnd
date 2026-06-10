@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { render, screen, waitFor } from "@testing-library/react"
+import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { MemoryRouter } from "react-router-dom"
 import { beforeEach, describe, expect, it, vi } from "vitest"
@@ -337,6 +337,37 @@ describe("Admin → AdmissionsBook (coverage of uncovered branches)", () => {
         await screen.findByText(/mateo vargas/i, undefined, { timeout: 3000 }),
       ).toBeInTheDocument()
     })
+
+    it("processes demo rejection with the local archive timeout", async () => {
+      mockedGetPending.mockResolvedValue(emptyPage)
+      mockedGetAutoDecided.mockResolvedValue([])
+
+      renderAdmissions()
+      expect(await screen.findByText(/mateo vargas/i)).toBeInTheDocument()
+
+      fireEvent.click(await screen.findByRole("button", { name: /rechazar/i }))
+
+      await waitFor(() => expect(screen.queryByText(/mateo vargas/i)).not.toBeInTheDocument(), {
+        timeout: 2500,
+      })
+      expect(screen.getAllByText(/lucia silva/i).length).toBeGreaterThanOrEqual(1)
+    })
+
+    it("processes demo approval and opens the processed account view", async () => {
+      mockedGetPending.mockResolvedValue(emptyPage)
+      mockedGetAutoDecided.mockResolvedValue([])
+
+      renderAdmissions()
+      expect(await screen.findByText(/mateo vargas/i)).toBeInTheDocument()
+
+      fireEvent.click(await screen.findByRole("button", { name: /aceptar/i }))
+      fireEvent.click(await screen.findByRole("button", { name: /CONFIRMAR INGRESO/i }))
+
+      expect(
+        await screen.findByText(/^RESULTADO$/i, undefined, { timeout: 2500 }),
+      ).toBeInTheDocument()
+      expect(screen.getByRole("button", { name: /crear cuenta/i })).toBeInTheDocument()
+    })
   })
 
   describe("AI analysis formatting", () => {
@@ -438,6 +469,67 @@ describe("Admin → AdmissionsBook (coverage of uncovered branches)", () => {
   })
 
   describe("account creation edge cases", () => {
+    it("shows the backend warning when the account exists already", async () => {
+      const user = userEvent.setup()
+      mockedReview.mockResolvedValue({
+        admission: { ...baseAdmission, status: "ACCEPTED" },
+        person: { id: "999" },
+      })
+      mockedCreateAccount.mockRejectedValue({
+        response: { data: { message: "already exists" } },
+      })
+
+      renderAdmissions()
+      await waitFor(() => expect(mockedGetById).toHaveBeenCalled())
+
+      await user.click(await screen.findByRole("button", { name: /aceptar/i }))
+      await user.click(await screen.findByRole("button", { name: /CONFIRMAR INGRESO/i }))
+      await user.click(await screen.findByRole("button", { name: /crear cuenta/i }))
+
+      expect(await screen.findByText(/Ya existe una cuenta/i)).toBeInTheDocument()
+    })
+
+    it("marks the account as created when only the email delivery fails", async () => {
+      const user = userEvent.setup()
+      mockedReview.mockResolvedValue({
+        admission: { ...baseAdmission, status: "ACCEPTED" },
+        person: { id: "999" },
+      })
+      mockedCreateAccount.mockRejectedValue({
+        response: { data: { message: "correo no pudo enviarse" } },
+      })
+
+      renderAdmissions()
+      await waitFor(() => expect(mockedGetById).toHaveBeenCalled())
+
+      await user.click(await screen.findByRole("button", { name: /aceptar/i }))
+      await user.click(await screen.findByRole("button", { name: /CONFIRMAR INGRESO/i }))
+      await user.click(await screen.findByRole("button", { name: /crear cuenta/i }))
+
+      expect(await screen.findByText(/CUENTA CREADA EXITOSAMENTE/i)).toBeInTheDocument()
+      expect(screen.getByText(/correo no se pudo enviar/i)).toBeInTheDocument()
+    })
+
+    it("shows a generic backend account creation error", async () => {
+      const user = userEvent.setup()
+      mockedReview.mockResolvedValue({
+        admission: { ...baseAdmission, status: "ACCEPTED" },
+        person: { id: "999" },
+      })
+      mockedCreateAccount.mockRejectedValue({
+        response: { data: { message: "backend exploded" } },
+      })
+
+      renderAdmissions()
+      await waitFor(() => expect(mockedGetById).toHaveBeenCalled())
+
+      await user.click(await screen.findByRole("button", { name: /aceptar/i }))
+      await user.click(await screen.findByRole("button", { name: /CONFIRMAR INGRESO/i }))
+      await user.click(await screen.findByRole("button", { name: /crear cuenta/i }))
+
+      expect(await screen.findByText(/Error: backend exploded/i)).toBeInTheDocument()
+    })
+
     it("shows the no-email processed view and archives without calling createAdmissionAccount", async () => {
       const user = userEvent.setup()
       mockedReview.mockResolvedValue({
@@ -474,6 +566,83 @@ describe("Admin → AdmissionsBook (coverage of uncovered branches)", () => {
         await screen.findByText(/NO HAY ADMISIONES PENDIENTES EN EL SISTEMA/i),
       ).toBeInTheDocument()
       expect(mockedCreateAccount).not.toHaveBeenCalled()
+    })
+  })
+
+  describe("review actions and pagination", () => {
+    it("moves to the next and previous admission pages", async () => {
+      const user = userEvent.setup()
+      const secondAdmission = {
+        ...baseAdmission,
+        id: "556",
+        tracking_code: "ADM-TEST-002",
+        candidate_data: { ...baseCandidate, first_name: "Kyle", last_name: "Reese" },
+      }
+      mockedGetPending.mockResolvedValue({
+        data: [baseAdmission, secondAdmission],
+        total: 2,
+        page: 1,
+        limit: 100,
+        totalPages: 1,
+      })
+      mockedGetById.mockImplementation((id: string) =>
+        Promise.resolve(id === "556" ? secondAdmission : baseAdmission),
+      )
+
+      renderAdmissions()
+
+      expect(await screen.findByText(/Sarah Connor/i)).toBeInTheDocument()
+      await user.click(screen.getByRole("button", { name: /SIGUIENTE/i }))
+      expect(await screen.findByText(/Kyle Reese/i)).toBeInTheDocument()
+
+      await new Promise((resolve) => setTimeout(resolve, 900))
+      await user.click(screen.getByRole("button", { name: /ANTERIOR/i }))
+      expect(await screen.findByText(/Sarah Connor/i)).toBeInTheDocument()
+    })
+
+    it("shows an error when rejecting fails", async () => {
+      const user = userEvent.setup()
+      mockedReview.mockRejectedValue(new Error("reject failed"))
+
+      renderAdmissions()
+      await waitFor(() => expect(mockedGetById).toHaveBeenCalled())
+
+      await user.click(await screen.findByRole("button", { name: /rechazar/i }))
+
+      expect(await screen.findByText(/Error al procesar el rechazo/i)).toBeInTheDocument()
+    })
+
+    it("shows an error when accepting fails", async () => {
+      const user = userEvent.setup()
+      mockedReview.mockRejectedValue(new Error("accept failed"))
+
+      renderAdmissions()
+      await waitFor(() => expect(mockedGetById).toHaveBeenCalled())
+
+      await user.click(await screen.findByRole("button", { name: /aceptar/i }))
+      await user.click(await screen.findByRole("button", { name: /CONFIRMAR INGRESO/i }))
+
+      expect(await screen.findByText(/Error al aprobar/i)).toBeInTheDocument()
+    })
+
+    it("closes the camp picker with the header close button", async () => {
+      const user = userEvent.setup()
+
+      renderAdmissions()
+      await waitFor(() => expect(mockedGetById).toHaveBeenCalled())
+
+      await user.click(await screen.findByRole("button", { name: /aceptar/i }))
+      expect(await screen.findByText(/ASIGNAR CAMPAMENTO DESTINO/i)).toBeInTheDocument()
+
+      const closeButton = screen
+        .getAllByRole("button")
+        .find((button) => button.textContent?.trim() === "✕")
+      expect(closeButton).toBeTruthy()
+      await user.click(closeButton as HTMLElement)
+
+      await waitFor(() =>
+        expect(screen.queryByText(/ASIGNAR CAMPAMENTO DESTINO/i)).not.toBeInTheDocument(),
+      )
     })
   })
 })

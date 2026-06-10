@@ -222,6 +222,18 @@ describe("AdmissionNew — intro phase", () => {
       expect(screen.queryByText(/sistema en espera/i)).not.toBeInTheDocument()
     })
   })
+
+  it("transitions to the form phase when the intro overlay receives Enter", async () => {
+    const user = userEvent.setup()
+    renderForm()
+    const overlay = screen.getByRole("button", { name: /haga clic/i })
+    overlay.focus()
+    await user.keyboard("{Enter}")
+
+    await waitFor(() => {
+      expect(screen.queryByText(/sistema en espera/i)).not.toBeInTheDocument()
+    })
+  })
 })
 
 describe("AdmissionNew — age validation", () => {
@@ -256,6 +268,22 @@ describe("AdmissionNew — photo validation", () => {
     submitForm()
     await waitFor(() => {
       expect(screen.getByText("Debes adjuntar una imagen valida")).toBeInTheDocument()
+    })
+  })
+
+  it("clears the photo error when the user selects a new file", async () => {
+    const user = userEvent.setup()
+    renderForm()
+    submitForm()
+    await waitFor(() => {
+      expect(screen.getByText("La foto es obligatoria")).toBeInTheDocument()
+    })
+
+    const fileInput = document.getElementById("foto") as HTMLInputElement
+    await user.upload(fileInput, makePhoto())
+
+    await waitFor(() => {
+      expect(screen.queryByText("La foto es obligatoria")).not.toBeInTheDocument()
     })
   })
 })
@@ -305,6 +333,40 @@ describe("AdmissionNew — API error handling", () => {
       () => expect(screen.getByText(/no se pudo registrar la admision/i)).toBeInTheDocument(),
       { timeout: 5000 },
     )
+  }, 10000)
+
+  it("shows the API message when submitAdmission rejects with an axios payload", async () => {
+    const user = userEvent.setup()
+    mockedSubmit.mockRejectedValueOnce({
+      isAxiosError: true,
+      response: { data: { message: "Cedula ya registrada" } },
+    })
+    renderForm()
+    await fillAllFields(user)
+    submitForm()
+
+    await waitFor(() => expect(screen.getByText(/Cedula ya registrada/i)).toBeInTheDocument(), {
+      timeout: 5000,
+    })
+  }, 10000)
+
+  it("continues registration without photo_url when image upload fails", async () => {
+    const user = userEvent.setup()
+    mockedUpload.mockRejectedValueOnce(new Error("upload failed"))
+    mockedSubmit.mockResolvedValueOnce({
+      tracking_code: "TRK-NO-PHOTO",
+      suggested_decision: "review",
+      score: 50,
+      status: "pending",
+    })
+
+    renderForm()
+    await fillAllFields(user)
+    submitForm()
+
+    await waitFor(() => expect(mockedSubmit).toHaveBeenCalled(), { timeout: 5000 })
+    expect(mockedSubmit).toHaveBeenCalledWith(expect.objectContaining({ photo_url: undefined }))
+    expect(await screen.findByText("TRK-NO-PHOTO")).toBeInTheDocument()
   }, 10000)
 })
 
