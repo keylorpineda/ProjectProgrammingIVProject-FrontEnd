@@ -297,7 +297,7 @@ describe("ManagerLogistics", () => {
     const submitBtn = screen.getByText(/FIRMAR ORDEN/i)
     await user.click(submitBtn)
 
-    expect(await screen.findByText(/Error al enviar solicitud/i)).toBeInTheDocument()
+    expect((await screen.findAllByText(/Error al enviar solicitud/i)).length).toBeGreaterThan(0)
   })
 
   it("closes the new request modal", async () => {
@@ -524,7 +524,7 @@ describe("ManagerLogistics", () => {
     const submitBtn = screen.getByText(/FIRMAR ORDEN/i)
     await user.click(submitBtn)
 
-    expect(await screen.findByText(/Error al enviar solicitud/i)).toBeInTheDocument()
+    expect((await screen.findAllByText(/Error al enviar solicitud/i)).length).toBeGreaterThan(0)
   })
 
   it("closes the new request modal", async () => {

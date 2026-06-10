@@ -14,6 +14,11 @@ vi.mock("../../store/useAuthStore", () => ({
 
 vi.mock("@/store/useAuthStore", () => ({
   useAuthStore: vi.fn(),
+  useTokenStore: vi.fn((selector) => selector({ token: "fake-token" })),
+}))
+
+vi.mock("@/hooks/useAlertSocket", () => ({
+  useAlertSocket: vi.fn(),
 }))
 
 const mockNavigate = vi.fn()
@@ -115,6 +120,8 @@ describe("DashboardManager", () => {
     expect(screen.getByText(/DOOMSDAY CENTRAL CONTROL PORTAL/i)).toBeInTheDocument()
     expect(screen.getByText(/COMMANDER/i)).toBeInTheDocument()
     expect(screen.getByTestId("mock-overview")).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText("BODEGA"))
     expect(screen.getByTestId("mock-inventory")).toBeInTheDocument()
   })
 

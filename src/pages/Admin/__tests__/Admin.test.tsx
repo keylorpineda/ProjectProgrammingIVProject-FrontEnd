@@ -14,6 +14,20 @@ import { getCamps } from "@/features/camps/services/camps.service"
 import { getDashboardMetrics } from "@/features/dashboard/services/dashboard.service"
 import { useAuthStore, useTokenStore } from "@/store/useAuthStore"
 
+vi.mock("react-leaflet-cluster", () => ({ default: () => null }), { virtual: true })
+vi.mock("@/features/map-test/components/ExplorationZoneMap", () => ({
+  ExplorationZoneMap: () => <div data-testid="exploration-zone-map" />,
+}))
+vi.mock("@/features/map-test/components/MapCoordPicker", () => ({
+  MapCoordPicker: () => <div data-testid="map-coord-picker" />,
+}))
+vi.mock("@/features/map-test/components/MapDashboardWrapper", () => ({
+  default: () => <div data-testid="map-dashboard-wrapper" />,
+}))
+vi.mock("@/features/map-test/components/TransferRouteMap", () => ({
+  TransferRouteMap: () => <div data-testid="transfer-route-map" />,
+}))
+
 vi.mock("@/features/auth/services/auth.service", () => ({
   login: vi.fn(),
   logout: vi.fn(),

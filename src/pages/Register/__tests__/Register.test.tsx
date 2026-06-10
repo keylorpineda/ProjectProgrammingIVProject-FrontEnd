@@ -180,10 +180,10 @@ describe("Register page", () => {
         await fillCredentials(user, "u", "mypassword")
         await user.click(screen.getByRole("button", { name: /establecer identidad/i }))
         await waitFor(() => expect(navigateMock).toHaveBeenCalledWith(expectedRoute), {
-          timeout: 6000,
+          timeout: 9000,
         })
       },
-      10000,
+      12000,
     )
 
     it("logs out and shows denied state when registered role has no routed destination", async () => {

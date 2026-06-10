@@ -390,4 +390,50 @@ describe("AdmissionNew — successful submission", () => {
       expect.objectContaining({ contact_email: "ellie@qz.com" }),
     )
   }, 10000)
+
+  it("compresses the selected photo before uploading when canvas succeeds", async () => {
+    const user = userEvent.setup()
+    const drawImage = vi.fn()
+    const getContext = vi
+      .spyOn(HTMLCanvasElement.prototype, "getContext")
+      .mockReturnValue({ drawImage } as unknown as CanvasRenderingContext2D)
+    const toBlob = vi
+      .spyOn(HTMLCanvasElement.prototype, "toBlob")
+      .mockImplementation(function (callback) {
+        callback(new Blob(["compressed"], { type: "image/jpeg" }))
+      })
+
+    vi.stubGlobal(
+      "Image",
+      class {
+        onload: (() => void) | null = null
+        onerror: (() => void) | null = null
+        width = 1600
+        height = 800
+        set src(_url: string) {
+          setTimeout(() => this.onload?.(), 0)
+        }
+      },
+    )
+
+    const uploadCallsBeforeSubmit = mockedUpload.mock.calls.length
+    renderForm()
+    await fillAllFields(user, "Tommy Miller", "tommy@example.com")
+    submitForm()
+
+    await waitFor(
+      () => expect(mockedUpload.mock.calls.length).toBeGreaterThan(uploadCallsBeforeSubmit),
+      {
+        timeout: 5000,
+      },
+    )
+    const uploadedFile = mockedUpload.mock.calls.at(-1)?.[0] as File
+    expect(uploadedFile.name).toBe("photo.jpg")
+    expect(uploadedFile.type).toBe("image/jpeg")
+    expect(drawImage).toHaveBeenCalled()
+    expect(toBlob).toHaveBeenCalledWith(expect.any(Function), "image/jpeg", 0.75)
+
+    getContext.mockRestore()
+    toBlob.mockRestore()
+  }, 10000)
 })
