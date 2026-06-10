@@ -10,7 +10,6 @@ interface WorkerGuardProps {
 function dashboardForRole(role: string | undefined): string | null {
   if (!role) return null
   const r = role.toLowerCase()
-  if (r === "worker") return null // handled by caller
   if (r.includes("admin")) return "/admin/dashboard"
   if (r === "camp_leader") return "/campleader/dashboard"
   if (r === "resource_manager") return "/camp-manager"

@@ -101,6 +101,9 @@ describe("Worker → Profile", () => {
     renderPage()
 
     const localBadge = await screen.findByRole("button", { name: /PRIMER TRABAJO/i })
+    fireEvent.keyDown(localBadge, { key: "Escape" })
+    expect(screen.queryByText("LOGRO DESBLOQUEADO")).not.toBeInTheDocument()
+
     fireEvent.keyDown(localBadge, { key: " " })
     expect(screen.getByText("LOGRO DESBLOQUEADO")).toBeInTheDocument()
     expect(screen.getByText("DEBUT")).toBeInTheDocument()
@@ -110,6 +113,21 @@ describe("Worker → Profile", () => {
 
     await userEvent.click(localBadge)
     expect(screen.getByText("LOGRO DESBLOQUEADO")).toBeInTheDocument()
+  })
+
+  it("renders the first-login badge from remote achievements", async () => {
+    svc.getMyBadges.mockResolvedValue([])
+    svc.getMyAchievements.mockResolvedValue([
+      { achievement_name: "PRIMER_TRABAJO", obtained_at: "2026-02-04T00:00:00.000Z" },
+    ])
+
+    renderPage()
+
+    const localBadge = await screen.findByRole("button", { name: /PRIMER TRABAJO/i })
+    await userEvent.click(localBadge)
+
+    expect(screen.getByText("LOGRO DESBLOQUEADO")).toBeInTheDocument()
+    expect(screen.getByText("DEBUT")).toBeInTheDocument()
   })
 
   it("opens a backend badge with keyboard and handles image load failure", async () => {

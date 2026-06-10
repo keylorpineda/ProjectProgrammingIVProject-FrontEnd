@@ -126,6 +126,11 @@ describe("workerService", () => {
       await expect(workerService.getAssignedResources()).resolves.toEqual([{ id: 2 }])
     })
 
+    it("getAssignedResources returns [] for an empty envelope", async () => {
+      ok({})
+      await expect(workerService.getAssignedResources()).resolves.toEqual([])
+    })
+
     it("getProfessions unwraps a { professions } envelope", async () => {
       ok({ professions: [{ id: "1" }] })
       await expect(workerService.getProfessions()).resolves.toEqual([{ id: "1" }])
@@ -150,6 +155,11 @@ describe("workerService", () => {
     it("getResources unwraps a { data } envelope", async () => {
       ok({ data: [{ id: "r2" }] })
       await expect(workerService.getResources()).resolves.toEqual([{ id: "r2" }])
+    })
+
+    it("getResources returns [] for an empty envelope", async () => {
+      ok({})
+      await expect(workerService.getResources()).resolves.toEqual([])
     })
 
     it("getInventory unwraps { inventory_items }", async () => {

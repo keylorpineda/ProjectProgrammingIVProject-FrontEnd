@@ -75,4 +75,14 @@ describe("WorkerGuard", () => {
     expect(screen.getByText("LOGIN PAGE")).toBeInTheDocument()
     expect(screen.queryByText("WORKER CONTENT")).toBeNull()
   })
+
+  it("sends an authenticated user without role back to login", () => {
+    renderWithProviders(tree, {
+      user: { ...workerUser, id: "11", role: undefined },
+      token: "tk",
+      route: "/worker/dashboard",
+    })
+
+    expect(screen.getByText("LOGIN PAGE")).toBeInTheDocument()
+  })
 })

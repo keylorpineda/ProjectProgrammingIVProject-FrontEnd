@@ -1,4 +1,4 @@
-import { screen, waitFor } from "@testing-library/react"
+import { act, screen, waitFor } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import WorkerDashboard from "../WorkerDashboard"
@@ -72,6 +72,19 @@ describe("Worker → Dashboard", () => {
     expect(screen.getByText(/COMIDA NET/i)).toBeInTheDocument()
     expect(screen.getByText(/AGUA NET/i)).toBeInTheDocument()
   })
+  it("renders negative food and positive water daily balance", async () => {
+    svc.getDailyBalance.mockResolvedValue({
+      ...workerBalance,
+      balance: { food: -5, water: 8 },
+    })
+
+    renderPage()
+
+    expect(await screen.findByText("BALANCE DIARIO DEL SECTOR")).toBeInTheDocument()
+    expect(screen.getByText("-5")).toBeInTheDocument()
+    expect(screen.getByText("+8")).toBeInTheDocument()
+  })
+
   it("uses fallback camp and zero counters when data is sparse", async () => {
     svc.getInventory.mockResolvedValue([])
     svc.getProfessions.mockResolvedValue([])
@@ -86,5 +99,26 @@ describe("Worker → Dashboard", () => {
       expect(screen.queryByText("BALANCE DIARIO DEL SECTOR")).not.toBeInTheDocument(),
     )
     await waitFor(() => expect(screen.getByText("0 criticas / 0 en deficit")).toBeInTheDocument())
+  })
+
+  it("refreshes the board clock on interval", async () => {
+    const setIntervalSpy = vi.spyOn(window, "setInterval").mockImplementation((callback) => {
+      act(() => {
+        callback()
+      })
+      return 1
+    })
+    const clearIntervalSpy = vi.spyOn(window, "clearInterval").mockImplementation(() => {})
+
+    const { unmount } = renderPage()
+
+    expect(await screen.findByText(/TABLERO - Campamento Alpha/i)).toBeInTheDocument()
+    expect(setIntervalSpy).toHaveBeenCalled()
+
+    unmount()
+    expect(clearIntervalSpy).toHaveBeenCalledWith(1)
+
+    setIntervalSpy.mockRestore()
+    clearIntervalSpy.mockRestore()
   })
 })

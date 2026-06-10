@@ -208,5 +208,25 @@ describe("useWorkerAPI", () => {
       expect(svc.getDailyBalance).not.toHaveBeenCalled()
       expect(svc.getCampExplorations).not.toHaveBeenCalled()
     })
+
+    it("camp-scoped hooks report a required camp id if manually refetched while disabled", async () => {
+      const { result: inventory } = renderHook(() => useInventory(null), { wrapper })
+      const { result: movements } = renderHook(() => useInventoryMovements(null), { wrapper })
+      const { result: balance } = renderHook(() => useDailyBalance(null), { wrapper })
+      const { result: camp } = renderHook(() => useCamp(null), { wrapper })
+      const { result: explorations } = renderHook(() => useCampExplorations(null), { wrapper })
+
+      const results = await Promise.all([
+        inventory.current.refetch(),
+        movements.current.refetch(),
+        balance.current.refetch(),
+        camp.current.refetch(),
+        explorations.current.refetch(),
+      ])
+
+      for (const result of results) {
+        expect(result.error).toMatchObject({ message: "Camp ID is required" })
+      }
+    })
   })
 })
