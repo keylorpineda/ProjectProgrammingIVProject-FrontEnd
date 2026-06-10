@@ -11,9 +11,14 @@ vi.mock("@/components/ui/InactivityGuard", () => ({
   default: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }))
 
+vi.mock("@/hooks/useAlertSocket", () => ({
+  useAlertSocket: vi.fn(),
+}))
+
 // Mock the Auth Store
 vi.mock("@/store/useAuthStore", () => ({
   useAuthStore: vi.fn(),
+  useTokenStore: vi.fn((selector) => selector({ token: "fake-token" })),
 }))
 
 const mockLogout = vi.fn()
@@ -41,7 +46,7 @@ describe("TravelManagerLayout", () => {
 
   it("renders the layout correctly for authenticated user", () => {
     render(
-      <MemoryRouter>
+      <MemoryRouter initialEntries={["/travel-manager/dashboard"]}>
         <TravelManagerLayout />
       </MemoryRouter>,
     )
@@ -117,5 +122,84 @@ describe("TravelManagerLayout", () => {
 
     // Check if the close sidebar button appears
     expect(screen.getAllByLabelText("Cerrar menú").length).toBeGreaterThan(0)
+  })
+
+  it("closes the mobile sidebar from the backdrop keyboard handler", () => {
+    render(
+      <MemoryRouter>
+        <TravelManagerLayout />
+      </MemoryRouter>,
+    )
+
+    fireEvent.click(screen.getByLabelText(/Abrir/i))
+    const closeBackdrop = screen.getAllByLabelText(/Cerrar/i)[1]
+
+    fireEvent.keyDown(closeBackdrop, { key: "Enter" })
+
+    expect(screen.queryAllByLabelText(/Cerrar/i)).toHaveLength(1)
+  })
+
+  it("renders fallback identity values when user data is partial", () => {
+    ;(useAuthStore as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
+      user: { id: "tm-fallback" },
+      logout: mockLogout,
+    })
+
+    render(
+      <MemoryRouter>
+        <TravelManagerLayout />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getAllByText("BASE::N/A").length).toBeGreaterThan(0)
+    expect(screen.getByText("TM-FALLBACK")).toBeInTheDocument()
+    expect(screen.getByText("T")).toBeInTheDocument()
+  })
+
+  it("closes the mobile sidebar from the backdrop space key", () => {
+    render(
+      <MemoryRouter>
+        <TravelManagerLayout />
+      </MemoryRouter>,
+    )
+
+    fireEvent.click(screen.getByLabelText(/Abrir/i))
+    const closeBackdrop = screen.getAllByLabelText(/Cerrar/i)[1]
+
+    fireEvent.keyDown(closeBackdrop, { key: " " })
+
+    expect(screen.queryAllByLabelText(/Cerrar/i)).toHaveLength(1)
+  })
+
+  it("keeps the mobile sidebar open for unrelated backdrop keys", () => {
+    render(
+      <MemoryRouter>
+        <TravelManagerLayout />
+      </MemoryRouter>,
+    )
+
+    fireEvent.click(screen.getByLabelText(/Abrir/i))
+    const closeBackdrop = screen.getAllByLabelText(/Cerrar/i)[1]
+
+    fireEvent.keyDown(closeBackdrop, { key: "Escape" })
+
+    expect(screen.queryAllByLabelText(/Cerrar/i)).toHaveLength(3)
+  })
+
+  it("renders anonymous identity fallbacks without user data", () => {
+    ;(useAuthStore as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
+      user: null,
+      logout: mockLogout,
+    })
+
+    render(
+      <MemoryRouter>
+        <TravelManagerLayout />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getAllByText("BASE::N/A").length).toBeGreaterThan(0)
+    expect(screen.getByText("TRAVEL MGR")).toBeInTheDocument()
+    expect(screen.getByText("T")).toBeInTheDocument()
   })
 })

@@ -12,6 +12,18 @@ vi.mock("@/store/useAuthStore", () => ({
   useAuthStore: vi.fn(),
 }))
 
+vi.mock("@/features/explorations/services/explorations.service", () => ({
+  getExplorations: vi.fn(() => []),
+}))
+
+vi.mock("@/features/persons/services/persons.service", () => ({
+  getPersons: vi.fn(() => ({ data: [] })),
+}))
+
+vi.mock("@/features/transfers/services/transfers.service", () => ({
+  getCampTransfers: vi.fn(() => []),
+}))
+
 // Mock React Query
 vi.mock("@tanstack/react-query", async () => {
   const actual = await vi.importActual("@tanstack/react-query")
@@ -34,14 +46,18 @@ describe("TravelProfile", () => {
     })
 
     // Mock useQuery to return some fake data to unlock some trophies and stats
-    ;(reactQuery.useQuery as ReturnType<typeof vi.fn>).mockImplementation(({ queryKey }) => {
-      if (queryKey[0] === "transfers")
-        return { data: Array(5).fill({ id: "t1", status: "completed" }) }
-      if (queryKey[0] === "persons") return { data: { data: Array(10).fill({ id: "p1" }) } }
-      if (queryKey[0] === "explorations")
-        return { data: Array(2).fill({ id: "e1", status: "active" }) }
-      return { data: [] }
-    })
+    ;(reactQuery.useQuery as ReturnType<typeof vi.fn>).mockImplementation(
+      ({ queryKey, queryFn }) => {
+        queryFn?.()
+
+        if (queryKey[0] === "transfers")
+          return { data: Array(5).fill({ id: "t1", status: "completed" }) }
+        if (queryKey[0] === "persons") return { data: { data: Array(10).fill({ id: "p1" }) } }
+        if (queryKey[0] === "explorations")
+          return { data: Array(2).fill({ id: "e1", status: "active" }) }
+        return { data: [] }
+      },
+    )
   })
 
   it("renders the profile id card correctly", () => {
@@ -104,5 +120,67 @@ describe("TravelProfile", () => {
 
     // The "CERRAR" button should disappear (since Framer motion is mocked/sync in tests mostly, or it might take a bit)
     // We'll just verify the click handler fires
+  })
+
+  it("renders maximum rank when transfer score is high", () => {
+    ;(reactQuery.useQuery as ReturnType<typeof vi.fn>).mockImplementation(
+      ({ queryKey, queryFn }) => {
+        queryFn?.()
+
+        if (queryKey[0] === "transfers")
+          return { data: Array.from({ length: 25 }, (_, id) => ({ id, status: "completed" })) }
+        if (queryKey[0] === "persons")
+          return { data: { data: Array.from({ length: 25 }, (_, id) => ({ id })) } }
+        if (queryKey[0] === "explorations")
+          return { data: Array.from({ length: 6 }, (_, id) => ({ id, status: "in_progress" })) }
+        return { data: [] }
+      },
+    )
+
+    render(
+      <MemoryRouter>
+        <TravelProfile />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getAllByText(/COMANDANTE MÓVIL/i).length).toBeGreaterThan(0)
+    expect(screen.getByText(/RANGO MÁXIMO/i)).toBeInTheDocument()
+    expect(screen.getByText("100% AL SIGUIENTE RANGO")).toBeInTheDocument()
+  })
+
+  it("opens a locked trophy with keyboard interaction", () => {
+    render(
+      <MemoryRouter>
+        <TravelProfile />
+      </MemoryRouter>,
+    )
+
+    const trophyButtons = screen.getAllByRole("button")
+    const lockedTrophy = trophyButtons[trophyButtons.length - 1]
+    fireEvent.keyDown(lockedTrophy, { key: "Enter" })
+
+    expect(screen.getByText("CERRAR")).toBeInTheDocument()
+    expect(screen.getAllByText(/BLOQUEADO/i).length).toBeGreaterThan(0)
+  })
+
+  it("renders profile fallbacks without user data", () => {
+    ;(useAuthStore as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
+      user: null,
+    })
+    ;(reactQuery.useQuery as ReturnType<typeof vi.fn>).mockImplementation(({ queryFn }) => {
+      queryFn?.()
+      return { data: undefined }
+    })
+
+    render(
+      <MemoryRouter>
+        <TravelProfile />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByText("TRV-TRV-0000")).toBeInTheDocument()
+    expect(screen.getByText("N/D")).toBeInTheDocument()
+    expect(screen.getByText("#?")).toBeInTheDocument()
+    expect(screen.getByText("0 PERSONAS")).toBeInTheDocument()
   })
 })
