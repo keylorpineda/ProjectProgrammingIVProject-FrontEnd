@@ -29,7 +29,15 @@ vi.mock("@/features/auth/services/auth.service", () => ({
   switchCamp: vi.fn(),
 }))
 vi.mock("@/features/map-test/components/MapCoordPicker", () => ({
-  MapCoordPicker: () => <div data-testid="map-coord-picker" />,
+  MapCoordPicker: ({ onChange }: { onChange: (lat: number, lng: number) => void }) => (
+    <button
+      data-testid="map-coord-picker"
+      type="button"
+      onClick={() => onChange(10.123456, -84.123456)}
+    >
+      Pick coordinates
+    </button>
+  ),
 }))
 
 const mockedGetCamps = getCamps as unknown as ReturnType<typeof vi.fn>
@@ -189,6 +197,47 @@ describe("Admin → Camps", () => {
       expect(body.max_capacity).toBeUndefined()
     })
 
+    it("sends location, foundation date and picked map coordinates", async () => {
+      const user = userEvent.setup()
+      mockedCreateCamp.mockResolvedValue({ ...camps[0], id: "999" })
+      renderCamps()
+      await user.click(await screen.findByRole("button", { name: /\+ NUEVO CAMPAMENTO/i }))
+      const modal = (await screen.findByRole("heading", { name: /^NUEVO CAMPAMENTO$/i })).closest(
+        ".modal-card",
+      ) as HTMLElement
+
+      await user.type(within(modal).getByPlaceholderText(/Nombre identificador/i), "Camp Norte")
+      await user.type(within(modal).getByPlaceholderText(/Sector norte/i), "Sector norte")
+      await user.click(within(modal).getByTestId("map-coord-picker"))
+      const dateInput = modal.querySelector('input[type="date"]') as HTMLInputElement
+      await user.type(dateInput, "2026-01-15")
+      await user.click(within(modal).getByRole("button", { name: /CREAR CAMPAMENTO/i }))
+
+      await waitFor(() => expect(mockedCreateCamp).toHaveBeenCalled())
+      const body = mockedCreateCamp.mock.calls[0][0]
+      expect(body.location_description).toBe("Sector norte")
+      expect(body.latitude).toBe(10.123456)
+      expect(body.longitude).toBe(-84.123456)
+      expect(body.foundation_date).toBe("2026-01-15")
+    })
+
+    it("closes the create modal with CANCELAR", async () => {
+      const user = userEvent.setup()
+      renderCamps()
+      await user.click(await screen.findByRole("button", { name: /\+ NUEVO CAMPAMENTO/i }))
+      expect(
+        await screen.findByRole("heading", { name: /^NUEVO CAMPAMENTO$/i }),
+      ).toBeInTheDocument()
+
+      await user.click(screen.getByRole("button", { name: /^CANCELAR$/i }))
+
+      await waitFor(() =>
+        expect(
+          screen.queryByRole("heading", { name: /^NUEVO CAMPAMENTO$/i }),
+        ).not.toBeInTheDocument(),
+      )
+    })
+
     it("shows a friendly error when the create API rejects", async () => {
       const user = userEvent.setup()
       mockedCreateCamp.mockRejectedValue(new Error("server down"))
@@ -231,6 +280,57 @@ describe("Admin → Camps", () => {
       expect(typeof body.longitude).toBe("number")
     })
 
+    it("EDITAR validates empty name before calling the API", async () => {
+      const user = userEvent.setup()
+      renderCamps()
+      await user.click(await screen.findByRole("heading", { name: /Campamento Alpha/i }))
+      await user.click(await screen.findByRole("button", { name: /^EDITAR$/i }))
+
+      const editModal = (
+        await screen.findByRole("heading", { name: /EDITAR CAMPAMENTO/i })
+      ).closest(".modal-card") as HTMLElement
+      await user.clear(within(editModal).getByPlaceholderText(/Nombre identificador/i))
+      await user.click(within(editModal).getByRole("button", { name: /GUARDAR CAMBIOS/i }))
+
+      expect(
+        within(editModal).getByText(/El nombre del campamento es obligatorio/i),
+      ).toBeInTheDocument()
+      expect(mockedUpdateCamp).not.toHaveBeenCalled()
+    })
+
+    it("EDITAR shows an error when updateCamp rejects", async () => {
+      const user = userEvent.setup()
+      mockedUpdateCamp.mockRejectedValue(new Error("500"))
+      renderCamps()
+      await user.click(await screen.findByRole("heading", { name: /Campamento Alpha/i }))
+      await user.click(await screen.findByRole("button", { name: /^EDITAR$/i }))
+
+      const editModal = (
+        await screen.findByRole("heading", { name: /EDITAR CAMPAMENTO/i })
+      ).closest(".modal-card") as HTMLElement
+      await user.click(within(editModal).getByRole("button", { name: /GUARDAR CAMBIOS/i }))
+
+      expect(
+        await within(editModal).findByText(/No se pudo actualizar el campamento/i),
+      ).toBeInTheDocument()
+    })
+
+    it("returns from edit modal to detail with CANCELAR", async () => {
+      const user = userEvent.setup()
+      renderCamps()
+      await user.click(await screen.findByRole("heading", { name: /Campamento Alpha/i }))
+      await user.click(await screen.findByRole("button", { name: /^EDITAR$/i }))
+
+      const editModal = (
+        await screen.findByRole("heading", { name: /EDITAR CAMPAMENTO/i })
+      ).closest(".modal-card") as HTMLElement
+      await user.click(within(editModal).getByRole("button", { name: /^CANCELAR$/i }))
+
+      expect(
+        await screen.findByRole("heading", { name: /DETALLES DEL CAMPAMENTO/i }),
+      ).toBeInTheDocument()
+    })
+
     it("DESACTIVAR flow calls the delete service with the camp id", async () => {
       const user = userEvent.setup()
       mockedDeleteCamp.mockResolvedValue(undefined)
@@ -239,6 +339,30 @@ describe("Admin → Camps", () => {
       await user.click(await screen.findByRole("button", { name: /^DESACTIVAR$/i }))
       await user.click(await screen.findByRole("button", { name: /CONFIRMAR BAJA/i }))
       await waitFor(() => expect(mockedDeleteCamp).toHaveBeenCalledWith("1"))
+    })
+
+    it("DESACTIVAR shows an error when deleteCamp rejects", async () => {
+      const user = userEvent.setup()
+      mockedDeleteCamp.mockRejectedValue(new Error("500"))
+      renderCamps()
+      await user.click(await screen.findByRole("heading", { name: /Campamento Alpha/i }))
+      await user.click(await screen.findByRole("button", { name: /^DESACTIVAR$/i }))
+      await user.click(await screen.findByRole("button", { name: /CONFIRMAR BAJA/i }))
+
+      expect(await screen.findByText(/No se pudo desactivar el campamento/i)).toBeInTheDocument()
+    })
+
+    it("returns from delete modal to detail with CANCELAR", async () => {
+      const user = userEvent.setup()
+      renderCamps()
+      await user.click(await screen.findByRole("heading", { name: /Campamento Alpha/i }))
+      await user.click(await screen.findByRole("button", { name: /^DESACTIVAR$/i }))
+
+      await user.click(await screen.findByRole("button", { name: /^CANCELAR$/i }))
+
+      expect(
+        await screen.findByRole("heading", { name: /DETALLES DEL CAMPAMENTO/i }),
+      ).toBeInTheDocument()
     })
   })
 })

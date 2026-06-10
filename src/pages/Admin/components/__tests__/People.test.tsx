@@ -216,6 +216,47 @@ describe("Admin → People", () => {
       expect(mockedCreatePerson.mock.calls[0][0].profession_id).toBeUndefined()
     })
 
+    it("sends optional profile fields when they are filled", async () => {
+      const user = userEvent.setup()
+      mockedCreatePerson.mockResolvedValue(persons[0])
+      renderPeople()
+      await user.click(await screen.findByRole("button", { name: /\+ NUEVO REGISTRO/i }))
+      const modal = (await screen.findByRole("heading", { name: /^NUEVO REGISTRO$/i })).closest(
+        ".modal-card",
+      ) as HTMLElement
+
+      await user.type(within(modal).getByPlaceholderText(/primer nombre/i), "Ana")
+      await user.type(within(modal).getByPlaceholderText(/primer apellido/i), "Ruiz")
+      await user.type(within(modal).getByPlaceholderText(/segundo apellido/i), "Mora")
+      await user.type(within(modal).getByPlaceholderText(/habilidades/i), "medicina")
+      await user.type(within(modal).getByPlaceholderText(/observaciones/i), "estable")
+      const birthDateInput = modal.querySelector('input[type="date"]') as HTMLInputElement
+      await user.type(birthDateInput, "2000-01-02")
+      await user.click(within(modal).getByRole("button", { name: /REGISTRAR PERSONA/i }))
+
+      await waitFor(() => expect(mockedCreatePerson).toHaveBeenCalled())
+      const body = mockedCreatePerson.mock.calls[0][0]
+      expect(body.last_name2).toBe("Mora")
+      expect(body.birth_date).toBe("2000-01-02")
+      expect(body.notes).toBe("estable")
+      expect(body.previous_skills).toBe("medicina")
+    })
+
+    it("closes the create modal with CANCELAR", async () => {
+      const user = userEvent.setup()
+      renderPeople()
+      await user.click(await screen.findByRole("button", { name: /\+ NUEVO REGISTRO/i }))
+      expect(await screen.findByRole("heading", { name: /^NUEVO REGISTRO$/i })).toBeInTheDocument()
+
+      await user.click(screen.getByRole("button", { name: /^CANCELAR$/i }))
+
+      await waitFor(() =>
+        expect(
+          screen.queryByRole("heading", { name: /^NUEVO REGISTRO$/i }),
+        ).not.toBeInTheDocument(),
+      )
+    })
+
     it("shows an error message when the create API rejects", async () => {
       const user = userEvent.setup()
       mockedCreatePerson.mockRejectedValue(new Error("400"))
@@ -257,6 +298,54 @@ describe("Admin → People", () => {
       expect(typeof body.profession_id).toBe("number")
     })
 
+    it("edit validates empty required names before calling the API", async () => {
+      const user = userEvent.setup()
+      renderPeople()
+      await user.click(await screen.findByText(/joel miller/i))
+      await user.click(await screen.findByRole("button", { name: /^EDITAR$/i }))
+
+      const editModal = (await screen.findByText(/EDITAR REGISTRO/i)).closest(
+        ".modal-card",
+      ) as HTMLElement
+      const nameInput = within(editModal).getByPlaceholderText(/primer nombre/i)
+      await user.clear(nameInput)
+      await user.click(within(editModal).getByRole("button", { name: /GUARDAR CAMBIOS/i }))
+
+      expect(within(editModal).getByText(/Nombre y apellido son obligatorios/i)).toBeInTheDocument()
+      expect(mockedUpdatePerson).not.toHaveBeenCalled()
+    })
+
+    it("shows an error when updatePerson rejects", async () => {
+      const user = userEvent.setup()
+      mockedUpdatePerson.mockRejectedValue(new Error("500"))
+      renderPeople()
+      await user.click(await screen.findByText(/joel miller/i))
+      await user.click(await screen.findByRole("button", { name: /^EDITAR$/i }))
+
+      const editModal = (await screen.findByText(/EDITAR REGISTRO/i)).closest(
+        ".modal-card",
+      ) as HTMLElement
+      await user.click(within(editModal).getByRole("button", { name: /GUARDAR CAMBIOS/i }))
+
+      expect(
+        await within(editModal).findByText(/No se pudo actualizar la persona/i),
+      ).toBeInTheDocument()
+    })
+
+    it("returns from edit modal to detail when pressing CANCELAR", async () => {
+      const user = userEvent.setup()
+      renderPeople()
+      await user.click(await screen.findByText(/joel miller/i))
+      await user.click(await screen.findByRole("button", { name: /^EDITAR$/i }))
+
+      const editModal = (await screen.findByText(/EDITAR REGISTRO/i)).closest(
+        ".modal-card",
+      ) as HTMLElement
+      await user.click(within(editModal).getByRole("button", { name: /^CANCELAR$/i }))
+
+      expect(await screen.findByText(/DOSSIER CLASIFICADO/i)).toBeInTheDocument()
+    })
+
     it("status change submits the selected enum value", async () => {
       const user = userEvent.setup()
       mockedUpdateStatus.mockResolvedValue(persons[0])
@@ -277,6 +366,40 @@ describe("Admin → People", () => {
       expect(body.status).toBe("sick")
     })
 
+    it("status change includes notes and shows API errors", async () => {
+      const user = userEvent.setup()
+      mockedUpdateStatus.mockRejectedValue(new Error("500"))
+      renderPeople()
+      await user.click(await screen.findByText(/joel miller/i))
+      await user.click(await screen.findByRole("button", { name: /CAMBIAR ESTADO/i }))
+
+      const statusModal = (await screen.findByText(/CAMBIAR ESTADO/i)).closest(
+        ".modal-card",
+      ) as HTMLElement
+      await user.type(within(statusModal).getByPlaceholderText(/Raz/i), "Reposo medico")
+      await user.click(within(statusModal).getByRole("button", { name: /CONFIRMAR ESTADO/i }))
+
+      await waitFor(() => expect(mockedUpdateStatus).toHaveBeenCalled())
+      expect(mockedUpdateStatus.mock.calls[0][1].notes).toBe("Reposo medico")
+      expect(
+        await within(statusModal).findByText(/No se pudo actualizar el estado/i),
+      ).toBeInTheDocument()
+    })
+
+    it("returns from status modal to detail when pressing CANCELAR", async () => {
+      const user = userEvent.setup()
+      renderPeople()
+      await user.click(await screen.findByText(/joel miller/i))
+      await user.click(await screen.findByRole("button", { name: /CAMBIAR ESTADO/i }))
+
+      const statusModal = (await screen.findByText(/CAMBIAR ESTADO/i)).closest(
+        ".modal-card",
+      ) as HTMLElement
+      await user.click(within(statusModal).getByRole("button", { name: /^CANCELAR$/i }))
+
+      expect(await screen.findByText(/DOSSIER CLASIFICADO/i)).toBeInTheDocument()
+    })
+
     it("delete submit calls the delete service with the person id", async () => {
       const user = userEvent.setup()
       mockedDeletePerson.mockResolvedValue(undefined)
@@ -286,6 +409,28 @@ describe("Admin → People", () => {
       await user.click(await screen.findByRole("button", { name: /CONFIRMAR BAJA/i }))
 
       await waitFor(() => expect(mockedDeletePerson).toHaveBeenCalledWith("10"))
+    })
+
+    it("shows an error when deletePerson rejects", async () => {
+      const user = userEvent.setup()
+      mockedDeletePerson.mockRejectedValue(new Error("500"))
+      renderPeople()
+      await user.click(await screen.findByText(/joel miller/i))
+      await user.click(await screen.findByRole("button", { name: /^ELIMINAR$/i }))
+      await user.click(await screen.findByRole("button", { name: /CONFIRMAR BAJA/i }))
+
+      expect(await screen.findByText(/No se pudo eliminar la persona/i)).toBeInTheDocument()
+    })
+
+    it("returns from delete modal to detail when pressing CANCELAR", async () => {
+      const user = userEvent.setup()
+      renderPeople()
+      await user.click(await screen.findByText(/joel miller/i))
+      await user.click(await screen.findByRole("button", { name: /^ELIMINAR$/i }))
+
+      await user.click(await screen.findByRole("button", { name: /^CANCELAR$/i }))
+
+      expect(await screen.findByText(/DOSSIER CLASIFICADO/i)).toBeInTheDocument()
     })
   })
 

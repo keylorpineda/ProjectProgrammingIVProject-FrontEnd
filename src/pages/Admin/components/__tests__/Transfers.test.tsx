@@ -37,7 +37,17 @@ vi.mock("@/features/auth/services/auth.service", () => ({
   switchCamp: vi.fn(),
 }))
 vi.mock("@/features/map-test/components/TransferRouteMap", () => ({
-  TransferRouteMap: () => <div data-testid="transfer-map" />,
+  TransferRouteMap: ({
+    fromCoords,
+    toCoords,
+  }: {
+    fromCoords: [number, number]
+    toCoords: [number, number]
+  }) => (
+    <div data-testid="transfer-map">
+      {fromCoords.join(",")}|{toCoords.join(",")}
+    </div>
+  ),
 }))
 
 const mockedGetTransfers = getCampTransfers as unknown as ReturnType<typeof vi.fn>
@@ -122,6 +132,38 @@ describe("Admin → Transfers (read + approve/reject + cancel)", () => {
       renderTransfers()
       expect(await screen.findByText(/SIN CONVOYES EN LA COLA/i)).toBeInTheDocument()
     })
+
+    it("shows the query error banner when transfers fail to load", async () => {
+      mockedGetTransfers.mockRejectedValue(new Error("network"))
+      renderTransfers()
+      expect(await screen.findByText(/No se pudieron cargar los manifiestos/i)).toBeInTheDocument()
+    })
+
+    it("renders fallback values for unknown transfer data and default route coordinates", async () => {
+      mockedGetTransfers.mockResolvedValue([
+        {
+          ...transfers[0],
+          id: "999",
+          type: undefined,
+          status: "mystery",
+          camp_origin_id: "unknown-origin",
+          camp_destination_id: "unknown-dest",
+          request_date: "not-a-date",
+          resourceDetails: [{ resource_id: "r-404", requested_quantity: 7, resource: null }],
+          personDetails: [{ person_id: "p-404", is_leader: false, person: null }],
+          notes: "sin referencias",
+        },
+      ])
+
+      renderTransfers()
+
+      expect(await screen.findByText(/MYSTERY/i)).toBeInTheDocument()
+      expect(screen.getByText(/N\/D/i)).toBeInTheDocument()
+      expect(screen.getByText(/not-a-date/i)).toBeInTheDocument()
+      expect(screen.getByText(/Recurso #r-404/i)).toBeInTheDocument()
+      expect(screen.getByText(/Persona #p-404/i)).toBeInTheDocument()
+      expect(screen.getByTestId("transfer-map").textContent).toContain("9.9281,-84.0907")
+    })
   })
 
   describe("approve / reject flow on pending requests (regression: NEVER 'denied')", () => {
@@ -171,6 +213,28 @@ describe("Admin → Transfers (read + approve/reject + cancel)", () => {
       await user.click(await screen.findByRole("button", { name: /^APROBAR$/i }))
       await user.click(await screen.findByRole("button", { name: /CONFIRMAR APROBACIÓN/i }))
       expect(await screen.findByText(/No se pudo aprobar el traslado/i)).toBeInTheDocument()
+    })
+
+    it("shows an error message when rejection API rejects", async () => {
+      const user = userEvent.setup()
+      mockedApprove.mockRejectedValue(new Error("400"))
+      renderTransfers()
+      await user.click(await screen.findByText(/TRASLADO #/i))
+      await user.click(await screen.findByRole("button", { name: /^RECHAZAR$/i }))
+      await user.click(await screen.findByRole("button", { name: /CONFIRMAR RECHAZO/i }))
+      expect(await screen.findByText(/No se pudo rechazar el traslado/i)).toBeInTheDocument()
+    })
+
+    it("closes the approval modal with CANCELAR", async () => {
+      const user = userEvent.setup()
+      renderTransfers()
+      await user.click(await screen.findByText(/TRASLADO #/i))
+      await user.click(await screen.findByRole("button", { name: /^APROBAR$/i }))
+      expect(await screen.findByText(/APROBAR TRASLADO/i)).toBeInTheDocument()
+
+      await user.click(screen.getByRole("button", { name: /^CANCELAR$/i }))
+
+      await waitFor(() => expect(screen.queryByText(/APROBAR TRASLADO/i)).not.toBeInTheDocument())
     })
 
     it("typing in formNotes textarea includes notes in the approve payload", async () => {
@@ -250,6 +314,40 @@ describe("Admin → Transfers (read + approve/reject + cancel)", () => {
       renderTransfers()
       await user.click(await screen.findByRole("button", { name: /CONFIRMAR LLEGADA/i }))
       await waitFor(() => expect(mockedArrive).toHaveBeenCalledWith("205"))
+    })
+
+    it("keeps the approved destination card visible when arrival confirmation rejects", async () => {
+      const user = userEvent.setup()
+      mockedArrive.mockRejectedValue(new Error("500"))
+      mockedGetTransfers.mockResolvedValue([
+        {
+          ...transfers[0],
+          id: "206",
+          status: "approved",
+          camp_origin_id: "2",
+          camp_destination_id: "1",
+        },
+      ])
+      renderTransfers()
+
+      await user.click(await screen.findByRole("button", { name: /CONFIRMAR LLEGADA/i }))
+
+      await waitFor(() => expect(mockedArrive).toHaveBeenCalledWith("206"))
+      expect(screen.getByRole("button", { name: /CONFIRMAR LLEGADA/i })).toBeInTheDocument()
+    })
+
+    it("keeps the pending origin card visible when cancellation rejects", async () => {
+      const user = userEvent.setup()
+      mockedCancel.mockRejectedValue(new Error("500"))
+      mockedGetTransfers.mockResolvedValue([
+        { ...transfers[0], id: "207", camp_origin_id: "1", camp_destination_id: "2" },
+      ])
+      renderTransfers()
+
+      await user.click(await screen.findByRole("button", { name: /CANCELAR SOLICITUD/i }))
+
+      await waitFor(() => expect(mockedCancel).toHaveBeenCalledWith("207"))
+      expect(screen.getByRole("button", { name: /CANCELAR SOLICITUD/i })).toBeInTheDocument()
     })
   })
 })

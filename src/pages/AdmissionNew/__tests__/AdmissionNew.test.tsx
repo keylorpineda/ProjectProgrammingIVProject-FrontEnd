@@ -436,4 +436,100 @@ describe("AdmissionNew — successful submission", () => {
     getContext.mockRestore()
     toBlob.mockRestore()
   }, 10000)
+
+  it("falls back to the original photo when canvas has no context", async () => {
+    const user = userEvent.setup()
+    const getContext = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null)
+
+    vi.stubGlobal(
+      "Image",
+      class {
+        onload: (() => void) | null = null
+        onerror: (() => void) | null = null
+        width = 800
+        height = 600
+        set src(_url: string) {
+          setTimeout(() => this.onload?.(), 0)
+        }
+      },
+    )
+
+    renderForm()
+    await fillAllFields(user, "Canvas Fallback", "canvas@example.com")
+    submitForm()
+
+    await waitFor(() => expect(mockedUpload).toHaveBeenCalled(), { timeout: 5000 })
+    const uploadedFile = mockedUpload.mock.calls.at(-1)?.[0] as File
+    expect(uploadedFile.name).toBe("photo.jpg")
+
+    getContext.mockRestore()
+  }, 10000)
+
+  it("falls back to the original photo when canvas returns no blob", async () => {
+    const user = userEvent.setup()
+    const getContext = vi
+      .spyOn(HTMLCanvasElement.prototype, "getContext")
+      .mockReturnValue({ drawImage: vi.fn() } as unknown as CanvasRenderingContext2D)
+    const toBlob = vi
+      .spyOn(HTMLCanvasElement.prototype, "toBlob")
+      .mockImplementation(function (callback) {
+        callback(null)
+      })
+
+    vi.stubGlobal(
+      "Image",
+      class {
+        onload: (() => void) | null = null
+        onerror: (() => void) | null = null
+        width = 800
+        height = 600
+        set src(_url: string) {
+          setTimeout(() => this.onload?.(), 0)
+        }
+      },
+    )
+
+    renderForm()
+    await fillAllFields(user, "Blob Fallback", "blob@example.com")
+    submitForm()
+
+    await waitFor(() => expect(mockedUpload).toHaveBeenCalled(), { timeout: 5000 })
+    const uploadedFile = mockedUpload.mock.calls.at(-1)?.[0] as File
+    expect(uploadedFile.name).toBe("photo.jpg")
+
+    getContext.mockRestore()
+    toBlob.mockRestore()
+  }, 10000)
+
+  it("sends optional profession, years, numeric scores and criminal record in the payload", async () => {
+    const user = userEvent.setup()
+    renderForm()
+
+    await fillAllFields(user, "Solo", "solo@example.com")
+    await user.type(document.getElementById("previous_profession") as HTMLInputElement, "Ingeniero")
+    await user.clear(screen.getByLabelText(/a.os de experiencia/i))
+    await user.type(screen.getByLabelText(/a.os de experiencia/i), "4")
+    fireEvent.change(document.getElementById("salud_score") as HTMLInputElement, {
+      target: { name: "salud_score", value: "80" },
+    })
+    fireEvent.change(document.getElementById("psychological_evaluation") as HTMLInputElement, {
+      target: { name: "psychological_evaluation", value: "95" },
+    })
+    await user.click(screen.getByLabelText(/sin antecedentes/i))
+    submitForm()
+
+    await waitFor(() => expect(mockedSubmit).toHaveBeenCalled(), { timeout: 5000 })
+    expect(mockedSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        first_name: "Solo",
+        last_name: "Solo",
+        previous_profession: "Ingeniero",
+        years_experience: 4,
+        health_status: 80,
+        psychological_evaluation: 95,
+        criminal_record: true,
+        personal_history: expect.stringContaining("Profesion previa: Ingeniero"),
+      }),
+    )
+  }, 10000)
 })
