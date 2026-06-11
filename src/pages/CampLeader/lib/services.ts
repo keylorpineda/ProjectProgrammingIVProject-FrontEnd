@@ -111,7 +111,7 @@ export const transfersService = {
     const { data } = await api.get(`/transfers/requests/camp/${campId}`, {
       params: filters,
     })
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     const list: any[] = Array.isArray(data) ? data : (data?.data ?? [])
     return list.map((t) => ({
       id: t.id,
@@ -231,7 +231,7 @@ export const usersService = {
     const { data } = await api.get("/users/persons", { params })
     const list = Array.isArray(data) ? data : (data.data ?? [])
     // Map to the shape the CampLeader UI expects
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     return list.map((p: any) => ({
       id: p.id,
       username: `${p.first_name} ${p.last_name}`,

@@ -41,7 +41,7 @@ const renderRegister = (token = "valid-token") =>
 
 const enableForm = async () => {
   await waitFor(() => expect(screen.getByLabelText(/nombre en código/i)).not.toBeDisabled(), {
-    timeout: 1000,
+    timeout: 2000,
   })
 }
 

@@ -171,7 +171,6 @@ async function mockAdminApis(page: Page) {
 
 const test = base.extend({
   page: async ({ page }, use) => {
-    // eslint-disable-next-line no-console
     page.on("console", (msg) => console.log(`[Browser] ${msg.type()}: ${msg.text()}`))
 
     await page.addInitScript(() => {

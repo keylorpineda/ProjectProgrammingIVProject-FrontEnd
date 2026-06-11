@@ -28,11 +28,11 @@ vi.mock("framer-motion", () => {
     "viewport",
   ])
   // Cache so motion.div === motion.div (no remounts between renders)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const cache: Record<string, any> = {}
   const makeMotionComponent = (tag: string) => {
     if (cache[tag]) return cache[tag]
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     const Component = ({ children, ...rest }: any) => {
       const safeProps = Object.fromEntries(Object.entries(rest).filter(([k]) => !animProps.has(k)))
       return createElement(tag, safeProps, children)
@@ -95,14 +95,12 @@ vi.mock("framer-motion", () => {
 
 // lucide-react: replace every icon component with a plain <span data-testid="icon-Name">
 vi.mock("lucide-react", async (importOriginal) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const actual = (await importOriginal()) as Record<string, any>
   return Object.fromEntries(
     Object.entries(actual).map(([key, val]) => [
       key,
       typeof val === "function"
-        ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          ({ className }: any) => createElement("span", { "data-testid": `icon-${key}`, className })
+        ? ({ className }: any) => createElement("span", { "data-testid": `icon-${key}`, className })
         : val,
     ]),
   )
@@ -135,7 +133,7 @@ class MockIntersectionObserver {
     return []
   }
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 ;(globalThis as any).IntersectionObserver = MockIntersectionObserver
 
 class MockResizeObserver {
@@ -143,14 +141,12 @@ class MockResizeObserver {
   unobserve() {}
   disconnect() {}
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 ;(globalThis as any).ResizeObserver = MockResizeObserver
 
 // URL.createObjectURL for file previews
 if (typeof URL.createObjectURL === "undefined") {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ;(URL as any).createObjectURL = () => "blob:mock"
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ;(URL as any).revokeObjectURL = () => {}
 }
 
@@ -170,7 +166,6 @@ vi.mock("leaflet", () => ({
 }))
 vi.mock("react-leaflet", () => {
   const passthrough = (name: string) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const Component = ({ children }: any) =>
       createElement("div", { "data-testid": `leaflet-${name}` }, children)
     Component.displayName = `MockLeaflet${name}`

@@ -1,5 +1,7 @@
-import { ReactNode } from "react"
-import { motion, HTMLMotionProps } from "framer-motion"
+import { motion } from "framer-motion"
+
+import type { HTMLMotionProps } from "framer-motion"
+import type { ReactNode } from "react"
 
 import "@/pages/worker/WorkerViews.css"
 
@@ -29,7 +31,7 @@ export function PinnedCard({
   ...props
 }: PinnedCardProps) {
   const Component: any = animated ? motion.div : "div"
-  
+
   // Resolve pin class (allows passing "red", "wv-pin-red", etc.)
   const resolvedPinClass = pinColor.startsWith("wv-pin-") ? pinColor : `wv-pin-${pinColor}`
 
@@ -37,7 +39,9 @@ export function PinnedCard({
     <Component
       className={`wv-pinned ${props.onClick ? "cursor-pointer" : ""} ${className}`}
       style={{ transform: `rotate(${rotate}deg)`, ...style }}
-      whileHover={animated ? (whileHover !== undefined ? whileHover : { scale: 1.06, rotate: 0 }) : undefined}
+      whileHover={
+        animated ? (whileHover !== undefined ? whileHover : { scale: 1.06, rotate: 0 }) : undefined
+      }
       {...props}
     >
       {pinColor !== "none" && <div className={`wv-pin ${resolvedPinClass}`} />}

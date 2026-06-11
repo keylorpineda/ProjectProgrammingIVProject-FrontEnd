@@ -125,7 +125,7 @@ export default function CampLeaderLayout() {
   }, [reloadData])
 
   // ── Exploration handlers ──────────────────────────────────────────────────
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const handleCreateExploration = async (data: any) => {
     setActionLoading(true)
     try {
@@ -146,7 +146,6 @@ export default function CampLeaderLayout() {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleReturnExploration = async (id: number, data: any) => {
     setActionLoading(true)
     try {
@@ -168,7 +167,7 @@ export default function CampLeaderLayout() {
   }
 
   // ── Transfer handlers ─────────────────────────────────────────────────────
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const handleCreateTransferRequest = async (data: any) => {
     setActionLoading(true)
     try {

@@ -384,7 +384,7 @@ export default function Transfers() {
                   </div>
 
                   {/* MINI-MAPA */}
-                  {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
+                  {}
                   <div
                     className="mx-6 mb-3 wv-transfer-minimap"
                     onClick={(e) => e.stopPropagation()}

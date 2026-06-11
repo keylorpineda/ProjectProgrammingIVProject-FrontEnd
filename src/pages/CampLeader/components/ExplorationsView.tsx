@@ -22,10 +22,10 @@ interface ExplorationsViewProps {
   resources: ResourceItem[]
   camps: Camp[]
   myCampId: number
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   onCreateExploration: (data: any) => Promise<void>
   onDepartExploration: (id: number) => Promise<void>
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   onReturnExploration: (id: number, data: any) => Promise<void>
   onCancelExploration: (id: number) => Promise<void>
 }

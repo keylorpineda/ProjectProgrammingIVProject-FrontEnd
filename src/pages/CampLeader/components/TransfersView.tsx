@@ -12,7 +12,7 @@ interface TransfersViewProps {
   resources: ResourceItem[]
   inventory: Inventory[]
   myCampId: number
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   onCreateTransferRequest: (data: any) => Promise<void>
   onApproveTransferRequest: (id: number, approved: boolean) => Promise<void>
   onCancelTransferRequest: (id: number) => Promise<void>

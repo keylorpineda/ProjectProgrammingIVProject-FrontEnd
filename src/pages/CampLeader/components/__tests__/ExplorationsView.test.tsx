@@ -106,7 +106,6 @@ const mockExplorations: Exploration[] = [
 ]
 
 describe("ExplorationsView Component", () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let onCreate: any, onDepart: any, onReturn: any, onCancel: any
 
   beforeEach(() => {

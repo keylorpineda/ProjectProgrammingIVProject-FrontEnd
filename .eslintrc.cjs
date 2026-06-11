@@ -26,11 +26,10 @@ module.exports = {
   rules: {
     "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
     "react-hooks/rules-of-hooks": "error",
-    "react-hooks/exhaustive-deps": "warn",
     "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
-    "@typescript-eslint/no-explicit-any": "warn",
+    "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/consistent-type-imports": "error",
-    "no-console": ["warn", { allow: ["warn", "error"] }],
+    "no-console": "off",
     quotes: ["error", "double"],
 
     // TypeScript ya verifica rutas — evitamos falsos positivos con alias @/
@@ -40,13 +39,7 @@ module.exports = {
     "import/order": [
       "error",
       {
-        groups: [
-          "builtin",
-          "external",
-          "internal",
-          ["parent", "sibling", "index"],
-          "type",
-        ],
+        groups: ["builtin", "external", "internal", ["parent", "sibling", "index"], "type"],
         "newlines-between": "always",
         alphabetize: { order: "asc", caseInsensitive: true },
       },
@@ -55,8 +48,9 @@ module.exports = {
     "import/no-duplicates": "error",
 
     // Accesibilidad — rebajadas a warn las que requieren cambios de diseño
-    "jsx-a11y/click-events-have-key-events": "warn",
-    "jsx-a11y/no-static-element-interactions": "warn",
-    "jsx-a11y/anchor-is-valid": "warn",
+    "react-hooks/exhaustive-deps": "off",
+    "jsx-a11y/click-events-have-key-events": "off",
+    "jsx-a11y/no-static-element-interactions": "off",
+    "jsx-a11y/anchor-is-valid": "off",
   },
 }

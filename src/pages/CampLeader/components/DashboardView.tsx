@@ -2,14 +2,6 @@ import { motion } from "framer-motion"
 import { User } from "lucide-react"
 import { useEffect, useState } from "react"
 
-import { CorkBoard } from "@/components/ui/CorkBoard"
-import { PinnedCard } from "@/components/ui/PinnedCard"
-
-const formatTime = () => {
-  const now = new Date()
-  return now.toISOString().split("T")[1].split(".")[0] + "Z"
-}
-
 import type {
   CampBalance,
   CampStatistics,
@@ -18,6 +10,14 @@ import type {
   InventoryMovement,
   Transfer,
 } from "../types"
+
+import { CorkBoard } from "@/components/ui/CorkBoard"
+import { PinnedCard } from "@/components/ui/PinnedCard"
+
+const formatTime = () => {
+  const now = new Date()
+  return now.toISOString().split("T")[1].split(".")[0] + "Z"
+}
 
 interface DashboardViewProps {
   explorations: Exploration[]
@@ -153,7 +153,6 @@ export default function DashboardView({
       title="TABLERO DE MANDO - RESUMEN OPERATIVO"
       rightElement={<span className="wv-board-time">{time}</span>}
     >
-
       {/* CUATRO MÉTRICAS */}
       <div className="wv-cork-grid">
         {/* Card 1: Exploraciones */}
@@ -191,12 +190,18 @@ export default function DashboardView({
         >
           {criticalStocks.length > 0 ? (
             <>
-              <div className="wv-big-number" style={{ color: "var(--accent-critical)" }}>{criticalStocks.length}</div>
-              <div className="wv-small-label" style={{ color: "var(--accent-critical)" }}>RECURSOS BAJO MÍNIMO</div>
+              <div className="wv-big-number" style={{ color: "var(--accent-critical)" }}>
+                {criticalStocks.length}
+              </div>
+              <div className="wv-small-label" style={{ color: "var(--accent-critical)" }}>
+                RECURSOS BAJO MÍNIMO
+              </div>
             </>
           ) : (
             <>
-              <div className="wv-big-number" style={{ color: "var(--accent-approved)" }}>OK</div>
+              <div className="wv-big-number" style={{ color: "var(--accent-approved)" }}>
+                OK
+              </div>
               <div className="wv-small-label">RACIONES ESTABLES</div>
             </>
           )}
@@ -211,16 +216,15 @@ export default function DashboardView({
           pinColor="gold"
           rotate={1}
         >
-          <div className="wv-big-number" style={{ color: rank.color }}>{statistics.survival_score}</div>
+          <div className="wv-big-number" style={{ color: rank.color }}>
+            {statistics.survival_score}
+          </div>
           <div className="wv-small-label">{statistics.explorations_completed} EXPEDICIONES</div>
         </PinnedCard>
       </div>
 
       {/* EXCURSIONISTAS ACTIVOS */}
-      <motion.div
-        variants={itemVariants}
-        className="wv-paper p-6"
-      >
+      <motion.div variants={itemVariants} className="wv-paper p-6">
         <div className="wv-section-title-row">
           <h3 className="wv-section-title" style={{ marginBottom: 0 }}>
             EXCURSIONISTAS EN ZONA MUERTA
@@ -277,10 +281,7 @@ export default function DashboardView({
       </motion.div>
 
       {/* BALANCE DIARIO */}
-      <motion.div
-        variants={itemVariants}
-        className="wv-paper p-6"
-      >
+      <motion.div variants={itemVariants} className="wv-paper p-6">
         <div className="wv-section-title-row">
           <h3 className="wv-section-title" style={{ marginBottom: 0 }}>
             BALANCE DIARIO DEL SECTOR
@@ -326,10 +327,7 @@ export default function DashboardView({
       </motion.div>
 
       {/* HISTORIAL DE MOVIMIENTOS */}
-      <motion.div
-        variants={itemVariants}
-        className="wv-paper p-6"
-      >
+      <motion.div variants={itemVariants} className="wv-paper p-6">
         <div className="wv-section-title-row">
           <h3 className="wv-section-title" style={{ marginBottom: 0 }}>
             HISTORIAL DE LOGS DE RESERVA

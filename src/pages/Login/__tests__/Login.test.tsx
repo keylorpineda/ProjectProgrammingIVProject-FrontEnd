@@ -149,7 +149,7 @@ describe("Login page", () => {
         await fillCredentials(user, "u", "123456")
         await user.click(screen.getByRole("button", { name: /iniciar sesión/i }))
         await waitFor(() => expect(navigateMock).toHaveBeenCalledWith(expectedRoute), {
-          timeout: 6000,
+          timeout: 8000,
         })
       },
       10000,

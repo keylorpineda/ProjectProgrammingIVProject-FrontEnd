@@ -8,7 +8,7 @@ import type { AuthUser } from "@/types/api.types"
 interface ProfileViewProps {
   user: AuthUser | null
   statistics: CampStatistics
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   residents: any[]
 }
 

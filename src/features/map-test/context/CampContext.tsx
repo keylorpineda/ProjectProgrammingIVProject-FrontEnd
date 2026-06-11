@@ -111,7 +111,6 @@ export const CampProvider = ({ children }: { children: React.ReactNode }) => {
       if (currentCamps.length === 0) return currentCamps
       return applyAlertsToCamps(currentCamps, inventoryAlerts)
     })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inventoryAlerts])
 
   useEffect(() => {

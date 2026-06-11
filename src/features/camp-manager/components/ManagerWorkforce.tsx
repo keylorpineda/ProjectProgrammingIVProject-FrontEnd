@@ -2,7 +2,6 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
-/* eslint-disable @typescript-eslint/no-explicit-any, react/prop-types */
 
 import { useQuery, keepPreviousData } from "@tanstack/react-query"
 import { motion } from "framer-motion"

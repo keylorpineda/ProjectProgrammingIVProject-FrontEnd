@@ -1,6 +1,8 @@
 import { motion } from "framer-motion"
 import { useEffect, useState } from "react"
 
+import { CorkBoard } from "@/components/ui/CorkBoard"
+import { PinnedCard } from "@/components/ui/PinnedCard"
 import {
   useInventoryStatus,
   useProfessionMetrics,
@@ -9,8 +11,6 @@ import {
   useCamp,
 } from "@/features/worker/hooks/useWorkerAPI"
 import { useAuth } from "@/pages/Admin/context/AuthContext"
-import { CorkBoard } from "@/components/ui/CorkBoard"
-import { PinnedCard } from "@/components/ui/PinnedCard"
 import "./WorkerViews.css"
 
 const formatTime = () => {
@@ -139,7 +139,6 @@ export default function WorkerDashboard() {
       title={`TABLERO - ${campName}`}
       rightElement={<span className="wv-board-time">{time}</span>}
     >
-
       <div className="wv-cork-grid">
         {cards.map((card, i) => (
           <PinnedCard

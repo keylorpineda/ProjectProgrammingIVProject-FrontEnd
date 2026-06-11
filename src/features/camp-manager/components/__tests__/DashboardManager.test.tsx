@@ -46,7 +46,7 @@ vi.mock("../ManagerRanking", () => ({
 vi.mock("../ManagerWorkforce", () => ({
   default: () => <div data-testid="mock-workforce">Workforce</div>,
 }))
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 vi.mock("../ManagerLogistics", () => ({
   default: ({ onModalClose, onDataChanged }: any) => (
     <div data-testid="mock-logistics">

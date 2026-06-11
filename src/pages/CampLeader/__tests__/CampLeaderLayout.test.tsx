@@ -132,10 +132,8 @@ vi.mock("../lib/services", () => ({
   },
 }))
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let capturedOnLogout: any = null
 vi.mock("@/components/ui/InactivityGuard", () => ({
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   default: ({ children, onLogout }: any) => {
     capturedOnLogout = onLogout
     return <div>{children}</div>
@@ -164,7 +162,7 @@ describe("CampLeaderLayout Page", () => {
     // Mock window.location
     // @ts-expect-error: Mocking window.location for testing purposes
     delete window.location
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     window.location = { ...originalLocation, href: "" } as any
   })
 

@@ -17,7 +17,6 @@ interface SidebarProps {
   survivalScore?: number
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type TabDef = { id: string; label: string; icon: ComponentType<any> }
 
 export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
