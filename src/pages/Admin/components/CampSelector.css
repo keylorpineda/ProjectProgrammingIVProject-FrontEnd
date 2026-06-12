@@ -47,3 +47,29 @@
   color: #000;
   font-family: var(--font-typewriter);
 }
+
+.camp-selector-3d {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: bold;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #6eff44;
+  background: #0a1a0a;
+  border: 1px solid #6eff44;
+  padding: 6px 12px;
+  cursor: pointer;
+  border-radius: 2px;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.5);
+  text-shadow: 0 0 6px rgba(110, 255, 68, 0.6);
+  transition: background 0.15s;
+}
+
+.camp-selector-3d:hover:not(:disabled) {
+  background: #123012;
+}
+
+.camp-selector-3d:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

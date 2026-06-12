@@ -1,0 +1,85 @@
+.camp3d-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: #040804;
+}
+
+.camp3d-loading {
+  position: absolute;
+  inset: 0;
+  background: #040804;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 99;
+  font-family: "Courier New", monospace;
+}
+.camp3d-loading-text {
+  color: #6eff44;
+  font-size: 9px;
+  letter-spacing: 4px;
+  text-shadow: 0 0 6px #6eff44;
+}
+.camp3d-loading-bar {
+  width: 200px;
+  height: 1px;
+  background: rgba(100, 255, 60, 0.12);
+  overflow: hidden;
+}
+.camp3d-loading-fill {
+  height: 100%;
+  width: 40%;
+  background: #6eff44;
+  animation: camp3d-boot 1s linear infinite;
+}
+@keyframes camp3d-boot {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(350%);
+  }
+}
+
+.camp3d-error {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 16px;
+  background: #0a0404;
+  font-family: "Courier New", monospace;
+  color: #ff6666;
+  text-align: center;
+  padding: 24px;
+}
+.camp3d-error-title {
+  font-size: 14px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  text-shadow: 0 0 6px #ff4444;
+}
+.camp3d-error-detail {
+  font-size: 11px;
+  color: rgba(255, 150, 150, 0.7);
+  max-width: 480px;
+}
+.camp3d-error-btn {
+  padding: 8px 18px;
+  font-family: "Courier New", monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #ff8888;
+  background: rgba(40, 0, 0, 0.6);
+  border: 1px solid #ff6666;
+  cursor: pointer;
+}
+.camp3d-error-btn:hover {
+  background: rgba(80, 0, 0, 0.7);
+}
