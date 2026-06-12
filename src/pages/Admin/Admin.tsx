@@ -19,6 +19,7 @@ import { CampProvider, useCamp } from "./context/CampContext"
 import { SessionProvider } from "./context/SessionContext"
 
 import AlertsBanner from "@/components/ui/AlertsBanner"
+import Camp3DOverlay from "@/features/camp-3d/components/Camp3DOverlay"
 import { useAlertSocket } from "@/hooks/useAlertSocket"
 import "./AdminTheme.css"
 import "./Admin.css"
@@ -163,6 +164,7 @@ const AdminLayout = () => {
       </div>
       <AlertsBanner campId={activeCampId} />
       <InactivityWarning />
+      <Camp3DOverlay />
     </div>
   )
 }

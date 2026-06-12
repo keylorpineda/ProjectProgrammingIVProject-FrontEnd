@@ -178,7 +178,10 @@
     "corrugat",
     "corrug",
     "ksmk",
-    "ksmoke"
+    "ksmoke",
+    "Parap",
+    "explo",
+    "Catmull"
   ],
   "ignorePaths": [
     "node_modules",

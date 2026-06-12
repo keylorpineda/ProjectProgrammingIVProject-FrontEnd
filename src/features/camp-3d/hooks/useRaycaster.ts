@@ -19,6 +19,11 @@ interface UseRaycasterOptions {
   onBuildingClick?: (building: BuildingConfig) => void
   /** Cambio de edificio bajo el cursor (null al salir). Útil para el tooltip. */
   onHoverChange?: (building: BuildingConfig | null) => void
+  /**
+   * Configs adicionales fuera del catálogo BUILDINGS (p.ej. el marcador de
+   * perfil del Paso 07, cuyo id/route dependen del usuario actual).
+   */
+  extraBuildings?: BuildingConfig[]
 }
 
 interface SavedEmissive {
@@ -39,12 +44,14 @@ export function useRaycaster(
   canvasRef: RefObject<HTMLCanvasElement | null>,
   contextRef: RefObject<ThreeContext | null>,
   targetsRef: RefObject<THREE.Object3D[]>,
-  { onBuildingClick, onHoverChange }: UseRaycasterOptions = {},
+  { onBuildingClick, onHoverChange, extraBuildings }: UseRaycasterOptions = {},
 ) {
   const onClickRef = useRef(onBuildingClick)
   const onHoverRef = useRef(onHoverChange)
+  const extraRef = useRef(extraBuildings)
   onClickRef.current = onBuildingClick
   onHoverRef.current = onHoverChange
+  extraRef.current = extraBuildings
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -90,7 +97,8 @@ export function useRaycaster(
         hovered = mesh
         canvas.style.cursor = "pointer"
         const id = (mesh.userData as BuildingUserData).id
-        onHoverRef.current?.(buildingById.get(id) ?? null)
+        const found = buildingById.get(id) ?? extraRef.current?.find((b) => b.id === id) ?? null
+        onHoverRef.current?.(found)
       } else {
         canvas.style.cursor = ""
         onHoverRef.current?.(null)
@@ -108,7 +116,7 @@ export function useRaycaster(
       const mesh = pick(e)
       if (!mesh) return
       const id = (mesh.userData as BuildingUserData).id
-      const building = buildingById.get(id)
+      const building = buildingById.get(id) ?? extraRef.current?.find((b) => b.id === id)
       if (building) onClickRef.current?.(building)
     }
 

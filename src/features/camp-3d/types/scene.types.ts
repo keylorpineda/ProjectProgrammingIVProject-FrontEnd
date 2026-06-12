@@ -52,6 +52,31 @@ export interface CampScene3DProps {
 }
 
 /**
+ * Referencias a objetos de la escena que reaccionan a datos del backend
+ * (las consume el paso de datos reactivos / useSceneAnimations).
+ */
+export interface SceneReactiveRefs {
+  /** Bandera del Cuartel General (roja con danger_level CRITICAL). */
+  hqFlag: THREE.Mesh
+  /** Luz interior del CG (parpadea según danger_level). */
+  hqInteriorLight: THREE.PointLight
+  /** Brazo de la barrera de la garita (rotation.z con admisiones pendientes). */
+  gateBarrierArm: THREE.Object3D
+  /** Lámpara de emergencia de la garita (parpadea en rojo con pendientes). */
+  gateEmergencyLamp: THREE.PointLight
+  /** Reflector de la torre (apunta fijo al gate con exploración in_progress). */
+  watchtowerSpot: THREE.SpotLight
+  /** Luz interior del almacén (cálida estable con inventario > 90%). */
+  warehouseLight: THREE.PointLight
+  /** Luz roja de alerta sobre el almacén (intensity 0 por defecto). */
+  warehouseAlertLight: THREE.PointLight
+  /** Pivote de la puerta basculante del garaje (rotation.x al abrir). */
+  garageDoor: THREE.Object3D
+  /** Material compartido de las ventanas iluminadas de los Apartamentos. */
+  apartmentsLitWindows: THREE.MeshStandardMaterial
+}
+
+/**
  * Handles que devuelve el constructor de escena para que el loop de animación
  * y el cleanup puedan operar sobre lo construido.
  */
@@ -62,6 +87,12 @@ export interface SceneHandles {
   dispose: () => void
   /** Meshes etiquetados con userData.type === 'building', objetivos del raycaster. */
   buildingMeshes: THREE.Object3D[]
+  /** Salida de exploración: 3 figuras caminan de la torre al gate (~4s). */
+  playExplorationAnimation: () => void
+  /** Traslado: puerta del garaje sube y el camión sale por el gate (~6.5s). */
+  playTransferAnimation: () => void
+  /** Objetos que el paso de datos reactivos manipula directamente. */
+  reactiveRefs: SceneReactiveRefs
 }
 
 /** Estado global de la vista 3D (Zustand). */

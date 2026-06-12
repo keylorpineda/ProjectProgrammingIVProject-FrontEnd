@@ -67,10 +67,12 @@ export default function CampScene3DWrapper({ campId, onClose }: CampScene3DProps
 
   return (
     <div className="camp3d-overlay">
+      {/* El skeleton vive DENTRO del boundary: si la escena falla, el fallback
+          de error reemplaza a ambos y el mensaje nunca queda tapado. */}
       <SceneErrorBoundary onClose={onClose}>
         <CampScene3D campId={campId} onClose={onClose} onReady={() => setLoading(false)} />
+        {loading ? <LoadingSkeleton /> : null}
       </SceneErrorBoundary>
-      {loading ? <LoadingSkeleton /> : null}
     </div>
   )
 }

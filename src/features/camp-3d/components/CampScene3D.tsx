@@ -1,13 +1,22 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
+import * as THREE from "three"
 
+import { BUILDINGS } from "../constants/buildings.config"
 import { useRaycaster } from "../hooks/useRaycaster"
 import { useThreeScene } from "../hooks/useThreeScene"
 import { buildCampScene } from "../services/sceneBuilder"
 
 import type { CameraState } from "../hooks/useThreeScene"
-import type { BuildingConfig, CampScene3DProps, SceneHandles } from "../types/scene.types"
-import type * as THREE from "three"
+import type {
+  BuildingConfig,
+  BuildingUserData,
+  Camp3DRole,
+  CampScene3DProps,
+  SceneHandles,
+} from "../types/scene.types"
+
+import { useAuthStore } from "@/store/useAuthStore"
 
 import "./CampScene3D.css"
 
@@ -16,20 +25,42 @@ type Props = CampScene3DProps & {
   onReady?: () => void
 }
 
+/** Normaliza el role del backend a los roles que entiende la escena. */
+const normalizeRole = (role?: string): Camp3DRole => {
+  const r = (role ?? "").toLowerCase()
+  if (r.includes("admin")) return "admin"
+  if (r === "camp_leader" || r === "resource_manager" || r === "travel_manager") return r
+  return "worker"
+}
+
+/**
+ * Paso 07 — marcador de perfil: cada rol tiene "su" espacio en el campamento.
+ * Una luz azulada pulsa sobre esa zona; el click navega al perfil del usuario.
+ */
+const PROFILE_MARKERS: Record<Camp3DRole, { pos: [number, number, number]; route: string }> = {
+  admin: { pos: [0, 3.3, -6.6], route: "/admin/profile" }, // ventana 2do piso CG
+  camp_leader: { pos: [-4.4, 1.8, -10], route: "/campleader/dashboard" }, // ala lateral CG
+  resource_manager: { pos: [-8.3, 2.2, 4], route: "/camp-manager" }, // oficina del almacén
+  travel_manager: { pos: [10.2, 2, 11.6], route: "/travel-manager/dashboard" }, // despacho garaje
+  worker: { pos: [12.8, 1.5, -3.1], route: "/worker/dashboard" }, // su unidad en apartamentos
+}
+
 // Huella de los edificios en el minimapa (coordenadas mundo → minimapa).
 const MINIMAP_BUILDINGS = [
-  { x: -14, z: 4, w: 16, h: 10, col: "#b8b8a8" },
-  { x: 0, z: -10, w: 18, h: 13, col: "#303828" },
-  { x: 12, z: 3, w: 16, h: 12, col: "#686858" },
-  { x: -17, z: 11, w: 8, h: 8, col: "#4a3020" },
-  { x: 10, z: -6, w: 18, h: 10, col: "#5a3820" },
-  { x: 0, z: 9, w: 10, h: 8, col: "#3a4450" },
-  { x: 6, z: 11, w: 16, h: 6, col: "#4a3020" },
-  { x: -8, z: -8, w: 12, h: 8, col: "#686858" },
+  { x: -13, z: 4, w: 32, h: 23, col: "#686858" }, // almacén
+  { x: -6, z: 4, w: 13, h: 13, col: "#6b3520" }, // depósito fuel
+  { x: 0, z: -10, w: 26, h: 23, col: "#4a4a45" }, // cuartel general
+  { x: 10, z: -6, w: 29, h: 19, col: "#5a3825" }, // apartamentos
+  { x: 13.5, z: 8.5, w: 26, h: 27, col: "#404038" }, // garaje
+  { x: -17, z: 11, w: 14, h: 17, col: "#4a3020" }, // torre vigilancia
+  { x: -6, z: 12.5, w: 6, h: 7, col: "#3d2e1e" }, // garita
+  { x: 12, z: 3, w: 19, h: 17, col: "#686858" }, // armería
+  { x: 6, z: 11, w: 19, h: 9, col: "#4a3020" }, // cocina
+  { x: 0, z: 9, w: 10, h: 11, col: "#3a4450" }, // radio
 ]
 const MINIMAP_ZONES = [
   { x: 0, z: -5, col: 0x44ff44 },
-  { x: -11, z: 2, col: 0xff3333 },
+  { x: -11, z: -2, col: 0xff3333 },
   { x: 10, z: 4, col: 0xffbb00 },
 ]
 
@@ -40,7 +71,7 @@ const drawMinimap = (mmX: CanvasRenderingContext2D, cam: CameraState) => {
   // zone tints
   const ztc = [
     [70, 51, 0x44ff44],
-    [70 + -11 * 3.2, 70 + 2 * 3.8, 0xff3333],
+    [70 + -11 * 3.2, 70 + -2 * 3.8, 0xff3333],
     [70 + 10 * 3.2, 70 + 4 * 3.8, 0xffbb00],
   ]
   ztc.forEach((z) => {
@@ -120,19 +151,86 @@ export default function CampScene3D({ campId, onClose, onReady }: Props) {
   const handlesRef = useRef<SceneHandles | null>(null)
   const targetsRef = useRef<THREE.Object3D[]>([])
   const frameRef = useRef(0)
+  const profileRef = useRef<{ group: THREE.Group; light: THREE.PointLight } | null>(null)
 
   const navigate = useNavigate()
   const [hovered, setHovered] = useState<BuildingConfig | null>(null)
+
+  const user = useAuthStore((s) => s.user)
+  const role = normalizeRole(user?.role)
+
+  // Config sintética del marcador de perfil (Paso 07) para tooltip y click.
+  const profileBuilding = useMemo<BuildingConfig>(() => {
+    const marker = PROFILE_MARKERS[role]
+    return {
+      id: "profile",
+      label: `Tu Perfil — ${user?.username ?? role}`,
+      meshNames: [],
+      route: marker.route,
+      requiredRoles: [role],
+      reactiveData: null,
+      position3D: { x: marker.pos[0], y: marker.pos[1], z: marker.pos[2] },
+    }
+  }, [role, user?.username])
 
   const contextRef = useThreeScene(canvasRef, {
     onReady: (ctx) => {
       const handles = buildCampScene(ctx.scene)
       handlesRef.current = handles
-      targetsRef.current = handles.buildingMeshes
+
+      // Paso 09 — filtro por rol: los edificios sin acceso se oscurecen y
+      // dejan de ser objetivos del raycaster (admin ve todo sin cambios).
+      const allowed = new Set(
+        BUILDINGS.filter((b) => b.requiredRoles.includes(role)).map((b) => b.id),
+      )
+      const targets: THREE.Object3D[] = []
+      handles.buildingMeshes.forEach((meshObj) => {
+        const data = meshObj.userData as BuildingUserData
+        if (allowed.has(data.id)) {
+          targets.push(meshObj)
+        } else {
+          const m = (meshObj as THREE.Mesh).material as THREE.MeshStandardMaterial
+          m.color.multiplyScalar(0.35)
+          m.emissiveIntensity = 0
+        }
+      })
+
+      // Paso 07 — marcador de perfil: zona translúcida clickeable + luz que
+      // pulsa lentamente sobre el espacio del usuario.
+      const markerPos = PROFILE_MARKERS[role].pos
+      const group = new THREE.Group()
+      const zone = new THREE.Mesh(
+        new THREE.BoxGeometry(1.1, 1.1, 1.1),
+        new THREE.MeshStandardMaterial({
+          color: 0xaaddff,
+          emissive: 0xaaddff,
+          emissiveIntensity: 0.35,
+          transparent: true,
+          opacity: 0.22,
+          roughness: 0.5,
+        }),
+      )
+      zone.position.set(markerPos[0], markerPos[1], markerPos[2])
+      const profileData: BuildingUserData = {
+        type: "building",
+        id: "profile",
+        baseEmissiveIntensity: 0.35,
+      }
+      zone.userData = profileData
+      const light = new THREE.PointLight(0xaaddff, 0.9, 6)
+      light.position.set(markerPos[0], markerPos[1] + 0.5, markerPos[2])
+      group.add(zone, light)
+      ctx.scene.add(group)
+      profileRef.current = { group, light }
+      targets.push(zone)
+
+      targetsRef.current = targets
       onReady?.()
     },
     onFrame: (t, ctx) => {
       handlesRef.current?.animate(t)
+      const profile = profileRef.current
+      if (profile) profile.light.intensity = 0.7 + Math.sin(t * 2.2) * 0.35
       // Minimapa + HUD cada 3 frames (como el original).
       frameRef.current += 1
       if (frameRef.current % 3 === 0) {
@@ -154,6 +252,7 @@ export default function CampScene3D({ campId, onClose, onReady }: Props) {
       navigate(building.route)
     },
     onHoverChange: setHovered,
+    extraBuildings: [profileBuilding],
   })
 
   // Libera la escena al desmontar (el renderer lo libera useThreeScene).
@@ -162,6 +261,17 @@ export default function CampScene3D({ campId, onClose, onReady }: Props) {
       handlesRef.current?.dispose()
       handlesRef.current = null
       targetsRef.current = []
+      const profile = profileRef.current
+      if (profile) {
+        profile.group.traverse((obj) => {
+          const m = obj as THREE.Mesh
+          if (m.geometry) m.geometry.dispose()
+          if (m.material) (m.material as THREE.Material).dispose()
+        })
+        profile.group.removeFromParent()
+        profile.light.dispose()
+        profileRef.current = null
+      }
     }
   }, [])
 

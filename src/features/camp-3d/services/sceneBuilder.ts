@@ -47,15 +47,15 @@ export function buildCampScene(scene: THREE.Scene): SceneHandles {
   // Pre-built shared mats
   const M = {
     ground: mat(0x1a2010),
-    dirt: mat(0x2e1e0e),
+    dirt: mat(0x2a1e0e),
     mud: mat(0x1a1008),
     grass: mat(0x162e0c),
-    wood: mat(0x4a3020),
-    woodD: mat(0x2a1508),
-    plank: mat(0x5a3820),
-    metal: mat(0x404050, 0, 0, 0.5, 0.5),
-    rust: mat(0x6a2e10, 0, 0, 0.95, 0.1),
-    rust2: mat(0x4a1e08),
+    wood: mat(0x3d2e1e, 0, 0, 0.98, 0),
+    woodD: mat(0x241710, 0, 0, 0.98, 0),
+    plank: mat(0x4a3525, 0, 0, 0.97, 0),
+    metal: mat(0x2a2a30, 0, 0, 0.6, 0.7),
+    rust: mat(0x7a3518, 0, 0, 0.95, 0.15),
+    rust2: mat(0xa04820, 0, 0, 0.9, 0.1),
     brl_g: mat(0x1e3818, 0x002200, 0.08),
     brl_r: mat(0x481808, 0x280000, 0.08),
     brl_y: mat(0x383008, 0x180a00, 0.06),
@@ -63,7 +63,7 @@ export function buildCampScene(scene: THREE.Scene): SceneHandles {
     sandbag: mat(0x524830),
     corrugat: mat(0x686858, 0, 0, 0.7, 0.3),
     corrugD: mat(0x404030, 0, 0, 0.75, 0.3),
-    brick: mat(0x6a3820),
+    brick: mat(0x5a3825, 0, 0, 0.97, 0),
     chain: mat(0x707060, 0, 0, 0.5, 0.7),
     pipe: mat(0x383840, 0, 0, 0.4, 0.6),
     wireH: mat(0x909070, 0, 0, 0.5, 0.5),
@@ -83,7 +83,7 @@ export function buildCampScene(scene: THREE.Scene): SceneHandles {
       roughness: 0.01,
       metalness: 0.8,
     }),
-    tarp: mat(0x283c28, 0, 0, 1),
+    tarp: mat(0x3d3828, 0, 0, 1),
     tarpR: mat(0x3c1010, 0, 0, 1),
     tarpB: mat(0x101c3c, 0, 0, 1),
     medWall: mat(0xb8b8a8),
@@ -241,7 +241,7 @@ export function buildCampScene(scene: THREE.Scene): SceneHandles {
   // Gate
   cyl(0.22, 0.24, 3.8, 8, M.woodD, -5, 1.9, 14)
   cyl(0.22, 0.24, 3.8, 8, M.woodD, 5, 1.9, 14)
-  const gateMesh = box(10.6, 0.16, 0.2, M.wood, 0, 3.8, 14)
+  box(10.6, 0.16, 0.2, M.wood, 0, 3.8, 14) // portón de valla (decorativo)
   // barbed wire
   box(40, 0.03, 0.03, M.wireH, 0, 3.05, -15)
   box(0.03, 0.03, 30, M.wireH, -19, 3.05, 0)
@@ -287,20 +287,68 @@ export function buildCampScene(scene: THREE.Scene): SceneHandles {
 
   // ---- CAMP STRUCTURES ----
 
-  // 1. MEDICAL HUT (mapeado a "Almacén" / warehouse en buildings.config)
-  const warehouseMesh = box(5, 3.2, 4, M.medWall, -14, 1.6, 4)
-  box(5.2, 0.1, 4.2, M.corrugat, -14, 3.26, 4)
-  box(1.5, 0.4, 0.12, mat(0xcc1111, 0xaa0000, 1.2), -14, 2.3, 6.07)
-  box(0.4, 1.5, 0.12, mat(0xcc1111, 0xaa0000, 1.2), -14, 2.3, 6.07)
-  box(0.9, 2.4, 0.12, M.woodD, -14, 1.2, 6.09)
-  box(0.9, 0.7, 0.12, mat(0xeeffcc, 0xccffaa, 0.5, 0.1), -11.56, 1.9, 4)
-  ptL(0xaaffcc, 2.0, 7, -14, 1.5, 4)
-  cyl(0.025, 0.025, 1.8, 5, M.metal, -12.4, 0.9, 5.6)
-  box(0.55, 0.04, 0.04, M.metal, -12.4, 1.82, 5.6)
-  box(0.75, 0.25, 1.9, mat(0xaaaaaa), -14.4, 0.25, 3.5)
-  box(0.75, 0.25, 1.9, mat(0xaaaaaa), -13.4, 0.25, 3.5)
-  cyl(0.035, 0.035, 2.5, 5, M.metal, -11.2, 1.25, 6.6)
-  box(1.3, 0.45, 0.1, mat(0xcc1111, 0xaa0000, 0.6), -11.2, 2.7, 6.6)
+  // 1. ALMACÉN + DEPÓSITO DE COMBUSTIBLE (Paso 05 — Recursos, estilo TLoU2)
+  // Nave industrial de chapa corrugada con el depósito de combustible adosado
+  // lateralmente: tanques cilíndricos exteriores con tubos de venteo, valla de
+  // cadena, letreros FUEL, pallets, barriles y tuberías en la zona de carga.
+  // La luz roja de alerta (intensity 0) la enciende el paso de datos reactivos
+  // cuando inventory.alert_active.
+  const whRoof = mat(0x505048, 0, 0, 0.78, 0.3)
+  const whDoor = mat(0x404040, 0, 0, 0.55, 0.6)
+  const whTank = mat(0x6b3520, 0, 0, 0.92, 0.12)
+  const whFence = mat(0x383840, 0, 0, 0.55, 0.65)
+  const whSign = mat(0xffdd00, 0xffdd00, 0.8)
+
+  const WHX = -13
+  const WHZ = 4
+  const warehouseMesh = box(10, 4, 6, M.corrugat, WHX, 2, WHZ)
+  box(10.2, 0.15, 6.2, whRoof, WHX, 4.1, WHZ, 0, 0, 0.04)
+  // Puerta corredera grande de metal + ventanas altas (estantería visible).
+  box(3, 3.4, 0.15, whDoor, WHX, 1.7, WHZ + 3.05)
+  for (let wvi = 0; wvi < 4; wvi++)
+    box(1.2, 1.0, 0.12, M.glass, WHX - 3.6 + wvi * 2.4, 3.1, WHZ + 3.04)
+  box(1.5, 2.0, 0.04, M.woodD, WHX + 1.2, 2.4, WHZ + 2.7)
+  // Depósito de combustible adosado lateral + tanques con tubos de venteo.
+  box(4, 3.5, 3.5, whTank, WHX + 7, 1.75, WHZ)
+  box(4.2, 0.12, 3.7, whRoof, WHX + 7, 3.56, WHZ)
+  cyl(0.8, 0.85, 2.2, 10, whTank, WHX + 8, 1.1, WHZ + 3)
+  cyl(0.8, 0.85, 2.2, 10, whTank, WHX + 6.2, 1.1, WHZ + 3.3)
+  cyl(0.06, 0.08, 2.5, 6, M.pipe, WHX + 8, 2.6, WHZ + 3)
+  cyl(0.06, 0.08, 2.5, 6, M.pipe, WHX + 6.2, 2.6, WHZ + 3.3)
+  // Valla de cadena alrededor del depósito + letreros de peligro FUEL.
+  box(4.5, 1.8, 0.08, whFence, WHX + 7, 0.9, WHZ + 4.3)
+  box(0.08, 1.8, 3.5, whFence, WHX + 9.2, 0.9, WHZ + 2.5)
+  box(0.3, 0.4, 0.06, whSign, WHX + 6.2, 1.2, WHZ + 4.35)
+  box(0.3, 0.4, 0.06, whSign, WHX + 8, 1.2, WHZ + 4.35)
+  // Zona de carga: pallets, barriles apilados y tuberías en el suelo.
+  box(0.95, 0.15, 0.95, M.plank, WHX - 0.8, 0.08, WHZ + 4.2)
+  box(0.95, 0.15, 0.95, M.plank, WHX + 0.4, 0.08, WHZ + 4.5)
+  box(0.95, 0.15, 0.95, M.plank, WHX - 0.2, 0.23, WHZ + 4.3)
+  box(0.95, 0.15, 0.95, M.plank, WHX - 2, 0.08, WHZ + 4.0)
+  cyl(0.35, 0.37, 0.92, 8, M.brl_g, WHX - 3.6, 0.46, WHZ + 3.8)
+  cyl(0.35, 0.37, 0.92, 8, M.brl_g, WHX - 4.3, 0.46, WHZ + 3.6)
+  cyl(0.35, 0.37, 0.92, 8, M.brl_r, WHX - 3.9, 0.46, WHZ + 4.5)
+  cyl(0.35, 0.37, 0.92, 8, M.brl_r, WHX - 4.5, 0.46, WHZ + 4.4)
+  cyl(0.35, 0.37, 0.92, 8, M.brl_g, WHX - 4.0, 1.38, WHZ + 4.1)
+  cyl(0.35, 0.37, 0.92, 8, M.brl_y, WHX - 3.2, 0.46, WHZ + 4.3)
+  box(8, 0.07, 0.07, M.pipe, WHX + 1, 0.05, WHZ + 3.6)
+  box(7, 0.07, 0.07, M.pipe, WHX - 1, 0.05, WHZ + 3.32)
+  // Escombros en la zona de carga.
+  for (let wdi = 0; wdi < 4; wdi++)
+    box(
+      0.12,
+      0.1,
+      0.12,
+      M.gravel,
+      WHX - 3 + Math.random() * 6,
+      0.05,
+      WHZ + 3.4 + Math.random(),
+      Math.random() * Math.PI,
+    )
+  // Luces: interior cálida, depósito tenue y alerta roja (apagada por defecto).
+  const whLight = ptL(0xffcc88, 3.0, 12, WHX, 2.5, WHZ)
+  ptL(0x332200, 0.6, 5, WHX + 7, 2, WHZ)
+  const whAlertLight = ptL(0xff2200, 0, 10, WHX, 5, WHZ)
 
   // 2. CUARTEL GENERAL (Paso 01 — Dashboard, estilo TLoU2)
   // Edificio principal de 2 pisos en concreto envejecido, torre de ladrillo en
@@ -400,11 +448,85 @@ export function buildCampScene(scene: THREE.Scene): SceneHandles {
     )
 
   // Iluminación: foco interior cálido + foco exterior tenue.
-  ptL(0xff9944, 2.5, 10, CGX, 2.5, CGZ)
+  const cgInteriorLight = ptL(0xff9944, 2.5, 10, CGX, 2.5, CGZ)
   ptL(0x334422, 0.6, 6, CGX, 3, CGZ + 4)
 
-  // 3. ARMORY
-  const armoryMesh = box(6, 3, 4.5, M.corrugat, 12, 1.5, 3)
+  // 9. GARITA DEL GUARDIA (Paso 02 — Admisiones, estilo TLoU2)
+  // Caseta de control en la entrada principal: madera con chapa oxidada,
+  // ventana deslizable para revisar documentos, barrera vehicular abatible y
+  // lámpara de emergencia. La barrera y la lámpara reaccionan a admisiones
+  // PENDING en el paso de datos reactivos; aquí queda la geometría base.
+  const gtWood = mat(0x3d2e1e, 0, 0, 0.98, 0)
+  const gtRoof = mat(0x6b3520, 0, 0, 0.95, 0.15)
+  const gtBarrier = mat(0x7a3518, 0, 0, 0.95, 0.2)
+  const gtSign = mat(0xcc1111, 0xcc1111, 0.3)
+  const gtStripe = mat(0xffcc00, 0xffcc00, 0.3)
+  const gtChair = mat(0x404040, 0, 0, 0.9, 0.3)
+
+  const GTX = -6
+  const GTZ = 12.5
+  // Cuerpo de la caseta + techo inclinado de chapa.
+  const gateMesh = box(1.8, 2.5, 1.8, gtWood, GTX, 1.25, GTZ)
+  box(1.9, 0.15, 1.9, gtRoof, GTX, 2.6, GTZ, 0, 0, 0.08)
+  // Ventana lateral deslizable (hacia el camino) + puerta frontal angosta.
+  box(0.65, 0.55, 0.12, M.glass, GTX + 0.91, 1.55, GTZ, Math.PI / 2)
+  box(0.6, 1.8, 0.12, gtWood, GTX, 0.9, GTZ + 0.91)
+  // Tablilla de registro en la pared y silla oxidada visible por el vidrio.
+  box(0.5, 0.5, 0.04, gtWood, GTX - 0.88, 1.5, GTZ, Math.PI / 2)
+  box(0.35, 0.6, 0.35, gtChair, GTX - 0.2, 0.3, GTZ - 0.2)
+  // Letreros de advertencia pintados a mano.
+  box(0.3, 0.4, 0.06, gtSign, GTX, 1.9, GTZ + 0.92)
+  box(0.3, 0.4, 0.06, gtSign, GTX + 0.92, 1.0, GTZ - 0.4, Math.PI / 2)
+
+  // Barrera vehicular abatible sobre la entrada. El brazo vive en un grupo con
+  // pivote en el poste para poder animar rotation.z (sube/baja con admisiones).
+  cyl(0.05, 0.06, 2.5, 6, gtBarrier, GTX + 2.2, 1.25, GTZ + 0.5)
+  cyl(0.05, 0.06, 1.9, 6, gtBarrier, GTX + 5.7, 0.95, GTZ + 0.5)
+  const gtBarrierArm = new THREE.Group()
+  gtBarrierArm.position.set(GTX + 2.2, 1.9, GTZ + 0.5)
+  const gtArm = new THREE.Mesh(gBox(3.5, 0.08, 0.1), gtBarrier)
+  gtArm.position.x = 1.75
+  gtArm.castShadow = true
+  gtBarrierArm.add(gtArm)
+  for (let gsi = 0; gsi < 3; gsi++) {
+    const stripe = new THREE.Mesh(gBox(0.55, 0.085, 0.105), gtStripe)
+    stripe.position.x = 0.5 + gsi * 1.1
+    gtBarrierArm.add(stripe)
+  }
+  root.add(gtBarrierArm)
+
+  // Lámpara de emergencia interior (parpadeará con admisiones PENDING).
+  cyl(0.04, 0.04, 0.8, 5, M.metal, GTX, 2.0, GTZ)
+  sph(0.1, 7, mat(0xff9933, 0xff9933, 3.0), GTX, 1.6, GTZ)
+  const gtLamp = ptL(0xffaa44, 2.0, 5, GTX, 1.7, GTZ)
+
+  // Sacos de arena apilados en las esquinas + musgo + escombros.
+  const gtCorners: [number, number][] = [
+    [GTX - 0.8, GTZ - 0.8],
+    [GTX + 0.8, GTZ - 0.8],
+    [GTX - 0.8, GTZ + 0.8],
+    [GTX + 0.8, GTZ + 0.8],
+  ]
+  gtCorners.forEach(([cx, cz]) => {
+    box(0.6, 0.26, 0.36, M.sandbag, cx, 0.13, cz)
+    box(0.6, 0.26, 0.36, M.sandbag, cx, 0.39, cz, 0.2)
+  })
+  box(0.04, 0.5, 0.04, cgMoss, GTX - 0.9, 1.0, GTZ + 0.4)
+  box(0.04, 0.5, 0.04, cgMoss, GTX + 0.9, 1.2, GTZ - 0.3)
+  for (let gdi = 0; gdi < 3; gdi++)
+    box(
+      0.1,
+      0.08,
+      0.08,
+      M.gravel,
+      GTX + 1 + Math.random() * 2,
+      0.05,
+      GTZ + Math.random() * 1.5,
+      Math.random() * Math.PI,
+    )
+
+  // 3. ARMORY (decorativa; en el Paso 07 será el locker del worker-soldado)
+  box(6, 3, 4.5, M.corrugat, 12, 1.5, 3)
   box(6.2, 0.1, 4.7, M.corrugD, 12, 3.06, 3)
   box(6.6, 0.06, 5, M.tarp, 12, 3.38, 3, 0, 0, 0.07)
   box(1.4, 2.2, 0.1, M.metal, 12, 1.1, 5.28)
@@ -415,50 +537,184 @@ export function buildCampScene(scene: THREE.Scene): SceneHandles {
   cyl(0.35, 0.36, 0.92, 8, M.brl_g, 15.2, 0.46, 1)
   cyl(0.35, 0.36, 0.92, 8, M.brl_r, 14.5, 0.46, 2)
 
-  // 4. WATCHTOWER
-  const wtp = [
-    [-15.75, 11.25],
-    [-15.75, 9.75],
-    [-18.25, 11.25],
-    [-18.25, 9.75],
+  // 4. TORRE DE VIGILANCIA (Paso 04 — Exploraciones, estilo TLoU2)
+  // Torre de madera reforzada de ~6.5m: 4 postes inclinados, plataforma con
+  // parapetos y sacos, techo inclinado, escalera de mano, reflector articulado
+  // (spot1: hace sweep en reposo y sigue a las figuras de la exploración),
+  // cuerdas tensadas, bitácora y binoculares en la plataforma.
+  const wtPost = mat(0x3d2e1e, 0, 0, 0.98, 0)
+  const wtPlat = mat(0x2a1e10, 0, 0, 0.99, 0)
+  const wtRoofM = mat(0x4a3020, 0, 0, 0.98, 0)
+  const wtParap = mat(0x3a2818, 0, 0, 0.98, 0)
+  const wtRefl = mat(0x383840, 0, 0, 0.5, 0.6)
+  const wtRope = mat(0x4a4018, 0, 0, 0.9, 0)
+
+  const WTX = -17
+  const WTZ = 11
+  const wtLegs: [number, number, number, number][] = [
+    [WTX - 1.25, WTZ - 1.25, 0.03, -0.03],
+    [WTX + 1.25, WTZ - 1.25, 0.03, 0.03],
+    [WTX - 1.25, WTZ + 1.25, -0.03, -0.03],
+    [WTX + 1.25, WTZ + 1.25, -0.03, 0.03],
   ]
-  wtp.forEach((p) => cyl(0.11, 0.14, 4.8, 6, M.wood, p[0], 2.4, p[1]))
-  box(3.5, 0.28, 3.5, M.wood, -17, 4.24, 11)
-  box(3.5, 0.08, 0.08, M.wood, -17, 4.5, 9.76)
-  box(3.5, 0.08, 0.08, M.wood, -17, 4.5, 12.24)
-  box(0.08, 0.08, 2.5, M.wood, -15.76, 4.5, 11)
-  box(0.08, 0.08, 2.5, M.wood, -18.24, 4.5, 11)
-  const watchtowerMesh = box(4.4, 0.18, 4.4, M.woodD, -17, 5.2, 11, 0.07)
-  for (let si = 0; si < 5; si++)
-    box(0.65, 0.28, 0.38, M.sandbag, -15.75, 4.58, -15.75 + si * 0.7 + 11.25)
-  box(0.04, 4.2, 0.04, M.wood, -16.0, 2.1, 12.3)
-  box(0.04, 4.2, 0.04, M.wood, -16.4, 2.1, 12.3)
-  for (let li = 0; li < 5; li++) box(0.04, 0.04, 0.42, M.wood, -16.2, 0.8 + li * 0.78, 12.3)
-  box(0.4, 0.25, 0.5, M.metal, -17, 5.5, 11, 0.2)
-  sph(0.12, 7, mat(0xffffff, 0xffffff, 3.5), -17, 5.65, 10.8)
+  wtLegs.forEach(([lx, lz, rx, rz]) =>
+    mk(gCyl(0.12, 0.16, 6.5, 6), wtPost, lx, 3.25, lz, 0, rx, rz),
+  )
+  box(3.5, 0.25, 3.5, wtPlat, WTX, 5.9, WTZ)
+  // Parapetos frontal/trasero + laterales.
+  box(3.7, 0.08, 0.1, wtParap, WTX, 6.55, WTZ - 1.8)
+  box(3.7, 0.08, 0.1, wtParap, WTX, 6.55, WTZ + 1.8)
+  box(0.08, 0.08, 3.0, wtParap, WTX - 1.8, 6.55, WTZ)
+  box(0.08, 0.08, 3.0, wtParap, WTX + 1.8, 6.55, WTZ)
+  // Postes del techo + techo inclinado de madera oscura (mesh clickeable).
+  for (const [cx2, cz2] of [
+    [WTX - 1.5, WTZ - 1.5],
+    [WTX + 1.5, WTZ - 1.5],
+    [WTX - 1.5, WTZ + 1.5],
+    [WTX + 1.5, WTZ + 1.5],
+  ])
+    box(0.08, 1.5, 0.08, wtPost, cx2, 6.75, cz2)
+  const watchtowerMesh = box(4.4, 0.18, 4.4, wtRoofM, WTX, 7.55, WTZ, 0, 0, 0.07)
+  // Escalera de mano (largueros + 8 peldaños).
+  box(0.04, 6, 0.04, wtPost, WTX + 0.95, 3, WTZ + 1.45)
+  box(0.04, 6, 0.04, wtPost, WTX + 0.45, 3, WTZ + 1.45)
+  for (let wli = 0; wli < 8; wli++)
+    box(0.55, 0.04, 0.04, wtPost, WTX + 0.7, 0.6 + wli * 0.72, WTZ + 1.45)
+  // Reflector articulado con lente cegadora (la luz direccional es spot1).
+  box(0.5, 0.28, 0.4, wtRefl, WTX, 6.25, WTZ - 0.3, 0, 0.2)
+  sph(0.14, 7, mat(0xffffff, 0xffffff, 4.0), WTX, 6.3, WTZ - 0.55)
   const spot1 = new THREE.SpotLight(0xdde8ff, 12, 45, Math.PI / 9, 0.2, 2)
-  spot1.position.set(-17, 5.4, 11)
+  spot1.position.set(WTX, 6.2, WTZ - 0.4)
   spot1.target.position.set(0, 0, 0)
   spot1.castShadow = false
   root.add(spot1)
   root.add(spot1.target)
+  // Sacos de arena en la plataforma (6) + bitácora + binoculares en repisa.
+  for (let wsi = 0; wsi < 6; wsi++)
+    box(0.65, 0.28, 0.4, M.sandbag, WTX - 1.45 + wsi * 0.58, 6.17, WTZ + 1.55)
+  box(0.25, 0.3, 0.12, M.plank, WTX + 1.2, 6.17, WTZ - 1.2)
+  box(0.08, 0.08, 0.08, M.metal, WTX - 1.3, 6.62, WTZ - 1.78)
+  // Cuerdas tensadas desde la plataforma hacia anclajes en el suelo.
+  box(0.04, 0.04, 7, wtRope, WTX + 1.2, 2.9, WTZ - 2.6, 0, 0.55)
+  box(0.04, 0.04, 7, wtRope, WTX - 1.2, 2.9, WTZ - 2.6, 0, 0.55)
+  box(0.04, 0.04, 7, wtRope, WTX + 2.4, 2.9, WTZ - 1.2, 0.5, 0.55)
+  // Luz tenue en la base + escombros.
+  ptL(0x331a00, 0.8, 6, WTX, 1, WTZ)
+  for (let wdi2 = 0; wdi2 < 3; wdi2++)
+    box(
+      0.12,
+      0.1,
+      0.1,
+      M.gravel,
+      WTX - 1 + Math.random() * 2,
+      0.05,
+      WTZ - 2 + Math.random(),
+      Math.random() * Math.PI,
+    )
 
-  // 5. BARRACKS
-  const barracksMesh = box(7, 2.6, 4, M.plank, 10, -0.2, -6)
-  box(7.2, 0.1, 4.2, M.corrugat, 10, 2.56, -6)
-  box(1.0, 2.0, 0.1, M.woodD, 6.55, 1.0, -6)
-  for (let bi = 0; bi < 3; bi++) {
-    box(0.8, 0.3, 1.9, mat(0x3a2a18), 8.5 + bi * 1.8, 0.3, -6, 0.04)
-    box(0.8, 0.12, 0.38, mat(0x6a5040), 8.5 + bi * 1.8, 0.44, -7)
+  // 5. APARTAMENTOS (Paso 03 — Personal, estilo TLoU2)
+  // Edificio residencial de ladrillo de 3 pisos reconvertido en dormitorios
+  // colectivos: ventanas mixtas (lit/tapiadas), balcones con ropa tendida (que
+  // oscila en animate), escalera de emergencia lateral, vegetación desde el
+  // tercer piso y grietas en la fachada. El número de ventanas iluminadas
+  // reflejará el personal activo en el paso de datos reactivos.
+  const aptBrick = mat(0x5a3825, 0, 0, 0.97, 0)
+  const aptRoof = mat(0x383830, 0, 0, 0.98, 0)
+  const aptBoard = new THREE.MeshStandardMaterial({
+    color: 0x1a1a1a,
+    transparent: true,
+    opacity: 0.7,
+    roughness: 0.95,
+  })
+  const aptBalcony = mat(0x2a2a30, 0, 0, 0.6, 0.5)
+  const aptStairs = mat(0x6b3520, 0, 0, 0.95, 0.15)
+  const aptCrack = mat(0x2a2000, 0, 0, 0.99, 0)
+  const aptWinLit = new THREE.MeshStandardMaterial({
+    color: 0xff9944,
+    emissive: 0xff9944,
+    emissiveIntensity: 0.9,
+    transparent: true,
+    opacity: 0.85,
+    roughness: 0.3,
+  })
+
+  const APX = 10
+  const APZ = -6
+  const barracksMesh = box(9, 7.5, 5, aptBrick, APX, 3.75, APZ)
+  box(9.2, 0.2, 5.2, aptRoof, APX, 7.6, APZ)
+  // Ventanas x9 (3 por piso): mixtas iluminadas / tapiadas con tablones.
+  const aptLitPattern = [true, false, true, true, false, true, false, true, false]
+  for (let api = 0; api < 9; api++) {
+    const fx = APX - 2.8 + (api % 3) * 2.8
+    const fy = 1.5 + Math.floor(api / 3) * 2.4
+    box(1.1, 1.2, 0.12, aptLitPattern[api] ? aptWinLit : aptBoard, fx, fy, APZ + 2.56)
   }
-  box(0.9, 0.6, 0.1, mat(0x334455, 0x223344, 0.3, 0.1), 13.5, 1.5, -6)
-  ptL(0xffaa66, 1.0, 6, 10, 1.4, -6)
-  box(0.04, 0.04, 8, M.rope, 10, 2.5, -3.75, Math.PI / 2)
-  for (let cl = 0; cl < 5; cl++)
-    box(0.22, 0.35, 0.02, mat(0x3a2a1a + cl * 0x020202), 7.5 + cl * 1.4, 2.28, -3.75)
+  // Balcones x4 (pisos 2-3) con barandal, cuerdas y ropa tendida.
+  const aptClothes: THREE.Mesh[] = []
+  const prendaCols = [0x3a2a1a, 0x223344, 0x442200, 0x3a2a1a, 0x223344, 0x442200]
+  const aptBalconies: [number, number][] = [
+    [APX - 2.5, 3.6],
+    [APX + 2.5, 3.6],
+    [APX - 2.5, 6.0],
+    [APX + 2.5, 6.0],
+  ]
+  aptBalconies.forEach(([bx, by], bi) => {
+    box(1.8, 0.1, 0.5, aptBalcony, bx, by - 0.65, APZ + 2.75)
+    box(1.9, 0.08, 0.52, aptBalcony, bx, by - 0.1, APZ + 2.98)
+    box(1.7, 0.02, 0.02, wtRope, bx, by - 0.2, APZ + 2.9)
+    if (bi < 3)
+      for (let pci = 0; pci < 2; pci++)
+        aptClothes.push(
+          box(
+            0.25,
+            0.35,
+            0.02,
+            mat(prendaCols[bi * 2 + pci], 0, 0, 1),
+            bx - 0.4 + pci * 0.8,
+            by - 0.38,
+            APZ + 2.9,
+          ),
+        )
+  })
+  // Escalera de emergencia en la fachada lateral (12 peldaños).
+  box(0.04, 5, 0.04, aptStairs, APX + 4.56, 3.4, APZ - 0.3)
+  box(0.04, 5, 0.04, aptStairs, APX + 4.56, 3.4, APZ + 0.3)
+  for (let asi = 0; asi < 12; asi++)
+    box(0.04, 0.04, 0.65, aptStairs, APX + 4.56, 1.1 + asi * 0.42, APZ)
+  // Entrada reforzada con sacos de arena.
+  box(1.2, 2.4, 0.15, cgDoor, APX, 1.2, APZ + 2.58)
+  box(6, 0.28, 0.4, M.sandbag, APX, 0.14, APZ + 2.95)
+  box(4.5, 0.28, 0.4, M.sandbag, APX, 0.42, APZ + 2.95)
+  // Vegetación desde el tercer piso + grietas oscuras + letrero despintado.
+  for (let avi = 0; avi < 8; avi++)
+    box(0.04, 0.6, 0.04, cgMoss, APX - 4 + Math.random() * 8, 4.5 + Math.random() * 2.5, APZ + 2.56)
+  const aptCracks: [number, number][] = [
+    [APX - 3.8, 2.2],
+    [APX - 1.4, 5.0],
+    [APX + 0.8, 3.2],
+    [APX + 2.9, 6.2],
+    [APX + 3.9, 1.6],
+  ]
+  aptCracks.forEach(([cx3, cy3]) => box(0.04, 0.8, 0.04, aptCrack, cx3, cy3, APZ + 2.55, 0, 0, 0.3))
+  box(2, 0.4, 0.1, mat(0x3a3a32, 0, 0, 0.98), APX, 7.1, APZ + 2.6)
+  // Luces interiores por piso + escombros perimetrales.
+  ptL(0xff9944, 1.5, 7, APX, 1.5, APZ)
+  ptL(0xff9944, 1.5, 7, APX, 3.9, APZ)
+  ptL(0xff9944, 1.5, 7, APX, 6.3, APZ)
+  for (let adi = 0; adi < 6; adi++)
+    box(
+      0.12,
+      0.1,
+      0.12,
+      M.gravel,
+      APX - 4 + Math.random() * 8,
+      0.05,
+      APZ + 2.9 + Math.random() * 0.8,
+      Math.random() * Math.PI,
+    )
 
-  // 6. RADIO STATION
-  const radioMesh = box(3, 2.8, 2.8, mat(0x3a4450), 0, 1.4, 9)
+  // 6. RADIO STATION (decorativa en el plan TLoU2)
+  box(3, 2.8, 2.8, mat(0x3a4450), 0, 1.4, 9)
   box(3.2, 0.1, 3.0, M.corrugat, 0, 2.86, 9)
   cyl(0.035, 0.035, 1.8, 5, M.metal, 0, 3.0, 9)
   box(1.0, 0.05, 0.85, M.metal, 0, 3.95, 9, 0.35, 0.45)
@@ -482,20 +738,12 @@ export function buildCampScene(scene: THREE.Scene): SceneHandles {
   box(2.5, 0.8, 0.8, M.wood, 6, 0.4, 11.2)
   cyl(0.28, 0.28, 0.35, 7, M.metal, 6, 0.95, 11.2)
 
-  // 8. FUEL DEPOT
-  const fuelMesh = box(4, 2.2, 3, M.corrugat, -8, -0.4, -8)
-  box(4.2, 0.1, 3.2, M.corrugD, -8, 2.09, -8)
-  cyl(0.35, 0.36, 0.92, 8, M.brl_y, -9.2, 0.46, -8)
-  cyl(0.35, 0.36, 0.92, 8, M.brl_y, -8.4, 0.46, -8)
-  cyl(0.35, 0.36, 0.92, 8, M.brl_r, -9.2, 0.46, -9)
-  box(4.1, 0.08, 0.08, mat(0xffdd00, 0xffcc00, 0.5), -8, 0.8, -6.6)
-  box(4.1, 0.08, 0.08, mat(0xffdd00, 0xffcc00, 0.5), -8, 1.4, -6.6)
-  box(0.65, 0.65, 0.1, mat(0xffdd00, 0xffcc00, 0.3), -8, 1.9, -6.6)
+  // (El antiguo FUEL DEPOT se fusionó con el Almacén — Paso 05.)
 
   // ---- ZONE MARKERS ----
   const zoneData = [
     { x: 0, z: -5, col: 0x44ff44, ec: 0x00cc00, gM: glowG },
-    { x: -11, z: 2, col: 0xff3333, ec: 0xcc0000, gM: glowR },
+    { x: -11, z: -2, col: 0xff3333, ec: 0xcc0000, gM: glowR },
     { x: 10, z: 4, col: 0xffbb00, ec: 0xcc7700, gM: glowY },
   ]
   const zoneLights: { l: THREE.PointLight; b: number }[] = []
@@ -534,7 +782,7 @@ export function buildCampScene(scene: THREE.Scene): SceneHandles {
     cyl(0.07, 0.08, 2.5, 6, M.metal, x - (c * len) / 2, 1.25, z - (s * len) / 2)
     cyl(0.07, 0.08, 2.5, 6, M.metal, x + (c * len) / 2, 1.25, z + (s * len) / 2)
   }
-  chFence(-7, -1, 10, Math.PI / 2)
+  chFence(-7, -3, 6, Math.PI / 2)
   chFence(7, 2, 8, Math.PI / 2)
 
   // ---- SANDBAGS (instanced) ----
@@ -550,7 +798,7 @@ export function buildCampScene(scene: THREE.Scene): SceneHandles {
       }
   }
   sbRow(-8, 2, 5, 0, 2)
-  sbRow(8, -4, 4, Math.PI / 2, 2)
+  sbRow(4, -4, 4, Math.PI / 2, 2)
   sbRow(-4, -8, 6, 0.3, 1)
   sbRow(12, -2, 4, Math.PI / 2, 3)
   sbRow(-13, -6, 5, 0, 2)
@@ -613,16 +861,8 @@ export function buildCampScene(scene: THREE.Scene): SceneHandles {
     [-9, 7],
     [-9, 7.3],
     [-8.5, 8.2],
-    [13, 9],
-    [13, 9.3],
-    [14, 9],
-    [14, 9.3],
-    [14, 9.6],
-    [13.5, 8.8],
-    [16, 5],
-    [16, 5.3],
-    [-16, 4],
-    [-16, 4.3],
+    [-16.5, 8.8],
+    [-16.5, 9.1],
   ]
   const iTires = new THREE.InstancedMesh(tireGeo, M.tire, tireData.length)
   tireData.forEach((p, i) => {
@@ -639,14 +879,14 @@ export function buildCampScene(scene: THREE.Scene): SceneHandles {
     [-12, -6],
     [-13, -5.3],
     [-11.5, -5],
-    [12, -7],
-    [12.8, -6.5],
+    [16, -7],
+    [16.8, -6.4],
     [0, -10],
     [1, -10.4],
     [-1, -9.8],
     [-4, 10],
     [-3.2, 10.4],
-    [14, 10],
+    [17.8, 12.9],
     [-7, -12],
     [-6, -11.5],
   ]
@@ -658,16 +898,63 @@ export function buildCampScene(scene: THREE.Scene): SceneHandles {
     box(0.96, 0.05, 0.05, M.woodD, p[0], h * 0.65, p[1], ry)
   })
 
-  // ---- WRECKED CAR (mapeado a "Camión" / truck) ----
-  const truckMesh = box(3.5, 0.9, 1.8, M.rust, 15, 0.45, 7, -0.15)
-  box(1.8, 0.8, 1.7, M.rust2, 15.5, 1.0, 7, -0.15)
-  box(1.5, 0.6, 0.12, M.glass, 16.15, 1.1, 7.1, -0.15)
-  ;[
-    [14, 6],
-    [16.2, 6],
-    [14, 8],
-    [16.2, 8],
-  ].forEach((p) => mk(gCyl(0.42, 0.42, 0.22, 10), M.tire, p[0], 0.22, p[1]))
+  // ---- 7. GARAJE DE TRASLADOS (Paso 06 — Transfers, estilo TLoU2) ----
+  // Garaje industrial de chapa y concreto: puerta basculante con pivote en el
+  // dintel (rotation.x 0 → -PI/2 al abrir), camioneta vieja visible adentro,
+  // herramientas colgadas, bidones de aceite, manchas brillantes en el suelo y
+  // señalización pintada. El camión de traslado (oculto) sale por el gate al
+  // disparar playTransferAnimation.
+  const gjWall = mat(0x404038, 0, 0, 0.88, 0.22)
+  const gjRoof = mat(0x383830, 0, 0, 0.65, 0.45)
+  const gjVan = mat(0x5a3020, 0, 0, 0.95, 0.1)
+  const gjTools = mat(0x4a4040, 0, 0, 0.6, 0.55)
+  const gjOil = new THREE.MeshStandardMaterial({
+    color: 0x0a0a08,
+    roughness: 0.02,
+    metalness: 0.7,
+  })
+  const gjSignal = mat(0xffdd00, 0xffdd00, 0.2)
+
+  const GJX = 13.5
+  const GJZ = 8.5
+  const garageMesh = box(8, 4, 7, gjWall, GJX, 2, GJZ)
+  box(8.2, 0.15, 7.2, gjRoof, GJX, 4.1, GJZ, 0, 0, 0.03)
+  // Puerta basculante (grupo con pivote en el dintel) + panel inferior.
+  const gjDoorPivot = new THREE.Group()
+  gjDoorPivot.position.set(GJX, 3.75, GJZ + 3.52)
+  const gjDoor = new THREE.Mesh(gBox(7, 3.5, 0.15), mat(0x383830, 0, 0, 0.65, 0.45))
+  gjDoor.position.y = -1.75
+  gjDoor.castShadow = true
+  gjDoorPivot.add(gjDoor)
+  root.add(gjDoorPivot)
+  box(7, 0.12, 0.15, gjWall, GJX, 0.06, GJZ + 3.52)
+  // Camioneta vieja en el interior (cabina + ruedas).
+  const gjVanX = GJX - 1.8
+  box(2.2, 0.9, 4.6, gjVan, gjVanX, 0.75, GJZ - 0.4)
+  box(2.0, 0.7, 1.4, gjVan, gjVanX, 1.5, GJZ + 1)
+  for (const [wx2, wz2] of [
+    [gjVanX - 1.15, GJZ - 2],
+    [gjVanX + 1.15, GJZ - 2],
+    [gjVanX - 1.15, GJZ + 1.2],
+    [gjVanX + 1.15, GJZ + 1.2],
+  ])
+    mk(gCyl(0.42, 0.42, 0.22, 10), M.tire, wx2, 0.42, wz2, 0, 0, Math.PI / 2)
+  // Herramientas colgadas, cables, bidones de aceite y manchas en el suelo.
+  box(0.04, 2, 0.04, cgCable, GJX + 3.9, 2, GJZ - 2)
+  for (let gti = 0; gti < 4; gti++)
+    box(0.25, 0.3, 0.04, gjTools, GJX + 1 + gti * 0.6, 2.2, GJZ - 3.4)
+  cyl(0.2, 0.22, 0.5, 8, M.brl_y, GJX + 3.2, 0.25, GJZ + 2.5)
+  cyl(0.2, 0.22, 0.5, 8, M.brl_y, GJX + 2.7, 0.25, GJZ + 2.8)
+  cyl(0.2, 0.22, 0.5, 8, M.brl_y, GJX + 2.95, 0.75, GJZ + 2.65)
+  box(6, 0.04, 0.3, gjSignal, GJX, 0.03, GJZ + 4.5)
+  for (const [ox, oz] of [
+    [GJX - 1, GJZ + 2],
+    [GJX + 0.8, GJZ + 1],
+    [GJX - 2.5, GJZ + 3],
+    [GJX + 1.8, GJZ + 4.3],
+  ])
+    pln(0.8, 0.6, gjOil, ox, 0.018, oz, Math.random() * Math.PI)
+  ptL(0xff9944, 4.0, 10, GJX, 2.5, GJZ)
 
   // ---- FIRE PIT ----
   cyl(0.62, 0.72, 0.18, 10, mat(0x2a2a20), -3, 0.09, 8)
@@ -700,16 +987,16 @@ export function buildCampScene(scene: THREE.Scene): SceneHandles {
   lantern(8, 3.6, -15, 0xffaa33)
   lantern(-5, 3.0, 14, 0xffcc55)
   lantern(5, 3.0, 14, 0xffcc55)
-  lantern(-14, 3.0, 6.5, 0xffeedd)
+  lantern(-13, 3.0, 8, 0xffeedd)
   lantern(0, 3.5, -7.5, 0xaaffaa)
   lantern(10, 3.2, 3.0, 0xffddaa)
   lantern(6, 3.0, 11.5, 0xffcc88)
   lantern(-3, 3.2, 9.5, 0x44ff88)
 
-  // Laundry line
-  box(0.03, 0.03, 14, M.rope, 0, 2.92, -12.5, Math.PI / 2)
+  // Laundry line (detrás del Cuartel General, entre el edificio y la valla)
+  box(0.03, 0.03, 14, M.rope, 0, 2.92, -14.2, Math.PI / 2)
   for (let li2 = 0; li2 < 6; li2++)
-    box(0.22, 0.35, 0.02, mat(0x3a2a1a + li2 * 0x030303), (li2 - 2.5) * 1.5, 2.65, -12.5)
+    box(0.22, 0.35, 0.02, mat(0x3a2a1a + li2 * 0x030303), (li2 - 2.5) * 1.5, 2.65, -14.2)
 
   // Warning tapes
   const tape = (x1: number, z1: number, x2: number, z2: number, col: number) => {
@@ -749,9 +1036,9 @@ export function buildCampScene(scene: THREE.Scene): SceneHandles {
   cyl(0.12, 0.12, 0.8, 6, M.rust, -5.82, 0.43, -8.5)
   const genL = ptL(0x88ffaa, 0.6, 5, -6.5, 1.3, -8.5)
 
-  // Spotlight tower (mapeado a "Torre de Mando" / command_tower)
+  // Spotlight tower (decorativa en el plan TLoU2)
   cyl(0.1, 0.13, 5.5, 7, M.metal, 16, 2.75, -12)
-  const commandTowerMesh = box(0.7, 0.32, 0.55, M.metal, 16, 5.5, -12)
+  box(0.7, 0.32, 0.55, M.metal, 16, 5.5, -12)
   sph(0.14, 7, mat(0xffffff, 0xffffff, 4.0), 16, 5.68, -12)
   const spot2 = new THREE.SpotLight(0xddeeff, 14, 50, Math.PI / 9, 0.2, 2)
   spot2.position.set(16, 5.5, -12)
@@ -770,8 +1057,8 @@ export function buildCampScene(scene: THREE.Scene): SceneHandles {
   cyl(0.12, 0.14, 4.2, 7, M.rust, -12, 2.1, -10)
 
   // ---- LIGHTING - REALISTIC DARK NIGHT ----
-  root.add(new THREE.AmbientLight(0x060c08, 1.0))
-  const moon = new THREE.DirectionalLight(0x8899bb, 1.2)
+  root.add(new THREE.AmbientLight(0x0c1410, 1.15))
+  const moon = new THREE.DirectionalLight(0x8899bb, 1.45)
   moon.position.set(5, 20, 8)
   moon.castShadow = true
   moon.shadow.mapSize.set(1024, 1024)
@@ -786,7 +1073,7 @@ export function buildCampScene(scene: THREE.Scene): SceneHandles {
   skyBounce.position.set(-8, 15, -5)
   root.add(skyBounce)
   // Zone color fills
-  ptL(0xff1100, 1.2, 20, -11, 5, 2)
+  ptL(0xff1100, 1.2, 20, -11, 5, -2)
   ptL(0x33cc22, 0.9, 15, 0, 5, -5)
   ptL(0xffbb00, 1.1, 17, 10, 5, 4)
   // Building glow from lit windows
@@ -871,6 +1158,119 @@ export function buildCampScene(scene: THREE.Scene): SceneHandles {
   )
   root.add(ksmoke)
 
+  // ---- MUSGO GLOBAL EN FACHADAS (P1 — naturaleza reconquistando) ----
+  const mossGeo = new THREE.PlaneGeometry(0.05, 0.6)
+  const mossMat = new THREE.MeshStandardMaterial({
+    color: 0x2d3d1a,
+    roughness: 1,
+    side: THREE.DoubleSide,
+  })
+  // Tramos de fachada [x1, z1, x2, z2] sobre los que brota el musgo.
+  const mossWalls: [number, number, number, number][] = [
+    [-3.5, -6.95, 3.5, -6.95], // CG frente
+    [-3.5, -13.05, 3.5, -13.05], // CG atrás
+    [-17.5, 7.07, -8.5, 7.07], // nave frente
+    [-17.97, 1.5, -17.97, 6.5], // nave lateral
+    [6, -3.42, 14, -3.42], // apartamentos frente
+    [14.53, -8, 14.53, -4], // apartamentos lateral
+    [10, 12.06, 17, 12.06], // garaje frente
+    [9.47, 5.5, 9.47, 11.5], // garaje lateral
+    [9.5, 5.27, 14.5, 5.27], // armería frente
+    [-6.8, 13.42, -5.2, 13.42], // garita
+  ]
+  const MOSS_N = 140
+  const iMoss = new THREE.InstancedMesh(mossGeo, mossMat, MOSS_N)
+  for (let mi = 0; mi < MOSS_N; mi++) {
+    const wSeg = mossWalls[mi % mossWalls.length]
+    const mu = Math.random()
+    const mwx = wSeg[0] + (wSeg[2] - wSeg[0]) * mu
+    const mwz = wSeg[1] + (wSeg[3] - wSeg[1]) * mu
+    tmpM.makeRotationY(Math.abs(wSeg[2] - wSeg[0]) < 0.01 ? Math.PI / 2 : 0)
+    tmpM.setPosition(mwx, 0.4 + Math.random() * 1.9, mwz)
+    iMoss.setMatrixAt(mi, tmpM)
+  }
+  iMoss.instanceMatrix.needsUpdate = true
+  root.add(iMoss)
+
+  // ---- ANIMACIONES PROGRAMADAS (exploración y traslado) ----
+  const tmpV = new THREE.Vector3()
+  const tmpV2 = new THREE.Vector3()
+
+  // Figuras humanoides (torso + cabeza + 4 extremidades) que caminan de la
+  // torre al gate cuando se crea una exploración. Genera incertidumbre: no
+  // sabes si vuelven.
+  const figMat = mat(0x3a3a35, 0, 0, 0.95, 0)
+  const exploFigures: THREE.Group[] = []
+  for (let fgi = 0; fgi < 3; fgi++) {
+    const fig = new THREE.Group()
+    const torso = new THREE.Mesh(gBox(0.32, 0.62, 0.2), figMat)
+    torso.position.y = 0.78
+    const head = new THREE.Mesh(gCyl(0.1, 0.11, 0.22, 6), figMat)
+    head.position.y = 1.2
+    fig.add(torso, head)
+    for (const [lmx, lmy] of [
+      [-0.1, 0.24],
+      [0.1, 0.24],
+      [-0.24, 0.78],
+      [0.24, 0.78],
+    ]) {
+      const limb = new THREE.Mesh(gBox(0.09, 0.45, 0.09), figMat)
+      limb.position.set(lmx, lmy, 0)
+      fig.add(limb)
+    }
+    fig.visible = false
+    root.add(fig)
+    exploFigures.push(fig)
+  }
+  const exploCurve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(-15.5, 0, 11.5),
+    new THREE.Vector3(-11, 0, 12.2),
+    new THREE.Vector3(-5, 0, 11.4),
+    new THREE.Vector3(0, 0, 14.4),
+  ])
+  let exploStart = -1
+  let exploQueued = false
+  const playExplorationAnimation = () => {
+    exploQueued = true
+  }
+
+  // Camión de traslado (oculto hasta playTransferAnimation).
+  const truckGroup = new THREE.Group()
+  const tkBody = new THREE.Mesh(gBox(2, 1.2, 4), mat(0x6b5030, 0, 0, 0.92, 0.15))
+  tkBody.position.set(0, 1.3, -0.6)
+  const tkCab = new THREE.Mesh(gBox(1.8, 1.0, 1.9), mat(0x5a4528, 0, 0, 0.9, 0.15))
+  tkCab.position.set(0, 1.1, 1.9)
+  const tkGlass = new THREE.Mesh(gBox(1.5, 0.45, 0.08), M.glass)
+  tkGlass.position.set(0, 1.35, 2.86)
+  truckGroup.add(tkBody, tkCab, tkGlass)
+  for (const [twx, twz] of [
+    [-0.85, 1.2],
+    [0.85, 1.2],
+    [-0.85, -1.6],
+    [0.85, -1.6],
+  ]) {
+    const wheel = new THREE.Mesh(gCyl(0.45, 0.45, 0.25, 10), M.tire)
+    wheel.rotation.z = Math.PI / 2
+    wheel.position.set(twx, 0.45, twz)
+    truckGroup.add(wheel)
+  }
+  const tkLight = new THREE.PointLight(0xddddff, 0, 20)
+  tkLight.position.set(0, 1.1, 2.6)
+  truckGroup.add(tkLight)
+  truckGroup.visible = false
+  root.add(truckGroup)
+  const transferCurve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(15.3, 0, 8.5),
+    new THREE.Vector3(15.3, 0, 12.6),
+    new THREE.Vector3(8, 0, 13.2),
+    new THREE.Vector3(1, 0, 14.6),
+  ])
+  let transferStart = -1
+  let transferQueued = false
+  const playTransferAnimation = () => {
+    transferQueued = true
+  }
+
   // ---- TAG BUILDING MESHES (raycaster targets) ----
   const buildingMeshes: THREE.Object3D[] = []
   const tagBuilding = (mesh: THREE.Mesh, id: string, name: string) => {
@@ -887,22 +1287,23 @@ export function buildCampScene(scene: THREE.Scene): SceneHandles {
     mesh.userData = data
     buildingMeshes.push(mesh)
   }
-  tagBuilding(warehouseMesh, "warehouse", "warehouse_mesh")
-  tagBuilding(watchtowerMesh, "watchtower", "watchtower_mesh")
+  tagBuilding(hqMesh, "hq", "hq_mesh")
   tagBuilding(gateMesh, "gate", "gate_mesh")
   tagBuilding(barracksMesh, "barracks", "barracks_mesh")
-  tagBuilding(hqMesh, "hq", "hq_mesh")
-  tagBuilding(commandTowerMesh, "command_tower", "command_tower_mesh")
-  tagBuilding(armoryMesh, "armory", "armory_mesh")
-  tagBuilding(fuelMesh, "fuel_depot", "fuel_mesh")
-  tagBuilding(radioMesh, "radio", "radio_mesh")
-  tagBuilding(truckMesh, "truck", "truck_mesh")
+  tagBuilding(watchtowerMesh, "watchtower", "watchtower_mesh")
+  tagBuilding(warehouseMesh, "warehouse", "warehouse_mesh")
+  tagBuilding(garageMesh, "garage", "garage_mesh")
 
   // ---- ANIMATE (per-frame) ----
   const animate = (t: number) => {
     // Cuartel General: la bandera ondea y el generador vibra levemente.
     cgFlag.rotation.z = Math.sin(t * 1.2) * 0.08
     cgGenerator.position.y = cgGenBaseY + Math.sin(t * 48) * 0.002
+    // Apartamentos: la ropa tendida oscila y las ventanas iluminadas titilan.
+    aptClothes.forEach((c, i) => {
+      c.rotation.z = Math.sin(t * 0.8 + i * 1.3) * 0.12
+    })
+    aptWinLit.emissiveIntensity = 0.9 + Math.sin(t * 3.5) * 0.08
     zoneLights.forEach((zl, i) => {
       zl.l.intensity = zl.b * (0.82 + Math.sin(t * 2.0 + i * 2.1) * 0.18)
     })
@@ -913,9 +1314,73 @@ export function buildCampScene(scene: THREE.Scene): SceneHandles {
     kFireL.intensity = 2.5 + Math.sin(t * 7.2) * 0.6 + Math.sin(t * 13.5) * 0.3
     toxL.intensity = 1.6 + Math.sin(t * 2.8) * 0.6
     genL.intensity = 0.5 + Math.sin(t * 48) * 0.15
-    spot1.target.position.x = Math.sin(t * 0.22) * 14
-    spot1.target.position.z = Math.cos(t * 0.22) * 10
-    spot1.target.updateMatrixWorld()
+
+    // ANIMACIÓN DE SALIDA (exploración): 3 figuras caminan de la torre al
+    // gate por la curva, el reflector las sigue y desaparecen al cruzar.
+    if (exploQueued) {
+      exploQueued = false
+      exploStart = t
+      exploFigures.forEach((f) => (f.visible = true))
+    }
+    if (exploStart >= 0) {
+      const ep = (t - exploStart) / 4
+      if (ep >= 1.3) {
+        exploStart = -1
+        exploFigures.forEach((f) => (f.visible = false))
+      } else {
+        exploFigures.forEach((f, i) => {
+          const fu = Math.min(Math.max(ep * 1.15 - i * 0.07, 0), 1)
+          if (fu >= 1) {
+            f.visible = false
+            return
+          }
+          exploCurve.getPoint(fu, tmpV)
+          f.position.set(tmpV.x, Math.abs(Math.sin(t * 9 + i * 2)) * 0.05, tmpV.z)
+          exploCurve.getPoint(Math.min(fu + 0.02, 1), tmpV2)
+          f.lookAt(tmpV2.x, f.position.y, tmpV2.z)
+        })
+        if (exploFigures[0].visible) {
+          spot1.target.position.set(exploFigures[0].position.x, 0, exploFigures[0].position.z)
+          spot1.target.updateMatrixWorld()
+        }
+      }
+    }
+    if (exploStart < 0) {
+      // Sweep automático del reflector cuando no hay salida en curso.
+      spot1.target.position.x = Math.sin(t * 0.22) * 14
+      spot1.target.position.z = Math.cos(t * 0.22) * 10
+      spot1.target.updateMatrixWorld()
+    }
+
+    // ANIMACIÓN DE TRASLADO: puerta basculante sube (1.5s), faros encienden
+    // (0.5-1s), el camión avanza al gate (3s), se encoge al salir y la puerta
+    // se cierra al final. Duración total ~6.5s.
+    if (transferQueued) {
+      transferQueued = false
+      transferStart = t
+      truckGroup.visible = true
+      truckGroup.scale.setScalar(1)
+      transferCurve.getPoint(0, tmpV)
+      truckGroup.position.copy(tmpV)
+      truckGroup.lookAt(tmpV.x, 0, tmpV.z + 1)
+    }
+    if (transferStart >= 0) {
+      const tk = t - transferStart
+      if (tk <= 1.5) gjDoorPivot.rotation.x = (-Math.PI / 2) * (tk / 1.5)
+      else if (tk >= 5) gjDoorPivot.rotation.x = (-Math.PI / 2) * Math.max(1 - (tk - 5) / 1.5, 0)
+      tkLight.intensity = truckGroup.visible ? Math.min(Math.max((tk - 0.5) / 0.5, 0), 1) * 8 : 0
+      if (tk >= 1.5 && tk < 4.5) {
+        const tu = (tk - 1.5) / 3
+        transferCurve.getPoint(tu, tmpV)
+        truckGroup.position.copy(tmpV)
+        transferCurve.getPoint(Math.min(tu + 0.02, 1), tmpV2)
+        truckGroup.lookAt(tmpV2.x, 0, tmpV2.z)
+        if (tu > 0.85) truckGroup.scale.setScalar(Math.max(1 - (tu - 0.85) / 0.15, 0.001))
+      }
+      if (tk >= 4.5 && truckGroup.visible) truckGroup.visible = false
+      if (tk >= 6.5) transferStart = -1
+    }
+
     spot2.target.position.x = Math.sin(t * 0.29 + 1.8) * 12
     spot2.target.position.z = Math.cos(t * 0.29 + 1.8) * 9
     spot2.target.updateMatrixWorld()
@@ -969,5 +1434,22 @@ export function buildCampScene(scene: THREE.Scene): SceneHandles {
     scene.remove(root)
   }
 
-  return { animate, dispose, buildingMeshes }
+  return {
+    animate,
+    dispose,
+    buildingMeshes,
+    playExplorationAnimation,
+    playTransferAnimation,
+    reactiveRefs: {
+      hqFlag: cgFlag,
+      hqInteriorLight: cgInteriorLight,
+      gateBarrierArm: gtBarrierArm,
+      gateEmergencyLamp: gtLamp,
+      watchtowerSpot: spot1,
+      warehouseLight: whLight,
+      warehouseAlertLight: whAlertLight,
+      garageDoor: gjDoorPivot,
+      apartmentsLitWindows: aptWinLit,
+    },
+  }
 }

@@ -83,7 +83,9 @@ export function useThreeScene(
     renderer.shadowMap.enabled = true
     renderer.shadowMap.type = THREE.BasicShadowMap
     renderer.toneMapping = THREE.ACESFilmicToneMapping
-    renderer.toneMappingExposure = 0.38
+    // Algo más alto que el HTML original (0.38) para que se distinga el detalle
+    // de los edificios sin perder el ambiente nocturno TLoU2.
+    renderer.toneMappingExposure = 0.52
 
     // ---- SCENE ----
     const scene = new THREE.Scene()
