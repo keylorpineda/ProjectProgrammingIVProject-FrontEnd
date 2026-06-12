@@ -1,4 +1,5 @@
-import { render, screen, fireEvent, act } from "@testing-library/react"
+﻿import { fireEvent } from "@testing-library/dom"
+import { render, screen, act } from "@testing-library/react"
 import { BrowserRouter } from "react-router-dom"
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 

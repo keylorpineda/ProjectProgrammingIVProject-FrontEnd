@@ -1,4 +1,5 @@
-import { fireEvent, screen, waitFor } from "@testing-library/react"
+﻿import { fireEvent } from "@testing-library/dom"
+import { screen, waitFor } from "@testing-library/react"
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { renderWithProviders, userEvent } from "../../../test/test-utils"

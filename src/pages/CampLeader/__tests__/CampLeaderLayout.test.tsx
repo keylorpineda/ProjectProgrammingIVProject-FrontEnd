@@ -1,4 +1,5 @@
-import { act, fireEvent, screen, waitFor } from "@testing-library/react"
+﻿import { fireEvent } from "@testing-library/dom"
+import { act, screen, waitFor } from "@testing-library/react"
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest"
 
 import { campLeaderUser } from "../../../test/fixtures"
