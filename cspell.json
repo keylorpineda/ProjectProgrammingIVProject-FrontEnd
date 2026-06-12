@@ -166,7 +166,19 @@
     "metodo",
     "unstub",
     "antíxidas",
-    "ANTÍXIDAS"
+    "ANTÍXIDAS",
+    "Raycaster",
+    "raycaster",
+    "minimapa",
+    "WASD",
+    "inicialización",
+    "apagarlo",
+    "renderizar",
+    "metalness",
+    "corrugat",
+    "corrug",
+    "ksmk",
+    "ksmoke"
   ],
   "ignorePaths": [
     "node_modules",

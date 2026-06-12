@@ -53,9 +53,9 @@ export const BUILDINGS: BuildingConfig[] = [
     label: "Cuartel General",
     meshNames: ["hq_mesh"],
     route: "/admin/dashboard",
-    requiredRoles: ["admin", "travel_manager", "camp_leader"],
+    requiredRoles: ["admin", "camp_leader"],
     reactiveData: null,
-    position3D: { x: 0, y: 1.75, z: -10 },
+    position3D: { x: 0, y: 2.25, z: -10 },
   },
   {
     id: "command_tower",

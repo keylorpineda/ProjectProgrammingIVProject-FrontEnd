@@ -302,32 +302,106 @@ export function buildCampScene(scene: THREE.Scene): SceneHandles {
   cyl(0.035, 0.035, 2.5, 5, M.metal, -11.2, 1.25, 6.6)
   box(1.3, 0.45, 0.1, mat(0xcc1111, 0xaa0000, 0.6), -11.2, 2.7, 6.6)
 
-  // 2. HQ / COMMAND
-  const hqMesh = box(6.5, 3.5, 5, M.hqWall, 0, 1.75, -10)
-  box(6.7, 0.12, 5.2, M.corrugat, 0, 3.57, -10)
-  const sbp = [
-    [-4, -7],
-    [-3.5, -7],
-    [-3, -7],
-    [-2.5, -7],
-    [-2, -7],
-    [-1.5, -7],
-    [-1, -7],
-    [0, -7],
-    [1, -7],
-    [1.5, -7],
-    [2, -7],
+  // 2. CUARTEL GENERAL (Paso 01 — Dashboard, estilo TLoU2)
+  // Edificio principal de 2 pisos en concreto envejecido, torre de ladrillo en
+  // la esquina, sacos de arena perimetrales, antena de radio, mástil con bandera
+  // destenida y generador ruidoso afuera. Paleta post-apocalíptica TLoU2.
+  const cgConcrete = mat(0x4a4a45, 0, 0, 0.95, 0) // concreto envejecido
+  const cgBrick = mat(0x5a3825, 0, 0, 0.97, 0) // ladrillo desgastado (torre)
+  const cgRoof = mat(0x383830, 0, 0, 0.98, 0) // techo plano manchado
+  const cgDoor = mat(0x2a2a30, 0, 0, 0.6, 0.7) // puerta reforzada de metal
+  const cgGenMat = mat(0x404040, 0, 0, 0.55, 0.5) // generador
+  const cgCable = mat(0x1a1a1a, 0, 0, 0.8, 0.3) // cables
+  const cgMoss = mat(0x2d3d1a, 0, 0, 1, 0) // musgo reconquistando las paredes
+  const cgWinLit = new THREE.MeshStandardMaterial({
+    color: 0xff9944,
+    emissive: 0xff9944,
+    emissiveIntensity: 0.9,
+    transparent: true,
+    opacity: 0.9,
+    roughness: 0.3,
+  })
+
+  const CGX = 0
+  const CGZ = -10
+  // Cuerpo principal (2 pisos) + techo plano con bordillo.
+  const hqMesh = box(8, 4.5, 6, cgConcrete, CGX, 2.25, CGZ)
+  box(8.2, 0.2, 6.2, cgRoof, CGX, 4.6, CGZ)
+  box(8.4, 0.25, 0.18, cgRoof, CGX, 4.7, CGZ - 3.1) // bordillo trasero
+  box(8.4, 0.25, 0.18, cgRoof, CGX, 4.7, CGZ + 3.1) // bordillo frontal
+  // Extensión lateral izquierda (sala de mapas).
+  box(4, 2.5, 0.15, cgConcrete, CGX - 4.05, 1.25, CGZ, Math.PI / 2)
+  box(4.1, 0.15, 0.2, cgRoof, CGX - 4.05, 2.55, CGZ, Math.PI / 2)
+  // Torre de ladrillo en la esquina frontal derecha.
+  box(2.2, 3.8, 2.2, cgBrick, CGX + 3.4, 1.9, CGZ + 1.9)
+  box(2.35, 0.2, 2.35, cgRoof, CGX + 3.4, 3.9, CGZ + 1.9)
+
+  // Puerta reforzada de metal (frente).
+  box(1.2, 2.4, 0.15, cgDoor, CGX, 1.2, CGZ + 3.02)
+  // Ventanas (6): 3 iluminadas (#ff9944) y 3 tapiadas (vidrio oscuro).
+  const cgWindows: [number, number, boolean][] = [
+    [-2.6, 1.6, true],
+    [-2.6, 3.3, false],
+    [2.0, 1.6, false],
+    [2.0, 3.3, true],
+    [-0.3, 3.3, true],
+    [1.1, 1.6, false],
   ]
-  sbp.forEach((p, i) => box(0.68, 0.3, 0.4, M.sandbag, p[0], 0.15 + Math.floor(i / 6) * 0.29, p[1]))
-  sbp.forEach((p) => box(0.68, 0.3, 0.4, M.sandbag, p[0], 0.44, p[1]))
-  box(1.1, 2.6, 0.12, M.woodD, 0, 1.3, -7.53)
-  box(1.0, 0.7, 0.12, mat(0x99bb88, 0x66aa44, 0.4, 0.1), -3, 2.2, -7.53)
-  box(1.0, 0.7, 0.12, mat(0x99bb88, 0x66aa44, 0.4, 0.1), 3, 2.2, -7.53)
-  ptL(0x88bb88, 1.8, 9, 0, 2, -10)
-  cyl(0.035, 0.035, 3.5, 5, M.metal, 1, 5.3, -10)
-  box(0.7, 0.04, 0.04, M.metal, 1, 6.4, -10, 0.3)
-  cyl(0.035, 0.035, 4, 5, M.metal, 2.5, 2, -12.5)
-  box(1.2, 0.06, 0.65, mat(0x223388, 0x112266, 0.3), 3.1, 4.1, -12.5)
+  cgWindows.forEach(([wx, wy, lit]) =>
+    box(1.0, 0.9, 0.12, lit ? cgWinLit : M.glass, CGX + wx, wy, CGZ + 3.0),
+  )
+
+  // Sacos de arena perimetrales en el frente (8 + segunda fila parcial).
+  for (let sgi = 0; sgi < 8; sgi++)
+    box(0.7, 0.28, 0.4, M.sandbag, CGX - 2.45 + sgi * 0.72, 0.14, CGZ + 3.45)
+  for (let sgi = 0; sgi < 5; sgi++)
+    box(0.7, 0.28, 0.4, M.sandbag, CGX - 1.45 + sgi * 0.72, 0.42, CGZ + 3.45)
+
+  // Mástil con bandera destenida (la bandera oscila al entrar a la vista 3D).
+  cyl(0.04, 0.04, 5, 6, M.metal, CGX - 3, 7.1, CGZ)
+  const cgFlag = box(1.4, 0.07, 0.8, mat(0x223388, 0x112266, 0.1), CGX - 2.25, 9.1, CGZ)
+  // Antena de radio (x3) en la azotea.
+  cyl(0.04, 0.04, 2.5, 5, M.metal, CGX + 2.6, 5.95, CGZ - 1.2)
+  cyl(0.04, 0.04, 2.5, 5, M.metal, CGX + 3.1, 5.95, CGZ - 1.4)
+  cyl(0.04, 0.04, 2.5, 5, M.metal, CGX + 2.1, 5.95, CGZ - 1.4)
+  box(0.7, 0.08, 0.08, M.metal, CGX + 2.6, 6.9, CGZ - 1.2)
+  // Alambre de púas en la azotea (postes + tramos).
+  for (let wpi = 0; wpi < 4; wpi++)
+    box(0.12, 0.5, 0.12, M.metal, CGX - 3.6 + wpi * 2.4, 4.95, CGZ - 3)
+  box(7.6, 0.03, 0.03, M.wireH, CGX, 5.15, CGZ - 3)
+
+  // Generador exterior ruidoso (vibra levemente) con tubo de escape y cables.
+  const cgGenBaseY = 0.43
+  const cgGenerator = box(1.4, 0.85, 0.9, cgGenMat, CGX - 5.6, cgGenBaseY, CGZ + 2.8)
+  cyl(0.06, 0.08, 1.2, 6, M.rust, CGX - 5.0, 1.1, CGZ + 2.8)
+  box(0.05, 0.05, 3, cgCable, CGX - 5.0, 1.4, CGZ + 1.6)
+
+  // Musgo trepando por las fachadas.
+  const cgMossSpots: [number, number, number][] = [
+    [-3.9, 1.2, CGZ + 1.5],
+    [-3.9, 2.4, CGZ - 1.2],
+    [3.95, 1.6, CGZ - 0.5],
+    [-1.2, 0.6, CGZ + 3.02],
+    [1.8, 0.5, CGZ + 3.02],
+    [4.5, 1.0, CGZ + 1.9],
+  ]
+  cgMossSpots.forEach(([mx, my, mz]) => box(0.04, 0.6, 0.04, cgMoss, mx, my, mz))
+  // Escombros rotados en el suelo cerca del edificio.
+  for (let dbi = 0; dbi < 5; dbi++)
+    box(
+      0.15,
+      0.12,
+      0.12,
+      M.gravel,
+      CGX - 3 + Math.random() * 6,
+      0.06,
+      CGZ + 3.5 + Math.random() * 1.2,
+      Math.random() * Math.PI,
+    )
+
+  // Iluminación: foco interior cálido + foco exterior tenue.
+  ptL(0xff9944, 2.5, 10, CGX, 2.5, CGZ)
+  ptL(0x334422, 0.6, 6, CGX, 3, CGZ + 4)
 
   // 3. ARMORY
   const armoryMesh = box(6, 3, 4.5, M.corrugat, 12, 1.5, 3)
@@ -826,6 +900,9 @@ export function buildCampScene(scene: THREE.Scene): SceneHandles {
 
   // ---- ANIMATE (per-frame) ----
   const animate = (t: number) => {
+    // Cuartel General: la bandera ondea y el generador vibra levemente.
+    cgFlag.rotation.z = Math.sin(t * 1.2) * 0.08
+    cgGenerator.position.y = cgGenBaseY + Math.sin(t * 48) * 0.002
     zoneLights.forEach((zl, i) => {
       zl.l.intensity = zl.b * (0.82 + Math.sin(t * 2.0 + i * 2.1) * 0.18)
     })
