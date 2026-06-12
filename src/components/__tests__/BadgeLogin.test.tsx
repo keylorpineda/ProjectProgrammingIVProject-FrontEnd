@@ -7,7 +7,7 @@ import { BadgeLogin } from "../BadgeLogin"
 const navigate = vi.fn()
 
 vi.mock("react-router-dom", async (importOriginal) => {
-  const actual = await importOriginal()
+  const actual = (await importOriginal()) as Record<string, unknown>
   return {
     ...actual,
     useNavigate: () => navigate,

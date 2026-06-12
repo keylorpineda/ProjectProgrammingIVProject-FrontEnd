@@ -78,7 +78,7 @@ describe("WorkerGuard", () => {
 
   it("sends an authenticated user without role back to login", () => {
     renderWithProviders(tree, {
-      user: { ...workerUser, id: "11", role: undefined },
+      user: { ...workerUser, id: "11", role: undefined } as unknown as typeof workerUser,
       token: "tk",
       route: "/worker/dashboard",
     })
