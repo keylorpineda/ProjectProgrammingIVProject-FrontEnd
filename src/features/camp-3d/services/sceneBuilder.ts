@@ -1,5 +1,17 @@
 import * as THREE from "three"
 
+import { getCampVisuals } from "./campVisuals"
+import {
+  makeBrickTex,
+  makeCorrugateTex,
+  makeWoodTex,
+  makeConcreteTex,
+  makeRustTex,
+  makeGroundTex,
+  makeSandbagTex,
+  type TexPair,
+} from "./textureBuilder"
+
 import type { BuildingUserData, SceneHandles } from "../types/scene.types"
 
 /**
@@ -12,7 +24,16 @@ import type { BuildingUserData, SceneHandles } from "../types/scene.types"
  * componente. Sólo expone `animate(t)` (flicker de luces, sweep de focos y
  * partículas) y `dispose()`.
  */
-export function buildCampScene(scene: THREE.Scene): SceneHandles {
+export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHandles {
+  const visuals = getCampVisuals(campId)
+  const { seed, weathering } = visuals
+  const C = visuals.colors
+  const L = visuals.lighting
+
+  // Apply per-camp fog and sky immediately
+  scene.fog = new THREE.Fog(C.fog, visuals.fog.near, visuals.fog.far)
+  scene.background = new THREE.Color(C.fog)
+
   const root = new THREE.Group()
   root.name = "camp-root"
   scene.add(root)
@@ -44,30 +65,53 @@ export function buildCampScene(scene: THREE.Scene): SceneHandles {
       metalness: mt,
     })
 
-  // Pre-built shared mats
+  const matTex = (tp: TexPair, col: number, em = 0, ei = 0, rg = 0.88, mt = 0, ns = 1.2) =>
+    new THREE.MeshStandardMaterial({
+      color: col,
+      map: tp.map,
+      normalMap: tp.normalMap,
+      normalScale: new THREE.Vector2(ns, ns),
+      emissive: em,
+      emissiveIntensity: ei,
+      roughness: rg,
+      metalness: mt,
+    })
+
+  // Procedural textures — seed + weathering make each camp unique
+  const TX = {
+    brick: makeBrickTex(2, seed, weathering),
+    corrugat: makeCorrugateTex(3, seed, weathering),
+    wood: makeWoodTex(2, seed, weathering),
+    conc: makeConcreteTex(2, seed, weathering),
+    rust: makeRustTex(3, seed, weathering),
+    ground: makeGroundTex(8, seed, weathering),
+    sandbag: makeSandbagTex(4, seed),
+  }
+
+  // Pre-built shared mats — colors driven by per-camp theme
   const M = {
-    ground: mat(0x1a2010),
-    dirt: mat(0x2a1e0e),
-    mud: mat(0x1a1008),
-    grass: mat(0x162e0c),
-    wood: mat(0x3d2e1e, 0, 0, 0.98, 0),
-    woodD: mat(0x241710, 0, 0, 0.98, 0),
-    plank: mat(0x4a3525, 0, 0, 0.97, 0),
-    metal: mat(0x2a2a30, 0, 0, 0.6, 0.7),
-    rust: mat(0x7a3518, 0, 0, 0.95, 0.15),
-    rust2: mat(0xa04820, 0, 0, 0.9, 0.1),
+    ground: matTex(TX.ground, C.ground, 0, 0, 0.96, 0, 1.0),
+    dirt: matTex(TX.ground, C.dirt, 0, 0, 0.98, 0, 0.8),
+    mud: mat(C.ground),
+    grass: mat(C.grass),
+    wood: matTex(TX.wood, C.wood, 0, 0, 0.9, 0, 1.2),
+    woodD: matTex(TX.wood, C.woodDark, 0, 0, 0.93, 0, 1.0),
+    plank: matTex(TX.wood, C.wood, 0, 0, 0.88, 0, 1.1),
+    metal: mat(C.metal, 0, 0, 0.6, 0.7),
+    rust: matTex(TX.rust, C.rust, 0, 0, 0.88, 0.18, 1.4),
+    rust2: matTex(TX.rust, C.rust, 0, 0, 0.84, 0.12, 1.2),
     brl_g: mat(0x1e3818, 0x002200, 0.08),
     brl_r: mat(0x481808, 0x280000, 0.08),
     brl_y: mat(0x383008, 0x180a00, 0.06),
     tire: mat(0x101010, 0, 0, 1, 0),
-    sandbag: mat(0x524830),
-    corrugat: mat(0x686858, 0, 0, 0.7, 0.3),
-    corrugD: mat(0x404030, 0, 0, 0.75, 0.3),
-    brick: mat(0x5a3825, 0, 0, 0.97, 0),
-    chain: mat(0x707060, 0, 0, 0.5, 0.7),
-    pipe: mat(0x383840, 0, 0, 0.4, 0.6),
+    sandbag: matTex(TX.sandbag, 0x524830, 0, 0, 0.92, 0, 1.0),
+    corrugat: matTex(TX.corrugat, C.metal, 0, 0, 0.62, 0.38, 1.6),
+    corrugD: matTex(TX.corrugat, C.metal, 0, 0, 0.68, 0.32, 1.4),
+    brick: matTex(TX.brick, C.brick, 0, 0, 0.84, 0, 1.5),
+    chain: mat(C.metal, 0, 0, 0.5, 0.7),
+    pipe: mat(C.metal, 0, 0, 0.4, 0.6),
     wireH: mat(0x909070, 0, 0, 0.5, 0.5),
-    gravel: mat(0x2e2c28),
+    gravel: mat(C.concrete),
     sign: mat(0x0a0a0a),
     glass: new THREE.MeshStandardMaterial({
       color: 0x334455,
@@ -193,7 +237,7 @@ export function buildCampScene(scene: THREE.Scene): SceneHandles {
   )
   // Grass - instanced
   const grassGeo = new THREE.PlaneGeometry(0.06, 0.55)
-  const grassMat = mat(0x162e0c)
+  const grassMat = mat(C.grass)
   const iGrass = new THREE.InstancedMesh(grassGeo, grassMat, 200)
   iGrass.receiveShadow = true
   for (let gi = 0; gi < 200; gi++) {
@@ -293,9 +337,9 @@ export function buildCampScene(scene: THREE.Scene): SceneHandles {
   // cadena, letreros FUEL, pallets, barriles y tuberías en la zona de carga.
   // La luz roja de alerta (intensity 0) la enciende el paso de datos reactivos
   // cuando inventory.alert_active.
-  const whRoof = mat(0x505048, 0, 0, 0.78, 0.3)
-  const whDoor = mat(0x404040, 0, 0, 0.55, 0.6)
-  const whTank = mat(0x6b3520, 0, 0, 0.92, 0.12)
+  const whRoof = matTex(TX.corrugat, C.metal, 0, 0, 0.68, 0.38, 1.5)
+  const whDoor = matTex(TX.corrugat, C.metal, 0, 0, 0.55, 0.62, 1.2)
+  const whTank = matTex(TX.rust, C.rust, 0, 0, 0.86, 0.15, 1.4)
   const whFence = mat(0x383840, 0, 0, 0.55, 0.65)
   const whSign = mat(0xffdd00, 0xffdd00, 0.8)
 
@@ -354,9 +398,9 @@ export function buildCampScene(scene: THREE.Scene): SceneHandles {
   // Edificio principal de 2 pisos en concreto envejecido, torre de ladrillo en
   // la esquina, sacos de arena perimetrales, antena de radio, mástil con bandera
   // destenida y generador ruidoso afuera. Paleta post-apocalíptica TLoU2.
-  const cgConcrete = mat(0x4a4a45, 0, 0, 0.95, 0) // concreto envejecido
-  const cgBrick = mat(0x5a3825, 0, 0, 0.97, 0) // ladrillo desgastado (torre)
-  const cgRoof = mat(0x383830, 0, 0, 0.98, 0) // techo plano manchado
+  const cgConcrete = matTex(TX.conc, C.concrete, 0, 0, 0.86, 0, 1.3)
+  const cgBrick = matTex(TX.brick, C.brick, 0, 0, 0.84, 0, 1.5)
+  const cgRoof = matTex(TX.corrugat, C.metal, 0, 0, 0.9, 0.08, 1.0)
   const cgDoor = mat(0x2a2a30, 0, 0, 0.6, 0.7) // puerta reforzada de metal
   const cgGenMat = mat(0x404040, 0, 0, 0.55, 0.5) // generador
   const cgCable = mat(0x1a1a1a, 0, 0, 0.8, 0.3) // cables
@@ -456,9 +500,9 @@ export function buildCampScene(scene: THREE.Scene): SceneHandles {
   // ventana deslizable para revisar documentos, barrera vehicular abatible y
   // lámpara de emergencia. La barrera y la lámpara reaccionan a admisiones
   // PENDING en el paso de datos reactivos; aquí queda la geometría base.
-  const gtWood = mat(0x3d2e1e, 0, 0, 0.98, 0)
-  const gtRoof = mat(0x6b3520, 0, 0, 0.95, 0.15)
-  const gtBarrier = mat(0x7a3518, 0, 0, 0.95, 0.2)
+  const gtWood = matTex(TX.wood, C.wood, 0, 0, 0.9, 0, 1.2)
+  const gtRoof = matTex(TX.rust, C.rust, 0, 0, 0.88, 0.15, 1.3)
+  const gtBarrier = matTex(TX.rust, C.rust, 0, 0, 0.88, 0.22, 1.2)
   const gtSign = mat(0xcc1111, 0xcc1111, 0.3)
   const gtStripe = mat(0xffcc00, 0xffcc00, 0.3)
   const gtChair = mat(0x404040, 0, 0, 0.9, 0.3)
@@ -544,10 +588,10 @@ export function buildCampScene(scene: THREE.Scene): SceneHandles {
   // parapetos y sacos, techo inclinado, escalera de mano, reflector articulado
   // (spot1: hace sweep en reposo y sigue a las figuras de la exploración),
   // cuerdas tensadas, bitácora y binoculares en la plataforma.
-  const wtPost = mat(0x3d2e1e, 0, 0, 0.98, 0)
-  const wtPlat = mat(0x2a1e10, 0, 0, 0.99, 0)
-  const wtRoofM = mat(0x4a3020, 0, 0, 0.98, 0)
-  const wtParap = mat(0x3a2818, 0, 0, 0.98, 0)
+  const wtPost = matTex(TX.wood, C.wood, 0, 0, 0.9, 0, 1.2)
+  const wtPlat = matTex(TX.wood, C.woodDark, 0, 0, 0.93, 0, 1.0)
+  const wtRoofM = matTex(TX.wood, C.wood, 0, 0, 0.9, 0, 1.1)
+  const wtParap = matTex(TX.wood, C.woodDark, 0, 0, 0.91, 0, 1.1)
   const wtRefl = mat(0x383840, 0, 0, 0.5, 0.6)
   const wtRope = mat(0x4a4018, 0, 0, 0.9, 0)
 
@@ -620,8 +664,8 @@ export function buildCampScene(scene: THREE.Scene): SceneHandles {
   // oscila en animate), escalera de emergencia lateral, vegetación desde el
   // tercer piso y grietas en la fachada. El número de ventanas iluminadas
   // reflejará el personal activo en el paso de datos reactivos.
-  const aptBrick = mat(0x5a3825, 0, 0, 0.97, 0)
-  const aptRoof = mat(0x383830, 0, 0, 0.98, 0)
+  const aptBrick = matTex(TX.brick, C.brick, 0, 0, 0.84, 0, 1.5)
+  const aptRoof = matTex(TX.corrugat, C.metal, 0, 0, 0.88, 0.08, 1.0)
   const aptBoard = new THREE.MeshStandardMaterial({
     color: 0x1a1a1a,
     transparent: true,
@@ -629,7 +673,7 @@ export function buildCampScene(scene: THREE.Scene): SceneHandles {
     roughness: 0.95,
   })
   const aptBalcony = mat(0x2a2a30, 0, 0, 0.6, 0.5)
-  const aptStairs = mat(0x6b3520, 0, 0, 0.95, 0.15)
+  const aptStairs = matTex(TX.rust, C.rust, 0, 0, 0.88, 0.15, 1.2)
   const aptCrack = mat(0x2a2000, 0, 0, 0.99, 0)
   const aptWinLit = new THREE.MeshStandardMaterial({
     color: 0xff9944,
@@ -909,8 +953,8 @@ export function buildCampScene(scene: THREE.Scene): SceneHandles {
   // herramientas colgadas, bidones de aceite, manchas brillantes en el suelo y
   // señalización pintada. El camión de traslado (oculto) sale por el gate al
   // disparar playTransferAnimation.
-  const gjWall = mat(0x404038, 0, 0, 0.88, 0.22)
-  const gjRoof = mat(0x383830, 0, 0, 0.65, 0.45)
+  const gjWall = matTex(TX.corrugat, C.metal, 0, 0, 0.78, 0.28, 1.4)
+  const gjRoof = matTex(TX.corrugat, C.metal, 0, 0, 0.62, 0.48, 1.2)
   const gjVan = mat(0x5a3020, 0, 0, 0.95, 0.1)
   const gjTools = mat(0x4a4040, 0, 0, 0.6, 0.55)
   const gjOil = new THREE.MeshStandardMaterial({
@@ -1062,12 +1106,330 @@ export function buildCampScene(scene: THREE.Scene): SceneHandles {
   root.add(ph)
   cyl(0.12, 0.14, 4.2, 7, M.rust, -12, 2.1, -10)
 
-  // ---- LIGHTING - REALISTIC DARK NIGHT ----
-  root.add(new THREE.AmbientLight(0x0c1410, 1.15))
-  const moon = new THREE.DirectionalLight(0x8899bb, 1.45)
+  // ---- EXTERIOR ENVIRONMENT ----
+  // Materials
+  const extTree = matTex(TX.wood, C.woodDark, 0, 0, 0.98, 0, 0.8)
+  const extBush = new THREE.MeshStandardMaterial({
+    color: new THREE.Color(C.grass).multiplyScalar(0.72),
+    roughness: 1.0,
+  })
+  const extLamp = mat(0x28282e, 0, 0, 0.45, 0.8)
+  const extBulb = mat(0xffdd88, 0xffdd88, 2.8)
+  const wrkMat = matTex(TX.rust, C.rust, 0, 0, 0.94, 0.06, 1.2)
+  const wtLegMat = mat(C.metal, 0, 0, 0.6, 0.55)
+  const wtTankM = matTex(TX.rust, C.rust, 0, 0, 0.85, 0.1, 1.3)
+  const ctnBlue = matTex(TX.corrugat, 0x2a5080, 0, 0, 0.75, 0.28, 1.4)
+  const ctnRed = matTex(TX.corrugat, 0x7a3028, 0, 0, 0.74, 0.28, 1.4)
+  const ivyMat = new THREE.MeshStandardMaterial({
+    color: new THREE.Color(C.grass).multiplyScalar(0.78),
+    roughness: 1.0,
+    transparent: true,
+    opacity: 0.88,
+  })
+
+  // DEAD TREES — post-apocalyptic leafless silhouettes
+  const treeDefs: [number, number, number][] = [
+    // [x, z, height] — outside fence
+    [-22, -12, 5.5],
+    [-24, 0, 4.2],
+    [-22, 10, 6.0],
+    [22, -8, 5.0],
+    [23, 4, 4.8],
+    [-5, -19, 3.8],
+    [8, -18, 5.2],
+    [-14, -18, 4.5],
+    [4, 16, 3.5],
+    [-10, 16, 4.0],
+    // inside — empty corners
+    [-3, -7, 3.2],
+    [16, -12, 3.8],
+    [-6, -12, 2.8],
+  ]
+  treeDefs.forEach(([tx, tz, th], ti) => {
+    cyl(0.14 + (ti % 3) * 0.04, 0.2 + (ti % 2) * 0.04, th, 7, extTree, tx, th / 2, tz)
+    const bCount = 3 + (ti % 3)
+    for (let b = 0; b < bCount; b++) {
+      const bh = th * (0.45 + b * 0.15)
+      const bLen = 0.85 + ((ti * 7 + b * 13) % 10) * 0.13
+      const bRy = (ti * 2.1 + b * 1.75) % (Math.PI * 2)
+      const bRz = 0.55 + ((ti * 3 + b * 5) % 10) * 0.04
+      mk(
+        gCyl(0.025, 0.065, bLen, 5),
+        extTree,
+        tx + Math.sin(bRy) * bLen * 0.44,
+        bh + Math.sin(bRz) * bLen * 0.44,
+        tz + Math.cos(bRy) * bLen * 0.44,
+        bRy,
+        0,
+        -bRz,
+      )
+      // Sub-branch on alternate trees
+      if (b === 0 && ti % 2 === 0) {
+        const sbLen = bLen * 0.55
+        const sbRy = bRy + 0.85
+        mk(
+          gCyl(0.018, 0.04, sbLen, 4),
+          extTree,
+          tx + Math.sin(bRy) * bLen * 0.78 + Math.sin(sbRy) * sbLen * 0.38,
+          bh + Math.sin(bRz) * bLen * 0.68 + sbLen * 0.22,
+          tz + Math.cos(bRy) * bLen * 0.78 + Math.cos(sbRy) * sbLen * 0.38,
+          sbRy,
+          0,
+          -bRz * 0.75,
+        )
+      }
+    }
+  })
+
+  // BUSHES — instanced, density by theme
+  const bushGeo2 = gSph(0.28, 5)
+  const bushPts: [number, number][] = [
+    [4.0, 2.0],
+    [5.4, 3.2],
+    [3.6, 1.2],
+    [-2.0, 3.4],
+    [-1.2, 2.2],
+    [-10.0, -8.0],
+    [-11.5, -7.4],
+    [-10.8, -9.0],
+    [12.0, -10.0],
+    [13.4, -11.0],
+    [11.0, -11.4],
+    [-15.0, -10.0],
+    [-16.5, -8.8],
+    [2.0, 11.0],
+    [-4.0, 11.5],
+    [-5.5, 12.8],
+    [-4.0, -13.0],
+    [-5.5, -13.8],
+    [-3.0, -14.2],
+    [15.0, 10.0],
+    [16.5, 11.2],
+    [-8.0, -4.0],
+    [-7.5, -5.0],
+    [-9.0, -5.5],
+  ]
+  const bushMax =
+    visuals.theme === "arid"
+      ? 12
+      : visuals.theme === "arctic"
+        ? 7
+        : visuals.theme === "industrial"
+          ? 5
+          : 24
+  const iBush2 = new THREE.InstancedMesh(bushGeo2, extBush, Math.min(bushPts.length, bushMax) * 3)
+  let bIdx = 0
+  for (let bi = 0; bi < Math.min(bushPts.length, bushMax) && bIdx < iBush2.count; bi++) {
+    const [bx, bz] = bushPts[bi]
+    for (let bj = 0; bj < 3 && bIdx < iBush2.count; bj++) {
+      const ox = ((bi * 7 + bj * 3) % 7) * 0.22 - 0.33
+      const oz = ((bi * 5 + bj * 4) % 7) * 0.2 - 0.3
+      const sc = 0.65 + bj * 0.22
+      tmpM.makeScale(sc, sc * 0.72, sc)
+      tmpM.setPosition(bx + ox, 0.19 * sc, bz + oz)
+      iBush2.setMatrixAt(bIdx++, tmpM)
+    }
+  }
+  iBush2.instanceMatrix.needsUpdate = true
+  iBush2.castShadow = true
+  root.add(iBush2)
+
+  // STREET LAMP POSTS — sodium-orange warm lamps
+  const lampLights: THREE.PointLight[] = []
+  const addLamp = (lx: number, lz: number) => {
+    cyl(0.055, 0.068, 4.8, 7, extLamp, lx, 2.4, lz)
+    box(1.1, 0.05, 0.05, extLamp, lx + 0.55, 4.82, lz)
+    cyl(0.13, 0.11, 0.24, 7, extLamp, lx + 1.1, 4.68, lz)
+    sph(0.09, 8, extBulb, lx + 1.1, 4.6, lz)
+    const ll = ptL(0xffcc77, 4.2, 16, lx + 1.1, 4.52, lz)
+    lampLights.push(ll)
+  }
+  addLamp(-15, -10)
+  addLamp(15, -10)
+  addLamp(-15, 5)
+  addLamp(15, 5)
+  addLamp(-8, -13)
+  addLamp(8, -13)
+
+  // ABANDONED CAR WRECK — crushed outside the gate
+  const WRX = 9,
+    WRZ = 16.6
+  box(3.8, 0.65, 1.8, wrkMat, WRX, 0.33, WRZ, 0.08)
+  box(2.6, 0.46, 1.6, wrkMat, WRX - 0.3, 0.82, WRZ, 0.05)
+  mk(gCyl(0.35, 0.35, 0.2, 10), M.tire, WRX - 1.55, 0.17, WRZ - 0.85, 0, 0, Math.PI / 2)
+  mk(gCyl(0.35, 0.35, 0.2, 10), M.tire, WRX - 1.55, 0.17, WRZ + 0.85, 0, 0, Math.PI / 2)
+  mk(gCyl(0.35, 0.35, 0.2, 10), M.tire, WRX + 1.55, 0.17, WRZ - 0.85, 0, 0, Math.PI / 2)
+  mk(gCyl(0.35, 0.35, 0.2, 10), M.tire, WRX + 1.55, 0.17, WRZ + 0.85, 0, 0, Math.PI / 2)
+  box(1.55, 0.62, 0.06, M.glass, WRX - 0.3, 0.74, WRZ - 0.84, 0, 0, 0.28)
+  pln(2.4, 1.5, M.puddle, WRX + 0.6, 0.016, WRZ + 0.7, 0.3)
+
+  // WATER TOWER — landmark near center-left
+  const WTW_X = -6,
+    WTW_Z = -4
+  const wLegPts: [number, number][] = [
+    [-0.9, -0.9],
+    [0.9, -0.9],
+    [-0.9, 0.9],
+    [0.9, 0.9],
+  ]
+  wLegPts.forEach(([lx2, lz2]) => {
+    mk(
+      gCyl(0.07, 0.09, 5.5, 6),
+      wtLegMat,
+      WTW_X + lx2,
+      2.75,
+      WTW_Z + lz2,
+      0,
+      -lx2 * 0.04,
+      lz2 * 0.04,
+    )
+  })
+  box(2.55, 0.06, 0.06, wtLegMat, WTW_X, 1.1, WTW_Z - 0.9)
+  box(2.55, 0.06, 0.06, wtLegMat, WTW_X, 1.1, WTW_Z + 0.9)
+  box(0.06, 0.06, 2.55, wtLegMat, WTW_X - 0.9, 2.4, WTW_Z)
+  box(0.06, 0.06, 2.55, wtLegMat, WTW_X + 0.9, 2.4, WTW_Z)
+  box(2.8, 0.05, 0.05, wtLegMat, WTW_X, 1.75, WTW_Z, 0.78)
+  box(2.8, 0.05, 0.05, wtLegMat, WTW_X, 1.75, WTW_Z, -0.78)
+  box(2.15, 0.12, 0.12, wtLegMat, WTW_X, 5.55, WTW_Z - 0.9)
+  box(2.15, 0.12, 0.12, wtLegMat, WTW_X, 5.55, WTW_Z + 0.9)
+  box(0.12, 0.12, 2.15, wtLegMat, WTW_X - 0.9, 5.55, WTW_Z)
+  box(0.12, 0.12, 2.15, wtLegMat, WTW_X + 0.9, 5.55, WTW_Z)
+  cyl(1.1, 1.15, 2.2, 12, wtTankM, WTW_X, 6.9, WTW_Z)
+  cyl(0, 1.12, 0.5, 12, wtTankM, WTW_X, 8.05, WTW_Z)
+  cyl(1.18, 1.18, 0.08, 12, wtLegMat, WTW_X, 5.98, WTW_Z)
+  cyl(1.18, 1.18, 0.08, 12, wtLegMat, WTW_X, 7.82, WTW_Z)
+  cyl(0.055, 0.055, 5.6, 6, M.pipe, WTW_X + 0.82, 2.8, WTW_Z)
+  for (let wr = 0; wr < 10; wr++)
+    box(0.42, 0.04, 0.04, wtLegMat, WTW_X - 1.2, 0.45 + wr * 0.55, WTW_Z, 0, 0, Math.PI / 2)
+  box(0.06, 1.6, 0.04, mat(0xbb3a0e, 0, 0, 0.98), WTW_X + 1.14, 6.9, WTW_Z)
+
+  // UTILITY POLES — along left fence with sagging wire
+  const upMat = mat(C.woodDark, 0, 0, 0.98, 0)
+  const polePts2: [number, number][] = [
+    [-19.5, -8],
+    [-19.5, 2],
+    [-19.5, -2.5],
+  ]
+  polePts2.forEach(([px, pz]) => {
+    cyl(0.07, 0.09, 5.5, 6, upMat, px, 2.75, pz)
+    box(1.05, 0.06, 0.06, upMat, px, 5.42, pz)
+    cyl(0.04, 0.04, 0.12, 5, M.pipe, px - 0.38, 5.4, pz)
+    cyl(0.04, 0.04, 0.12, 5, M.pipe, px + 0.38, 5.4, pz)
+  })
+  // Sagging wire between first two poles (9 segments)
+  for (let wi = 0; wi < 8; wi++) {
+    const wt1 = wi / 8,
+      wt2 = (wi + 1) / 8
+    const wy1 = 5.38 - Math.sin(wt1 * Math.PI) * 0.42
+    const wy2 = 5.38 - Math.sin(wt2 * Math.PI) * 0.42
+    const wz1 = -8 + wt1 * 10,
+      wz2 = -8 + wt2 * 10
+    const dz2 = wz2 - wz1,
+      dy2 = wy2 - wy1
+    const wLen = Math.sqrt(dz2 * dz2 + dy2 * dy2)
+    box(
+      0.018,
+      0.018,
+      wLen,
+      mat(0x161618, 0, 0, 0.9, 0.2),
+      -19.5,
+      (wy1 + wy2) / 2,
+      (wz1 + wz2) / 2,
+      0,
+      -Math.atan2(dy2, dz2),
+      0,
+    )
+  }
+
+  // GROUND MARKINGS — painted path guides
+  const yMark = new THREE.MeshStandardMaterial({
+    color: 0xccbb33,
+    emissive: 0xccbb33,
+    emissiveIntensity: 0.18,
+    roughness: 0.96,
+  })
+  const rMark = new THREE.MeshStandardMaterial({
+    color: 0xbb2211,
+    emissive: 0xbb2211,
+    emissiveIntensity: 0.14,
+    roughness: 0.96,
+  })
+  for (let ml = 0; ml < 8; ml++) pln(0.12, 0.9, yMark, 0, 0.018, -10 + ml * 1.55)
+  pln(0.5, 1.2, yMark, 0, 0.018, 11.5)
+  pln(4, 0.18, rMark, 0, 0.018, 13.2)
+  pln(
+    2.5,
+    2.5,
+    new THREE.MeshBasicMaterial({ color: 0x440000, transparent: true, opacity: 0.16 }),
+    -13,
+    0.016,
+    7.5,
+  )
+  for (let ds = 0; ds < 5; ds++) pln(2.5, 0.2, yMark, -1.5, 0.018, -3 + ds * 0.48, ds * 0.2 + 0.1)
+
+  // SHIPPING CONTAINERS — stacked near left fence / warehouse
+  box(6, 2.4, 2.4, ctnBlue, -16.5, 1.2, -3)
+  box(6, 2.4, 2.4, ctnRed, -16.5, 3.6, -3)
+  box(6, 2.4, 2.4, ctnBlue, -16.5, 1.2, -6.5)
+  for (const cx4 of [-19.52, -13.48])
+    for (const cz4 of [-1.78, -4.22, -5.28, -7.72]) {
+      box(0.12, 2.45, 0.12, mat(C.metal, 0, 0, 0.5, 0.7), cx4, 1.22, cz4)
+      box(0.12, 2.45, 0.12, mat(C.metal, 0, 0, 0.5, 0.7), cx4, 3.62, cz4)
+    }
+  box(5.8, 0.06, 0.06, mat(C.metal, 0, 0, 0.4, 0.6), -16.5, 0.99, -1.78)
+  box(5.8, 0.06, 0.06, mat(C.metal, 0, 0, 0.4, 0.6), -16.5, 2.41, -1.78)
+  box(0.06, 2.42, 0.06, mat(C.metal, 0, 0, 0.4, 0.6), -16.5, 1.21, -1.78)
+
+  // IVY / CLIMBING PLANTS on building exteriors (temperate + industrial only)
+  if (visuals.theme === "temperate" || visuals.theme === "industrial") {
+    const ivyPts: [number, number, number, number, number][] = [
+      [CGX - 3.5, 1.2, CGZ + 3.04, 0.9, 0],
+      [CGX - 3.5, 2.8, CGZ + 3.04, 0.7, 0],
+      [CGX + 3.2, 0.8, CGZ + 3.04, 0.65, 0],
+      [CGX + 3.2, 2.1, CGZ + 3.04, 0.55, 0],
+      [CGX - 3.9, 1.5, CGZ - 3.04, 0.8, Math.PI],
+      [APX - 3.8, 2.2, APZ + 2.59, 0.7, 0],
+      [APX - 1.4, 4.5, APZ + 2.59, 0.55, 0],
+      [APX + 1.2, 3.0, APZ + 2.59, 0.6, 0],
+      [APX + 3.6, 1.8, APZ + 2.59, 0.5, 0],
+    ]
+    ivyPts.forEach(([ix, iy, iz, isc, iry]) => {
+      const im = new THREE.Mesh(new THREE.PlaneGeometry(isc * 0.95, isc * 1.45), ivyMat)
+      im.position.set(ix, iy, iz)
+      im.rotation.y = iry
+      root.add(im)
+    })
+  }
+
+  // MOSS CARPET along inner fence base
+  const mossFenceGeo = gSph(0.1, 4)
+  const iMossF = new THREE.InstancedMesh(mossFenceGeo, mat(C.grass, 0, 0, 1.0, 0), 60)
+  for (let mi = 0; mi < 60; mi++) {
+    const side = mi % 2 === 0 ? -19.1 : 19.1
+    const mz3 = (Math.random() - 0.5) * 27
+    const ms3 = 0.55 + Math.random() * 0.75
+    tmpM.makeScale(ms3, ms3 * 0.38, ms3)
+    tmpM.setPosition(side + (Math.random() - 0.5) * 0.5, 0.04 * ms3, mz3)
+    iMossF.setMatrixAt(mi, tmpM)
+  }
+  iMossF.instanceMatrix.needsUpdate = true
+  root.add(iMossF)
+
+  // CAMP ENTRANCE SIGN — above gate
+  box(5.5, 0.55, 0.1, mat(0x1a1208, 0, 0, 0.98), 0, 4.5, 14.05)
+  box(5.6, 0.62, 0.06, mat(0xcc9922, 0xbb8811, 0.35), 0, 4.5, 14.1)
+  box(5.52, 0.12, 0.08, mat(0xcc3311, 0xaa2200, 0.4), 0, 4.2, 14.05)
+  box(5.52, 0.12, 0.08, mat(0xcc3311, 0xaa2200, 0.4), 0, 4.8, 14.05)
+
+  // ---- LIGHTING — driven by per-camp theme ----
+  // Hemisphere light gives realistic sky/ground separation (sky color from above, ground bounce from below)
+  const hemi = new THREE.HemisphereLight(L.moonColor, L.ambientColor, L.ambientIntensity * 0.55)
+  root.add(hemi)
+  root.add(new THREE.AmbientLight(L.ambientColor, L.ambientIntensity * 0.65))
+  const moon = new THREE.DirectionalLight(L.moonColor, L.moonIntensity)
   moon.position.set(5, 20, 8)
   moon.castShadow = true
-  moon.shadow.mapSize.set(1024, 1024)
+  moon.shadow.mapSize.set(2048, 2048)
   moon.shadow.camera.left = -30
   moon.shadow.camera.right = 30
   moon.shadow.camera.top = 30
@@ -1075,7 +1437,7 @@ export function buildCampScene(scene: THREE.Scene): SceneHandles {
   moon.shadow.camera.far = 80
   moon.shadow.bias = -0.002
   root.add(moon)
-  const skyBounce = new THREE.DirectionalLight(0x334455, 0.25)
+  const skyBounce = new THREE.DirectionalLight(L.skyColor, L.skyIntensity)
   skyBounce.position.set(-8, 15, -5)
   root.add(skyBounce)
   // Zone color fills
@@ -1390,6 +1752,10 @@ export function buildCampScene(scene: THREE.Scene): SceneHandles {
       if (tk >= 4.5 && truckGroup.visible) truckGroup.visible = false
       if (tk >= 6.5) transferStart = -1
     }
+
+    lampLights.forEach((ll, li) => {
+      ll.intensity = 3.8 + Math.sin(t * 1.1 + li * 1.8) * 0.3 + Math.sin(t * 4.7 + li * 0.9) * 0.15
+    })
 
     spot2.target.position.x = Math.sin(t * 0.29 + 1.8) * 12
     spot2.target.position.z = Math.cos(t * 0.29 + 1.8) * 9

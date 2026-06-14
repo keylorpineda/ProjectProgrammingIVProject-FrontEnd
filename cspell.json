@@ -181,7 +181,10 @@
     "ksmoke",
     "Parap",
     "explo",
-    "Catmull"
+    "Catmull",
+    "hemi",
+    "nctx",
+    "sobel"
   ],
   "ignorePaths": [
     "node_modules",

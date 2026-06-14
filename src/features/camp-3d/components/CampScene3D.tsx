@@ -229,7 +229,7 @@ export default function CampScene3D({ campId, onClose, onReady }: Props) {
 
   const contextRef = useThreeScene(canvasRef, {
     onReady: (ctx) => {
-      const handles = buildCampScene(ctx.scene)
+      const handles = buildCampScene(ctx.scene, campId)
       handlesRef.current = handles
 
       // Paso 09 — filtro por rol: los edificios sin acceso se oscurecen y

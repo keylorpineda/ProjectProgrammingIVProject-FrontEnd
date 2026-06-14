@@ -79,13 +79,11 @@ export function useThreeScene(
     const initialW = canvas.clientWidth || window.innerWidth
     const initialH = canvas.clientHeight || window.innerHeight
     renderer.setSize(initialW, initialH, false)
-    renderer.setPixelRatio(1)
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     renderer.shadowMap.enabled = true
-    renderer.shadowMap.type = THREE.BasicShadowMap
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap
     renderer.toneMapping = THREE.ACESFilmicToneMapping
-    // Algo más alto que el HTML original (0.38) para que se distinga el detalle
-    // de los edificios sin perder el ambiente nocturno TLoU2.
-    renderer.toneMappingExposure = 0.52
+    renderer.toneMappingExposure = 0.58
 
     // ---- SCENE ----
     const scene = new THREE.Scene()
