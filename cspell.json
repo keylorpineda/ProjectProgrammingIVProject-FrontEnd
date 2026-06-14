@@ -184,7 +184,13 @@
     "Catmull",
     "hemi",
     "nctx",
-    "sobel"
+    "sobel",
+    "porton",
+    "frand",
+    "sbry",
+    "gpry",
+    "embr",
+    "Srcs"
   ],
   "ignorePaths": [
     "node_modules",

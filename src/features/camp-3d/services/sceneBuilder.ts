@@ -14,6 +14,9 @@ import {
 
 import type { BuildingUserData, SceneHandles, WatchtowerMode } from "../types/scene.types"
 
+/** Factor de escala global del campamento. Exportado para proyección de marcadores. */
+export const SCENE_SCALE = 1.4
+
 /**
  * Construye el campamento 3D completo dentro de `scene`, replicando fielmente
  * la escena de camp3d.html (terreno, vallas, edificios, props, luces y
@@ -36,7 +39,13 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
 
   const root = new THREE.Group()
   root.name = "camp-root"
+  root.scale.setScalar(SCENE_SCALE)
   scene.add(root)
+  // Scale fog so it clips at the same relative distance after root scaling
+  if (scene.fog instanceof THREE.Fog) {
+    scene.fog.near *= SCENE_SCALE
+    scene.fog.far *= SCENE_SCALE
+  }
 
   // ---- GEOMETRY CACHE (reuse!) ----
   const GEO: Record<string, THREE.BufferGeometry> = {}
@@ -90,8 +99,8 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
 
   // Pre-built shared mats — colors driven by per-camp theme
   const M = {
-    ground: matTex(TX.ground, C.ground, 0, 0, 0.96, 0, 1.0),
-    dirt: matTex(TX.ground, C.dirt, 0, 0, 0.98, 0, 0.8),
+    ground: matTex(TX.ground, C.ground, 0, 0, 0.96, 0, 1.6),
+    dirt: matTex(TX.ground, C.dirt, 0, 0, 0.98, 0, 1.3),
     mud: mat(C.ground),
     grass: mat(C.grass),
     wood: matTex(TX.wood, C.wood, 0, 0, 0.9, 0, 1.2),
@@ -105,9 +114,9 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
     brl_y: mat(0x383008, 0x180a00, 0.06),
     tire: mat(0x101010, 0, 0, 1, 0),
     sandbag: matTex(TX.sandbag, 0x524830, 0, 0, 0.92, 0, 1.0),
-    corrugat: matTex(TX.corrugat, C.metal, 0, 0, 0.62, 0.38, 1.6),
-    corrugD: matTex(TX.corrugat, C.metal, 0, 0, 0.68, 0.32, 1.4),
-    brick: matTex(TX.brick, C.brick, 0, 0, 0.84, 0, 1.5),
+    corrugat: matTex(TX.corrugat, C.metal, 0, 0, 0.62, 0.38, 2.8),
+    corrugD: matTex(TX.corrugat, C.metal, 0, 0, 0.68, 0.32, 2.5),
+    brick: matTex(TX.brick, C.brick, 0, 0, 0.84, 0, 2.2),
     chain: mat(C.metal, 0, 0, 0.5, 0.7),
     pipe: mat(C.metal, 0, 0, 0.4, 0.6),
     wireH: mat(0x909070, 0, 0, 0.5, 0.5),
@@ -203,6 +212,8 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
   const tmpM = new THREE.Matrix4()
 
   // ---- GROUND ----
+  // Extended outer terrain (visible beyond fence when camera pans)
+  pln(180, 160, mat(C.dirt, 0, 0, 0.99), 0, -0.04, 0)
   pln(56, 44, M.ground, 0, 0, 0)
   pln(4, 26, M.gravel, 0, 0.01, -1)
   pln(22, 4, M.gravel, 0, 0.01, 5)
@@ -235,21 +246,87 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
   mps.forEach((p) =>
     pln(p[2] + 0.5, p[3] + 0.4, M.mud, p[0] + 0.2, 0.012, p[1] - 0.2, Math.random() * Math.PI),
   )
-  // Grass - instanced
-  const grassGeo = new THREE.PlaneGeometry(0.06, 0.55)
-  const grassMat = mat(C.grass)
-  const iGrass = new THREE.InstancedMesh(grassGeo, grassMat, 200)
+  // Grass - instanced (general camp floor)
+  const grassGeo = new THREE.PlaneGeometry(0.15, 0.95)
+  const grassMat = new THREE.MeshStandardMaterial({
+    color: C.grass,
+    roughness: 1.0,
+    side: THREE.DoubleSide,
+  })
+  const iGrass = new THREE.InstancedMesh(grassGeo, grassMat, 320)
   iGrass.receiveShadow = true
-  for (let gi = 0; gi < 200; gi++) {
-    const gx = (Math.random() - 0.5) * 36
-    const gz = (Math.random() - 0.5) * 28
-    const gy = 0.275 + Math.random() * 0.15
-    tmpM.makeRotationY(Math.random() * Math.PI)
-    tmpM.setPosition(gx, gy, gz)
+  for (let gi = 0; gi < 320; gi++) {
+    const gx = (Math.random() - 0.5) * 40
+    const gz = (Math.random() - 0.5) * 32
+    const gy = 0.475 + Math.random() * 0.12
+    const sc2 = 0.7 + Math.random() * 0.7
+    const lean = (Math.random() - 0.5) * 0.22
+    tmpM
+      .identity()
+      .multiply(new THREE.Matrix4().setPosition(gx, gy * sc2, gz))
+      .multiply(new THREE.Matrix4().makeRotationY(Math.random() * Math.PI))
+      .multiply(new THREE.Matrix4().makeRotationZ(lean))
+      .multiply(new THREE.Matrix4().makeScale(1, sc2, 1))
     iGrass.setMatrixAt(gi, tmpM)
   }
   iGrass.instanceMatrix.needsUpdate = true
   root.add(iGrass)
+
+  // Zone grass patches — denser tufts in each zone area
+  const zoneGrassData: [number, number, number, number][] = [
+    // [x, z, colorR, colorG]
+    // Green zone (0, -5) — lush grass
+    [0, -5, 0.22, 0.72],
+    [1.2, -4, 0.2, 0.68],
+    [-1.0, -6, 0.24, 0.7],
+    [0.5, -3.5, 0.18, 0.65],
+    [-0.8, -4.5, 0.22, 0.72],
+    [1.5, -5.5, 0.2, 0.68],
+    [-1.5, -3.8, 0.25, 0.73],
+    [0.8, -6.5, 0.19, 0.66],
+    // Red zone (-11, -2) — sparse dead grass
+    [-11, -2, 0.28, 0.22],
+    [-12, -1, 0.26, 0.2],
+    [-10, -3, 0.3, 0.24],
+    [-11.5, -0.5, 0.27, 0.21],
+    [-9.8, -2.5, 0.29, 0.23],
+    // Yellow zone (10, 4) — dry yellowish grass
+    [10, 4, 0.48, 0.45],
+    [11, 3, 0.46, 0.43],
+    [9, 5, 0.5, 0.46],
+    [10.5, 5.5, 0.47, 0.44],
+    [8.8, 3.5, 0.49, 0.45],
+  ]
+  const zGrassGeo = new THREE.PlaneGeometry(0.16, 1.15)
+  const iZGrass = new THREE.InstancedMesh(
+    zGrassGeo,
+    new THREE.MeshStandardMaterial({
+      roughness: 1,
+      side: THREE.DoubleSide,
+      color: 0x446633,
+    }),
+    zoneGrassData.length * 5,
+  )
+  let zgIdx = 0
+  zoneGrassData.forEach(([zx, zz, cr, cg]) => {
+    const col = new THREE.Color(cr, cg, 0.08)
+    for (let k = 0; k < 5; k++) {
+      const ox = (Math.random() - 0.5) * 1.6
+      const oz = (Math.random() - 0.5) * 1.6
+      const sc = 0.7 + Math.random() * 0.75
+      const rotation = new THREE.Matrix4().makeRotationY(Math.random() * Math.PI)
+      const scale = new THREE.Matrix4().makeScale(sc, sc, sc)
+      const pos = new THREE.Matrix4().setPosition(zx + ox, 0.36 * sc, zz + oz)
+      tmpM.identity().multiply(pos).multiply(rotation).multiply(scale)
+      iZGrass.setMatrixAt(zgIdx, tmpM)
+      iZGrass.setColorAt(zgIdx, col)
+      zgIdx++
+    }
+  })
+  iZGrass.count = zgIdx
+  iZGrass.instanceMatrix.needsUpdate = true
+  if (iZGrass.instanceColor) iZGrass.instanceColor.needsUpdate = true
+  root.add(iZGrass)
 
   // ---- PERIMETER FENCE ----
   const postGeo = gCyl(0.09, 0.11, 3.1, 6)
@@ -509,79 +586,164 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
 
   const GTX = -6
   const GTZ = 12.5
-  // Cuerpo de la caseta + techo inclinado de chapa.
-  const gateMesh = box(1.8, 2.5, 1.8, gtWood, GTX, 1.25, GTZ)
-  box(1.9, 0.15, 1.9, gtRoof, GTX, 2.6, GTZ, 0, 0, 0.08)
-  // Ventana lateral deslizable (hacia el camino) + puerta frontal angosta.
-  box(0.65, 0.55, 0.12, M.glass, GTX + 0.91, 1.55, GTZ, Math.PI / 2)
-  box(0.6, 1.8, 0.12, gtWood, GTX, 0.9, GTZ + 0.91)
-  // Tablilla de registro en la pared y silla oxidada visible por el vidrio.
-  box(0.5, 0.5, 0.04, gtWood, GTX - 0.88, 1.5, GTZ, Math.PI / 2)
-  box(0.35, 0.6, 0.35, gtChair, GTX - 0.2, 0.3, GTZ - 0.2)
-  // Letreros de advertencia pintados a mano.
-  box(0.3, 0.4, 0.06, gtSign, GTX, 1.9, GTZ + 0.92)
-  box(0.3, 0.4, 0.06, gtSign, GTX + 0.92, 1.0, GTZ - 0.4, Math.PI / 2)
+  // === PORTÓN DE ADMISIONES — checkpoint principal de entrada ===
+  // Edificio de caseta ampliado (2.8 x 3.2) con arquería central
+  const gateMesh = box(2.8, 3.0, 2.4, gtWood, GTX, 1.5, GTZ)
+  box(3.0, 0.18, 2.6, gtRoof, GTX, 3.12, GTZ, 0, 0, 0.07)
+  // Extensión trasera (sala de procesamiento)
+  box(1.6, 2.2, 1.5, matTex(TX.conc, C.concrete, 0, 0, 0.9), GTX - 1.8, 1.1, GTZ - 0.6)
+  box(1.65, 0.14, 1.55, gtRoof, GTX - 1.8, 2.25, GTZ - 0.6)
+  // Ventana ancha hacia el carril de acceso
+  box(1.0, 0.7, 0.1, M.glass, GTX + 1.41, 1.8, GTZ, Math.PI / 2)
+  box(0.8, 0.55, 0.08, M.glass, GTX - 0.2, 2.2, GTZ - 0.6, Math.PI / 2)
+  // Puerta doble frontal reforzada
+  box(0.9, 2.4, 0.1, mat(0x282828, 0, 0, 0.6, 0.5), GTX - 0.5, 1.2, GTZ + 1.21)
+  box(0.9, 2.4, 0.1, mat(0x282828, 0, 0, 0.6, 0.5), GTX + 0.5, 1.2, GTZ + 1.21)
+  box(0.08, 2.4, 0.12, mat(0xcc9900, 0, 0, 0.5, 0.5), GTX, 1.2, GTZ + 1.21)
+  // Marco decorativo de la puerta
+  box(2.0, 0.22, 0.12, matTex(TX.conc, C.concrete, 0, 0, 0.88), GTX, 2.52, GTZ + 1.21)
+  box(0.2, 2.56, 0.12, matTex(TX.conc, C.concrete, 0, 0, 0.88), GTX - 1.0, 1.24, GTZ + 1.21)
+  box(0.2, 2.56, 0.12, matTex(TX.conc, C.concrete, 0, 0, 0.88), GTX + 1.0, 1.24, GTZ + 1.21)
+  // Letrero ADMISIONES sobre la puerta (grande, iluminado)
+  box(2.8, 0.65, 0.1, mat(0x0a0804, 0, 0, 0.98), GTX, 3.4, GTZ + 1.2)
+  box(2.65, 0.5, 0.08, mat(0xdd8800, 0xcc6600, 0.55), GTX, 3.4, GTZ + 1.2)
+  box(2.4, 0.08, 0.08, mat(0xffaa00, 0xffaa00, 1.8), GTX, 3.07, GTZ + 1.2)
+  box(2.4, 0.08, 0.08, mat(0xffaa00, 0xffaa00, 1.8), GTX, 3.73, GTZ + 1.2)
+  ptL(0xffcc44, 2.5, 7, GTX, 3.5, GTZ + 1.1)
+  // Tablilla de registro y silla
+  box(0.55, 0.55, 0.05, gtWood, GTX - 1.38, 1.7, GTZ, Math.PI / 2)
+  box(0.4, 0.7, 0.4, gtChair, GTX + 0.4, 0.35, GTZ - 0.3)
+  // Letreros de advertencia
+  box(0.35, 0.45, 0.07, gtSign, GTX, 2.3, GTZ + 1.22)
+  box(0.35, 0.45, 0.07, gtSign, GTX + 1.42, 1.2, GTZ - 0.4, Math.PI / 2)
 
-  // Barrera vehicular abatible sobre la entrada. El brazo vive en un grupo con
-  // pivote en el poste para poder animar rotation.z (sube/baja con admisiones).
-  cyl(0.05, 0.06, 2.5, 6, gtBarrier, GTX + 2.2, 1.25, GTZ + 0.5)
-  cyl(0.05, 0.06, 1.9, 6, gtBarrier, GTX + 5.7, 0.95, GTZ + 0.5)
+  // EDIFICIO DE ADMISIONES CENTRAL — visible desde la entrada, 2 pisos
+  const AHX = 0,
+    AHZ = 8
+  const ahConc = matTex(TX.conc, C.concrete, 0, 0, 0.88, 0, 1.8)
+  const ahBrick = matTex(TX.brick, C.brick, 0, 0, 0.85, 0, 2.0)
+  const ahRoof = matTex(TX.corrugat, C.metal, 0, 0, 0.7, 0.32, 2.2)
+  // Cuerpo principal 2 pisos
+  box(11, 5.8, 6.5, ahConc, AHX, 2.9, AHZ)
+  // Franja de ladrillo en base
+  box(11.1, 1.4, 6.6, ahBrick, AHX, 0.7, AHZ)
+  // Techo plano con pretil
+  box(11.4, 0.35, 6.8, ahRoof, AHX, 5.88, AHZ)
+  box(11.4, 0.7, 0.28, ahConc, AHX, 6.23, AHZ + 3.4)
+  box(11.4, 0.7, 0.28, ahConc, AHX, 6.23, AHZ - 3.4)
+  box(0.28, 0.7, 6.8, ahConc, AHX - 5.7, 6.23, AHZ)
+  box(0.28, 0.7, 6.8, ahConc, AHX + 5.7, 6.23, AHZ)
+  // Torre de observación encima
+  box(4.5, 2.8, 3.5, ahConc, AHX, 7.5, AHZ)
+  box(4.8, 0.28, 3.8, ahRoof, AHX, 9.04, AHZ)
+  box(4.8, 0.55, 0.22, ahConc, AHX, 9.35, AHZ + 1.9)
+  box(4.8, 0.55, 0.22, ahConc, AHX, 9.35, AHZ - 1.9)
+  box(0.22, 0.55, 3.8, ahConc, AHX - 2.4, 9.35, AHZ)
+  box(0.22, 0.55, 3.8, ahConc, AHX + 2.4, 9.35, AHZ)
+  // Ventanas planta baja (4 ventanales)
+  for (let wi = 0; wi < 4; wi++) {
+    box(1.6, 1.2, 0.1, M.glass, AHX - 3.9 + wi * 2.6, 2.1, AHZ + 3.3)
+    box(1.6, 0.06, 0.12, mat(0x505040, 0, 0, 0.5, 0.4), AHX - 3.9 + wi * 2.6, 2.75, AHZ + 3.3)
+  }
+  // Ventanas 2do piso
+  for (let wi2 = 0; wi2 < 5; wi2++)
+    box(1.2, 1.0, 0.1, M.glass, AHX - 4.5 + wi2 * 2.2, 4.5, AHZ + 3.3)
+  // Ventanas torre
+  box(1.8, 1.2, 0.1, M.glass, AHX, 7.5, AHZ + 1.76)
+  box(1.8, 1.2, 0.1, M.glass, AHX - 2.26, 7.5, AHZ)
+  box(1.8, 1.2, 0.1, M.glass, AHX + 2.26, 7.5, AHZ)
+  // Puerta principal doble
+  box(2.2, 2.8, 0.12, mat(0x282828, 0, 0, 0.6, 0.5), AHX - 0.55, 1.4, AHZ + 3.3)
+  box(2.2, 2.8, 0.12, mat(0x282828, 0, 0, 0.6, 0.5), AHX + 0.55, 1.4, AHZ + 3.3)
+  box(4.6, 0.28, 0.14, ahConc, AHX, 2.94, AHZ + 3.3)
+  // LETRERO ADMISIONES — grande, iluminado
+  box(10.5, 2.0, 0.15, mat(0x080706, 0, 0, 0.98), AHX, 5.1, AHZ + 3.35)
+  box(10.1, 1.62, 0.1, mat(0xcc7700, 0xaa5500, 0.55), AHX, 5.1, AHZ + 3.35)
+  box(9.7, 0.1, 0.06, mat(0xff9900, 0xff7700, 3.5), AHX, 4.15, AHZ + 3.35)
+  box(9.7, 0.1, 0.06, mat(0xff9900, 0xff7700, 3.5), AHX, 6.05, AHZ + 3.35)
+  // Luces del edificio (iluminan la fachada)
+  ptL(0xffdd88, 7.0, 22, AHX - 4, 7.5, AHZ + 6)
+  ptL(0xffdd88, 7.0, 22, AHX + 4, 7.5, AHZ + 6)
+  ptL(0xffaa44, 4.5, 14, AHX, 6.0, AHZ + 4)
+  // Focos en pretil
+  sph(0.13, 6, mat(0xffee88, 0xffcc44, 4.5), AHX - 4.5, 6.45, AHZ + 3.4)
+  sph(0.13, 6, mat(0xffee88, 0xffcc44, 4.5), AHX + 4.5, 6.45, AHZ + 3.4)
+  sph(0.13, 6, mat(0xffee88, 0xffcc44, 4.5), AHX, 6.45, AHZ + 3.4)
+  // Cámaras de seguridad en esquinas
+  box(0.18, 0.12, 0.32, mat(C.metal, 0, 0, 0.5, 0.65), AHX - 5.6, 5.5, AHZ + 3.45, -0.35)
+  box(0.18, 0.12, 0.32, mat(C.metal, 0, 0, 0.5, 0.65), AHX + 5.6, 5.5, AHZ + 3.45, 0.35)
+
+  // Barrera vehicular abatible (más robusta)
+  cyl(0.07, 0.09, 3.0, 8, gtBarrier, GTX + 2.5, 1.5, GTZ + 0.4)
+  cyl(0.07, 0.09, 2.2, 8, gtBarrier, GTX + 4.8, 1.1, GTZ + 0.4)
   const gtBarrierArm = new THREE.Group()
-  gtBarrierArm.position.set(GTX + 2.2, 1.9, GTZ + 0.5)
-  const gtArm = new THREE.Mesh(gBox(3.5, 0.08, 0.1), gtBarrier)
-  gtArm.position.x = 1.75
+  gtBarrierArm.position.set(GTX + 2.5, 2.6, GTZ + 0.4)
+  const gtArm = new THREE.Mesh(gBox(4.0, 0.1, 0.12), gtBarrier)
+  gtArm.position.x = 2.0
   gtArm.castShadow = true
   gtBarrierArm.add(gtArm)
-  for (let gsi = 0; gsi < 3; gsi++) {
-    const stripe = new THREE.Mesh(gBox(0.55, 0.085, 0.105), gtStripe)
-    stripe.position.x = 0.5 + gsi * 1.1
+  for (let gsi = 0; gsi < 4; gsi++) {
+    const stripe = new THREE.Mesh(gBox(0.6, 0.105, 0.125), gtStripe)
+    stripe.position.x = 0.5 + gsi * 0.95
     gtBarrierArm.add(stripe)
   }
   root.add(gtBarrierArm)
+  // Luz de semáforo en el poste de la barrera
+  sph(0.1, 7, mat(0xff2200, 0xff0000, 4.0), GTX + 2.5, 2.85, GTZ + 0.35)
 
-  // Lámpara de emergencia interior (parpadeará con admisiones PENDING).
-  cyl(0.04, 0.04, 0.8, 5, M.metal, GTX, 2.0, GTZ)
-  sph(0.1, 7, mat(0xff9933, 0xff9933, 3.0), GTX, 1.6, GTZ)
-  const gtLamp = ptL(0xffaa44, 2.0, 5, GTX, 1.7, GTZ)
+  // Lámpara de emergencia interior
+  cyl(0.04, 0.04, 0.8, 5, M.metal, GTX, 2.5, GTZ)
+  sph(0.12, 7, mat(0xff9933, 0xff9933, 3.5), GTX, 2.2, GTZ)
+  const gtLamp = ptL(0xffaa44, 3.0, 8, GTX, 2.3, GTZ)
 
-  // Sacos de arena apilados en las esquinas + musgo + escombros.
-  const gtCorners: [number, number][] = [
-    [GTX - 0.8, GTZ - 0.8],
-    [GTX + 0.8, GTZ - 0.8],
-    [GTX - 0.8, GTZ + 0.8],
-    [GTX + 0.8, GTZ + 0.8],
-  ]
-  gtCorners.forEach(([cx, cz]) => {
-    box(0.6, 0.26, 0.36, M.sandbag, cx, 0.13, cz)
-    box(0.6, 0.26, 0.36, M.sandbag, cx, 0.39, cz, 0.2)
-  })
-  box(0.04, 0.5, 0.04, cgMoss, GTX - 0.9, 1.0, GTZ + 0.4)
-  box(0.04, 0.5, 0.04, cgMoss, GTX + 0.9, 1.2, GTZ - 0.3)
+  // Muro de sacos de arena + concreto reforzado en el frente
+  for (let sb = 0; sb < 8; sb++)
+    box(0.65, 0.28, 0.4, M.sandbag, GTX - 2.8 + sb * 0.72, 0.14, GTZ + 2.0)
+  for (let sb = 0; sb < 6; sb++)
+    box(0.65, 0.28, 0.4, M.sandbag, GTX - 1.8 + sb * 0.72, 0.42, GTZ + 2.0)
+  box(5.8, 0.2, 0.3, matTex(TX.conc, C.concrete, 0, 0, 0.9), GTX + 0.1, 0.68, GTZ + 2.0)
+  // Cámaras de seguridad en el arco
+  box(0.15, 0.1, 0.28, mat(C.metal, 0, 0, 0.5, 0.65), GTX + 3.95, 5.1, GTZ + 0.55, 0.3)
+  box(0.15, 0.1, 0.28, mat(C.metal, 0, 0, 0.5, 0.65), GTX - 1.15, 5.1, GTZ + 0.55, -0.3)
+  // Musgo y escombros
+  box(0.04, 0.5, 0.04, cgMoss, GTX - 1.38, 1.2, GTZ + 0.5)
+  box(0.04, 0.5, 0.04, cgMoss, GTX + 1.4, 1.4, GTZ - 0.45)
   for (let gdi = 0; gdi < 3; gdi++)
-    box(
-      0.1,
-      0.08,
-      0.08,
-      M.gravel,
-      GTX + 1 + Math.random() * 2,
-      0.05,
-      GTZ + Math.random() * 1.5,
-      Math.random() * Math.PI,
-    )
+    box(0.1, 0.08, 0.08, M.gravel, GTX + 2 + gdi * 0.9, 0.05, GTZ + 1.0, gdi * 0.7)
 
-  // 3. ARMORY (decorativa; en el Paso 07 será el locker del worker-soldado)
-  // Reubicada a z=1.5 para no chocar con el garaje (z>=5) y que su puerta dé
-  // a campo abierto en vez de a la pared del garaje.
-  box(6, 3, 4.5, M.corrugat, 12, 1.5, 1.5)
-  box(6.2, 0.1, 4.7, M.corrugD, 12, 3.06, 1.5)
-  box(6.6, 0.06, 5, M.tarp, 12, 3.38, 1.5, 0, 0, 0.07)
-  box(1.4, 2.2, 0.1, M.metal, 12, 1.1, 3.78)
-  box(0.9, 0.9, 0.9, M.plank, 11, 0.45, 1.5)
-  box(0.9, 0.9, 0.9, M.plank, 11, 1.35, 1.5)
-  box(0.9, 0.9, 0.9, M.plank, 12, 0.45, 1.5)
-  cyl(0.35, 0.36, 0.92, 8, M.brl_g, 14.6, 0.46, 0.6)
-  cyl(0.35, 0.36, 0.92, 8, M.brl_g, 15.3, 0.46, 0.6)
-  cyl(0.35, 0.36, 0.92, 8, M.brl_r, 14.6, 0.46, 1.5)
+  // 3. ARMERÍA — Edificio grande de armamento (Paso 07: locker soldado)
+  box(8, 5, 6.5, M.corrugat, 12, 2.5, 0.8)
+  box(4, 4.5, 5, M.brick, 12, 2.25, -4.2)
+  box(8.5, 0.16, 7, M.corrugD, 12, 5.1, 0.8, 0, 0, 0.04)
+  box(4.3, 0.16, 5.3, M.corrugD, 12, 4.58, -4.2, 0, 0, -0.03)
+  box(0.16, 5, 0.16, M.metal, 8.9, 2.5, 4.1)
+  box(0.16, 5, 0.16, M.metal, 15.1, 2.5, 4.1)
+  box(0.16, 5, 0.16, M.metal, 8.9, 2.5, -2.45)
+  box(0.16, 5, 0.16, M.metal, 15.1, 2.5, -2.45)
+  box(1.05, 3.6, 0.1, mat(0x282820, 0, 0, 0.62, 0.55), 11.4, 1.8, 4.07)
+  box(1.05, 3.6, 0.1, mat(0x282820, 0, 0, 0.62, 0.55), 12.6, 1.8, 4.07)
+  box(2.3, 0.12, 0.1, mat(0x3a3a30, 0, 0, 0.6, 0.5), 12, 3.7, 4.07)
+  box(3.2, 0.54, 0.08, mat(0x0a0a08, 0, 0, 0.98), 12, 4.55, 4.08)
+  box(3.0, 0.4, 0.07, mat(0x993300, 0xcc4400, 0.72), 12, 4.55, 4.08)
+  box(2.8, 0.06, 0.07, mat(0xdd5500, 0xdd5500, 2.2), 12, 4.3, 4.08)
+  box(2.8, 0.06, 0.07, mat(0xdd5500, 0xdd5500, 2.2), 12, 4.78, 4.08)
+  box(1.2, 0.82, 0.08, M.glass, 9.6, 3.3, 4.06)
+  box(1.2, 0.82, 0.08, M.glass, 14.4, 3.3, 4.06)
+  box(1.0, 0.7, 0.08, M.glass, 9.6, 1.9, 4.06)
+  box(1.0, 0.7, 0.08, M.glass, 14.4, 1.9, 4.06)
+  ptL(0xffaa55, 1.8, 14, 12, 2.8, 0.5)
+  for (let sb = 0; sb < 6; sb++) box(0.95, 0.44, 0.44, M.sandbag, 9.2 + sb * 0.96, 0.22, 5.1)
+  for (let sb = 0; sb < 6; sb++) box(0.95, 0.44, 0.44, M.sandbag, 9.2 + sb * 0.96, 0.66, 5.1)
+  box(0.9, 0.9, 0.9, M.plank, 9.0, 0.45, 4.9)
+  box(0.9, 0.9, 0.9, M.plank, 9.0, 1.35, 4.9)
+  box(0.9, 0.9, 0.9, M.plank, 9.9, 0.45, 4.9)
+  cyl(0.35, 0.36, 0.92, 8, M.brl_g, 15.2, 0.46, 4.9)
+  cyl(0.35, 0.36, 0.92, 8, M.brl_r, 15.2, 0.46, 3.9)
+  cyl(0.35, 0.36, 0.92, 8, M.brl_y, 14.3, 0.46, 4.5)
+  box(0.08, 1.8, 0.08, M.metal, 15.8, 0.9, 1.8)
+  box(0.08, 1.8, 0.08, M.metal, 15.8, 0.9, -0.8)
+  box(0.06, 0.06, 3.0, M.metal, 15.8, 1.2, 0.5)
+  box(0.06, 0.06, 3.0, M.metal, 15.8, 0.6, 0.5)
 
   // 4. TORRE DE VIGILANCIA (Paso 04 — Exploraciones, estilo TLoU2)
   // Torre de madera reforzada de ~6.5m: 4 postes inclinados, plataforma con
@@ -771,18 +933,73 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
   box(0.5, 0.4, 0.08, mat(0x112211, 0x00ff44, 0.8), -1.56, 1.8, 9)
   ptL(0x22ff44, 0.9, 5, 0, 1.5, 9)
 
-  // 7. KITCHEN
-  box(6, 2.5, 0.1, M.plank, 6, 1.25, 12)
-  box(0.1, 2.5, 2.2, M.plank, 3.1, 1.25, 11)
-  box(0.1, 2.5, 2.2, M.plank, 8.9, 1.25, 11)
-  box(6.2, 0.1, 2.4, M.corrugat, 6, 2.56, 11)
-  cyl(0.4, 0.45, 0.6, 8, M.rust, 5, 0.3, 11)
-  cyl(0.4, 0.45, 0.6, 8, M.rust, 6.2, 0.3, 11)
-  sph(0.16, 8, mat(0xff6600, 0xff4400, 5.5), 5.6, 0.78, 11)
-  sph(0.08, 6, mat(0xffcc00, 0xffbb00, 6.5), 5.6, 0.9, 11)
-  const kFireL = ptL(0xff5500, 3.5, 8, 5.6, 1.0, 11)
-  box(2.5, 0.8, 0.8, M.wood, 6, 0.4, 11.2)
-  cyl(0.28, 0.28, 0.35, 7, M.metal, 6, 0.95, 11.2)
+  // 7. COCINA / CANTINA — edificio cerrado con área de comedor exterior
+  // Nave cocina (madera + chapa)
+  box(6, 3.2, 5, M.plank, 5.5, 1.6, 10.2)
+  box(6.2, 0.14, 5.2, M.corrugat, 5.5, 3.28, 10.2, 0, 0, 0.04)
+  // Puerta cocina y ventana de servicio
+  box(1.0, 2.2, 0.08, M.woodD, 5.5, 1.1, 12.72)
+  box(1.8, 0.65, 0.06, M.glass, 4.3, 2.1, 12.72)
+  // Chimenea de ladrillo (doble)
+  cyl(0.28, 0.32, 3.8, 8, M.brick, 4.4, 1.6 + 1.9, 9.3)
+  cyl(0.35, 0.28, 0.35, 8, M.rust, 4.4, 5.55, 9.3)
+  cyl(0.22, 0.26, 2.9, 8, M.brick, 5.9, 1.6 + 1.45, 9.3)
+  cyl(0.3, 0.22, 0.28, 8, M.rust, 5.9, 4.95, 9.3)
+  // Calderas / cocinas de leña
+  box(0.7, 0.7, 0.7, M.rust, 4.5, 0.35, 10.5)
+  box(0.7, 0.7, 0.7, M.rust, 5.8, 0.35, 10.5)
+  sph(0.14, 7, mat(0xff6600, 0xff4400, 6.0), 5.1, 0.85, 10.5)
+  const kFireL = ptL(0xff5500, 3.5, 10, 5.5, 1.2, 10.5)
+  // Área de comedor exterior (techo de tela sobre postes)
+  box(5, 0.07, 3.5, M.tarpB, 8.8, 2.85, 11.5)
+  box(0.1, 2.85, 0.1, M.wood, 7.0, 1.42, 10.0)
+  box(0.1, 2.85, 0.1, M.wood, 7.0, 1.42, 13.0)
+  box(0.1, 2.85, 0.1, M.wood, 10.6, 1.42, 10.0)
+  box(0.1, 2.85, 0.1, M.wood, 10.6, 1.42, 13.0)
+  // Mesas y bancos exteriores
+  box(1.5, 0.06, 0.55, M.woodD, 8.8, 0.72, 11.0)
+  box(1.5, 0.06, 0.55, M.woodD, 8.8, 0.72, 12.2)
+  box(1.4, 0.06, 0.22, M.wood, 8.8, 0.42, 10.7)
+  box(1.4, 0.06, 0.22, M.wood, 8.8, 0.42, 11.3)
+  box(1.4, 0.06, 0.22, M.wood, 8.8, 0.42, 11.9)
+  box(1.4, 0.06, 0.22, M.wood, 8.8, 0.42, 12.5)
+  // Barriles de agua y provisiones
+  cyl(0.38, 0.4, 0.9, 9, M.brl_y, 3.0, 0.45, 12.5)
+  cyl(0.38, 0.4, 0.9, 9, M.brl_y, 3.0, 1.35, 12.5)
+  cyl(0.38, 0.4, 0.9, 9, M.brl_g, 2.2, 0.45, 12.5)
+
+  // 8. ENFERMERÍA — Centro médico del campamento (x=-7, z=-7)
+  box(6, 3.5, 5.5, mat(0xa0a890), -7, 1.75, -7) // nave principal (lona verde militar)
+  box(6.3, 0.13, 5.8, mat(0x7a8860, 0, 0, 0.96), -7, 3.57, -7, 0, 0, 0.03) // techo lona
+  box(2.5, 3.5, 0.08, mat(0xc8d0b8), -7, 1.75, -4.24) // pared frontal blanca
+  // Cruz roja en fachada
+  box(1.5, 1.5, 0.06, mat(0xfafafa), -7, 2.2, -4.23)
+  box(0.38, 1.5, 0.06, mat(0xcc0a0a, 0xaa0000, 1.1), -7, 2.2, -4.22)
+  box(1.5, 0.38, 0.06, mat(0xcc0a0a, 0xaa0000, 1.1), -7, 2.2, -4.22)
+  ptL(0xcc0000, 2.5, 8, -7, 2.5, -4.1)
+  // Puerta y ventanas
+  box(1.0, 2.3, 0.07, mat(0xc8d0b8), -7, 1.15, -4.23)
+  box(1.2, 0.75, 0.07, M.glass, -8.8, 2.3, -4.23)
+  box(1.2, 0.75, 0.07, M.glass, -5.2, 2.3, -4.23)
+  // Postes de esquina
+  box(0.14, 3.5, 0.14, M.metal, -9.95, 1.75, -4.24)
+  box(0.14, 3.5, 0.14, M.metal, -4.05, 1.75, -4.24)
+  // Luz interior (blanca-fría)
+  ptL(0xddeeff, 2.2, 10, -7, 2.0, -7)
+  // Camilla + suministros médicos
+  box(2.0, 0.12, 0.7, mat(0xfafafa), -7, 0.66, -6.5) // camilla
+  box(0.06, 0.66, 0.06, M.metal, -6.1, 0.33, -6.2)
+  box(0.06, 0.66, 0.06, M.metal, -7.9, 0.33, -6.2)
+  box(0.06, 0.66, 0.06, M.metal, -6.1, 0.33, -6.8)
+  box(0.06, 0.66, 0.06, M.metal, -7.9, 0.33, -6.8)
+  box(0.5, 0.42, 0.36, mat(0xfafafa), -9.2, 0.21, -6.0) // caja médica
+  box(0.5, 0.42, 0.36, mat(0xfafafa), -9.2, 0.63, -6.0) // caja apilada
+  box(0.06, 0.42, 0.06, mat(0xee1111, 0xcc0000, 1.8), -9.2, 0.21, -6.0) // cruz pequeña
+  box(0.5, 0.42, 0.36, mat(0xd0e8e0), -4.8, 0.21, -4.6) // botiquín verde
+  // Poste con bandera de emergencia
+  cyl(0.04, 0.04, 4.5, 5, M.metal, -9.5, 2.25, -4.5)
+  box(0.9, 0.5, 0.04, mat(0xfafafa, 0, 0, 0.85), -9.1, 4.0, -4.5) // bandera blanca
+  box(0.36, 0.5, 0.04, mat(0xcc0a0a, 0xaa0000, 0.9), -9.1, 4.0, -4.5) // cruz bandera
 
   // (El antiguo FUEL DEPOT se fusionó con el Almacén — Paso 05.)
 
@@ -830,6 +1047,53 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
   }
   chFence(-7, -3, 6, Math.PI / 2)
   chFence(7, 2, 8, Math.PI / 2)
+
+  // ---- PORTÓN DE TRASLADOS (salida sur — GJX=13.5, GJZ=8.5) ----
+  // Carretera de grava saliendo hacia el sur (GJZ+11 = z=19.5 root-local)
+  pln(7.5, 24, M.gravel, 13.5, 0.012, 19.5)
+  for (let rm = 0; rm < 5; rm++)
+    box(0.18, 0.02, 1.4, mat(0xddcc88, 0, 0, 0.85), 13.5, 0.022, 13.5 + rm * 4.2)
+  // Postes del portón (hormigón + metal)
+  box(0.55, 5.8, 0.55, matTex(TX.conc, C.concrete, 0, 0, 0.88), 9.7, 2.9, 12.1)
+  box(0.55, 5.8, 0.55, matTex(TX.conc, C.concrete, 0, 0, 0.88), 17.3, 2.9, 12.1)
+  box(0.72, 0.22, 0.72, M.metal, 9.7, 5.9, 12.1)
+  box(0.72, 0.22, 0.72, M.metal, 17.3, 5.9, 12.1)
+  // Luces rojas de advertencia
+  sph(0.18, 7, mat(0xff2200, 0xff2200, 4.0), 9.7, 5.7, 11.9)
+  sph(0.18, 7, mat(0xff2200, 0xff2200, 4.0), 17.3, 5.7, 11.9)
+  ptL(0xff1100, 3.0, 8, 9.7, 5.5, 11.8)
+  ptL(0xff1100, 3.0, 8, 17.3, 5.5, 11.8)
+  // Hoja derecha (pivota en x=17, z=12.1)
+  const portonPivotR = new THREE.Group()
+  portonPivotR.position.set(17.0, 0, 12.1)
+  const portonPanelR = new THREE.Mesh(
+    gBox(3.4, 4.8, 0.12),
+    matTex(TX.corrugat, C.metal, 0, 0, 0.55, 0.45),
+  )
+  portonPanelR.position.set(-1.7, 2.4, 0)
+  portonPanelR.castShadow = true
+  portonPivotR.add(portonPanelR)
+  root.add(portonPivotR)
+  // Hoja izquierda (pivota en x=10, z=12.1)
+  const portonPivotL = new THREE.Group()
+  portonPivotL.position.set(10.0, 0, 12.1)
+  const portonPanelL = new THREE.Mesh(
+    gBox(3.4, 4.8, 0.12),
+    matTex(TX.corrugat, C.metal, 0, 0, 0.55, 0.45),
+  )
+  portonPanelL.position.set(1.7, 2.4, 0)
+  portonPanelL.castShadow = true
+  portonPivotL.add(portonPanelL)
+  root.add(portonPivotL)
+  // Travesaños horizontales (barra de cierre)
+  box(7.2, 0.22, 0.14, M.metal, 13.5, 3.6, 12.1)
+  box(7.2, 0.22, 0.14, M.metal, 13.5, 1.4, 12.1)
+  box(3.2, 0.14, 0.12, mat(0xddcc00, 0xbbaa00, 0.3), 13.5, 0.8, 12.1)
+  box(2.0, 0.5, 0.08, mat(0x0a0808, 0, 0, 0.98), 13.5, 4.5, 12.08)
+  box(1.85, 0.36, 0.07, mat(0xdd2200, 0xaa1100, 0.65), 13.5, 4.5, 12.07)
+  // Valla a ambos lados de la carretera exterior
+  chFence(7.0, 18.5, 8)
+  chFence(20.0, 18.5, 8)
 
   // ---- SANDBAGS (instanced) ----
   const sbGeo = gBox(0.68, 0.3, 0.4)
@@ -1127,63 +1391,207 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
     opacity: 0.88,
   })
 
-  // DEAD TREES — post-apocalyptic leafless silhouettes
-  const treeDefs: [number, number, number][] = [
-    // [x, z, height] — outside fence
-    [-22, -12, 5.5],
-    [-24, 0, 4.2],
-    [-22, 10, 6.0],
-    [22, -8, 5.0],
-    [23, 4, 4.8],
-    [-5, -19, 3.8],
-    [8, -18, 5.2],
-    [-14, -18, 4.5],
-    [4, 16, 3.5],
-    [-10, 16, 4.0],
-    // inside — empty corners
-    [-3, -7, 3.2],
-    [16, -12, 3.8],
-    [-6, -12, 2.8],
+  // FOREST — dense ring of pines + dead trees + undergrowth around camp
+  const pineCan = new THREE.MeshStandardMaterial({
+    color:
+      visuals.theme === "arctic"
+        ? 0x1a2e1a
+        : visuals.theme === "arid"
+          ? 0x3a2c0c
+          : visuals.theme === "industrial"
+            ? 0x141810
+            : 0x0c2006,
+    roughness: 1.0,
+    flatShading: true,
+    side: THREE.FrontSide,
+  })
+  const pineTrk = mat(C.woodDark, 0, 0, 0.98, 0)
+
+  // Instanced pine geometry — 4 layers: trunk + 3 cones (flatShading for organic look)
+  const PINE_MAX = 100
+  const iTrunkF = new THREE.InstancedMesh(
+    new THREE.CylinderGeometry(0.13, 0.22, 1, 6),
+    pineTrk,
+    PINE_MAX,
+  )
+  const iConeL = new THREE.InstancedMesh(new THREE.ConeGeometry(1.65, 1, 8), pineCan, PINE_MAX)
+  const iConeM = new THREE.InstancedMesh(new THREE.ConeGeometry(1.15, 1, 7), pineCan, PINE_MAX)
+  const iConeU = new THREE.InstancedMesh(new THREE.ConeGeometry(0.68, 1, 6), pineCan, PINE_MAX)
+  iTrunkF.castShadow = true
+  iConeL.castShadow = true
+  iConeM.castShadow = true
+  iConeU.castShadow = true
+  iTrunkF.receiveShadow = true
+  iConeL.receiveShadow = true
+
+  // Seeded pseudo-random — no Math.random() so every camp renders identically
+  let fs = seed
+  const frand = () => {
+    fs = (fs * 1664525 + 1013904223) >>> 0
+    return (fs >>> 0) / 0x100000000
+  }
+
+  const pineRings = [
+    { r: 23, spacing: 4.8, clearFront: 0.42 },
+    { r: 30, spacing: 5.5, clearFront: 0.28 },
+    { r: 38, spacing: 6.2, clearFront: 0.18 },
+    { r: 47, spacing: 7.0, clearFront: 0.0 },
   ]
-  treeDefs.forEach(([tx, tz, th], ti) => {
-    cyl(0.14 + (ti % 3) * 0.04, 0.2 + (ti % 2) * 0.04, th, 7, extTree, tx, th / 2, tz)
-    const bCount = 3 + (ti % 3)
+  let pi2 = 0
+  pineRings.forEach(({ r, spacing, clearFront }) => {
+    const count = Math.floor((2 * Math.PI * r) / spacing)
+    for (let i = 0; i < count && pi2 < PINE_MAX; i++) {
+      const ang = (i / count) * Math.PI * 2 + pi2 * 0.07
+      // Clear the front arc so the camera has an open view of the camp entrance
+      const sinA = Math.sin(ang)
+      if (clearFront > 0 && sinA > clearFront) continue
+      const jr = (frand() - 0.5) * 5
+      const jx2 = (frand() - 0.5) * 3.5
+      const jz2 = (frand() - 0.5) * 3.5
+      const px2 = Math.cos(ang) * (r + jr) + jx2
+      const pz2 = Math.sin(ang) * (r + jr) + jz2
+      const th = 5.0 + (pi2 % 7) * 1.2
+      const sc = 0.72 + (pi2 % 5) * 0.12
+      // Trunk
+      tmpM.makeScale(1, th, 1)
+      tmpM.setPosition(px2, th * 0.5, pz2)
+      iTrunkF.setMatrixAt(pi2, tmpM)
+      // Lower canopy
+      tmpM.makeScale(sc * 1.42, 2.2 * sc, sc * 1.42)
+      tmpM.setPosition(px2, th * 0.4, pz2)
+      iConeL.setMatrixAt(pi2, tmpM)
+      // Mid canopy
+      tmpM.makeScale(sc * 0.98, 1.9 * sc, sc * 0.98)
+      tmpM.setPosition(px2, th * 0.58, pz2)
+      iConeM.setMatrixAt(pi2, tmpM)
+      // Upper canopy
+      tmpM.makeScale(sc * 0.58, 1.7 * sc, sc * 0.58)
+      tmpM.setPosition(px2, th * 0.75, pz2)
+      iConeU.setMatrixAt(pi2, tmpM)
+      pi2++
+    }
+  })
+  iTrunkF.count = pi2
+  iConeL.count = pi2
+  iConeM.count = pi2
+  iConeU.count = pi2
+  iTrunkF.instanceMatrix.needsUpdate = true
+  iConeL.instanceMatrix.needsUpdate = true
+  iConeM.instanceMatrix.needsUpdate = true
+  iConeU.instanceMatrix.needsUpdate = true
+  root.add(iTrunkF)
+  root.add(iConeL)
+  root.add(iConeM)
+  root.add(iConeU)
+
+  // DEAD TREES — leafless silhouettes mixed into forest + inside camp corners
+  const deadPosList: [number, number, number][] = [
+    // forest edge dead trees
+    [-22, -13, 5.8],
+    [-26, -4, 4.4],
+    [-23, 8, 6.2],
+    [-25, 0, 3.9],
+    [22, -10, 5.2],
+    [24, 2, 4.6],
+    [22, 11, 5.5],
+    [26, -4, 3.8],
+    [-6, -20, 4.0],
+    [7, -19, 5.4],
+    [-14, -19, 4.7],
+    [2, -21, 3.6],
+    [3, 17, 3.7],
+    [-9, 17, 4.2],
+    [-16, 16, 5.0],
+    [11, 18, 3.5],
+    [28, 8, 4.8],
+    [-28, 12, 5.2],
+    [32, -6, 3.9],
+    [-30, -8, 6.1],
+    // inside camp — empty corners
+    [-3.5, -7.5, 3.2],
+    [16.5, -12.5, 3.8],
+    [-6.5, -12.5, 2.9],
+    [17, 5, 3.4],
+  ]
+  deadPosList.forEach(([tx, tz, th], ti) => {
+    cyl(0.13 + (ti % 3) * 0.035, 0.19 + (ti % 2) * 0.035, th, 7, extTree, tx, th / 2, tz)
+    const bCount = 3 + (ti % 4)
     for (let b = 0; b < bCount; b++) {
-      const bh = th * (0.45 + b * 0.15)
-      const bLen = 0.85 + ((ti * 7 + b * 13) % 10) * 0.13
-      const bRy = (ti * 2.1 + b * 1.75) % (Math.PI * 2)
-      const bRz = 0.55 + ((ti * 3 + b * 5) % 10) * 0.04
+      const bh = th * (0.4 + b * 0.16)
+      const bl = 0.9 + ((ti * 7 + b * 11) % 10) * 0.15
+      const bry2 = (ti * 1.9 + b * 2.1) % (Math.PI * 2)
+      const brz2 = 0.5 + ((ti * 3 + b * 5) % 10) * 0.04
       mk(
-        gCyl(0.025, 0.065, bLen, 5),
+        gCyl(0.022, 0.06, bl, 5),
         extTree,
-        tx + Math.sin(bRy) * bLen * 0.44,
-        bh + Math.sin(bRz) * bLen * 0.44,
-        tz + Math.cos(bRy) * bLen * 0.44,
-        bRy,
+        tx + Math.sin(bry2) * bl * 0.44,
+        bh,
+        tz + Math.cos(bry2) * bl * 0.44,
+        bry2,
         0,
-        -bRz,
+        -brz2,
       )
-      // Sub-branch on alternate trees
       if (b === 0 && ti % 2 === 0) {
-        const sbLen = bLen * 0.55
-        const sbRy = bRy + 0.85
+        const sbl = bl * 0.52
+        const sbry = bry2 + 0.85
         mk(
-          gCyl(0.018, 0.04, sbLen, 4),
+          gCyl(0.016, 0.038, sbl, 4),
           extTree,
-          tx + Math.sin(bRy) * bLen * 0.78 + Math.sin(sbRy) * sbLen * 0.38,
-          bh + Math.sin(bRz) * bLen * 0.68 + sbLen * 0.22,
-          tz + Math.cos(bRy) * bLen * 0.78 + Math.cos(sbRy) * sbLen * 0.38,
-          sbRy,
+          tx + Math.sin(bry2) * bl * 0.76 + Math.sin(sbry) * sbl * 0.36,
+          bh + sbl * 0.2,
+          tz + Math.cos(bry2) * bl * 0.76 + Math.cos(sbry) * sbl * 0.36,
+          sbry,
           0,
-          -bRz * 0.75,
+          -brz2 * 0.7,
         )
       }
     }
   })
 
-  // BUSHES — instanced, density by theme
-  const bushGeo2 = gSph(0.28, 5)
-  const bushPts: [number, number][] = [
+  // FALLEN LOGS in forest floor
+  for (let li = 0; li < 16; li++) {
+    const la = frand() * Math.PI * 2
+    const lr = 22 + frand() * 28
+    const lx2 = Math.cos(la) * lr
+    const lz2 = Math.sin(la) * lr
+    const ll = 2.2 + frand() * 4.0
+    mk(gCyl(0.13, 0.2, ll, 7), pineTrk, lx2, 0.15, lz2, la + Math.PI / 2, 0, Math.PI / 2)
+  }
+
+  // ROCK CLUSTERS — scattered outside fence and forest floor
+  const rockMat2 = mat(0x383430, 0, 0, 0.96, 0)
+  const iRock2 = new THREE.InstancedMesh(gSph(0.35, 5), rockMat2, 100)
+  for (let ri2 = 0; ri2 < 100; ri2++) {
+    const ra = frand() * Math.PI * 2
+    const rr = 18 + frand() * 38
+    const rx2 = Math.cos(ra) * rr
+    const rz2 = Math.sin(ra) * rr
+    const rsc = 0.28 + frand() * 1.15
+    const rsy = rsc * (0.42 + frand() * 0.6)
+    tmpM.makeScale(rsc, rsy, rsc * (0.5 + frand() * 0.7))
+    tmpM.setPosition(rx2, rsy * 0.45, rz2)
+    iRock2.setMatrixAt(ri2, tmpM)
+  }
+  iRock2.instanceMatrix.needsUpdate = true
+  root.add(iRock2)
+
+  // FOREST UNDERGROWTH — dense low spheres on forest floor
+  const iUnder = new THREE.InstancedMesh(gSph(0.2, 4), extBush, 180)
+  for (let ui = 0; ui < 180; ui++) {
+    const ua = frand() * Math.PI * 2
+    const ur = 21 + frand() * 35
+    const ux = Math.cos(ua) * ur
+    const uz2 = Math.sin(ua) * ur
+    const usc = 0.45 + frand() * 1.1
+    tmpM.makeScale(usc, usc * 0.55, usc)
+    tmpM.setPosition(ux, 0.11 * usc, uz2)
+    iUnder.setMatrixAt(ui, tmpM)
+  }
+  iUnder.instanceMatrix.needsUpdate = true
+  root.add(iUnder)
+
+  // INTERIOR CAMP BUSHES
+  const campBushPts: [number, number][] = [
     [4.0, 2.0],
     [5.4, 3.2],
     [3.6, 1.2],
@@ -1211,16 +1619,20 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
   ]
   const bushMax =
     visuals.theme === "arid"
-      ? 12
+      ? 10
       : visuals.theme === "arctic"
-        ? 7
+        ? 6
         : visuals.theme === "industrial"
-          ? 5
+          ? 4
           : 24
-  const iBush2 = new THREE.InstancedMesh(bushGeo2, extBush, Math.min(bushPts.length, bushMax) * 3)
+  const iBush2 = new THREE.InstancedMesh(
+    gSph(0.28, 5),
+    extBush,
+    Math.min(campBushPts.length, bushMax) * 3,
+  )
   let bIdx = 0
-  for (let bi = 0; bi < Math.min(bushPts.length, bushMax) && bIdx < iBush2.count; bi++) {
-    const [bx, bz] = bushPts[bi]
+  for (let bi = 0; bi < Math.min(campBushPts.length, bushMax) && bIdx < iBush2.count; bi++) {
+    const [bx, bz] = campBushPts[bi]
     for (let bj = 0; bj < 3 && bIdx < iBush2.count; bj++) {
       const ox = ((bi * 7 + bj * 3) % 7) * 0.22 - 0.33
       const oz = ((bi * 5 + bj * 4) % 7) * 0.2 - 0.3
@@ -1380,6 +1792,280 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
   box(5.8, 0.06, 0.06, mat(C.metal, 0, 0, 0.4, 0.6), -16.5, 2.41, -1.78)
   box(0.06, 2.42, 0.06, mat(C.metal, 0, 0, 0.4, 0.6), -16.5, 1.21, -1.78)
 
+  // BUILDING DETAILS — architectural enrichment on existing structures
+
+  // HQ — flag pole with flag
+  cyl(0.038, 0.05, 7.2, 6, mat(C.metal, 0, 0, 0.45, 0.7), CGX - 3.8, 3.6, CGZ + 3.8)
+  box(1.55, 0.44, 0.02, mat(0x8b1a1a, 0xaa0000, 0.55), CGX - 3.05, 6.82, CGZ + 3.82)
+  box(0.5, 0.44, 0.02, mat(0xcccccc, 0, 0, 0.9), CGX - 2.28, 6.82, CGZ + 3.82)
+  // HQ — antenna mast + blinking light + dishes
+  cyl(0.022, 0.022, 3.8, 5, mat(C.metal, 0, 0, 0.45, 0.8), CGX + 2.4, 9.75, CGZ - 0.8)
+  box(1.1, 0.018, 0.018, mat(C.metal, 0, 0, 0.4, 0.7), CGX + 2.4, 10.5, CGZ - 0.8)
+  box(0.018, 0.018, 0.85, mat(C.metal, 0, 0, 0.4, 0.7), CGX + 2.4, 10.2, CGZ - 0.8)
+  sph(0.075, 5, mat(0xff3300, 0xff3300, 3.8), CGX + 2.4, 11.55, CGZ - 0.8)
+  // satellite dish
+  mk(
+    new THREE.SphereGeometry(0.52, 7, 4, 0, Math.PI * 2, 0, Math.PI / 2),
+    mat(C.metal, 0, 0, 0.38, 0.5),
+    CGX - 2.4,
+    8.55,
+    CGZ - 0.6,
+    0,
+    Math.PI * 0.28,
+    0,
+  )
+  cyl(0.022, 0.022, 0.65, 4, mat(C.metal, 0, 0, 0.48, 0.8), CGX - 2.4, 8.2, CGZ - 0.6)
+  // HQ — bollards at entrance
+  for (let bo = 0; bo < 5; bo++)
+    cyl(0.075, 0.085, 0.75, 8, mat(0xcc9900, 0xaa7700, 0.25), CGX - 2.0 + bo, 0.38, CGZ + 3.5)
+  // HQ — security camera
+  box(0.13, 0.09, 0.24, mat(C.metal, 0, 0, 0.5, 0.65), CGX + 3.58, 6.65, CGZ + 3.0, 0.24)
+  mk(
+    gCyl(0.022, 0.032, 0.16, 5),
+    mat(0x0a0a10, 0, 0, 0.3, 0.2),
+    CGX + 3.62,
+    6.65,
+    CGZ + 3.15,
+    0,
+    Math.PI / 2,
+  )
+
+  // Watchtower — searchlight + proper ladder rungs
+  box(0.34, 0.2, 0.24, mat(C.metal, 0, 0, 0.48, 0.6), WTX, 8.9, WTZ + 0.22, 0.32)
+  sph(0.11, 7, mat(0xffffcc, 0xffffcc, 4.0), WTX + 0.06, 8.9, WTZ + 0.4)
+  cyl(0.024, 0.024, 7.6, 5, mat(C.metal, 0, 0, 0.5, 0.65), WTX + 0.35, 3.8, WTZ - 0.65)
+  cyl(0.024, 0.024, 7.6, 5, mat(C.metal, 0, 0, 0.5, 0.65), WTX - 0.15, 3.8, WTZ - 0.65)
+  for (let rl = 0; rl < 13; rl++)
+    box(0.52, 0.028, 0.028, mat(C.metal, 0, 0, 0.55, 0.6), WTX + 0.1, 0.4 + rl * 0.58, WTZ - 0.65)
+
+  // Warehouse — loading dock ramp + exhaust fan + roof AC
+  box(5.8, 0.24, 1.85, matTex(TX.conc, C.concrete, 0, 0, 0.94), WHX + 1.2, 0.12, WHZ + 4.0)
+  box(5.8, 0.06, 0.08, mat(0xffcc00, 0xaa8800, 0.22), WHX + 1.2, 0.25, WHZ + 3.1)
+  for (let ds2 = 0; ds2 < 3; ds2++)
+    cyl(
+      0.065,
+      0.075,
+      0.58,
+      7,
+      mat(C.metal, 0, 0, 0.45, 0.6),
+      WHX - 1.2 + ds2 * 1.5,
+      0.29,
+      WHZ + 4.92,
+    )
+  cyl(0.58, 0.58, 0.16, 10, mat(C.metal, 0, 0, 0.55, 0.45), WHX + 4.5, 7.22, WHZ - 0.4)
+  cyl(0.46, 0.46, 0.08, 8, mat(0x0e0e0e, 0, 0, 0.9, 0), WHX + 4.5, 7.32, WHZ - 0.4)
+  box(1.0, 0.55, 0.62, mat(C.metal, 0, 0, 0.52, 0.5), WHX - 2.5, 7.12, WHZ - 0.5)
+  for (let p3 = 0; p3 < 3; p3++)
+    cyl(
+      0.03,
+      0.03,
+      1.1,
+      5,
+      mat(C.metal, 0, 0, 0.42, 0.55),
+      WHX - 2.5 + (p3 - 1) * 0.28,
+      7.68,
+      WHZ - 0.5,
+    )
+
+  // MODULE-BASED BUILDING IDENTITIES
+  // Each building owns a system role: COMANDO, ADMISIONES, RECURSOS, PERSONAL, TRASLADOS, VIGILANCIA.
+  // Signs: dark board + colored emissive strip + accent glow dots.
+
+  const modSign = (
+    x: number,
+    y: number,
+    z: number,
+    w: number,
+    col: number,
+    glowCol: number,
+    ry = 0,
+  ) => {
+    box(w + 0.14, 0.72, 0.1, mat(0x0c0c0a, 0, 0, 0.98), x, y, z, ry)
+    box(w, 0.56, 0.07, mat(col, glowCol, 0.58), x, y, z, ry)
+    box(w * 0.88, 0.07, 0.07, mat(glowCol, glowCol, 1.6), x, y - 0.37, z, ry)
+    box(w * 0.88, 0.07, 0.07, mat(glowCol, glowCol, 1.6), x, y + 0.37, z, ry)
+  }
+
+  // ── COMANDO — HQ: camp dashboard & leadership ──────────────────────
+  modSign(CGX, 5.5, CGZ + 3.15, 4.0, 0x0a1830, 0x2255cc)
+  // tactical map table
+  box(2.6, 0.14, 1.6, mat(C.woodDark, 0, 0, 0.88), CGX, 0.72, CGZ - 0.4)
+  box(2.4, 0.06, 1.4, mat(0x0a1a0a, 0x153015, 0.55), CGX, 0.8, CGZ - 0.4)
+  // comms terminal
+  box(0.52, 0.78, 0.28, mat(0x1a1a20, 0, 0, 0.7, 0.35), CGX + 2.85, 1.44, CGZ - 2.5)
+  box(0.44, 0.32, 0.05, mat(0x0a180a, 0x0a440a, 0.55), CGX + 2.85, 1.52, CGZ - 2.24)
+  // sandbag protection on entrance
+  for (let sb = 0; sb < 5; sb++)
+    box(0.7, 0.42, 0.44, M.sandbag, CGX - 2.1 + sb * 1.08, 0.21, CGZ + 3.65)
+
+  // ── ADMISIONES — Gate: intake & AI decision processing ─────────────
+  modSign(GTX + 3.5, 3.25, GTZ - 1.25, 3.2, 0x281800, 0xdd8800)
+  // processing kiosk
+  box(1.4, 2.15, 1.4, matTex(TX.conc, C.concrete, 0, 0, 0.88), GTX + 3.5, 1.08, GTZ - 1.8)
+  box(1.44, 0.13, 1.44, matTex(TX.corrugat, C.metal, 0, 0, 0.6, 0.42), GTX + 3.5, 2.16, GTZ - 1.8)
+  box(0.72, 0.88, 0.06, M.glass, GTX + 3.5, 1.38, GTZ - 1.08)
+  // status indicators (amber = applicants pending)
+  for (let si = 0; si < 3; si++)
+    sph(0.08, 5, mat(0xffaa00, 0xff8800, 2.4), GTX + 2.45 + si * 0.55, 3.7, GTZ - 1.25)
+  // queue poles + rope
+  for (let qb = 0; qb < 5; qb++) {
+    cyl(0.042, 0.042, 1.1, 5, mat(0xcc8800, 0, 0, 0.5, 0.6), GTX + 0.6 + qb * 0.9, 0.55, GTZ - 2.5)
+    if (qb < 4)
+      box(0.9, 0.04, 0.04, mat(0xcc6600, 0, 0, 0.55, 0.1), GTX + 1.05 + qb * 0.9, 0.65, GTZ - 2.5)
+  }
+  // document clipboard on post
+  cyl(0.03, 0.03, 2.2, 5, mat(C.metal, 0, 0, 0.45, 0.6), GTX + 5.6, 1.1, GTZ - 2.5)
+  box(0.64, 0.85, 0.04, mat(0xd8d0b0, 0, 0, 0.88), GTX + 5.6, 1.85, GTZ - 2.46)
+  box(0.64, 0.06, 0.04, mat(0x884400, 0, 0, 0.75), GTX + 5.6, 2.34, GTZ - 2.46)
+  // waiting benches
+  for (let wb = 0; wb < 3; wb++)
+    box(0.9, 0.28, 0.36, mat(C.woodDark, 0, 0, 0.92), GTX + 1.2 + wb * 1.1, 0.14, GTZ - 3.8)
+
+  // ── RECURSOS — Warehouse: inventory & supply chain ─────────────────
+  modSign(WHX + 1.2, 5.65, WHZ + 3.18, 4.2, 0x081808, 0x22aa22)
+  // inventory level bars: low=red, medium=amber, high=green
+  for (let bar = 0; bar < 6; bar++) {
+    const bh = 0.18 + bar * 0.14
+    const bc = bar < 2 ? 0xcc2211 : bar < 4 ? 0xcc8811 : 0x22aa22
+    const bg = bar < 2 ? 0xaa1100 : bar < 4 ? 0xaa6600 : 0x119900
+    box(0.25, bh, 0.07, mat(bc, bg, 0.5), WHX - 1.35 + bar * 0.58, 4.02 + bh * 0.5, WHZ + 3.2)
+  }
+  // color-coded crate stacks: green=food, red=weapons, white=medical
+  const cStacks: [number, number, number, number][] = [
+    [WHX + 6.9, WHZ - 2.1, 3, 0x1a5018],
+    [WHX + 7.6, WHZ - 2.1, 2, 0x1a5018],
+    [WHX + 6.9, WHZ - 3.6, 2, 0x7a1010],
+    [WHX + 7.6, WHZ - 3.6, 3, 0x7a1010],
+    [WHX + 6.9, WHZ - 5.1, 2, 0xbebeb6],
+    [WHX + 7.6, WHZ - 5.1, 2, 0xbebeb6],
+  ]
+  cStacks.forEach(([cx, cz2, stk, cc2]) => {
+    for (let ck = 0; ck < stk; ck++)
+      box(0.7, 0.64, 0.7, mat(cc2, 0, 0, 0.84), cx, 0.32 + ck * 0.65, cz2)
+  })
+  // color marker tabs on crate stacks
+  box(0.06, 0.4, 0.55, mat(0x22aa22, 0x0a8a0a, 0.4), WHX + 6.52, 0.56, WHZ - 2.1)
+  box(0.06, 0.4, 0.55, mat(0xcc2211, 0xaa1100, 0.4), WHX + 6.52, 0.56, WHZ - 3.6)
+  box(0.06, 0.4, 0.55, mat(0xdddddd, 0xaaaaaa, 0.3), WHX + 6.52, 0.56, WHZ - 5.1)
+
+  // ── PERSONAL — Barracks: person roster & status tracking ───────────
+  modSign(APX, 5.65, APZ + 2.68, 4.0, 0x0a1428, 0x2266cc)
+  // roster board on post
+  cyl(0.032, 0.036, 2.6, 5, mat(C.metal, 0, 0, 0.45, 0.65), APX - 5.8, 1.3, APZ + 2.9)
+  box(1.3, 1.75, 0.06, mat(0x0e1420, 0x1a2a44, 0.52), APX - 5.8, 1.55, APZ + 2.9)
+  // status dot legend: active (green), exploring (amber), injured (red)
+  const personDots: [number, number][] = [
+    [0x22bb22, 0x11aa11],
+    [0x22bb22, 0x11aa11],
+    [0x22bb22, 0x11aa11],
+    [0xcc8811, 0xaa6600],
+    [0xcc8811, 0xaa6600],
+    [0xcc2222, 0xaa1100],
+  ]
+  personDots.forEach(([dc, dg], di) => {
+    sph(0.07, 5, mat(dc, dg, 1.8), APX - 6.2, 1.85 - di * 0.22, APZ + 2.9)
+  })
+  // bunk frame suggestion (outside under awning)
+  for (let bk = 0; bk < 3; bk++) {
+    box(1.1, 0.12, 2.2, mat(C.woodDark, 0, 0, 0.9), APX - 2.4 + bk * 1.5, 0.46, APZ - 2.5)
+    for (const leg of [-1.0, 1.0]) {
+      cyl(
+        0.04,
+        0.04,
+        0.46,
+        4,
+        mat(C.metal, 0, 0, 0.45, 0.6),
+        APX - 2.4 + bk * 1.5 + leg * 0.5,
+        0.23,
+        APZ - 3.5,
+      )
+      cyl(
+        0.04,
+        0.04,
+        0.46,
+        4,
+        mat(C.metal, 0, 0, 0.45, 0.6),
+        APX - 2.4 + bk * 1.5 + leg * 0.5,
+        0.23,
+        APZ - 1.5,
+      )
+    }
+  }
+  // uniform/equipment rack
+  box(2.2, 1.25, 0.12, mat(C.metal, 0, 0, 0.45, 0.55), APX + 5.3, 1.68, APZ + 2.65)
+  for (let uf = 0; uf < 5; uf++)
+    mk(
+      gCyl(0.018, 0.018, 0.48, 4),
+      mat(C.metal, 0, 0, 0.5, 0.5),
+      APX + 4.1 + uf * 0.46,
+      2.0,
+      APZ + 2.6,
+      0,
+      Math.PI / 2,
+    )
+
+  // ── TRASLADOS — Garage: inter-camp transfer dispatch ───────────────
+  modSign(GJX, 5.25, GJZ + 2.9, 3.6, 0x1a1600, 0xddcc00)
+  // dispatch board on post
+  cyl(0.03, 0.035, 2.6, 5, mat(C.metal, 0, 0, 0.45, 0.65), GJX + 5.2, 1.3, GJZ - 0.5)
+  box(1.45, 1.85, 0.05, mat(0x141408, 0x303010, 0.5), GJX + 5.2, 1.52, GJZ - 0.5)
+  // departure status dots: green=ready, amber=loading, grey=idle
+  const deptDots: [number, number][] = [
+    [0x22cc22, 0x11aa11],
+    [0xddcc00, 0xbbaa00],
+    [0x888888, 0x555555],
+    [0x888888, 0x555555],
+  ]
+  deptDots.forEach(([dc2, dg2], di2) => {
+    sph(0.065, 5, mat(dc2, dg2, 1.8), GJX + 4.55, 1.9 - di2 * 0.36, GJZ - 0.5)
+  })
+  // cargo staging pallets
+  for (let cp = 0; cp < 2; cp++)
+    box(1.45, 0.1, 1.0, mat(C.woodDark, 0, 0, 0.92), GJX + 4.0, 0.05 + cp * 0.12, GJZ - 3.2)
+  box(1.1, 0.75, 0.82, matTex(TX.corrugat, C.metal, 0, 0, 0.7, 0.3), GJX + 4.0, 0.52, GJZ - 3.2)
+  // fuel barrels
+  for (let fb = 0; fb < 4; fb++)
+    cyl(
+      0.22,
+      0.24,
+      0.88,
+      10,
+      mat(fb % 2 === 0 ? 0x882200 : 0x222244, 0, 0, 0.72),
+      GJX + 6.4 + (fb % 2) * 0.55,
+      0.44,
+      GJZ + Math.floor(fb / 2) * 0.65 - 0.25,
+    )
+
+  // ── VIGILANCIA — Watchtower: security & monitoring ─────────────────
+  modSign(WTX + 0.5, 3.65, WTZ - 0.68, 2.2, 0x200808, 0xcc2222, -Math.PI / 2)
+  // guard station bulletin at base
+  cyl(0.03, 0.03, 1.85, 5, mat(C.metal, 0, 0, 0.45, 0.6), WTX + 2.6, 0.93, WTZ - 1.0)
+  box(0.88, 1.25, 0.05, mat(0x0e0e08, 0x2a2010, 0.5), WTX + 2.6, 1.12, WTZ - 0.96)
+  sph(0.1, 6, mat(0xff2200, 0xff1100, 3.5), WTX + 2.6, 2.17, WTZ - 0.96)
+  // corner guard posts at fence (Guardia profession stations)
+  const guardPosts2: [number, number, number][] = [
+    [18.2, -13.5, Math.PI * 1.25],
+    [-18.2, -13.5, Math.PI * 0.75],
+    [18.2, 12.3, Math.PI * 1.75],
+  ]
+  guardPosts2.forEach(([gpx, gpz, gpry]) => {
+    box(1.65, 2.2, 1.65, matTex(TX.conc, C.concrete, 0, 0, 0.88), gpx, 1.1, gpz)
+    box(1.75, 0.12, 1.75, matTex(TX.corrugat, C.metal, 0, 0, 0.62, 0.42), gpx, 2.22, gpz)
+    box(0.68, 0.85, 0.06, M.glass, gpx + Math.sin(gpry) * 0.84, 1.26, gpz + Math.cos(gpry) * 0.84)
+    for (let sb = 0; sb < 4; sb++)
+      box(
+        0.76,
+        0.4,
+        0.42,
+        M.sandbag,
+        gpx + Math.sin(gpry + Math.PI) * 0.72 + (sb - 1.5) * 0.8,
+        0.2,
+        gpz + Math.cos(gpry + Math.PI) * 0.72,
+        gpry,
+      )
+    sph(0.08, 5, mat(0xcc2200, 0xaa1100, 2.8), gpx, 2.55, gpz)
+  })
+
   // IVY / CLIMBING PLANTS on building exteriors (temperate + industrial only)
   if (visuals.theme === "temperate" || visuals.theme === "industrial") {
     const ivyPts: [number, number, number, number, number][] = [
@@ -1429,17 +2115,21 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
   const moon = new THREE.DirectionalLight(L.moonColor, L.moonIntensity)
   moon.position.set(5, 20, 8)
   moon.castShadow = true
-  moon.shadow.mapSize.set(2048, 2048)
-  moon.shadow.camera.left = -30
-  moon.shadow.camera.right = 30
-  moon.shadow.camera.top = 30
-  moon.shadow.camera.bottom = -30
-  moon.shadow.camera.far = 80
+  moon.shadow.mapSize.set(1024, 1024)
+  moon.shadow.camera.left = -45
+  moon.shadow.camera.right = 45
+  moon.shadow.camera.top = 45
+  moon.shadow.camera.bottom = -45
+  moon.shadow.camera.far = 110
   moon.shadow.bias = -0.002
   root.add(moon)
   const skyBounce = new THREE.DirectionalLight(L.skyColor, L.skyIntensity)
   skyBounce.position.set(-8, 15, -5)
   root.add(skyBounce)
+  // Warm front fill — subtler, preserves perf
+  const fillFront = new THREE.DirectionalLight(0xffcc88, 0.28)
+  fillFront.position.set(2, 10, 30)
+  root.add(fillFront)
   // Zone color fills
   ptL(0xff1100, 1.2, 20, -11, 5, -2)
   ptL(0x33cc22, 0.9, 15, 0, 5, -5)
@@ -1449,78 +2139,110 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
   ptL(0xccddaa, 0.4, 12, 13, 5, -16)
 
   // ---- PARTICLES ----
-  const PC = 200
+  // Ambient dust/spores
+  const PC = 120
   const pGeo = new THREE.BufferGeometry()
   const pPos = new Float32Array(PC * 3)
   const pV = new Float32Array(PC * 3)
   for (let pi = 0; pi < PC; pi++) {
-    pPos[pi * 3] = (Math.random() - 0.5) * 42
-    pPos[pi * 3 + 1] = Math.random() * 6 + 0.2
-    pPos[pi * 3 + 2] = (Math.random() - 0.5) * 32
-    pV[pi * 3] = (Math.random() - 0.5) * 0.009
+    pPos[pi * 3] = (Math.random() - 0.5) * 40
+    pPos[pi * 3 + 1] = Math.random() * 7 + 0.2
+    pPos[pi * 3 + 2] = (Math.random() - 0.5) * 30
+    pV[pi * 3] = (Math.random() - 0.5) * 0.008
     pV[pi * 3 + 1] = Math.random() * 0.003 + 0.001
-    pV[pi * 3 + 2] = (Math.random() - 0.5) * 0.009
+    pV[pi * 3 + 2] = (Math.random() - 0.5) * 0.008
   }
   pGeo.setAttribute("position", new THREE.BufferAttribute(pPos, 3))
   const parts = new THREE.Points(
     pGeo,
     new THREE.PointsMaterial({
-      color: 0x66bb88,
-      size: 0.06,
+      color: 0x88cc99,
+      size: 0.07,
       transparent: true,
-      opacity: 0.35,
+      opacity: 0.4,
       sizeAttenuation: true,
     }),
   )
   root.add(parts)
 
+  // Fire embers — orange/red sparks rising from fire pit
+  const embrN = 60
+  const embrGeo = new THREE.BufferGeometry()
+  const embrPos = new Float32Array(embrN * 3)
+  const embrV = new Float32Array(embrN * 3)
+  for (let ei = 0; ei < embrN; ei++) {
+    embrPos[ei * 3] = -3 + (Math.random() - 0.5) * 0.6
+    embrPos[ei * 3 + 1] = 0.4 + Math.random() * 3.5
+    embrPos[ei * 3 + 2] = 8 + (Math.random() - 0.5) * 0.6
+    embrV[ei * 3] = (Math.random() - 0.5) * 0.018
+    embrV[ei * 3 + 1] = 0.022 + Math.random() * 0.018
+    embrV[ei * 3 + 2] = (Math.random() - 0.5) * 0.018
+  }
+  embrGeo.setAttribute("position", new THREE.BufferAttribute(embrPos, 3))
+  const embers = new THREE.Points(
+    embrGeo,
+    new THREE.PointsMaterial({
+      color: 0xff6600,
+      size: 0.08,
+      transparent: true,
+      opacity: 0.75,
+      sizeAttenuation: true,
+    }),
+  )
+  root.add(embers)
+
   // Fire smoke particles
-  const smkN = 60
+  const smkN = 55
   const smkGeo = new THREE.BufferGeometry()
   const smkPos = new Float32Array(smkN * 3)
   const smkV = new Float32Array(smkN * 3)
   for (let si = 0; si < smkN; si++) {
-    smkPos[si * 3] = -3 + (Math.random() - 0.5) * 0.5
-    smkPos[si * 3 + 1] = 0.5 + Math.random() * 3
-    smkPos[si * 3 + 2] = 8 + (Math.random() - 0.5) * 0.5
-    smkV[si * 3] = (Math.random() - 0.5) * 0.005
-    smkV[si * 3 + 1] = 0.015 + Math.random() * 0.01
-    smkV[si * 3 + 2] = (Math.random() - 0.5) * 0.004
+    smkPos[si * 3] = -3 + (Math.random() - 0.5) * 0.6
+    smkPos[si * 3 + 1] = 0.5 + Math.random() * 4
+    smkPos[si * 3 + 2] = 8 + (Math.random() - 0.5) * 0.6
+    smkV[si * 3] = (Math.random() - 0.5) * 0.006
+    smkV[si * 3 + 1] = 0.012 + Math.random() * 0.01
+    smkV[si * 3 + 2] = (Math.random() - 0.5) * 0.005
   }
   smkGeo.setAttribute("position", new THREE.BufferAttribute(smkPos, 3))
   const smoke = new THREE.Points(
     smkGeo,
     new THREE.PointsMaterial({
-      color: 0x555550,
-      size: 0.32,
+      color: 0x606055,
+      size: 0.42,
       transparent: true,
-      opacity: 0.18,
+      opacity: 0.22,
       sizeAttenuation: true,
     }),
   )
   root.add(smoke)
 
-  // Kitchen smoke
-  const ksmkN = 40
+  // Kitchen chimney smoke — both chimneys
+  const ksmkN = 50
   const ksmkGeo = new THREE.BufferGeometry()
   const ksmkPos = new Float32Array(ksmkN * 3)
   const ksmkV = new Float32Array(ksmkN * 3)
+  const ksmkSrcs = [
+    [4.4, 5.7, 9.3],
+    [5.9, 5.0, 9.3],
+  ]
   for (let ki = 0; ki < ksmkN; ki++) {
-    ksmkPos[ki * 3] = 5.6 + (Math.random() - 0.5) * 0.4
-    ksmkPos[ki * 3 + 1] = 1.0 + Math.random() * 2.5
-    ksmkPos[ki * 3 + 2] = 11 + (Math.random() - 0.5) * 0.4
-    ksmkV[ki * 3] = (Math.random() - 0.5) * 0.004
-    ksmkV[ki * 3 + 1] = 0.014 + Math.random() * 0.008
-    ksmkV[ki * 3 + 2] = 0
+    const src = ksmkSrcs[ki % 2]
+    ksmkPos[ki * 3] = src[0] + (Math.random() - 0.5) * 0.5
+    ksmkPos[ki * 3 + 1] = src[1] + Math.random() * 3.5
+    ksmkPos[ki * 3 + 2] = src[2] + (Math.random() - 0.5) * 0.4
+    ksmkV[ki * 3] = (Math.random() - 0.5) * 0.005
+    ksmkV[ki * 3 + 1] = 0.013 + Math.random() * 0.009
+    ksmkV[ki * 3 + 2] = (Math.random() - 0.5) * 0.003
   }
   ksmkGeo.setAttribute("position", new THREE.BufferAttribute(ksmkPos, 3))
   const ksmoke = new THREE.Points(
     ksmkGeo,
     new THREE.PointsMaterial({
-      color: 0x666660,
-      size: 0.25,
+      color: 0x707068,
+      size: 0.38,
       transparent: true,
-      opacity: 0.14,
+      opacity: 0.2,
       sizeAttenuation: true,
     }),
   )
@@ -1752,8 +2474,17 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
     }
     if (transferStart >= 0) {
       const tk = t - transferStart
-      if (tk <= 1.5) gjDoorPivot.rotation.x = (-Math.PI / 2) * (tk / 1.5)
-      else if (tk >= 5) gjDoorPivot.rotation.x = (-Math.PI / 2) * Math.max(1 - (tk - 5) / 1.5, 0)
+      if (tk <= 1.5) {
+        const prog = tk / 1.5
+        gjDoorPivot.rotation.x = (-Math.PI / 2) * prog
+        portonPivotR.rotation.y = (Math.PI / 2) * prog
+        portonPivotL.rotation.y = -(Math.PI / 2) * prog
+      } else if (tk >= 5) {
+        const prog = Math.max(1 - (tk - 5) / 1.5, 0)
+        gjDoorPivot.rotation.x = (-Math.PI / 2) * prog
+        portonPivotR.rotation.y = (Math.PI / 2) * prog
+        portonPivotL.rotation.y = -(Math.PI / 2) * prog
+      }
       tkLight.intensity = truckGroup.visible ? Math.min(Math.max((tk - 0.5) / 0.5, 0), 1) * 8 : 0
       if (tk >= 1.5 && tk < 4.5) {
         const tu = (tk - 1.5) / 3
@@ -1802,12 +2533,27 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
     for (let ki2 = 0; ki2 < ksmkN; ki2++) {
       ksmkPos[ki2 * 3] += ksmkV[ki2 * 3]
       ksmkPos[ki2 * 3 + 1] += ksmkV[ki2 * 3 + 1]
-      if (ksmkPos[ki2 * 3 + 1] > 4) {
-        ksmkPos[ki2 * 3] = 5.6 + (Math.random() - 0.5) * 0.4
-        ksmkPos[ki2 * 3 + 1] = 1.0
+      if (ksmkPos[ki2 * 3 + 1] > 10) {
+        const src2 = ksmkSrcs[ki2 % 2]
+        ksmkPos[ki2 * 3] = src2[0] + (Math.random() - 0.5) * 0.5
+        ksmkPos[ki2 * 3 + 1] = src2[1]
+        ksmkPos[ki2 * 3 + 2] = src2[2] + (Math.random() - 0.5) * 0.4
       }
     }
     ksmkGeo.attributes.position.needsUpdate = true
+
+    // Embers — drift upward with slight turbulence, reset when too high
+    for (let ei2 = 0; ei2 < embrN; ei2++) {
+      embrPos[ei2 * 3] += embrV[ei2 * 3] * (0.9 + Math.sin(t * 3.7 + ei2) * 0.2)
+      embrPos[ei2 * 3 + 1] += embrV[ei2 * 3 + 1]
+      embrPos[ei2 * 3 + 2] += embrV[ei2 * 3 + 2] * (0.9 + Math.cos(t * 2.9 + ei2) * 0.2)
+      if (embrPos[ei2 * 3 + 1] > 5.5) {
+        embrPos[ei2 * 3] = -3 + (Math.random() - 0.5) * 0.6
+        embrPos[ei2 * 3 + 1] = 0.4
+        embrPos[ei2 * 3 + 2] = 8 + (Math.random() - 0.5) * 0.6
+      }
+    }
+    embrGeo.attributes.position.needsUpdate = true
   }
 
   // ---- DISPOSE ----

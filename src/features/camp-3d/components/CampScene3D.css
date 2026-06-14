@@ -113,17 +113,182 @@
   background: rgba(0, 60, 0, 0.8);
 }
 
-.camp3d-hover-label {
+/* ---- Hover tooltip (floats above building in screen space) ---- */
+.camp3d-hover-tip {
   position: absolute;
-  bottom: 30px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 9;
-  padding: 4px 12px;
-  font-size: 11px;
-  letter-spacing: 2px;
-  color: #cfe;
-  background: rgba(0, 20, 10, 0.7);
-  border: 1px solid rgba(110, 255, 68, 0.4);
+  transform: translate(-50%, -100%);
+  z-index: 15;
   pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: "Courier New", monospace;
+  animation: camp3d-pop 0.14s ease-out both;
+}
+
+.camp3d-hover-tip-name {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(2, 5, 2, 0.93);
+  border: 1px solid var(--mc, #6eff44);
+  padding: 4px 10px;
+  font-size: 9.5px;
+  font-weight: bold;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--mc, #6eff44);
+  text-shadow: 0 0 7px var(--mc, #6eff44);
+  white-space: nowrap;
+  box-shadow: 0 0 14px rgba(0, 0, 0, 0.5);
+}
+
+.camp3d-hover-tip-icon {
+  font-size: 13px;
+}
+
+.camp3d-hover-tip-desc {
+  background: rgba(2, 5, 2, 0.87);
+  border: 1px solid rgba(110, 180, 80, 0.3);
+  border-top: none;
+  padding: 2px 10px;
+  font-size: 7.5px;
+  letter-spacing: 1.8px;
+  color: rgba(175, 200, 160, 0.65);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.camp3d-hover-tip-line {
+  width: 1.5px;
+  height: 18px;
+  background: linear-gradient(to bottom, var(--mc, #6eff44) 30%, transparent);
+  flex-shrink: 0;
+}
+
+/* ---- Floating Building Marker ---- */
+@keyframes camp3d-pop {
+  from {
+    opacity: 0;
+    transform: translate(-50%, calc(-100% + 10px));
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -100%);
+  }
+}
+
+.camp3d-marker {
+  position: absolute;
+  z-index: 20;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translate(-50%, -100%);
+  animation: camp3d-pop 0.18s ease-out both;
+  user-select: none;
+  font-family: "Courier New", monospace;
+}
+
+.camp3d-marker-box {
+  position: relative;
+  background: rgba(3, 7, 3, 0.96);
+  border: 1px solid var(--mc, #6eff44);
+  box-shadow:
+    0 0 20px rgba(110, 255, 68, 0.22),
+    inset 0 0 14px rgba(0, 0, 0, 0.7);
+  padding: 10px 14px 10px 16px;
+  min-width: 190px;
+  overflow: hidden;
+}
+
+/* Left accent bar */
+.camp3d-marker-box::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--mc, #6eff44);
+  box-shadow: 0 0 8px var(--mc, #6eff44);
+}
+
+/* Scanline overlay */
+.camp3d-marker-box::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(0, 0, 0, 0.12) 3px,
+    rgba(0, 0, 0, 0.12) 4px
+  );
+  pointer-events: none;
+}
+
+.camp3d-marker-cta {
+  font-size: 7.5px;
+  letter-spacing: 2px;
+  color: var(--mc, #6eff44);
+  opacity: 0.7;
+  text-transform: uppercase;
+  margin-top: 7px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(110, 255, 68, 0.18);
+  width: 100%;
+  text-align: center;
+  animation: camp3d-pulse 2s ease-in-out infinite;
+}
+
+@keyframes camp3d-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.camp3d-marker-icon {
+  font-size: 20px;
+  color: var(--mc, #6eff44);
+  text-shadow: 0 0 12px var(--mc, #6eff44);
+  margin-bottom: 4px;
+  line-height: 1;
+  z-index: 1;
+}
+
+.camp3d-marker-title {
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--mc, #6eff44);
+  text-shadow: 0 0 7px var(--mc, #6eff44);
+  margin-bottom: 3px;
+  padding-right: 16px;
+  line-height: 1.3;
+  z-index: 1;
+}
+
+.camp3d-marker-desc {
+  font-size: 8px;
+  letter-spacing: 1.8px;
+  color: rgba(190, 210, 190, 0.6);
+  margin-bottom: 9px;
+  text-transform: uppercase;
+  z-index: 1;
+}
+
+.camp3d-marker-line {
+  width: 2px;
+  height: 28px;
+  background: linear-gradient(to bottom, var(--mc, #6eff44) 30%, transparent);
+  box-shadow: 0 0 5px var(--mc, #6eff44);
+  flex-shrink: 0;
 }

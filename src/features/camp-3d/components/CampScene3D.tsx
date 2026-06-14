@@ -6,7 +6,7 @@ import { BUILDINGS } from "../constants/buildings.config"
 import { useRaycaster } from "../hooks/useRaycaster"
 import { useSceneReactiveData } from "../hooks/useSceneReactiveData"
 import { useThreeScene } from "../hooks/useThreeScene"
-import { buildCampScene } from "../services/sceneBuilder"
+import { buildCampScene, SCENE_SCALE } from "../services/sceneBuilder"
 
 import type { CameraState } from "../hooks/useThreeScene"
 import type {
@@ -16,6 +16,7 @@ import type {
   CampScene3DProps,
   SceneHandles,
 } from "../types/scene.types"
+import type { CSSProperties } from "react"
 
 import { workerService } from "@/features/worker/services/workerService"
 import { useAuthStore } from "@/store/useAuthStore"
@@ -72,6 +73,17 @@ const resolveWorkerSubType = (professionName?: string): string => {
   if (name.includes("explorador") || name.includes("explorer") || name.includes("scout"))
     return "explorer"
   return "other"
+}
+
+/** Info por módulo para el marcador flotante de click */
+const BUILDING_INFO: Record<string, { desc: string; icon: string; color: string }> = {
+  hq: { desc: "Comando y Operaciones", icon: "⌂", color: "#44aaff" },
+  gate: { desc: "Control de Admisiones", icon: "⊕", color: "#ffaa22" },
+  barracks: { desc: "Gestión de Personal", icon: "▲", color: "#44aaff" },
+  watchtower: { desc: "Misiones y Vigilancia", icon: "◎", color: "#ff4444" },
+  warehouse: { desc: "Inventario y Recursos", icon: "▪", color: "#6eff44" },
+  garage: { desc: "Traslados y Logística", icon: "⚙", color: "#ffdd00" },
+  profile: { desc: "Tu Espacio Personal", icon: "✦", color: "#aaddff" },
 }
 
 // Huella de los edificios en el minimapa (coordenadas mundo → minimapa).
@@ -184,6 +196,8 @@ export default function CampScene3D({ campId, onClose, onReady }: Props) {
 
   const navigate = useNavigate()
   const [hovered, setHovered] = useState<BuildingConfig | null>(null)
+  const hoveredBuildingRef = useRef<BuildingConfig | null>(null)
+  const markerElemRef = useRef<HTMLDivElement | null>(null)
 
   const user = useAuthStore((s) => s.user)
   const role = normalizeRole(user?.role)
@@ -208,8 +222,12 @@ export default function CampScene3D({ campId, onClose, onReady }: Props) {
       const pos = WORKER_SUB_MARKERS[workerSubType].pos
       const { group, light } = profileRef.current
       // zone is the first child
-      group.children[0].position.set(pos[0], pos[1], pos[2])
-      light.position.set(pos[0], pos[1] + 0.5, pos[2])
+      group.children[0].position.set(
+        pos[0] * SCENE_SCALE,
+        pos[1] * SCENE_SCALE,
+        pos[2] * SCENE_SCALE,
+      )
+      light.position.set(pos[0] * SCENE_SCALE, (pos[1] + 0.5) * SCENE_SCALE, pos[2] * SCENE_SCALE)
     }
   }, [role, workerSubType])
 
@@ -265,7 +283,11 @@ export default function CampScene3D({ campId, onClose, onReady }: Props) {
           roughness: 0.5,
         }),
       )
-      zone.position.set(markerPos[0], markerPos[1], markerPos[2])
+      zone.position.set(
+        markerPos[0] * SCENE_SCALE,
+        markerPos[1] * SCENE_SCALE,
+        markerPos[2] * SCENE_SCALE,
+      )
       const profileData: BuildingUserData = {
         type: "building",
         id: "profile",
@@ -273,7 +295,11 @@ export default function CampScene3D({ campId, onClose, onReady }: Props) {
       }
       zone.userData = profileData
       const light = new THREE.PointLight(0xaaddff, 0.9, 6)
-      light.position.set(markerPos[0], markerPos[1] + 0.5, markerPos[2])
+      light.position.set(
+        markerPos[0] * SCENE_SCALE,
+        (markerPos[1] + 0.5) * SCENE_SCALE,
+        markerPos[2] * SCENE_SCALE,
+      )
       group.add(zone, light)
       ctx.scene.add(group)
       profileRef.current = { group, light }
@@ -286,6 +312,17 @@ export default function CampScene3D({ campId, onClose, onReady }: Props) {
       handlesRef.current?.animate(t)
       const profile = profileRef.current
       if (profile) profile.light.intensity = 0.7 + Math.sin(t * 2.2) * 0.35
+      // Update floating marker above hovered building
+      const hb = hoveredBuildingRef.current
+      const markerEl = markerElemRef.current
+      if (hb && markerEl && canvasRef.current) {
+        const canvas = canvasRef.current
+        const p = hb.position3D
+        const wv = new THREE.Vector3(p.x * SCENE_SCALE, p.y * SCENE_SCALE + 3.5, p.z * SCENE_SCALE)
+        wv.project(ctx.camera)
+        markerEl.style.left = `${Math.round((wv.x * 0.5 + 0.5) * canvas.clientWidth)}px`
+        markerEl.style.top = `${Math.round((-wv.y * 0.5 + 0.5) * canvas.clientHeight)}px`
+      }
       // Minimapa + HUD cada 3 frames (como el original).
       frameRef.current += 1
       if (frameRef.current % 3 === 0) {
@@ -309,7 +346,10 @@ export default function CampScene3D({ campId, onClose, onReady }: Props) {
       onClose()
       navigate(building.route)
     },
-    onHoverChange: setHovered,
+    onHoverChange: (building) => {
+      setHovered(building)
+      hoveredBuildingRef.current = building
+    },
     extraBuildings: [profileBuilding],
   })
 
@@ -351,7 +391,29 @@ export default function CampScene3D({ campId, onClose, onReady }: Props) {
         <canvas ref={minimapRef} width={140} height={140} />
       </div>
 
-      {hovered ? <div className="camp3d-hover-label">{hovered.label}</div> : null}
+      {hovered &&
+        (() => {
+          const info = BUILDING_INFO[hovered.id] ?? {
+            desc: "Módulo del Campamento",
+            icon: "◉",
+            color: "#6eff44",
+          }
+          return (
+            <div
+              ref={markerElemRef}
+              className="camp3d-marker"
+              style={{ "--mc": info.color } as CSSProperties}
+            >
+              <div className="camp3d-marker-box">
+                <div className="camp3d-marker-icon">{info.icon}</div>
+                <div className="camp3d-marker-title">{hovered.label}</div>
+                <div className="camp3d-marker-desc">{info.desc}</div>
+                <div className="camp3d-marker-cta">◎ Haz clic para entrar</div>
+              </div>
+              <div className="camp3d-marker-line" />
+            </div>
+          )
+        })()}
 
       <div className="camp3d-ctrl">
         WASD/Flechas Mover &nbsp;|&nbsp; Drag Rotar &nbsp;|&nbsp; Scroll Zoom &nbsp;|&nbsp; Q/E

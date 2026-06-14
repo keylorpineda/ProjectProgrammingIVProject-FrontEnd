@@ -56,7 +56,7 @@ function toTex(canvas: HTMLCanvasElement, rep = 2): THREE.CanvasTexture {
   const t = new THREE.CanvasTexture(canvas)
   t.wrapS = t.wrapT = THREE.RepeatWrapping
   t.repeat.set(rep, rep)
-  t.anisotropy = 4
+  t.anisotropy = 8
   t.needsUpdate = true
   return t
 }
@@ -159,7 +159,7 @@ export function makeBrickTex(rep = 2, seed = 0, weathering = 0.5): TexPair {
   ctx.fillRect(0, 0, W, H)
 
   const [nc, nctx] = makeCtx(W, H)
-  nctx.putImageData(sobelNormal(ctx.getImageData(0, 0, W, H), W, H, 4.5), 0, 0)
+  nctx.putImageData(sobelNormal(ctx.getImageData(0, 0, W, H), W, H, 6.5), 0, 0)
   return { map: toTex(c, rep), normalMap: toTex(nc, rep) }
 }
 
@@ -515,7 +515,7 @@ export function makeRustTex(rep = 3, seed = 0, weathering = 0.5): TexPair {
 }
 
 // ---- GROUND ----
-// 5-octave fbm terrain, pebbles, mud ruts, vegetation patches
+// 6-octave fbm terrain with stronger contrast, more pebbles, mud ruts, vegetation patches
 export function makeGroundTex(rep = 8, seed = 0, _weathering = 0.5): TexPair {
   const W = 512,
     H = 512
@@ -524,19 +524,20 @@ export function makeGroundTex(rep = 8, seed = 0, _weathering = 0.5): TexPair {
   const id = ctx.createImageData(W, H)
   for (let y = 0; y < H; y++) {
     for (let x = 0; x < W; x++) {
-      const n = fbm(x * 0.018, y * 0.018, seed, 5)
+      const n = fbm(x * 0.022, y * 0.022, seed, 6)
+      const n2 = fbm(x * 0.055, y * 0.055, seed + 3, 3)
       const i = (y * W + x) * 4
-      const v = Math.floor(n * 28)
-      id.data[i] = 22 + v
-      id.data[i + 1] = 28 + v + 5
-      id.data[i + 2] = 13 + v
+      const v = Math.floor(n * 38 + n2 * 12)
+      id.data[i] = 18 + v
+      id.data[i + 1] = 24 + v + 6
+      id.data[i + 2] = 10 + v
       id.data[i + 3] = 255
     }
   }
   ctx.putImageData(id, 0, 0)
 
   // Embedded stones / pebbles of varied sizes
-  for (let r = 0; r < 65; r++) {
+  for (let r = 0; r < 90; r++) {
     const rv = h(r, 90, seed)
     const size = 0.8 + h(r, 95, seed) * 7
     const bright = rv > 0.5
@@ -604,7 +605,7 @@ export function makeGroundTex(rep = 8, seed = 0, _weathering = 0.5): TexPair {
   }
 
   const [nc, nctx] = makeCtx(W, H)
-  nctx.putImageData(sobelNormal(ctx.getImageData(0, 0, W, H), W, H, 5), 0, 0)
+  nctx.putImageData(sobelNormal(ctx.getImageData(0, 0, W, H), W, H, 7), 0, 0)
   return { map: toTex(c, rep), normalMap: toTex(nc, rep) }
 }
 

@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 
 import { BadgeRegister } from "../../components/BadgeRegister"
+import { ParticleCanvas } from "../../components/ui/ParticleCanvas"
 
 import { completeRegistration } from "@/features/admissions/services/admissions.service"
 import { login } from "@/features/auth/services/auth.service"
@@ -33,8 +34,6 @@ export default function Register() {
   const bgY6 = useTransform(mouseY, (v) => v * -6)
   const bgX8 = useTransform(mouseX, (v) => v * -8)
   const bgY8 = useTransform(mouseY, (v) => v * -8)
-  const bgX20 = useTransform(mouseX, (v) => v * -20)
-  const bgY20 = useTransform(mouseY, (v) => v * -20)
 
   useEffect(() => {
     if (!token) {
@@ -365,21 +364,8 @@ export default function Register() {
           transition={{ repeat: Infinity, duration: 15, ease: "easeInOut" }}
         />
 
-        {/* Particles */}
-        <motion.div
-          className="absolute inset-0 opacity-80 mix-blend-screen z-20 pointer-events-none"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at center, rgba(254,240,138,1) 1px, rgba(0,0,0,0) 2px), radial-gradient(circle at center, rgba(251,146,60,1) 1px, rgba(0,0,0,0) 1.5px)",
-            backgroundSize: "120px 120px, 90px 90px",
-            backgroundPosition: "0 0, 45px 45px",
-            x: bgX20,
-            y: bgY20,
-            willChange: "transform",
-          }}
-          animate={{ y: [0, -30, 0], x: [0, 10, 0] }}
-          transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
-        />
+        {/* Particle system — individual embers/ash with organic drift */}
+        <ParticleCanvas count={90} zIndex={20} />
 
         <div
           className="absolute inset-0 z-30 pointer-events-none mix-blend-screen opacity-50"

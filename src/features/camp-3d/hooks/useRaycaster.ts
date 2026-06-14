@@ -7,8 +7,8 @@ import type { ThreeContext } from "./useThreeScene"
 import type { BuildingConfig, BuildingUserData } from "../types/scene.types"
 import type { RefObject } from "react"
 
-const HIGHLIGHT_HEX = 0x6eff44
-const HIGHLIGHT_INTENSITY = 0.6
+const HIGHLIGHT_HEX = 0xffffff
+const HIGHLIGHT_INTENSITY = 0.45
 // Umbral en px para distinguir un click de un drag de cámara.
 const CLICK_DRAG_THRESHOLD = 6
 

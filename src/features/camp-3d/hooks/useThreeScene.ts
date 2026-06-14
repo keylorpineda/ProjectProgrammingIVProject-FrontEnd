@@ -83,7 +83,7 @@ export function useThreeScene(
     renderer.shadowMap.enabled = true
     renderer.shadowMap.type = THREE.PCFSoftShadowMap
     renderer.toneMapping = THREE.ACESFilmicToneMapping
-    renderer.toneMappingExposure = 0.58
+    renderer.toneMappingExposure = 0.88
 
     // ---- SCENE ----
     const scene = new THREE.Scene()
@@ -96,10 +96,10 @@ export function useThreeScene(
     camera.lookAt(0, 0, 0)
 
     const camState: CameraState = {
-      theta: 0.25,
-      phi: 0.68,
-      radius: 30,
-      target: new THREE.Vector3(0, 0, 0),
+      theta: Math.PI * 0.48,
+      phi: 1.28,
+      radius: 40,
+      target: new THREE.Vector3(0, 0.5, 13),
     }
 
     const ctx: ThreeContext = { scene, camera, renderer, camState }
@@ -127,7 +127,7 @@ export function useThreeScene(
       prevM = { x: e.clientX, y: e.clientY }
     }
     const onWheel = (e: WheelEvent) => {
-      camState.radius = Math.max(5, Math.min(60, camState.radius + e.deltaY * 0.04))
+      camState.radius = Math.max(8, Math.min(54, camState.radius + e.deltaY * 0.04))
       e.preventDefault()
     }
     const onKeyDown = (e: KeyboardEvent) => {
@@ -209,10 +209,10 @@ export function useThreeScene(
       if (keys["s"] || keys["S"] || keys["ArrowDown"]) camState.target.addScaledVector(fw, -SPEED)
       if (keys["a"] || keys["A"] || keys["ArrowLeft"]) camState.target.addScaledVector(rt, -SPEED)
       if (keys["d"] || keys["D"] || keys["ArrowRight"]) camState.target.addScaledVector(rt, SPEED)
-      if (keys["q"] || keys["Q"]) camState.radius = Math.max(5, camState.radius - 0.25)
-      if (keys["e"] || keys["E"]) camState.radius = Math.min(60, camState.radius + 0.25)
-      camState.target.x = Math.max(-22, Math.min(22, camState.target.x))
-      camState.target.z = Math.max(-16, Math.min(16, camState.target.z))
+      if (keys["q"] || keys["Q"]) camState.radius = Math.max(8, camState.radius - 0.25)
+      if (keys["e"] || keys["E"]) camState.radius = Math.min(54, camState.radius + 0.25)
+      camState.target.x = Math.max(-32, Math.min(32, camState.target.x))
+      camState.target.z = Math.max(-24, Math.min(24, camState.target.z))
 
       camera.position.x =
         camState.target.x + camState.radius * Math.sin(camState.phi) * Math.cos(camState.theta)
