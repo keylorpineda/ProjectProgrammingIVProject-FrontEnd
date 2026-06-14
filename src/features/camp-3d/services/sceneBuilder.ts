@@ -526,16 +526,18 @@ export function buildCampScene(scene: THREE.Scene): SceneHandles {
     )
 
   // 3. ARMORY (decorativa; en el Paso 07 será el locker del worker-soldado)
-  box(6, 3, 4.5, M.corrugat, 12, 1.5, 3)
-  box(6.2, 0.1, 4.7, M.corrugD, 12, 3.06, 3)
-  box(6.6, 0.06, 5, M.tarp, 12, 3.38, 3, 0, 0, 0.07)
-  box(1.4, 2.2, 0.1, M.metal, 12, 1.1, 5.28)
-  box(0.9, 0.9, 0.9, M.plank, 11, 0.45, 3)
-  box(0.9, 0.9, 0.9, M.plank, 11, 1.35, 3)
-  box(0.9, 0.9, 0.9, M.plank, 12, 0.45, 3)
-  cyl(0.35, 0.36, 0.92, 8, M.brl_g, 14.5, 0.46, 1)
-  cyl(0.35, 0.36, 0.92, 8, M.brl_g, 15.2, 0.46, 1)
-  cyl(0.35, 0.36, 0.92, 8, M.brl_r, 14.5, 0.46, 2)
+  // Reubicada a z=1.5 para no chocar con el garaje (z>=5) y que su puerta dé
+  // a campo abierto en vez de a la pared del garaje.
+  box(6, 3, 4.5, M.corrugat, 12, 1.5, 1.5)
+  box(6.2, 0.1, 4.7, M.corrugD, 12, 3.06, 1.5)
+  box(6.6, 0.06, 5, M.tarp, 12, 3.38, 1.5, 0, 0, 0.07)
+  box(1.4, 2.2, 0.1, M.metal, 12, 1.1, 3.78)
+  box(0.9, 0.9, 0.9, M.plank, 11, 0.45, 1.5)
+  box(0.9, 0.9, 0.9, M.plank, 11, 1.35, 1.5)
+  box(0.9, 0.9, 0.9, M.plank, 12, 0.45, 1.5)
+  cyl(0.35, 0.36, 0.92, 8, M.brl_g, 14.6, 0.46, 0.6)
+  cyl(0.35, 0.36, 0.92, 8, M.brl_g, 15.3, 0.46, 0.6)
+  cyl(0.35, 0.36, 0.92, 8, M.brl_r, 14.6, 0.46, 1.5)
 
   // 4. TORRE DE VIGILANCIA (Paso 04 — Exploraciones, estilo TLoU2)
   // Torre de madera reforzada de ~6.5m: 4 postes inclinados, plataforma con
@@ -797,12 +799,13 @@ export function buildCampScene(scene: THREE.Scene): SceneHandles {
         sbData.push([x + c * tt, 0.15 + r * 0.29, z + s * tt, ry + (Math.random() - 0.5) * 0.08])
       }
   }
-  sbRow(-8, 2, 5, 0, 2)
+  // Berm frontal del almacén (a la izq. de su puerta, sin taparla).
+  sbRow(-16.5, 8, 4, 0, 2)
   sbRow(4, -4, 4, Math.PI / 2, 2)
   sbRow(-4, -8, 6, 0.3, 1)
   sbRow(12, -2, 4, Math.PI / 2, 3)
   sbRow(-13, -6, 5, 0, 2)
-  sbRow(0, 13, 6, 0, 2)
+  // (Antes había una fila en (0,13) que tapaba el portón principal — eliminada.)
   const iSB = new THREE.InstancedMesh(sbGeo, M.sandbag, sbData.length)
   sbData.forEach((p, i) => {
     tmpM.makeRotationY(p[3])
@@ -817,9 +820,10 @@ export function buildCampScene(scene: THREE.Scene): SceneHandles {
   const brlGeo = gCyl(0.34, 0.36, 0.92, 8)
   const brlBand = gCyl(0.375, 0.375, 0.05, 8)
   const brlData: [number, number, THREE.Material][] = [
-    [-5, 3, M.brl_r],
-    [-4.2, 3, M.brl_r],
-    [-5, 4.2, M.brl_g],
+    // Junto al depósito de combustible (a su costado este, no dentro).
+    [-3.4, 3, M.brl_r],
+    [-3.4, 4, M.brl_r],
+    [-2.7, 3.5, M.brl_g],
     [6, 1.5, M.brl_g],
     [6.8, 1.5, M.brl_y],
     [14, -2, M.brl_r],
@@ -827,9 +831,10 @@ export function buildCampScene(scene: THREE.Scene): SceneHandles {
     [-14, -3, M.brl_y],
     [-13.3, -3, M.brl_g],
     [-14.8, -4, M.brl_r],
-    [2, -9, M.brl_g],
-    [2.8, -9, M.brl_g],
-    [3.6, -9.4, M.brl_y],
+    // Junto a los generadores, a la izq. del Cuartel General (no dentro).
+    [-8, -9, M.brl_g],
+    [-8.8, -9, M.brl_g],
+    [-8.4, -9.8, M.brl_y],
     [8, 8, M.brl_r],
     [8.8, 8, M.brl_g],
   ]
@@ -881,9 +886,9 @@ export function buildCampScene(scene: THREE.Scene): SceneHandles {
     [-11.5, -5],
     [16, -7],
     [16.8, -6.4],
-    [0, -10],
-    [1, -10.4],
-    [-1, -9.8],
+    [-9, -12],
+    [-8, -12.4],
+    [-10, -11.6],
     [-4, 10],
     [-3.2, 10.4],
     [17.8, 12.9],
@@ -972,9 +977,10 @@ export function buildCampScene(scene: THREE.Scene): SceneHandles {
   sph(0.18, 7, mat(0xff6600, 0xff4400, 5.5), -3, 0.38, 8)
   sph(0.09, 6, mat(0xffcc00, 0xffcc00, 7.0), -3, 0.5, 8)
   const fireP = ptL(0xff5500, 4.5, 12, -3, 0.8, 8)
-  cyl(0.4, 0.5, 0.14, 8, mat(0x2a2a20), 0, 0.07, 11.5)
-  sph(0.13, 7, mat(0xff6600, 0xff4400, 5.0), 0, 0.32, 11.5)
-  const fireP2 = ptL(0xff5500, 3.0, 8, 0, 0.6, 11.5)
+  // Fogata secundaria movida a (-2.5,10) para dejar libre el carril del portón.
+  cyl(0.4, 0.5, 0.14, 8, mat(0x2a2a20), -2.5, 0.07, 10)
+  sph(0.13, 7, mat(0xff6600, 0xff4400, 5.0), -2.5, 0.32, 10)
+  const fireP2 = ptL(0xff5500, 3.0, 8, -2.5, 0.6, 10)
 
   // ---- LANTERNS ----
   const lantern = (x: number, y: number, z: number, col = 0xffaa33) => {
@@ -1175,7 +1181,7 @@ export function buildCampScene(scene: THREE.Scene): SceneHandles {
     [14.53, -8, 14.53, -4], // apartamentos lateral
     [10, 12.06, 17, 12.06], // garaje frente
     [9.47, 5.5, 9.47, 11.5], // garaje lateral
-    [9.5, 5.27, 14.5, 5.27], // armería frente
+    [9.5, 3.78, 14.5, 3.78], // armería frente
     [-6.8, 13.42, -5.2, 13.42], // garita
   ]
   const MOSS_N = 140
@@ -1304,6 +1310,10 @@ export function buildCampScene(scene: THREE.Scene): SceneHandles {
       c.rotation.z = Math.sin(t * 0.8 + i * 1.3) * 0.12
     })
     aptWinLit.emissiveIntensity = 0.9 + Math.sin(t * 3.5) * 0.08
+    // Garita: la lámpara de emergencia parpadea suavemente (siempre encendida).
+    gtLamp.intensity = 2.0 + Math.sin(t * 5) * 0.22 + Math.sin(t * 11) * 0.1
+    // Almacén: la luz interior cálida fluctúa muy levemente (generador propio).
+    whLight.intensity = 3.0 + Math.sin(t * 1.8) * 0.22
     zoneLights.forEach((zl, i) => {
       zl.l.intensity = zl.b * (0.82 + Math.sin(t * 2.0 + i * 2.1) * 0.18)
     })

@@ -4,6 +4,7 @@ import * as THREE from "three"
 
 import { BUILDINGS } from "../constants/buildings.config"
 import { useRaycaster } from "../hooks/useRaycaster"
+import { useSceneReactiveData } from "../hooks/useSceneReactiveData"
 import { useThreeScene } from "../hooks/useThreeScene"
 import { buildCampScene } from "../services/sceneBuilder"
 
@@ -16,6 +17,7 @@ import type {
   SceneHandles,
 } from "../types/scene.types"
 
+import { workerService } from "@/features/worker/services/workerService"
 import { useAuthStore } from "@/store/useAuthStore"
 
 import "./CampScene3D.css"
@@ -42,7 +44,34 @@ const PROFILE_MARKERS: Record<Camp3DRole, { pos: [number, number, number]; route
   camp_leader: { pos: [-4.4, 1.8, -10], route: "/campleader/dashboard" }, // ala lateral CG
   resource_manager: { pos: [-8.3, 2.2, 4], route: "/camp-manager" }, // oficina del almacén
   travel_manager: { pos: [10.2, 2, 11.6], route: "/travel-manager/dashboard" }, // despacho garaje
-  worker: { pos: [12.8, 1.5, -3.1], route: "/worker/dashboard" }, // su unidad en apartamentos
+  worker: { pos: [12.8, 1.5, -3.1], route: "/worker/dashboard" }, // default: apartamentos
+}
+
+/**
+ * Paso 07 — sub-categorías de worker según profesión:
+ *  - soldado → Armería (locker room)
+ *  - explorador → Torre de Vigilancia (plataforma superior)
+ *  - otro → Apartamentos (su unidad — default)
+ */
+const WORKER_SUB_MARKERS: Record<string, { pos: [number, number, number]; route: string }> = {
+  soldier: { pos: [12, 1.5, 1.5], route: "/worker/profile" }, // armería locker
+  explorer: { pos: [-17, 6.2, 11], route: "/worker/profile" }, // torre plataforma
+  other: { pos: [12.8, 1.5, -3.1], route: "/worker/dashboard" }, // apartamentos
+}
+
+/** Resuelve la posición del perfil para workers según su profesión. */
+const resolveWorkerSubType = (professionName?: string): string => {
+  const name = (professionName ?? "").toLowerCase()
+  if (
+    name.includes("soldado") ||
+    name.includes("soldier") ||
+    name.includes("guardia") ||
+    name.includes("guard")
+  )
+    return "soldier"
+  if (name.includes("explorador") || name.includes("explorer") || name.includes("scout"))
+    return "explorer"
+  return "other"
 }
 
 // Huella de los edificios en el minimapa (coordenadas mundo → minimapa).
@@ -158,10 +187,35 @@ export default function CampScene3D({ campId, onClose, onReady }: Props) {
 
   const user = useAuthStore((s) => s.user)
   const role = normalizeRole(user?.role)
+  const [workerSubType, setWorkerSubType] = useState<string>("other")
+
+  // Fetch worker profession for sub-type placement
+  useEffect(() => {
+    if (role === "worker") {
+      workerService
+        .getMyProfile()
+        .then((profile: any) => {
+          const profName = profile.person?.profession?.name
+          setWorkerSubType(resolveWorkerSubType(profName))
+        })
+        .catch(() => setWorkerSubType("other"))
+    }
+  }, [role])
+
+  // Update marker position dynamically if worker profile is fetched after scene load
+  useEffect(() => {
+    if (role === "worker" && profileRef.current) {
+      const pos = WORKER_SUB_MARKERS[workerSubType].pos
+      const { group, light } = profileRef.current
+      // zone is the first child
+      group.children[0].position.set(pos[0], pos[1], pos[2])
+      light.position.set(pos[0], pos[1] + 0.5, pos[2])
+    }
+  }, [role, workerSubType])
 
   // Config sintética del marcador de perfil (Paso 07) para tooltip y click.
   const profileBuilding = useMemo<BuildingConfig>(() => {
-    const marker = PROFILE_MARKERS[role]
+    const marker = role === "worker" ? WORKER_SUB_MARKERS[workerSubType] : PROFILE_MARKERS[role]
     return {
       id: "profile",
       label: `Tu Perfil — ${user?.username ?? role}`,
@@ -171,7 +225,7 @@ export default function CampScene3D({ campId, onClose, onReady }: Props) {
       reactiveData: null,
       position3D: { x: marker.pos[0], y: marker.pos[1], z: marker.pos[2] },
     }
-  }, [role, user?.username])
+  }, [role, user?.username, workerSubType])
 
   const contextRef = useThreeScene(canvasRef, {
     onReady: (ctx) => {
@@ -197,7 +251,8 @@ export default function CampScene3D({ campId, onClose, onReady }: Props) {
 
       // Paso 07 — marcador de perfil: zona translúcida clickeable + luz que
       // pulsa lentamente sobre el espacio del usuario.
-      const markerPos = PROFILE_MARKERS[role].pos
+      const markerPos =
+        role === "worker" ? WORKER_SUB_MARKERS[workerSubType].pos : PROFILE_MARKERS[role].pos
       const group = new THREE.Group()
       const zone = new THREE.Mesh(
         new THREE.BoxGeometry(1.1, 1.1, 1.1),
@@ -245,6 +300,9 @@ export default function CampScene3D({ campId, onClose, onReady }: Props) {
       }
     },
   })
+
+  // Paso Reactivo — conecta endpoints del backend con las refs visuales.
+  useSceneReactiveData(campId, handlesRef)
 
   useRaycaster(canvasRef, contextRef, targetsRef, {
     onBuildingClick: (building) => {
