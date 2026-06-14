@@ -98,25 +98,33 @@ export function useSceneReactiveData(
       // ---- 3. EXPLORATIONS → Torre de Vigilancia ----
       try {
         const explorations = await getExplorations({ campId })
-        const hasActive = explorations.some(
-          (e) => e.status === "in_progress" || e.status === "en_route",
-        )
-        const hasOverdue = explorations.some((e) => e.status === "overdue")
+        // El backend solo usa scheduled|in_progress|completed|cancelled. Una
+        // exploración "activa" ya partió (in_progress). "Overdue" no es un
+        // status: se calcula si venció su plazo (estimated_days + grace_days).
+        const active = explorations.filter((e) => e.status === "in_progress")
+        const hasActive = active.length > 0
+        const now = Date.now()
+        const hasOverdue = active.some((e) => {
+          const deadline =
+            new Date(e.departure_date).getTime() +
+            (e.estimated_days + (e.grace_days ?? 0)) * 86_400_000
+          return Number.isFinite(deadline) && now > deadline
+        })
 
+        // El color lo fija el hook; posición/parpadeo del foco los aplica el
+        // loop animate según el modo (para no pelear con el barrido).
         if (hasOverdue) {
-          // Reflector blinks orange (handled via intensity toggle)
+          handles.setWatchtowerMode("overdue")
           refs.watchtowerSpot.color.setHex(0xff6600)
         } else if (hasActive) {
-          // Spot fixed towards gate
-          refs.watchtowerSpot.target.position.set(0, 0, 14.4)
-          refs.watchtowerSpot.target.updateMatrixWorld()
+          handles.setWatchtowerMode("gate")
           refs.watchtowerSpot.color.setHex(0xdde8ff)
         } else {
+          handles.setWatchtowerMode("sweep")
           refs.watchtowerSpot.color.setHex(0xdde8ff)
-          // Sweep handled in animate loop
         }
 
-        // Trigger exploration animation only on transition false → true
+        // Dispara la animación de salida solo en la transición false → true.
         if (hasActive && !prevExploActive.current) {
           handles.playExplorationAnimation()
         }
@@ -167,18 +175,15 @@ export function useSceneReactiveData(
       // ---- 5. TRANSFERS → Garaje ----
       try {
         const transfers = await getCampTransfers(campId)
+        // El camión sale físicamente cuando el traslado pasa a in_transit
+        // (pending → approved → in_transit → completed en el backend).
         const hasInTransit = transfers.some((t) => t.status === "in_transit")
-        const hasPending = transfers.some((t) => t.status === "pending")
-        const hasApproved = transfers.some((t) => t.status === "approved")
 
-        // Trigger truck animation only on transition false → true
-        if ((hasInTransit || hasApproved) && !prevTransferActive.current) {
+        // Dispara la animación del camión solo en la transición false → true.
+        if (hasInTransit && !prevTransferActive.current) {
           handles.playTransferAnimation()
         }
-        prevTransferActive.current = hasInTransit || hasApproved
-
-        // If pending → door stays closed (default), handled by animate loop
-        void hasPending
+        prevTransferActive.current = hasInTransit
       } catch {
         /* silent */
       }

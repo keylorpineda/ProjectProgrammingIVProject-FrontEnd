@@ -12,7 +12,7 @@ import {
   type TexPair,
 } from "./textureBuilder"
 
-import type { BuildingUserData, SceneHandles } from "../types/scene.types"
+import type { BuildingUserData, SceneHandles, WatchtowerMode } from "../types/scene.types"
 
 /**
  * Construye el campamento 3D completo dentro de `scene`, replicando fielmente
@@ -1598,8 +1598,14 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
   ])
   let exploStart = -1
   let exploQueued = false
+  // Modo del reflector de la torre, fijado por los datos reactivos:
+  // 'sweep' (sin exploración activa), 'gate' (in_progress) u 'overdue' (vencida).
+  let watchtowerMode: WatchtowerMode = "sweep"
   const playExplorationAnimation = () => {
     exploQueued = true
+  }
+  const setWatchtowerMode = (mode: WatchtowerMode) => {
+    watchtowerMode = mode
   }
 
   // Camión de traslado (oculto hasta playTransferAnimation).
@@ -1718,9 +1724,17 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
       }
     }
     if (exploStart < 0) {
-      // Sweep automático del reflector cuando no hay salida en curso.
-      spot1.target.position.x = Math.sin(t * 0.22) * 14
-      spot1.target.position.z = Math.cos(t * 0.22) * 10
+      // Sin animación de salida en curso: el reflector reacciona a los datos.
+      if (watchtowerMode === "sweep") {
+        spot1.target.position.x = Math.sin(t * 0.22) * 14
+        spot1.target.position.z = Math.cos(t * 0.22) * 10
+        spot1.intensity = 12
+      } else {
+        // 'gate'/'overdue' → apunta fijo a la salida del campamento; 'overdue'
+        // además parpadea para señalar urgencia.
+        spot1.target.position.set(0, 0, 14.4)
+        spot1.intensity = watchtowerMode === "overdue" ? 9 + Math.abs(Math.sin(t * 4)) * 8 : 12
+      }
       spot1.target.updateMatrixWorld()
     }
 
@@ -1816,6 +1830,7 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
     buildingMeshes,
     playExplorationAnimation,
     playTransferAnimation,
+    setWatchtowerMode,
     reactiveRefs: {
       hqFlag: cgFlag,
       hqInteriorLight: cgInteriorLight,

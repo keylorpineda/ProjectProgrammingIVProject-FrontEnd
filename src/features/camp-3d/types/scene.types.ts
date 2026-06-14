@@ -91,9 +91,14 @@ export interface SceneHandles {
   playExplorationAnimation: () => void
   /** Traslado: puerta del garaje sube y el camión sale por el gate (~6.5s). */
   playTransferAnimation: () => void
+  /** Fija el comportamiento del reflector de la torre según los datos. */
+  setWatchtowerMode: (mode: WatchtowerMode) => void
   /** Objetos que el paso de datos reactivos manipula directamente. */
   reactiveRefs: SceneReactiveRefs
 }
+
+/** Comportamiento del reflector de la torre según el estado de exploraciones. */
+export type WatchtowerMode = "sweep" | "gate" | "overdue"
 
 /** Estado global de la vista 3D (Zustand). */
 export interface Scene3DState {
