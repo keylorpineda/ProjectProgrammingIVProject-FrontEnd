@@ -1,6 +1,6 @@
 import * as THREE from "three"
 
-import { getCampVisuals } from "./campVisuals"
+import { getCampVisuals } from "./campVisuals" // v2
 import {
   makeBrickTex,
   makeCorrugateTex,
@@ -217,6 +217,107 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
   pln(56, 44, M.ground, 0, 0, 0)
   pln(4, 26, M.gravel, 0, 0.01, -1)
   pln(22, 4, M.gravel, 0, 0.01, 5)
+
+  // ── CARRETERA EXTERIOR (z=14→52, approach desde el exterior) ────────────
+  // Asfalto oscuro con micro-variación (textura de concreto muy teñida)
+  const asfMat = matTex(TX.conc, 0x0f0f0e, 0, 0, 0.97, 0.0, 0.4)
+  // Arcén: tierra compacta oscura — mat simple sin textura brillante
+  const asfShoulderMat = mat(0x181715, 0, 0, 0.99, 0)
+  const asfLnMat = mat(0xccca60, 0xccc850, 0.04, 0.15) // líneas amarillas desgastadas
+  const asfEdgMat = mat(0xa8a890, 0xa8a880, 0.03, 0.12) // borde blanco/marfil
+  // Transición entre carretera interna (w=4) y externa (w=7.5)
+  pln(5.5, 3.0, asfMat, 0, 0.028, 12.7)
+  // Superficie asfalto principal
+  pln(7.5, 40, asfMat, 0, 0.027, 33)
+  // Arcenes oscuros (sin textura brillante)
+  pln(8, 40, asfShoulderMat, -7.5, 0.018, 33)
+  pln(8, 40, asfShoulderMat, 7.5, 0.018, 33)
+  // Líneas centrales discontinuas amarillas
+  for (let rm = 0; rm < 10; rm++) pln(0.2, 2.6, asfLnMat, 0, 0.034, 16.8 + rm * 4.4)
+  // Líneas de borde
+  pln(0.14, 40, asfEdgMat, -3.45, 0.034, 33)
+  pln(0.14, 40, asfEdgMat, 3.45, 0.034, 33)
+  // Manchas de aceite sutiles (no pure-black, sino gris muy oscuro)
+  pln(1.8, 2.8, mat(0x0a0a09, 0, 0, 0.99), 0.4, 0.035, 25, 0.2)
+  pln(1.2, 1.6, mat(0x0b0b0a, 0, 0, 0.99), -1.0, 0.035, 39, 0.8)
+  // Charcos pequeños y reflectivos
+  pln(1.4, 0.7, M.puddle, -0.8, 0.036, 28)
+  pln(0.9, 1.1, M.puddle, 1.6, 0.036, 44)
+  pln(0.6, 0.4, M.puddle, -1.3, 0.036, 20)
+  // Barreras K-Rail de concreto (perfil realista: base ancha → cuerpo trapezoidal → tope)
+  const barrierMat = matTex(TX.conc, 0x5a5a52, 0, 0, 0.92, 0, 1.4)
+  const barrierTopMat = matTex(TX.conc, 0x484840, 0, 0, 0.94, 0, 1.0)
+  const barrierPosBR = [-5.8, -5.8, 5.8, 5.8, -5.8, 5.8] // alternadas izq/der
+  const barrierPosZ = [17.5, 23.2, 28.8, 34.5, 40.2, 45.9]
+  for (let br = 0; br < 6; br++) {
+    const bx = barrierPosBR[br]
+    const brz = barrierPosZ[br]
+    const lean = (Math.random() - 0.5) * 0.12
+    const fallen = br === 2 || br === 4 // 2 barreras caídas de costado
+    if (fallen) {
+      // Barrera tirada de costado
+      box(2.6, 0.48, 0.82, barrierMat, bx, 0.24, brz, 0, lean * 0.3, Math.PI / 2)
+    } else {
+      // Barrera K-Rail de pie: base + cuerpo + tope
+      box(2.6, 0.18, 0.72, barrierMat, bx, 0.09, brz, 0, 0, lean * 0.5) // base
+      box(2.6, 0.52, 0.52, barrierMat, bx, 0.44, brz, 0, 0, lean) // cuerpo
+      box(2.6, 0.12, 0.28, barrierTopMat, bx, 0.76, brz, 0, 0, lean) // tope
+      // Grieta/daño en algunas
+      if (br % 2 === 0) box(0.05, 0.52, 0.54, mat(0x2a2a22, 0, 0, 0.99), bx + 0.6, 0.44, brz)
+    }
+  }
+  // Auto abandonado oxidado en arcén derecho (~z=37)
+  const rdWreckMat = matTex(TX.rust, 0x3a3020, 0, 0, 0.94, 0.22, 1.0)
+  box(1.75, 0.75, 3.5, rdWreckMat, 7.0, 0.5, 37.5, 0.14)
+  box(1.55, 0.65, 1.8, rdWreckMat, 7.0, 1.0, 37.0, 0.14)
+  box(0.08, 0.75, 3.5, mat(0x1a1610, 0, 0, 0.92), 7.0 - 0.88, 0.5, 37.5, 0.14)
+  box(0.08, 0.75, 3.5, mat(0x1a1610, 0, 0, 0.92), 7.0 + 0.88, 0.5, 37.5, 0.14)
+  for (const [wkx2, wkz2] of [
+    [-0.78, 35.9],
+    [0.78, 35.9],
+    [-0.78, 39.1],
+    [0.78, 39.1],
+  ])
+    mk(gCyl(0.36, 0.36, 0.22, 8), M.tire, wkx2 + 7.0, 0.22, wkz2, 0, 0, Math.PI / 2)
+  pln(1.5, 0.9, M.puddle, 7.2, 0.022, 38.6)
+  // Postes eléctricos lado derecho
+  for (let pp = 0; pp < 5; pp++) {
+    const ppz = 19 + pp * 7.8
+    box(0.16, 7.5, 0.16, mat(0x2a2418, 0, 0, 0.88), 10.0, 3.75, ppz)
+    box(2.8, 0.1, 0.1, mat(0x1e1812, 0, 0, 0.6, 0.25), 10.0, 7.1, ppz)
+    if (pp < 4) {
+      box(0.04, 0.22, 7.8, mat(0x181408, 0, 0, 0.75), 8.8, 6.88, ppz + 3.9)
+      box(0.04, 0.22, 7.8, mat(0x181408, 0, 0, 0.75), 11.2, 6.88, ppz + 3.9)
+    }
+  }
+  // Señal de carretera verde (tipo distancia)
+  box(0.1, 3.5, 0.1, mat(C.metal, 0, 0, 0.55, 0.7), -9.5, 1.75, 29)
+  box(2.0, 1.0, 0.08, mat(0x08380a, 0, 0, 0.88), -9.5, 3.65, 29)
+  box(1.85, 0.82, 0.06, mat(0x14cc14, 0x0e9e0e, 0.1), -9.5, 3.65, 29)
+  // Pasto de arcén (instanciado, 260 briznas a los costados de la carretera)
+  const rdGrsGeo = new THREE.PlaneGeometry(0.13, 0.88)
+  const rdGrsMat = new THREE.MeshStandardMaterial({
+    color: 0x3c4018,
+    roughness: 1,
+    side: THREE.DoubleSide,
+  })
+  const iRdGrs = new THREE.InstancedMesh(rdGrsGeo, rdGrsMat, 260)
+  for (let rgi = 0; rgi < 260; rgi++) {
+    const side = rgi % 2 === 0 ? 1 : -1
+    const rgx = side * (5.2 + Math.random() * 7.5)
+    const rgz = 14.5 + Math.random() * 38
+    const rsc = 0.5 + Math.random() * 0.85
+    const rLean = (Math.random() - 0.5) * 0.38
+    tmpM
+      .identity()
+      .multiply(new THREE.Matrix4().setPosition(rgx, 0.34 * rsc, rgz))
+      .multiply(new THREE.Matrix4().makeRotationY(Math.random() * Math.PI))
+      .multiply(new THREE.Matrix4().makeRotationZ(rLean))
+      .multiply(new THREE.Matrix4().makeScale(1, rsc, 1))
+    iRdGrs.setMatrixAt(rgi, tmpM)
+  }
+  iRdGrs.instanceMatrix.needsUpdate = true
+  root.add(iRdGrs)
   const dps = [
     [-6, 2, 4, 2.5],
     [-2, -3, 3, 2],
@@ -253,22 +354,45 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
     roughness: 1.0,
     side: THREE.DoubleSide,
   })
-  const iGrass = new THREE.InstancedMesh(grassGeo, grassMat, 320)
+  const GRASS_N = 520
+  const iGrass = new THREE.InstancedMesh(grassGeo, grassMat, GRASS_N)
   iGrass.receiveShadow = true
-  for (let gi = 0; gi < 320; gi++) {
-    const gx = (Math.random() - 0.5) * 40
-    const gz = (Math.random() - 0.5) * 32
-    const gy = 0.475 + Math.random() * 0.12
-    const sc2 = 0.7 + Math.random() * 0.7
-    const lean = (Math.random() - 0.5) * 0.22
+  // Zonas con edificios — el pasto se evita en estos rectángulos aproximados
+  const noGrassZones: [number, number, number, number][] = [
+    // [xMin, xMax, zMin, zMax]
+    [-2, 2, 6, 11], // edificio admisiones
+    [-6, -3, 11, 14], // garita guardia
+    [10, 17, 5, 12], // garaje traslados
+    [9, 16, -2, 5], // armería
+    [-8, -2, -5, 2], // cuartel general
+    [-2, 4, -9, -3], // almacén
+    [0, 8, -7, -1], // enfermería/barraca
+    [-20, 20, 13, 16], // zona valla frontal
+    [-20, 20, -16, -14], // zona valla trasera
+    [-4, 4, -2, 4], // carretera central
+    [-4, 4, 14, 58], // carretera exterior (no grass on asphalt)
+  ]
+  const isInBuilding = (x: number, z: number) =>
+    noGrassZones.some(([x0, x1, z0, z1]) => x > x0 && x < x1 && z > z0 && z < z1)
+
+  let gi = 0
+  let attempts = 0
+  while (gi < GRASS_N && attempts < GRASS_N * 4) {
+    attempts++
+    const gx = (Math.random() - 0.5) * 44
+    const gz = (Math.random() - 0.5) * 34
+    if (isInBuilding(gx, gz)) continue
+    const sc2 = 0.65 + Math.random() * 0.78
+    const lean = (Math.random() - 0.5) * 0.24
     tmpM
       .identity()
-      .multiply(new THREE.Matrix4().setPosition(gx, gy * sc2, gz))
+      .multiply(new THREE.Matrix4().setPosition(gx, 0.45 * sc2, gz))
       .multiply(new THREE.Matrix4().makeRotationY(Math.random() * Math.PI))
       .multiply(new THREE.Matrix4().makeRotationZ(lean))
       .multiply(new THREE.Matrix4().makeScale(1, sc2, 1))
-    iGrass.setMatrixAt(gi, tmpM)
+    iGrass.setMatrixAt(gi++, tmpM)
   }
+  iGrass.count = gi
   iGrass.instanceMatrix.needsUpdate = true
   root.add(iGrass)
 
@@ -588,7 +712,7 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
   const GTZ = 12.5
   // === PORTÓN DE ADMISIONES — checkpoint principal de entrada ===
   // Edificio de caseta ampliado (2.8 x 3.2) con arquería central
-  const gateMesh = box(2.8, 3.0, 2.4, gtWood, GTX, 1.5, GTZ)
+  box(2.8, 3.0, 2.4, gtWood, GTX, 1.5, GTZ)
   box(3.0, 0.18, 2.6, gtRoof, GTX, 3.12, GTZ, 0, 0, 0.07)
   // Extensión trasera (sala de procesamiento)
   box(1.6, 2.2, 1.5, matTex(TX.conc, C.concrete, 0, 0, 0.9), GTX - 1.8, 1.1, GTZ - 0.6)
@@ -623,8 +747,8 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
   const ahConc = matTex(TX.conc, C.concrete, 0, 0, 0.88, 0, 1.8)
   const ahBrick = matTex(TX.brick, C.brick, 0, 0, 0.85, 0, 2.0)
   const ahRoof = matTex(TX.corrugat, C.metal, 0, 0, 0.7, 0.32, 2.2)
-  // Cuerpo principal 2 pisos
-  box(11, 5.8, 6.5, ahConc, AHX, 2.9, AHZ)
+  // Cuerpo principal 2 pisos (captured for tagBuilding — este es el módulo de admisiones)
+  const ahMainMesh = box(11, 5.8, 6.5, ahConc, AHX, 2.9, AHZ)
   // Franja de ladrillo en base
   box(11.1, 1.4, 6.6, ahBrick, AHX, 0.7, AHZ)
   // Techo plano con pretil
@@ -782,7 +906,7 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
     [WTX + 1.5, WTZ + 1.5],
   ])
     box(0.08, 1.5, 0.08, wtPost, cx2, 6.75, cz2)
-  const watchtowerMesh = box(4.4, 0.18, 4.4, wtRoofM, WTX, 7.55, WTZ, 0, 0, 0.07)
+  box(4.4, 0.18, 4.4, wtRoofM, WTX, 7.55, WTZ, 0, 0, 0.07)
   // Escalera de mano (largueros + 8 peldaños).
   box(0.04, 6, 0.04, wtPost, WTX + 0.95, 3, WTZ + 1.45)
   box(0.04, 6, 0.04, wtPost, WTX + 0.45, 3, WTZ + 1.45)
@@ -1049,10 +1173,15 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
   chFence(7, 2, 8, Math.PI / 2)
 
   // ---- PORTÓN DE TRASLADOS (salida sur — GJX=13.5, GJZ=8.5) ----
-  // Carretera de grava saliendo hacia el sur (GJZ+11 = z=19.5 root-local)
-  pln(7.5, 24, M.gravel, 13.5, 0.012, 19.5)
+  // Material oscuro para caminos de acceso del garaje (tierra compacta oscura)
+  const accRoadMat = mat(0x1e1c18, 0, 0, 0.98, 0)
+  // Carretera de acceso del garaje (corre paralela al sur)
+  pln(6.5, 28, accRoadMat, 13.5, 0.012, 21)
+  // Conector transversal: de la carretera de acceso (x=13.5) a la principal (x=0), z≈22
+  pln(14, 5, accRoadMat, 6.75, 0.011, 22)
+  // Marcas de rodada
   for (let rm = 0; rm < 5; rm++)
-    box(0.18, 0.02, 1.4, mat(0xddcc88, 0, 0, 0.85), 13.5, 0.022, 13.5 + rm * 4.2)
+    box(0.18, 0.02, 1.4, mat(0x4a4230, 0, 0, 0.92), 13.5, 0.022, 14 + rm * 4.2)
   // Postes del portón (hormigón + metal)
   box(0.55, 5.8, 0.55, matTex(TX.conc, C.concrete, 0, 0, 0.88), 9.7, 2.9, 12.1)
   box(0.55, 5.8, 0.55, matTex(TX.conc, C.concrete, 0, 0, 0.88), 17.3, 2.9, 12.1)
@@ -1085,9 +1214,9 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
   portonPanelL.castShadow = true
   portonPivotL.add(portonPanelL)
   root.add(portonPivotL)
-  // Travesaños horizontales (barra de cierre)
-  box(7.2, 0.22, 0.14, M.metal, 13.5, 3.6, 12.1)
-  box(7.2, 0.22, 0.14, M.metal, 13.5, 1.4, 12.1)
+  // Travesaños horizontales — z=12.22 (delante de los portones) para evitar z-fighting
+  box(7.2, 0.22, 0.14, M.metal, 13.5, 3.6, 12.22)
+  box(7.2, 0.22, 0.14, M.metal, 13.5, 1.4, 12.22)
   box(3.2, 0.14, 0.12, mat(0xddcc00, 0xbbaa00, 0.3), 13.5, 0.8, 12.1)
   box(2.0, 0.5, 0.08, mat(0x0a0808, 0, 0, 0.98), 13.5, 4.5, 12.08)
   box(1.85, 0.36, 0.07, mat(0xdd2200, 0xaa1100, 0.65), 13.5, 4.5, 12.07)
@@ -1230,17 +1359,43 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
 
   const GJX = 13.5
   const GJZ = 8.5
-  const garageMesh = box(8, 4, 7, gjWall, GJX, 2, GJZ)
-  box(8.2, 0.15, 7.2, gjRoof, GJX, 4.1, GJZ, 0, 0, 0.03)
-  // Puerta basculante (grupo con pivote en el dintel) + panel inferior.
+  // Garaje reconstruido como paneles separados — evita z-fighting con la puerta
+  box(0.32, 4.2, 7.2, gjWall, GJX - 3.84, 2.1, GJZ) // pared izq
+  box(0.32, 4.2, 7.2, gjWall, GJX + 3.84, 2.1, GJZ) // pared der
+  box(8.2, 4.2, 0.32, gjWall, GJX, 2.1, GJZ - 3.44) // pared trasera
+  box(8.2, 0.28, 7.2, gjRoof, GJX, 4.24, GJZ) // techo exterior
+  box(7.6, 0.18, 6.6, gjRoof, GJX, 4.08, GJZ) // cielo raso interior
+  // Marco frontal alrededor de la apertura de la puerta (7m ancho × 3.5m alto)
+  box(0.52, 4.2, 0.42, gjWall, GJX - 3.76, 2.1, GJZ + 3.58) // pilar izq
+  box(0.52, 4.2, 0.42, gjWall, GJX + 3.76, 2.1, GJZ + 3.58) // pilar der
+  box(8.2, 0.72, 0.42, gjWall, GJX, 3.86, GJZ + 3.58) // dintel
+  // Suelo interior (aceite/cemento) — offset al techo
+  pln(7.2, 6.6, mat(0x0c0c0a, 0, 0, 0.3, 0.4), GJX, 0.014, GJZ)
+  // Refuerzo de esquinas interior
+  for (let ri2 = 0; ri2 < 3; ri2++) {
+    box(0.32, 0.1, 6.8, M.metal, GJX, 1.0 + ri2 * 1.2, GJZ - 0.1)
+  }
+  // Ventana lateral (iluminación natural)
+  box(1.4, 0.9, 0.1, M.glass, GJX + 3.82, 2.4, GJZ - 1.5)
+  // Puerta de enrollado — sube verticalmente, sin rotación (evita clipping con marco)
+  // gjDoorPivot.position.y se anima de 0 → 3.6 para levantar la puerta
   const gjDoorPivot = new THREE.Group()
-  gjDoorPivot.position.set(GJX, 3.75, GJZ + 3.52)
-  const gjDoor = new THREE.Mesh(gBox(7, 3.5, 0.15), mat(0x383830, 0, 0, 0.65, 0.45))
-  gjDoor.position.y = -1.75
+  gjDoorPivot.position.set(GJX, 0, GJZ + 3.58)
+  const gjDoor = new THREE.Mesh(
+    gBox(6.9, 3.5, 0.1),
+    matTex(TX.corrugat, 0x2a2a28, 0, 0, 0.72, 0.35, 1.8),
+  )
+  gjDoor.position.y = 1.75 // centro de la puerta (spans y=0 to y=3.5)
   gjDoor.castShadow = true
+  // Refuerzos horizontales
+  for (let dp = 0; dp < 5; dp++) {
+    const drib = new THREE.Mesh(gBox(6.9, 0.09, 0.13), mat(0x1e1e1c, 0, 0, 0.6, 0.5))
+    drib.position.set(0, 0.3 + dp * 0.7, 0.06)
+    gjDoorPivot.add(drib)
+  }
   gjDoorPivot.add(gjDoor)
   root.add(gjDoorPivot)
-  box(7, 0.12, 0.15, gjWall, GJX, 0.06, GJZ + 3.52)
+  box(7, 0.12, 0.18, gjWall, GJX, 0.06, GJZ + 3.62)
   // Camioneta vieja en el interior (cabina + ruedas).
   const gjVanX = GJX - 1.8
   box(2.2, 0.9, 4.6, gjVan, gjVanX, 0.75, GJZ - 0.4)
@@ -2127,8 +2282,9 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
   skyBounce.position.set(-8, 15, -5)
   root.add(skyBounce)
   // Warm front fill — subtler, preserves perf
-  const fillFront = new THREE.DirectionalLight(0xffcc88, 0.28)
-  fillFront.position.set(2, 10, 30)
+  // Fill frontal: apunta desde el lado izquierdo alto, NO desde encima de la carretera
+  const fillFront = new THREE.DirectionalLight(0xffcc88, 0.18)
+  fillFront.position.set(-8, 14, 8)
   root.add(fillFront)
   // Zone color fills
   ptL(0xff1100, 1.2, 20, -11, 5, -2)
@@ -2286,31 +2442,94 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
   const tmpV = new THREE.Vector3()
   const tmpV2 = new THREE.Vector3()
 
-  // Figuras humanoides (torso + cabeza + 4 extremidades) que caminan de la
-  // torre al gate cuando se crea una exploración. Genera incertidumbre: no
-  // sabes si vuelven.
-  const figMat = mat(0x3a3a35, 0, 0, 0.95, 0)
+  // Figuras humanoides realistas — torso, cabeza, cuello, extremidades articuladas
+  // con brazo/pierna swing durante el caminar.
+  const figSkinMat = mat(0x8a6050, 0, 0, 0.85, 0)
+  const figBootMat = mat(0x1a1810, 0, 0, 0.95, 0)
+  const figGearMat = mat(0x3a3c34, 0, 0, 0.72, 0.18)
+  // Paleta de ropa (3 soldados con equipamiento ligeramente distinto)
+  const figOutfits = [
+    { jacket: 0x353c30, pants: 0x28302a, hat: 0x2a3025 },
+    { jacket: 0x3c3828, pants: 0x303028, hat: 0x383420 },
+    { jacket: 0x2e3a2e, pants: 0x2a2e2c, hat: 0x263224 },
+  ]
+
+  interface FigLimbs {
+    lArm: THREE.Group
+    rArm: THREE.Group
+    lLeg: THREE.Group
+    rLeg: THREE.Group
+  }
   const exploFigures: THREE.Group[] = []
+  const exploLimbs: FigLimbs[] = []
+
   for (let fgi = 0; fgi < 3; fgi++) {
+    const fit = figOutfits[fgi]
     const fig = new THREE.Group()
-    const torso = new THREE.Mesh(gBox(0.32, 0.62, 0.2), figMat)
-    torso.position.y = 0.78
-    const head = new THREE.Mesh(gCyl(0.1, 0.11, 0.22, 6), figMat)
-    head.position.y = 1.2
-    fig.add(torso, head)
-    for (const [lmx, lmy] of [
-      [-0.1, 0.24],
-      [0.1, 0.24],
-      [-0.24, 0.78],
-      [0.24, 0.78],
-    ]) {
-      const limb = new THREE.Mesh(gBox(0.09, 0.45, 0.09), figMat)
-      limb.position.set(lmx, lmy, 0)
-      fig.add(limb)
-    }
+
+    // Torso (chaqueta)
+    const torsoM = mat(fit.jacket, 0, 0, 0.92, 0)
+    const torso = new THREE.Mesh(gBox(0.36, 0.6, 0.22), torsoM)
+    torso.position.y = 0.92
+    torso.castShadow = true
+    // Mochila/equipo a la espalda
+    const pack = new THREE.Mesh(gBox(0.26, 0.38, 0.2), figGearMat)
+    pack.position.set(0, 0.92, -0.2)
+    // Cuello
+    const neck = new THREE.Mesh(gCyl(0.065, 0.07, 0.14, 6), figSkinMat)
+    neck.position.y = 1.27
+    // Cabeza (esfera ligeramente ovalada)
+    const head = new THREE.Mesh(gSph(0.13, 8), figSkinMat)
+    head.scale.y = 1.2
+    head.position.y = 1.44
+    head.castShadow = true
+    // Casco/gorro
+    const hat = new THREE.Mesh(gCyl(0.155, 0.14, 0.14, 8), mat(fit.hat, 0, 0, 0.88, 0))
+    hat.position.y = 1.59
+
+    fig.add(torso, pack, neck, head, hat)
+
+    // BRAZO IZQUIERDO (grupo con pivote en hombro)
+    const lArm = new THREE.Group()
+    lArm.position.set(-0.26, 1.16, 0)
+    const lArmM = new THREE.Mesh(gBox(0.11, 0.42, 0.11), torsoM)
+    lArmM.position.y = -0.21
+    const lHand = new THREE.Mesh(gBox(0.09, 0.12, 0.09), figSkinMat)
+    lHand.position.y = -0.45
+    lArm.add(lArmM, lHand)
+
+    // BRAZO DERECHO
+    const rArm = new THREE.Group()
+    rArm.position.set(0.26, 1.16, 0)
+    const rArmM = new THREE.Mesh(gBox(0.11, 0.42, 0.11), torsoM)
+    rArmM.position.y = -0.21
+    const rHand = new THREE.Mesh(gBox(0.09, 0.12, 0.09), figSkinMat)
+    rHand.position.y = -0.45
+    rArm.add(rArmM, rHand)
+
+    // PIERNA IZQUIERDA (pivote en cadera)
+    const lLeg = new THREE.Group()
+    lLeg.position.set(-0.12, 0.62, 0)
+    const lLegM = new THREE.Mesh(gBox(0.14, 0.46, 0.14), mat(fit.pants, 0, 0, 0.92, 0))
+    lLegM.position.y = -0.23
+    const lBoot = new THREE.Mesh(gBox(0.15, 0.17, 0.2), figBootMat)
+    lBoot.position.set(0, -0.51, 0.04)
+    lLeg.add(lLegM, lBoot)
+
+    // PIERNA DERECHA
+    const rLeg = new THREE.Group()
+    rLeg.position.set(0.12, 0.62, 0)
+    const rLegM = new THREE.Mesh(gBox(0.14, 0.46, 0.14), mat(fit.pants, 0, 0, 0.92, 0))
+    rLegM.position.y = -0.23
+    const rBoot = new THREE.Mesh(gBox(0.15, 0.17, 0.2), figBootMat)
+    rBoot.position.set(0, -0.51, 0.04)
+    rLeg.add(rLegM, rBoot)
+
+    fig.add(lArm, rArm, lLeg, rLeg)
     fig.visible = false
     root.add(fig)
     exploFigures.push(fig)
+    exploLimbs.push({ lArm, rArm, lLeg, rLeg })
   }
   const exploCurve = new THREE.CatmullRomCurve3([
     new THREE.Vector3(-15.5, 0, 11.5),
@@ -2330,39 +2549,241 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
     watchtowerMode = mode
   }
 
-  // Camión de traslado (oculto hasta playTransferAnimation).
+  // ── CAMIÓN MILITAR DE TRASLADO — modelo detallado (oculto hasta animación) ──
   const truckGroup = new THREE.Group()
-  const tkBody = new THREE.Mesh(gBox(2, 1.2, 4), mat(0x6b5030, 0, 0, 0.92, 0.15))
-  tkBody.position.set(0, 1.3, -0.6)
-  const tkCab = new THREE.Mesh(gBox(1.8, 1.0, 1.9), mat(0x5a4528, 0, 0, 0.9, 0.15))
-  tkCab.position.set(0, 1.1, 1.9)
-  const tkGlass = new THREE.Mesh(gBox(1.5, 0.45, 0.08), M.glass)
-  tkGlass.position.set(0, 1.35, 2.86)
-  truckGroup.add(tkBody, tkCab, tkGlass)
-  for (const [twx, twz] of [
-    [-0.85, 1.2],
-    [0.85, 1.2],
-    [-0.85, -1.6],
-    [0.85, -1.6],
-  ]) {
-    const wheel = new THREE.Mesh(gCyl(0.45, 0.45, 0.25, 10), M.tire)
-    wheel.rotation.z = Math.PI / 2
-    wheel.position.set(twx, 0.45, twz)
-    truckGroup.add(wheel)
+  const tkBodyMat = matTex(TX.rust, 0x4a3318, 0, 0, 0.9, 0.14, 1.2) // chapa oxidada
+  const tkCabMat = mat(0x35270e, 0, 0, 0.88, 0.18)
+  const tkMetMat = mat(C.metal, 0, 0, 0.45, 0.72)
+  const tkGlsMat = new THREE.MeshStandardMaterial({
+    color: 0x445566,
+    transparent: true,
+    opacity: 0.48,
+    roughness: 0.06,
+    metalness: 0.35,
+  })
+
+  // Chasis (largueros longitudinales)
+  const tkChasL = new THREE.Mesh(gBox(0.2, 0.22, 6.0), tkMetMat)
+  tkChasL.position.set(-0.85, 0.48, -0.1)
+  const tkChasR = new THREE.Mesh(gBox(0.2, 0.22, 6.0), tkMetMat)
+  tkChasR.position.set(0.85, 0.48, -0.1)
+  // Travesaños del chasis
+  for (const cz of [-2.4, -1.2, 0.2, 1.4, 2.4]) {
+    const cx = new THREE.Mesh(gBox(1.9, 0.16, 0.2), tkMetMat)
+    cx.position.set(0, 0.48, cz)
+    truckGroup.add(cx)
   }
-  const tkLight = new THREE.PointLight(0xddddff, 0, 20)
-  tkLight.position.set(0, 1.1, 2.6)
-  truckGroup.add(tkLight)
+
+  // CAJA DE CARGA (contenedor militar)
+  const tkCargo = new THREE.Mesh(gBox(2.1, 1.55, 3.85), tkBodyMat)
+  tkCargo.position.set(0, 1.66, -0.95)
+  tkCargo.castShadow = true
+  // Techo carga
+  const tkCargoRoof = new THREE.Mesh(gBox(2.2, 0.12, 4.0), tkMetMat)
+  tkCargoRoof.position.set(0, 2.5, -0.95)
+  // Costillas verticales en los lados del contenedor (4 por lado)
+  for (let ri = 0; ri < 4; ri++) {
+    const ribL = new THREE.Mesh(gBox(0.09, 1.55, 0.14), tkMetMat)
+    ribL.position.set(-1.08, 1.66, -2.4 + ri * 0.9)
+    const ribR = new THREE.Mesh(gBox(0.09, 1.55, 0.14), tkMetMat)
+    ribR.position.set(1.08, 1.66, -2.4 + ri * 0.9)
+    truckGroup.add(ribL, ribR)
+  }
+  // Compuerta trasera
+  const tkGate = new THREE.Mesh(gBox(2.05, 1.5, 0.1), tkBodyMat)
+  tkGate.position.set(0, 1.64, -2.92)
+  tkGate.rotation.x = 0.08
+
+  // CABINA DEL CONDUCTOR
+  const tkCabin = new THREE.Mesh(gBox(2.05, 1.55, 1.95), tkCabMat)
+  tkCabin.position.set(0, 1.72, 1.62)
+  tkCabin.castShadow = true
+  // Techo cabina (ligeramente sobresalido)
+  const tkRoof = new THREE.Mesh(gBox(2.15, 0.14, 2.05), tkMetMat)
+  tkRoof.position.set(0, 2.56, 1.58)
+  // Capó del motor (inclinado suavemente)
+  const tkHood = new THREE.Mesh(gBox(1.95, 0.55, 1.7), tkCabMat)
+  tkHood.position.set(0, 1.28, 2.8)
+  tkHood.rotation.x = -0.07
+  // Pared frontal del motor / parrilla
+  const tkFront = new THREE.Mesh(gBox(1.95, 1.35, 0.2), mat(0x1a1410, 0, 0, 0.7, 0.5))
+  tkFront.position.set(0, 0.98, 3.62)
+  // Parrilla de ventilación (rejilla)
+  const tkGrille = new THREE.Mesh(gBox(1.5, 0.65, 0.08), mat(0x282420, 0, 0, 0.55, 0.65))
+  tkGrille.position.set(0, 0.88, 3.72)
+  // Parachoques delantero robusto (post-apoc reforzado)
+  const tkBump = new THREE.Mesh(gBox(2.3, 0.42, 0.25), tkMetMat)
+  tkBump.position.set(0, 0.45, 3.72)
+  const tkBumpL = new THREE.Mesh(gBox(0.22, 0.58, 0.55), tkMetMat)
+  tkBumpL.position.set(-0.9, 0.45, 3.54)
+  const tkBumpR = new THREE.Mesh(gBox(0.22, 0.58, 0.55), tkMetMat)
+  tkBumpR.position.set(0.9, 0.45, 3.54)
+
+  // PARABRISAS (inclinado) + ventanas laterales
+  const tkWind = new THREE.Mesh(gBox(1.75, 0.82, 0.08), tkGlsMat)
+  tkWind.position.set(0, 2.1, 2.6)
+  tkWind.rotation.x = -0.3
+  const tkWinL = new THREE.Mesh(gBox(0.08, 0.72, 1.0), tkGlsMat)
+  tkWinL.position.set(-1.03, 2.05, 1.62)
+  const tkWinR = new THREE.Mesh(gBox(0.08, 0.72, 1.0), tkGlsMat)
+  tkWinR.position.set(1.03, 2.05, 1.62)
+
+  // FAROS — materiales con emissive dinámico (se animarán al encender)
+  const tkHLMat = new THREE.MeshStandardMaterial({
+    color: 0xfffde8,
+    emissive: 0xffcc66,
+    emissiveIntensity: 0,
+    roughness: 0.1,
+    metalness: 0.4,
+  })
+  const tkHRMat = tkHLMat.clone()
+  const tkHL = new THREE.Mesh(gSph(0.18, 8), tkHLMat)
+  tkHL.position.set(-0.68, 1.0, 3.74)
+  const tkHR = new THREE.Mesh(gSph(0.18, 8), tkHRMat)
+  tkHR.position.set(0.68, 1.0, 3.74)
+  // LUCES TRASERAS — emissive rojo (freno/posición)
+  const tkTailMat = new THREE.MeshStandardMaterial({
+    color: 0x440000,
+    emissive: 0xff1100,
+    emissiveIntensity: 0,
+    roughness: 0.3,
+  })
+  const tkTailL = new THREE.Mesh(gBox(0.22, 0.16, 0.05), tkTailMat)
+  tkTailL.position.set(-0.85, 0.95, -3.1)
+  const tkTailR = new THREE.Mesh(gBox(0.22, 0.16, 0.05), tkTailMat.clone())
+  tkTailR.position.set(0.85, 0.95, -3.1)
+
+  // ESPEJOS LATERALES
+  const tkMirL = new THREE.Mesh(gBox(0.3, 0.18, 0.12), tkMetMat)
+  tkMirL.position.set(-1.2, 2.35, 2.3)
+  const tkMirR = new THREE.Mesh(gBox(0.3, 0.18, 0.12), tkMetMat)
+  tkMirR.position.set(1.2, 2.35, 2.3)
+
+  // TUBO DE ESCAPE (izquierda, vertical)
+  const tkExh = new THREE.Mesh(gCyl(0.055, 0.06, 1.55, 8), tkMetMat)
+  tkExh.position.set(-1.18, 1.98, 0.95)
+
+  // TANQUE DE COMBUSTIBLE (cilíndrico, lado derecho bajo contenedor)
+  const tkFuel = new THREE.Mesh(gCyl(0.28, 0.28, 1.2, 10), tkMetMat)
+  tkFuel.position.set(0.92, 0.5, -0.95)
+  tkFuel.rotation.z = Math.PI / 2
+
+  // RUEDA DE REPUESTO (trasera)
+  const spareW = new THREE.Mesh(gCyl(0.48, 0.48, 0.25, 12), M.tire)
+  spareW.position.set(0, 1.58, -2.98)
+  spareW.rotation.x = Math.PI / 2
+
+  // ESCALONES bajo la puerta del conductor
+  const tkStepL = new THREE.Mesh(gBox(0.38, 0.08, 0.52), tkMetMat)
+  tkStepL.position.set(-1.1, 0.58, 1.35)
+  const tkStepR = new THREE.Mesh(gBox(0.38, 0.08, 0.52), tkMetMat)
+  tkStepR.position.set(1.1, 0.58, 1.35)
+
+  // RUEDAS — referencias guardadas para animar rotación de rodadura
+  const tkWheels: THREE.Mesh[] = []
+  const wFGeo = gCyl(0.52, 0.52, 0.34, 14)
+  const wRimGeo = gCyl(0.3, 0.3, 0.36, 10)
+  for (const [fwx, fwz] of [
+    [-0.95, 2.78],
+    [0.95, 2.78],
+  ]) {
+    const fw = new THREE.Mesh(wFGeo, M.tire)
+    fw.rotation.z = Math.PI / 2
+    fw.position.set(fwx, 0.52, fwz)
+    fw.castShadow = true
+    const frim = new THREE.Mesh(wRimGeo, tkMetMat)
+    frim.rotation.z = Math.PI / 2
+    frim.position.set(fwx, 0.52, fwz)
+    tkWheels.push(fw)
+    truckGroup.add(fw, frim)
+  }
+  // RUEDAS — traseras dobles (2 ejes × 2 lados)
+  const wRGeo = gCyl(0.5, 0.5, 0.28, 14)
+  for (const [rwx, rwz] of [
+    [-0.88, -0.62],
+    [0.88, -0.62],
+    [-0.88, -1.85],
+    [0.88, -1.85],
+  ]) {
+    const rw = new THREE.Mesh(wRGeo, M.tire)
+    rw.rotation.z = Math.PI / 2
+    rw.position.set(rwx, 0.5, rwz)
+    rw.castShadow = true
+    const rrim = new THREE.Mesh(wRimGeo, tkMetMat)
+    rrim.rotation.z = Math.PI / 2
+    rrim.position.set(rwx, 0.5, rwz)
+    tkWheels.push(rw)
+    truckGroup.add(rw, rrim)
+  }
+
+  truckGroup.add(
+    tkChasL,
+    tkChasR,
+    tkCargo,
+    tkCargoRoof,
+    tkGate,
+    tkCabin,
+    tkRoof,
+    tkHood,
+    tkFront,
+    tkGrille,
+    tkBump,
+    tkBumpL,
+    tkBumpR,
+    tkWind,
+    tkWinL,
+    tkWinR,
+    tkHL,
+    tkHR,
+    tkTailL,
+    tkTailR,
+    tkMirL,
+    tkMirR,
+    tkExh,
+    tkFuel,
+    spareW,
+    tkStepL,
+    tkStepR,
+  )
+  // Luz de punto frontal (faros)
+  const tkLight = new THREE.PointLight(0xffeebb, 0, 28)
+  tkLight.position.set(0, 1.0, 4.0)
+  // SpotLight izq para haz de luz real
+  const tkSpotL = new THREE.SpotLight(0xfff5cc, 0, 40, Math.PI / 7, 0.4, 1.5)
+  tkSpotL.position.set(-0.68, 1.0, 3.74)
+  const tkSpotR = new THREE.SpotLight(0xfff5cc, 0, 40, Math.PI / 7, 0.4, 1.5)
+  tkSpotR.position.set(0.68, 1.0, 3.74)
+  // El target del spot se pone adelante del camión (en local space)
+  const tkSpotTargetL = new THREE.Object3D()
+  const tkSpotTargetR = new THREE.Object3D()
+  tkSpotTargetL.position.set(-0.5, 0.5, 12)
+  tkSpotTargetR.position.set(0.5, 0.5, 12)
+  truckGroup.add(tkSpotTargetL, tkSpotTargetR)
+  tkSpotL.target = tkSpotTargetL
+  tkSpotR.target = tkSpotTargetR
+  // Luz trasera roja (luces de posición)
+  const tkRearLight = new THREE.PointLight(0xff2200, 0, 8)
+  tkRearLight.position.set(0, 0.9, -3.2)
+  truckGroup.add(tkLight, tkSpotL, tkSpotR, tkRearLight)
   truckGroup.visible = false
   root.add(truckGroup)
+  // Curva suave: garaje → acceso → giro gradual a la principal → niebla
   const transferCurve = new THREE.CatmullRomCurve3([
-    new THREE.Vector3(15.3, 0, 8.5),
-    new THREE.Vector3(15.3, 0, 12.6),
-    new THREE.Vector3(8, 0, 13.2),
-    new THREE.Vector3(1, 0, 14.6),
+    new THREE.Vector3(GJX, 0, GJZ - 1.0), // dentro del garaje esperando
+    new THREE.Vector3(GJX, 0, GJZ + 5.0), // sale por la puerta
+    new THREE.Vector3(GJX, 0, GJZ + 10), // recto por carretera de acceso
+    new THREE.Vector3(GJX - 1, 0, GJZ + 13), // inicio del giro (gradual)
+    new THREE.Vector3(10, 0, 23.5), // giro medio
+    new THREE.Vector3(5, 0, 24.5), // giro avanzado
+    new THREE.Vector3(2, 0, 25.5), // casi en la principal
+    new THREE.Vector3(0, 0, 28), // en la carretera principal
+    new THREE.Vector3(0, 0, 38), // avanzando
+    new THREE.Vector3(0.2, 0, 51), // desaparece en niebla
   ])
   let transferStart = -1
   let transferQueued = false
+  let tkWheelAngle = 0 // acumulador de rotación de ruedas
+  const tkPrevPos = new THREE.Vector3() // para calcular velocidad real
   const playTransferAnimation = () => {
     transferQueued = true
   }
@@ -2383,12 +2804,28 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
     mesh.userData = data
     buildingMeshes.push(mesh)
   }
+  // Cajas de colisión para edificios con meshes poco visibles (torre y garaje)
+  // Usan el mismo material que el edificio pero cubre todo el volumen visible
+  const wtHitMat = new THREE.MeshStandardMaterial({ color: C.wood, roughness: 0.9, metalness: 0 })
+  const wtHitMesh = new THREE.Mesh(gBox(4.2, 7.6, 4.2), wtHitMat)
+  wtHitMesh.position.set(WTX, 3.8, WTZ)
+  root.add(wtHitMesh)
+
+  const gjHitMat = new THREE.MeshStandardMaterial({
+    color: C.metal,
+    roughness: 0.75,
+    metalness: 0.3,
+  })
+  const gjHitMesh = new THREE.Mesh(gBox(8, 4.2, 7.4), gjHitMat)
+  gjHitMesh.position.set(GJX, 2.1, GJZ)
+  root.add(gjHitMesh)
+
   tagBuilding(hqMesh, "hq", "hq_mesh")
-  tagBuilding(gateMesh, "gate", "gate_mesh")
+  tagBuilding(ahMainMesh, "gate", "ah_mesh")
   tagBuilding(barracksMesh, "barracks", "barracks_mesh")
-  tagBuilding(watchtowerMesh, "watchtower", "watchtower_mesh")
+  tagBuilding(wtHitMesh, "watchtower", "watchtower_mesh")
   tagBuilding(warehouseMesh, "warehouse", "warehouse_mesh")
-  tagBuilding(garageMesh, "garage", "garage_mesh")
+  tagBuilding(gjHitMesh, "garage", "garage_mesh")
 
   // ---- ANIMATE (per-frame) ----
   const animate = (t: number) => {
@@ -2435,9 +2872,17 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
             return
           }
           exploCurve.getPoint(fu, tmpV)
-          f.position.set(tmpV.x, Math.abs(Math.sin(t * 9 + i * 2)) * 0.05, tmpV.z)
+          // Leve rebote vertical al caminar
+          f.position.set(tmpV.x, Math.abs(Math.sin(t * 8.5 + i * 2)) * 0.04, tmpV.z)
           exploCurve.getPoint(Math.min(fu + 0.02, 1), tmpV2)
           f.lookAt(tmpV2.x, f.position.y, tmpV2.z)
+          // Swing de extremidades (caminar realista)
+          const swing = Math.sin(t * 7.5 + i * 2.1) * 0.52
+          const limbs = exploLimbs[i]
+          limbs.lArm.rotation.x = swing
+          limbs.rArm.rotation.x = -swing
+          limbs.lLeg.rotation.x = -swing * 0.65
+          limbs.rLeg.rotation.x = swing * 0.65
         })
         if (exploFigures[0].visible) {
           spot1.target.position.set(exploFigures[0].position.x, 0, exploFigures[0].position.z)
@@ -2460,42 +2905,102 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
       spot1.target.updateMatrixWorld()
     }
 
-    // ANIMACIÓN DE TRASLADO: puerta basculante sube (1.5s), faros encienden
-    // (0.5-1s), el camión avanza al gate (3s), se encoge al salir y la puerta
-    // se cierra al final. Duración total ~6.5s.
+    // ANIMACIÓN DE TRASLADO — duración total ~11s
+    // 0-1.4s  : puerta del garaje sube
+    // 0.6-1.1s: faros encienden progresivamente
+    // 1.4-9.4s: camión avanza por curva (8s para recorrer toda la carretera)
+    //   ├─ 0-30%  : sale del garaje, gira hacia el portón
+    //   ├─ 40-55%: portón del campamento se abre
+    //   ├─ 55-65%: cruza el portón
+    //   ├─ 65-70%: portón se cierra
+    //   └─ 75%+ : se desvanece en la niebla
+    // 8.0s: puerta del garaje baja
+    // 9.4s: camión invisible (en la niebla)
+    // 11s : reset
     if (transferQueued) {
       transferQueued = false
       transferStart = t
       truckGroup.visible = true
       truckGroup.scale.setScalar(1)
+      tkWheelAngle = 0
+      // Posicionar dentro del garaje en el punto 0 de la curva
       transferCurve.getPoint(0, tmpV)
+      tkPrevPos.copy(tmpV)
       truckGroup.position.copy(tmpV)
-      truckGroup.lookAt(tmpV.x, 0, tmpV.z + 1)
+      // El frente del camión es +Z — lookAt apunta -Z al objetivo, entonces rotamos 180°
+      transferCurve.getPoint(0.015, tmpV2)
+      truckGroup.lookAt(tmpV2.x, 0, tmpV2.z)
+      truckGroup.rotateY(Math.PI)
     }
     if (transferStart >= 0) {
       const tk = t - transferStart
-      if (tk <= 1.5) {
-        const prog = tk / 1.5
-        gjDoorPivot.rotation.x = (-Math.PI / 2) * prog
-        portonPivotR.rotation.y = (Math.PI / 2) * prog
-        portonPivotL.rotation.y = -(Math.PI / 2) * prog
-      } else if (tk >= 5) {
-        const prog = Math.max(1 - (tk - 5) / 1.5, 0)
-        gjDoorPivot.rotation.x = (-Math.PI / 2) * prog
-        portonPivotR.rotation.y = (Math.PI / 2) * prog
-        portonPivotL.rotation.y = -(Math.PI / 2) * prog
+      const DRIVE_START = 1.4
+      const DRIVE_DUR = 8.0
+      const DRIVE_END = DRIVE_START + DRIVE_DUR
+
+      // ── Puerta garaje: roll-up (sube verticalmente) ──
+      const doorUp = 3.6 // cuánto sube para desaparecer en el techo
+      if (tk <= DRIVE_START) {
+        gjDoorPivot.position.y = doorUp * Math.min(tk / DRIVE_START, 1)
+      } else if (tk >= 8.0) {
+        gjDoorPivot.position.y = doorUp * Math.max(1 - (tk - 8.0) / 1.2, 0)
       }
-      tkLight.intensity = truckGroup.visible ? Math.min(Math.max((tk - 0.5) / 0.5, 0), 1) * 8 : 0
-      if (tk >= 1.5 && tk < 4.5) {
-        const tu = (tk - 1.5) / 3
+
+      // ── Faros + luces traseras (secuencia de encendido realista) ──
+      const headProg = Math.min(Math.max((tk - 0.5) / 0.6, 0), 1)
+      const tailProg = Math.min(Math.max((tk - 0.3) / 0.4, 0), 1)
+      if (truckGroup.visible) {
+        tkLight.intensity = headProg * 14
+        tkSpotL.intensity = headProg * 8
+        tkSpotR.intensity = headProg * 8
+        tkRearLight.intensity = tailProg * 4
+        tkHLMat.emissiveIntensity = headProg * 4.5
+        tkHRMat.emissiveIntensity = headProg * 4.5
+        tkTailMat.emissiveIntensity = tailProg * 3.0
+      } else {
+        tkLight.intensity = 0
+        tkSpotL.intensity = 0
+        tkSpotR.intensity = 0
+        tkRearLight.intensity = 0
+        tkHLMat.emissiveIntensity = 0
+        tkHRMat.emissiveIntensity = 0
+        tkTailMat.emissiveIntensity = 0
+      }
+
+      // ── Movimiento del camión ──
+      if (tk >= DRIVE_START && tk < DRIVE_END + 0.5) {
+        const tu = Math.min((tk - DRIVE_START) / DRIVE_DUR, 1)
         transferCurve.getPoint(tu, tmpV)
-        truckGroup.position.copy(tmpV)
-        transferCurve.getPoint(Math.min(tu + 0.02, 1), tmpV2)
-        truckGroup.lookAt(tmpV2.x, 0, tmpV2.z)
-        if (tu > 0.85) truckGroup.scale.setScalar(Math.max(1 - (tu - 0.85) / 0.15, 0.001))
+
+        // Velocidad real por fotograma (para rotar ruedas)
+        const frameSpeed = tmpV.distanceTo(tkPrevPos)
+        tkWheelAngle += frameSpeed / 0.52 // circunferencia ≈ 2π×0.52, simplificado
+        tkPrevPos.copy(tmpV)
+
+        // Suspensión: pequeño rebote vertical proporcional a la velocidad
+        const suspension = Math.sin(tkWheelAngle * 2.8) * 0.018 * Math.min(frameSpeed * 60, 1)
+        truckGroup.position.set(tmpV.x, tmpV.y + suspension, tmpV.z)
+
+        // Dirección: lookAt con punto más lejano en curva → giros más suaves
+        const lookAhead = Math.min(tu + 0.06, 1)
+        transferCurve.getPoint(lookAhead, tmpV2)
+        truckGroup.lookAt(tmpV2.x, suspension, tmpV2.z)
+        truckGroup.rotateY(Math.PI)
+
+        // Rotación de ruedas (rodan en función de la distancia recorrida)
+        tkWheels.forEach((w) => {
+          w.rotation.x = -tkWheelAngle // negativo porque el frente está en +Z
+        })
       }
-      if (tk >= 4.5 && truckGroup.visible) truckGroup.visible = false
-      if (tk >= 6.5) transferStart = -1
+
+      // ── El camión se desvanece en la niebla a partir del 80% de la curva ──
+      if (tk >= DRIVE_END) {
+        if (truckGroup.visible) truckGroup.visible = false
+        // Reset portón si quedó abierto
+        portonPivotR.rotation.y = 0
+        portonPivotL.rotation.y = 0
+      }
+      if (tk >= 11.0) transferStart = -1
     }
 
     lampLights.forEach((ll, li) => {

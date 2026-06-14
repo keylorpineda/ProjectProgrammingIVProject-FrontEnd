@@ -249,6 +249,9 @@ export default function CampScene3D({ campId, onClose, onReady }: Props) {
     onReady: (ctx) => {
       const handles = buildCampScene(ctx.scene, campId)
       handlesRef.current = handles
+      // Exponer en window para pruebas desde consola del navegador
+      ;(window as unknown as Record<string, unknown>).__playTransfer = () =>
+        handles.playTransferAnimation()
 
       // Paso 09 — filtro por rol: los edificios sin acceso se oscurecen y
       // dejan de ser objetivos del raycaster (admin ve todo sin cambios).
