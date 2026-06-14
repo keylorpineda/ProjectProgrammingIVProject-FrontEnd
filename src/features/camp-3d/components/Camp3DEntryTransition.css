@@ -1,0 +1,151 @@
+.camp3d-entry {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: radial-gradient(circle at center, #0a160a 0%, #000 80%);
+  font-family: var(--font-mono, monospace);
+  pointer-events: none;
+}
+
+/* Líneas de barrido tipo CRT. */
+.camp3d-entry-scanlines {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(110, 255, 68, 0.05) 0px,
+    rgba(110, 255, 68, 0.05) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  opacity: 0.6;
+}
+
+/* Barrido de radar que gira detrás del texto. */
+.camp3d-entry-radar {
+  position: absolute;
+  width: 140vmax;
+  height: 140vmax;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    rgba(110, 255, 68, 0.18) 0deg,
+    transparent 40deg,
+    transparent 360deg
+  );
+  animation: camp3d-entry-sweep 2.6s linear infinite;
+  opacity: 0.5;
+}
+
+@keyframes camp3d-entry-sweep {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.camp3d-entry-content {
+  position: relative;
+  z-index: 1;
+  width: min(90vw, 520px);
+  padding: 0 24px;
+  text-align: left;
+  color: #6eff44;
+  text-shadow: 0 0 8px rgba(110, 255, 68, 0.6);
+}
+
+.camp3d-entry-title {
+  font-family: var(--font-typewriter, monospace);
+  font-size: clamp(1.4rem, 4vw, 2.4rem);
+  font-weight: 900;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  text-align: center;
+  animation: camp3d-entry-flicker 1.8s ease-in-out infinite;
+}
+
+.camp3d-entry-campname {
+  margin-top: 6px;
+  text-align: center;
+  font-size: 0.85rem;
+  letter-spacing: 2px;
+  color: #b6ffa0;
+  opacity: 0.85;
+}
+
+.camp3d-entry-console {
+  margin-top: 28px;
+  min-height: 96px;
+  font-size: 0.82rem;
+  line-height: 1.7;
+}
+
+.camp3d-entry-line {
+  white-space: nowrap;
+  overflow: hidden;
+  animation: camp3d-entry-typein 0.35s steps(24, end);
+}
+
+.camp3d-entry-line::after {
+  content: "_";
+  animation: camp3d-entry-caret 0.7s step-end infinite;
+}
+
+.camp3d-entry-bar {
+  margin-top: 22px;
+  height: 8px;
+  border: 1px solid #6eff44;
+  background: rgba(10, 26, 10, 0.6);
+  box-shadow: 0 0 10px rgba(110, 255, 68, 0.35);
+}
+
+.camp3d-entry-fill {
+  height: 100%;
+  background: #6eff44;
+  box-shadow: 0 0 12px rgba(110, 255, 68, 0.8);
+}
+
+@keyframes camp3d-entry-typein {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+@keyframes camp3d-entry-caret {
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes camp3d-entry-flicker {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  48% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.72;
+  }
+  52% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .camp3d-entry-radar,
+  .camp3d-entry-title,
+  .camp3d-entry-line {
+    animation: none;
+  }
+}

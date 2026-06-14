@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import * as THREE from "three"
 
@@ -73,6 +73,55 @@ const resolveWorkerSubType = (professionName?: string): string => {
   if (name.includes("explorador") || name.includes("explorer") || name.includes("scout"))
     return "explorer"
   return "other"
+}
+
+/** Nombre legible de cada rango para el aviso de acceso denegado. */
+const ROLE_LABELS: Record<Camp3DRole, string> = {
+  admin: "ADMINISTRADOR",
+  camp_leader: "LÍDER DE CAMPAMENTO",
+  resource_manager: "GESTOR DE RECURSOS",
+  travel_manager: "GESTOR DE VIAJES",
+  worker: "OPERARIO",
+}
+
+/** Ruta "casa" de cada rol (fallback cuando un edificio no mapea a una vista propia). */
+const ROLE_HOME: Record<Camp3DRole, string> = {
+  admin: "/admin/dashboard",
+  camp_leader: "/campleader",
+  resource_manager: "/camp-manager",
+  travel_manager: "/travel-manager/dashboard",
+  worker: "/worker/dashboard",
+}
+
+/**
+ * Ruta destino por edificio y rol. Las rutas del catálogo apuntan a la vista
+ * Admin; aquí se traducen al módulo equivalente de cada rol para que el click
+ * no aterrice en una ruta protegida ajena. Si falta una entrada, se usa
+ * ROLE_HOME[role] (los roles con navegación por pestañas — camp_leader,
+ * resource_manager — caen en su tablero, que es destino válido).
+ */
+const BUILDING_ROUTE_BY_ROLE: Record<string, Partial<Record<Camp3DRole, string>>> = {
+  hq: { admin: "/admin/dashboard" },
+  gate: { admin: "/admin/admissions" },
+  barracks: { admin: "/admin/people" },
+  watchtower: {
+    admin: "/admin/explorations",
+    travel_manager: "/travel-manager/expeditions",
+    worker: "/worker/expeditions",
+  },
+  warehouse: {
+    admin: "/admin/resources",
+    worker: "/worker/resources",
+  },
+  garage: {
+    admin: "/admin/transfers",
+    travel_manager: "/travel-manager/transfers",
+  },
+}
+
+const resolveBuildingRoute = (role: Camp3DRole, building: BuildingConfig): string => {
+  if (building.id === "profile") return building.route
+  return BUILDING_ROUTE_BY_ROLE[building.id]?.[role] ?? ROLE_HOME[role]
 }
 
 /** Info por módulo para el marcador flotante de click */
@@ -203,6 +252,31 @@ export default function CampScene3D({ campId, onClose, onReady }: Props) {
   const role = normalizeRole(user?.role)
   const [workerSubType, setWorkerSubType] = useState<string>("other")
 
+  // Edificios accesibles por el rol actual (admin ve todo).
+  const allowedIds = useMemo(
+    () => new Set(BUILDINGS.filter((b) => b.requiredRoles.includes(role)).map((b) => b.id)),
+    [role],
+  )
+
+  // Aviso de acceso denegado al tocar un edificio sin autorización. El `nonce`
+  // re-dispara la animación aunque se toque el mismo edificio dos veces.
+  const [denied, setDenied] = useState<{ building: BuildingConfig; nonce: number } | null>(null)
+  const deniedTimerRef = useRef<number | null>(null)
+  const deniedNonceRef = useRef(0)
+
+  const showDenied = useCallback((building: BuildingConfig) => {
+    deniedNonceRef.current += 1
+    setDenied({ building, nonce: deniedNonceRef.current })
+    if (deniedTimerRef.current) window.clearTimeout(deniedTimerRef.current)
+    deniedTimerRef.current = window.setTimeout(() => setDenied(null), 4200)
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      if (deniedTimerRef.current) window.clearTimeout(deniedTimerRef.current)
+    }
+  }, [])
+
   // Fetch worker profession for sub-type placement
   useEffect(() => {
     if (role === "worker") {
@@ -253,17 +327,14 @@ export default function CampScene3D({ campId, onClose, onReady }: Props) {
       ;(window as unknown as Record<string, unknown>).__playTransfer = () =>
         handles.playTransferAnimation()
 
-      // Paso 09 — filtro por rol: los edificios sin acceso se oscurecen y
-      // dejan de ser objetivos del raycaster (admin ve todo sin cambios).
-      const allowed = new Set(
-        BUILDINGS.filter((b) => b.requiredRoles.includes(role)).map((b) => b.id),
-      )
+      // Paso 09 — filtro por rol: los edificios sin acceso se oscurecen pero
+      // SIGUEN siendo clickeables; al tocarlos se muestra el aviso de acceso
+      // denegado (admin ve todo sin cambios).
       const targets: THREE.Object3D[] = []
       handles.buildingMeshes.forEach((meshObj) => {
         const data = meshObj.userData as BuildingUserData
-        if (allowed.has(data.id)) {
-          targets.push(meshObj)
-        } else {
+        targets.push(meshObj)
+        if (!allowedIds.has(data.id)) {
           const m = (meshObj as THREE.Mesh).material as THREE.MeshStandardMaterial
           m.color.multiplyScalar(0.35)
           m.emissiveIntensity = 0
@@ -346,8 +417,13 @@ export default function CampScene3D({ campId, onClose, onReady }: Props) {
 
   useRaycaster(canvasRef, contextRef, targetsRef, {
     onBuildingClick: (building) => {
+      // El perfil siempre es accesible; los demás se validan contra el rol.
+      if (building.id !== "profile" && !allowedIds.has(building.id)) {
+        showDenied(building)
+        return
+      }
       onClose()
-      navigate(building.route)
+      navigate(resolveBuildingRoute(role, building))
     },
     onHoverChange: (building) => {
       setHovered(building)
@@ -381,26 +457,20 @@ export default function CampScene3D({ campId, onClose, onReady }: Props) {
       <canvas ref={canvasRef} className="camp3d-canvas" />
 
       <button type="button" className="camp3d-back" onClick={onClose}>
-        ◄ Volver al Mapa
+        ◄ Ir al Panel
       </button>
-
-      <div className="camp3d-hud">
-        <div className="camp3d-zp camp3d-zr">☢ Red Zone</div>
-        <div className="camp3d-zp camp3d-zg">✦ Green Zone</div>
-        <div className="camp3d-zp camp3d-zy">⚠ Quarantine</div>
-      </div>
-
-      <div className="camp3d-minimap">
-        <canvas ref={minimapRef} width={140} height={140} />
-      </div>
 
       {hovered &&
         (() => {
-          const info = BUILDING_INFO[hovered.id] ?? {
+          const restricted = hovered.id !== "profile" && !allowedIds.has(hovered.id)
+          const base = BUILDING_INFO[hovered.id] ?? {
             desc: "Módulo del Campamento",
             icon: "◉",
             color: "#6eff44",
           }
+          const info = restricted
+            ? { desc: "Zona Restringida", icon: "🔒", color: "#ff4444" }
+            : base
           return (
             <div
               ref={markerElemRef}
@@ -411,12 +481,43 @@ export default function CampScene3D({ campId, onClose, onReady }: Props) {
                 <div className="camp3d-marker-icon">{info.icon}</div>
                 <div className="camp3d-marker-title">{hovered.label}</div>
                 <div className="camp3d-marker-desc">{info.desc}</div>
-                <div className="camp3d-marker-cta">◎ Haz clic para entrar</div>
+                <div className="camp3d-marker-cta">
+                  {restricted ? "⛔ Acceso no autorizado" : "◎ Haz clic para entrar"}
+                </div>
               </div>
               <div className="camp3d-marker-line" />
             </div>
           )
         })()}
+
+      {denied ? (
+        <div
+          className="camp3d-denied"
+          key={denied.nonce}
+          role="button"
+          tabIndex={0}
+          aria-label="Cerrar aviso de acceso denegado"
+          onClick={() => setDenied(null)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " " || e.key === "Escape") setDenied(null)
+          }}
+        >
+          <div className="camp3d-denied-box">
+            <div className="camp3d-denied-stripe" />
+            <div className="camp3d-denied-icon">⛔</div>
+            <div className="camp3d-denied-title">ACCESO DENEGADO</div>
+            <div className="camp3d-denied-sub">AUTORIZACIÓN INSUFICIENTE</div>
+            <div className="camp3d-denied-target">{`// ${denied.building.label}`}</div>
+            <div className="camp3d-denied-info">
+              RANGO REQUERIDO:{" "}
+              {denied.building.requiredRoles.map((r) => ROLE_LABELS[r] ?? r).join(" · ")}
+            </div>
+            <div className="camp3d-denied-bar">
+              <div className="camp3d-denied-fill" />
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <div className="camp3d-ctrl">
         WASD/Flechas Mover &nbsp;|&nbsp; Drag Rotar &nbsp;|&nbsp; Scroll Zoom &nbsp;|&nbsp; Q/E

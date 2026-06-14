@@ -6,6 +6,7 @@ import { BadgeLogin } from "../../components/BadgeLogin"
 import { ParticleCanvas } from "../../components/ui/ParticleCanvas"
 
 import { login } from "@/features/auth/services/auth.service"
+import { use3DStore } from "@/store/use3DStore"
 import { useAuthStore } from "@/store/useAuthStore"
 
 type LoginStatus = "waiting" | "processing" | "granted" | "denied"
@@ -58,6 +59,16 @@ export default function Login() {
     setTimeout(() => {
       setIsGateOpen(true)
       setTimeout(() => {
+        // Cualquier rol aterriza directamente en la vista 3D del campamento: se
+        // enciende el store antes de navegar para que el Camp3DOverlay del
+        // layout correspondiente monte la escena y reproduzca la animación de
+        // entrada. El store no persiste, así que esto solo ocurre al iniciar
+        // sesión, no en recargas posteriores.
+        const campId = useAuthStore.getState().user?.camp_id
+        if (campId) {
+          use3DStore.getState().setActiveCamp(campId)
+          use3DStore.getState().setIs3DActive(true)
+        }
         navigate(destination)
       }, 3500)
     }, 1500)

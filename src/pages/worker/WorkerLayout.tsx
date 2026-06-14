@@ -12,6 +12,7 @@ import FirstLoginAchievement from "@/components/ui/FirstLoginAchievement"
 import InactivityGuard from "@/components/ui/InactivityGuard"
 import WorkerSidebar from "@/components/ui/WorkerSidebar"
 import WorkerTopBar from "@/components/ui/WorkerTopBar"
+import Camp3DOverlay from "@/features/camp-3d/components/Camp3DOverlay"
 import { useCamp } from "@/features/worker/hooks/useWorkerAPI"
 import { useAlertSocket } from "@/hooks/useAlertSocket"
 import { useAuth } from "@/pages/Admin/context/AuthContext"
@@ -89,6 +90,8 @@ export default function WorkerLayout() {
           {user ? <FirstLoginAchievement userId={user.id} userName={user.username} /> : null}
 
           <AlertsBanner campId={campId} />
+
+          <Camp3DOverlay />
 
           <footer className="worker-footer">
             <p>GESTIÓN DEL FIN — PROTOCOLO DE SUPERVIVENCIA ACTIVO</p>

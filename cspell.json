@@ -190,7 +190,8 @@
     "sbry",
     "gpry",
     "embr",
-    "Srcs"
+    "Srcs",
+    "crossfade"
   ],
   "ignorePaths": [
     "node_modules",

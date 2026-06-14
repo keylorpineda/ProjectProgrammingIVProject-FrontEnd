@@ -33,6 +33,7 @@ import type {
 
 import AlertsBanner from "@/components/ui/AlertsBanner"
 import InactivityGuard from "@/components/ui/InactivityGuard"
+import Camp3DOverlay from "@/features/camp-3d/components/Camp3DOverlay"
 import { useAlertSocket } from "@/hooks/useAlertSocket"
 import { useAuthStore, useTokenStore } from "@/store/useAuthStore"
 
@@ -325,6 +326,8 @@ export default function CampLeaderLayout() {
         </div>
 
         <AlertsBanner campId={campId} />
+
+        <Camp3DOverlay />
 
         {/* ACTION LOADING OVERLAY */}
         <AnimatePresence>

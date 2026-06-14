@@ -27,7 +27,8 @@ export default function CampSelector() {
     }
   }
 
-  // MVP: acceso directo a la vista 3D sin transición desde el mapa.
+  // Acceso directo a la vista 3D: Camp3DOverlay reproduce la animación de
+  // entrada cinematográfica al encenderse el store.
   const open3D = () => {
     if (!activeCampId) return
     setActiveCamp(activeCampId)
@@ -59,7 +60,7 @@ export default function CampSelector() {
         onClick={open3D}
         disabled={isLoading || isSwitching || !activeCampId}
       >
-        Vista 3D
+        Ver Campamento
       </button>
 
       {/* La escena 3D se monta una sola vez en Admin.tsx (Camp3DOverlay). */}

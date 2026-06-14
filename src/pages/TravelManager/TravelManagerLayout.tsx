@@ -14,6 +14,7 @@ import { Outlet, useNavigate, NavLink } from "react-router-dom"
 
 import AlertsBanner from "@/components/ui/AlertsBanner"
 import InactivityGuard from "@/components/ui/InactivityGuard"
+import Camp3DOverlay from "@/features/camp-3d/components/Camp3DOverlay"
 import { useAlertSocket } from "@/hooks/useAlertSocket"
 import { useAuthStore } from "@/store/useAuthStore"
 import "./TravelManagerViews.css"
@@ -247,6 +248,8 @@ export default function TravelManagerLayout() {
         </div>
 
         <AlertsBanner campId={campId} />
+
+        <Camp3DOverlay />
 
         {/* MOBILE SIDEBAR MODAL */}
         {sidebarOpen && (

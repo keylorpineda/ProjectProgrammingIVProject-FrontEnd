@@ -28,6 +28,7 @@ import { useAuthStore } from "../store/useAuthStore"
 
 import AlertsBanner from "@/components/ui/AlertsBanner"
 import InactivityGuard from "@/components/ui/InactivityGuard"
+import Camp3DOverlay from "@/features/camp-3d/components/Camp3DOverlay"
 import { useAlertSocket } from "@/hooks/useAlertSocket"
 import { useAuthStore as useGlobalAuthStore } from "@/store/useAuthStore"
 
@@ -442,6 +443,8 @@ export default function DashboardManager() {
           </div>
         </div>
         <AlertsBanner campId={campId ?? ""} />
+
+        <Camp3DOverlay />
       </div>
     </InactivityGuard>
   )

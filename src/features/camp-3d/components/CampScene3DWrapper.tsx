@@ -35,7 +35,7 @@ class SceneErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryStat
           <div className="camp3d-error-title">⚠ Fallo en la vista 3D</div>
           <div className="camp3d-error-detail">{this.state.error.message}</div>
           <button type="button" className="camp3d-error-btn" onClick={this.props.onClose}>
-            ◄ Volver al Mapa
+            ◄ Ir al Panel
           </button>
         </div>
       )
