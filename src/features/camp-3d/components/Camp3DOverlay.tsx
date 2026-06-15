@@ -18,16 +18,24 @@ export default function Camp3DOverlay() {
   const is3DActive = use3DStore((s) => s.is3DActive)
   const activeCamp3DId = use3DStore((s) => s.activeCamp3DId)
   const setIs3DActive = use3DStore((s) => s.setIs3DActive)
+  const transferCinematic = use3DStore((s) => s.transferCinematic)
 
-  // Anima la entrada solo en el flanco de subida (apagado → encendido).
+  // Anima la entrada solo en el flanco de subida (apagado → encendido). Si la
+  // apertura es una cinemática de traslado, se omite la intro verde para que el
+  // plano del camión sea la presentación.
   const [showIntro, setShowIntro] = useState(false)
   const wasActive = useRef(false)
+  const lastCineNonce = useRef(transferCinematic)
 
   useEffect(() => {
-    if (is3DActive && !wasActive.current) setShowIntro(true)
+    if (is3DActive && !wasActive.current) {
+      const isCinematicOpen = transferCinematic > lastCineNonce.current
+      setShowIntro(!isCinematicOpen)
+    }
     if (!is3DActive) setShowIntro(false)
+    lastCineNonce.current = transferCinematic
     wasActive.current = is3DActive
-  }, [is3DActive])
+  }, [is3DActive, transferCinematic])
 
   const handleIntroComplete = useCallback(() => setShowIntro(false), [])
 

@@ -13,6 +13,8 @@ import { api } from "../config/api"
 
 import type { IntercampRequest } from "../types/api.types"
 
+import { use3DStore } from "@/store/use3DStore"
+
 interface ManagerLogisticsProps {
   campId: string
   onDataChanged: () => void
@@ -106,6 +108,8 @@ export default function ManagerLogistics({
           },
         ],
       })
+      // Cinemática del camión saliendo del campamento al crear el traslado.
+      if (campId) use3DStore.getState().startTransferCinematic(String(campId))
       onModalClose?.()
       setRequestNotes("")
       refetch()

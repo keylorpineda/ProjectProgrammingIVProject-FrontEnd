@@ -13,6 +13,13 @@ import type { Scene3DState } from "@/features/camp-3d/types/scene.types"
 export const use3DStore = create<Scene3DState>((set) => ({
   is3DActive: false,
   activeCamp3DId: null,
+  transferCinematic: 0,
   setIs3DActive: (value) => set({ is3DActive: value }),
   setActiveCamp: (id) => set({ activeCamp3DId: id }),
+  startTransferCinematic: (campId) =>
+    set((s) => ({
+      activeCamp3DId: campId,
+      is3DActive: true,
+      transferCinematic: s.transferCinematic + 1,
+    })),
 }))

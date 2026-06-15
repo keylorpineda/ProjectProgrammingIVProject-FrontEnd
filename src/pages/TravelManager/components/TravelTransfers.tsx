@@ -41,6 +41,7 @@ import {
   createTransferRequest,
   cancelTransfer,
 } from "@/features/transfers/services/transfers.service"
+import { use3DStore } from "@/store/use3DStore"
 import { useAuthStore, useTokenStore } from "@/store/useAuthStore"
 
 // ── Status helpers ──────────────────────────────────────────────────────────
@@ -258,6 +259,8 @@ export default function TravelTransfers() {
     mutationFn: createTransferRequest,
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["transfers", campId] })
+      // Cinemática del camión saliendo del campamento al crear el traslado.
+      if (campId) use3DStore.getState().startTransferCinematic(String(campId))
       resetForm()
       setIsNewModalOpen(false)
 

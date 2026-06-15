@@ -35,6 +35,7 @@ import AlertsBanner from "@/components/ui/AlertsBanner"
 import InactivityGuard from "@/components/ui/InactivityGuard"
 import Camp3DOverlay from "@/features/camp-3d/components/Camp3DOverlay"
 import { useAlertSocket } from "@/hooks/useAlertSocket"
+import { use3DStore } from "@/store/use3DStore"
 import { useAuthStore, useTokenStore } from "@/store/useAuthStore"
 
 import "./campleader.css"
@@ -173,6 +174,8 @@ export default function CampLeaderLayout() {
     setActionLoading(true)
     try {
       await transfersService.createTransferRequest(data)
+      // Cinemática del camión saliendo del campamento al crear el traslado.
+      if (user?.camp_id) use3DStore.getState().startTransferCinematic(user.camp_id)
       await reloadData()
     } finally {
       setActionLoading(false)

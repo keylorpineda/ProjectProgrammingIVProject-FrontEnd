@@ -173,7 +173,10 @@ export default function TravelManagerLayout() {
                   GESTIÓN VIAJES
                 </span>
               </div>
-              <div className="w-10"></div>
+              <div className="flex items-center gap-2">
+                <Open3DButton className="!px-2 !py-1 text-[10px]" label="3D" />
+                <div className="w-2"></div>
+              </div>
             </header>
 
             {/* DESKTOP TOPBAR */}

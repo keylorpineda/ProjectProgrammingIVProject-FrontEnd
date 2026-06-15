@@ -106,4 +106,15 @@ export interface Scene3DState {
   activeCamp3DId: string | null
   setIs3DActive: (value: boolean) => void
   setActiveCamp: (id: string | null) => void
+  /**
+   * Contador que se incrementa cada vez que se pide la cinemática de salida del
+   * camión (al crear un traslado). La escena observa el cambio para reproducir
+   * la animación con cámara guionada y letterbox. 0 = ninguna aún.
+   */
+  transferCinematic: number
+  /**
+   * Abre la vista 3D del campamento `campId` y dispara la cinemática del camión
+   * saliendo (incrementa `transferCinematic`). Se llama al crear un traslado.
+   */
+  startTransferCinematic: (campId: string) => void
 }

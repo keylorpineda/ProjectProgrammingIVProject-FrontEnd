@@ -293,6 +293,97 @@
   flex-shrink: 0;
 }
 
+/* ---- Cinemática de salida del camión (al crear un traslado) ---- */
+.camp3d-cine {
+  position: absolute;
+  inset: 0;
+  z-index: 18;
+  pointer-events: none;
+  font-family: "Courier New", monospace;
+}
+
+.camp3d-cine-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 11%;
+  background: #000;
+  box-shadow: 0 0 24px rgba(0, 0, 0, 0.9);
+}
+
+.camp3d-cine-bar-top {
+  top: 0;
+  animation: camp3d-cine-bar-top-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.camp3d-cine-bar-bottom {
+  bottom: 0;
+  animation: camp3d-cine-bar-bottom-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.camp3d-cine-title {
+  position: absolute;
+  bottom: 13%;
+  left: 0;
+  right: 0;
+  text-align: center;
+  animation: camp3d-cine-title 4.5s ease-in-out forwards;
+}
+
+.camp3d-cine-kicker {
+  font-size: 10px;
+  letter-spacing: 5px;
+  color: #6eff44;
+  text-shadow: 0 0 8px rgba(110, 255, 68, 0.7);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.camp3d-cine-main {
+  font-family: var(--font-typewriter, "Courier New", monospace);
+  font-size: clamp(1.1rem, 3vw, 1.9rem);
+  font-weight: 900;
+  letter-spacing: 6px;
+  color: #e8fbe0;
+  text-shadow: 0 0 14px rgba(110, 255, 68, 0.5);
+  text-transform: uppercase;
+}
+
+@keyframes camp3d-cine-bar-top-in {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes camp3d-cine-bar-bottom-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes camp3d-cine-title {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  12% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
 /* ---- Aviso de ACCESO DENEGADO (edificio sin autorización) ---- */
 .camp3d-denied {
   position: absolute;

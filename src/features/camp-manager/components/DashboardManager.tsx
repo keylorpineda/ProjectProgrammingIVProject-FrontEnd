@@ -259,6 +259,17 @@ export default function DashboardManager() {
             className="flex-1 flex flex-col overflow-hidden min-w-0"
             style={{ isolation: "isolate" }}
           >
+            {/* ENCABEZADO MOVIL - AÑADIDO PARA LA VISTA 3D */}
+            <header className="md:hidden bg-[#121110] border-b-2 border-black flex items-center justify-between px-4 py-3 shrink-0 font-mono select-none z-30 shadow-md">
+              <div className="flex items-center gap-2">
+                <span className="text-[#9c2720] animate-pulse font-bold">☠</span>
+                <span className="font-black text-[#df8120] uppercase tracking-widest text-sm">
+                  DOOMSDAY
+                </span>
+              </div>
+              <Open3DButton className="!px-2 !py-1 text-[10px]" label="3D" />
+            </header>
+
             {/* THREE COLUMN DOOMSDAY TOPBAR PANEL */}
             <header className="bg-[#121110] border-b-2 border-black flex flex-col sm:flex-row justify-between items-center px-6 md:px-10 lg:px-14 py-3 gap-4 shrink-0 font-mono select-none z-10 shadow-md">
               {/* Left Portal Badges */}

@@ -19,6 +19,7 @@ import type {
 import type { CSSProperties } from "react"
 
 import { workerService } from "@/features/worker/services/workerService"
+import { use3DStore } from "@/store/use3DStore"
 import { useAuthStore } from "@/store/useAuthStore"
 
 import "./CampScene3D.css"
@@ -227,6 +228,52 @@ const drawMinimap = (mmX: CanvasRenderingContext2D, cam: CameraState) => {
   mmX.stroke()
 }
 
+// ---- Cinemática de salida del camión (al crear un traslado) ----
+// Keyframes de cámara en coordenadas de MUNDO (raw × SCENE_SCALE). La cámara
+// orbital se reconstruye cada frame desde camState, así que basta con interpolar
+// theta/phi/radius/target a lo largo de estos puntos para "guionar" el plano.
+// Sincronizado con playTransferAnimation (puerta 0-1.4s, recorrido 1.4-9.4s):
+// arranca pegado al garaje y va siguiendo al camión hasta el portón principal.
+interface CineKey {
+  t: number
+  target: [number, number, number]
+  theta: number
+  phi: number
+  radius: number
+}
+const CINE_KEYS: CineKey[] = [
+  { t: 0.0, target: [18.9, 2.0, 13.0], theta: 1.9, phi: 1.16, radius: 15 },
+  { t: 2.6, target: [18.0, 1.6, 19.0], theta: 2.1, phi: 1.06, radius: 17 },
+  { t: 5.5, target: [11.0, 1.6, 23.5], theta: 2.4, phi: 1.0, radius: 21 },
+  { t: 8.5, target: [2.0, 2.0, 23.5], theta: 2.7, phi: 0.95, radius: 28 },
+  { t: 10.6, target: [0.0, 2.0, 22.0], theta: 2.9, phi: 0.95, radius: 30 },
+]
+const CINE_DURATION = 10.8
+// Nonce del store ya consumido; module-level para sobrevivir remounts del overlay.
+let lastConsumedCinematic = 0
+
+const smoothstep = (x: number) => x * x * (3 - 2 * x)
+
+/** Interpola camState a lo largo de CINE_KEYS en el instante `ct` (s). */
+function driveCinematicCamera(ct: number, cam: CameraState) {
+  let a = CINE_KEYS[0]
+  let b = CINE_KEYS[CINE_KEYS.length - 1]
+  for (let i = 0; i < CINE_KEYS.length - 1; i++) {
+    if (ct >= CINE_KEYS[i].t && ct <= CINE_KEYS[i + 1].t) {
+      a = CINE_KEYS[i]
+      b = CINE_KEYS[i + 1]
+      break
+    }
+  }
+  const span = b.t - a.t || 1
+  const k = smoothstep(Math.max(0, Math.min(1, (ct - a.t) / span)))
+  const mix = (x: number, y: number) => x + (y - x) * k
+  cam.target.set(mix(a.target[0], b.target[0]), mix(a.target[1], b.target[1]), mix(a.target[2], b.target[2]))
+  cam.theta = mix(a.theta, b.theta)
+  cam.phi = mix(a.phi, b.phi)
+  cam.radius = mix(a.radius, b.radius)
+}
+
 /**
  * Escena 3D del campamento migrada de camp3d.html. Monta el canvas Three.js,
  * construye la escena en `onReady`, la anima cada frame, dibuja el minimapa y
@@ -319,6 +366,19 @@ export default function CampScene3D({ campId, onClose, onReady }: Props) {
     }
   }, [role, user?.username, workerSubType])
 
+  // ---- Cinemática del camión al crear un traslado ----
+  const cineActiveRef = useRef(false)
+  const cineStartRef = useRef<number | null>(null)
+  const [showCine, setShowCine] = useState(false)
+
+  const startCinematic = useCallback(() => {
+    if (!handlesRef.current) return
+    handlesRef.current.playTransferAnimation()
+    cineActiveRef.current = true
+    cineStartRef.current = null
+    setShowCine(true)
+  }, [])
+
   const contextRef = useThreeScene(canvasRef, {
     onReady: (ctx) => {
       const handles = buildCampScene(ctx.scene, campId)
@@ -381,8 +441,26 @@ export default function CampScene3D({ campId, onClose, onReady }: Props) {
 
       targetsRef.current = targets
       onReady?.()
+
+      // Si se pidió la cinemática del camión antes de que la escena estuviera
+      // lista (p. ej. al crear el traslado desde otra vista), dispárala ahora.
+      const pendingCine = use3DStore.getState().transferCinematic
+      if (pendingCine > lastConsumedCinematic) {
+        lastConsumedCinematic = pendingCine
+        startCinematic()
+      }
     },
     onFrame: (t, ctx) => {
+      // Cámara guionada de la cinemática (sobrescribe el control orbital).
+      if (cineActiveRef.current) {
+        if (cineStartRef.current === null) cineStartRef.current = t
+        const ct = t - cineStartRef.current
+        driveCinematicCamera(ct, ctx.camState)
+        if (ct > CINE_DURATION) {
+          cineActiveRef.current = false
+          setShowCine(false)
+        }
+      }
       handlesRef.current?.animate(t)
       const profile = profileRef.current
       if (profile) profile.light.intensity = 0.7 + Math.sin(t * 2.2) * 0.35
@@ -414,6 +492,18 @@ export default function CampScene3D({ campId, onClose, onReady }: Props) {
 
   // Paso Reactivo — conecta endpoints del backend con las refs visuales.
   useSceneReactiveData(campId, handlesRef)
+
+  // Cuando la escena YA está abierta y se crea un traslado, el store incrementa
+  // `transferCinematic`; aquí lo detectamos y disparamos la cinemática.
+  useEffect(() => {
+    const unsub = use3DStore.subscribe((state) => {
+      if (state.transferCinematic > lastConsumedCinematic && handlesRef.current) {
+        lastConsumedCinematic = state.transferCinematic
+        startCinematic()
+      }
+    })
+    return unsub
+  }, [startCinematic])
 
   useRaycaster(canvasRef, contextRef, targetsRef, {
     onBuildingClick: (building) => {
@@ -459,6 +549,17 @@ export default function CampScene3D({ campId, onClose, onReady }: Props) {
       <button type="button" className="camp3d-back" onClick={onClose}>
         ◄ Ir al Panel
       </button>
+
+      {showCine ? (
+        <div className="camp3d-cine">
+          <div className="camp3d-cine-bar camp3d-cine-bar-top" />
+          <div className="camp3d-cine-bar camp3d-cine-bar-bottom" />
+          <div className="camp3d-cine-title">
+            <div className="camp3d-cine-kicker">{"// DESPACHO DE CONVOY"}</div>
+            <div className="camp3d-cine-main">TRASLADO EN MARCHA</div>
+          </div>
+        </div>
+      ) : null}
 
       {hovered &&
         (() => {
