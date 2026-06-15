@@ -72,7 +72,7 @@ export default function Login() {
         use3DStore.getState().setIs3DActive(true)
       }
       navigate(destination)
-    }, 5300)
+    }, 5600)
   }
 
   const handleLogin = async (u: string, p: string) => {
