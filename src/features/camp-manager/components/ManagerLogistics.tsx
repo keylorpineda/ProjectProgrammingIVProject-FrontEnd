@@ -5,7 +5,7 @@
 
 import { useQuery } from "@tanstack/react-query"
 import { motion } from "framer-motion"
-import { Truck, ShieldAlert, Archive, Mail, Send } from "lucide-react"
+import { Truck, ShieldAlert, Mail, Send } from "lucide-react"
 import { useEffect, useState } from "react"
 import { type FormEvent } from "react"
 
@@ -32,7 +32,6 @@ const STATUS_STAMP: Record<string, { label: string; color: string; bg: string; r
     completed: { label: "COMPLETADO", color: "#4a4a6a", bg: "#d8d8e8", rotation: 3 },
     rejected: { label: "RECHAZADO", color: "#9c2720", bg: "#f0d4d0", rotation: -2 },
     cancelled: { label: "CANCELADO", color: "#6a4a1a", bg: "#e8e0d0", rotation: 1 },
-    arrived: { label: "RECIBIDO", color: "#4a4a6a", bg: "#d8d8e8", rotation: 3 },
   }
 
 export default function ManagerLogistics({
@@ -129,28 +128,6 @@ export default function ManagerLogistics({
       onDataChanged()
     } catch (err: any) {
       setErrorState(err?.message || "Fallo de respuesta de satélite.")
-    } finally {
-      setActionId(null)
-    }
-  }
-
-  const handleArrive = async (id: string, currentStatus: string) => {
-    setActionId(id)
-    setErrorState(null)
-    try {
-      // Backend state machine: approved → in_transit (depart) → completed (arrive)
-      // If still "approved", the convoy hasn't departed yet — call /depart first,
-      // then /arrive. If already "in_transit", go straight to /arrive.
-      if (currentStatus === "approved") {
-        await api.patch(`/transfers/requests/${id}/depart`)
-      }
-      await api.patch(`/transfers/requests/${id}/arrive`)
-      refetch()
-      onDataChanged()
-    } catch (err: any) {
-      const msg =
-        err?.response?.data?.message || err?.message || "Error de descarga física del flete."
-      setErrorState(msg)
     } finally {
       setActionId(null)
     }
@@ -493,21 +470,17 @@ export default function ManagerLogistics({
                       )}
 
                       {(req.status === "approved" || req.status === "in_transit") && (
-                        <button
-                          type="button"
-                          disabled={actionId !== null}
-                          onClick={() => handleArrive(req.id, req.status)}
+                        <div
                           style={{
                             width: "100%",
-                            border: "1px solid #2a5a35",
-                            backgroundColor: "#2a5a35",
-                            color: "#d8f0d8",
+                            border: "1px solid #1a4a7a",
+                            backgroundColor: "rgba(26,74,122,0.12)",
+                            color: "#1a4a7a",
                             padding: "10px 16px",
                             fontFamily: "monospace",
                             fontSize: "0.72rem",
                             fontWeight: 900,
                             textTransform: "uppercase",
-                            cursor: "pointer",
                             letterSpacing: "1px",
                             display: "flex",
                             alignItems: "center",
@@ -515,9 +488,8 @@ export default function ManagerLogistics({
                             gap: 8,
                           }}
                         >
-                          <Archive style={{ width: 14, height: 14 }} /> REGISTRAR LLEGADA FÍSICA Y
-                          TRANSBORDO
-                        </button>
+                          <Truck style={{ width: 14, height: 14 }} /> CONVOY EN RUTA
+                        </div>
                       )}
                     </div>
                   </motion.div>

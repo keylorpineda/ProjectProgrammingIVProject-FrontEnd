@@ -5,7 +5,6 @@ import {
   ArrowLeftRight,
   Search,
   X,
-  CheckCircle2,
   AlertCircle,
   Loader2,
   ChevronRight,
@@ -41,7 +40,6 @@ import {
   getCampTransfers,
   createTransferRequest,
   cancelTransfer,
-  confirmTransferArrival,
 } from "@/features/transfers/services/transfers.service"
 import { useAuthStore, useTokenStore } from "@/store/useAuthStore"
 
@@ -292,11 +290,6 @@ export default function TravelTransfers() {
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["transfers", campId] }),
   })
 
-  const confirmMutation = useMutation({
-    mutationFn: (id: string) => confirmTransferArrival(id),
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["transfers", campId] }),
-  })
-
   // ── Derived state ────────────────────────────────────────────────────────
   const normalize = (s: string | null | undefined) =>
     String(s ?? "")
@@ -441,19 +434,6 @@ export default function TravelTransfers() {
       onConfirm: () => {
         setConfirmDialog((prev) => ({ ...prev, isOpen: false }))
         cancelMutation.mutate(id)
-      },
-    })
-  }
-
-  function handleConfirmArrival(id: string) {
-    setConfirmDialog({
-      isOpen: true,
-      title: "Confirmar Llegada",
-      message: "¿Confirmar la llegada exitosa de este traslado a la base de destino?",
-      type: "info",
-      onConfirm: () => {
-        setConfirmDialog((prev) => ({ ...prev, isOpen: false }))
-        confirmMutation.mutate(id)
       },
     })
   }
@@ -623,7 +603,6 @@ export default function TravelTransfers() {
               <option value="pending">PENDIENTE</option>
               <option value="approved">APROBADO</option>
               <option value="in_transit">EN TRÁNSITO</option>
-              <option value="completed">COMPLETADO</option>
               <option value="rejected">RECHAZADO</option>
               <option value="cancelled">CANCELADO</option>
             </select>
@@ -1080,25 +1059,6 @@ export default function TravelTransfers() {
                           Cancelar Traslado
                         </span>
                         <span className="tm-action-sub">Abortar orden</span>
-                      </button>
-                    )}
-                  {selectedTransfer.status === "in_transit" &&
-                    selectedTransfer.camp_destination_id === campId && (
-                      <button
-                        onClick={() => handleConfirmArrival(selectedTransfer.id)}
-                        disabled={confirmMutation.isPending}
-                        className="tm-action-btn tm-action-btn-primary"
-                        style={{ padding: "8px 16px", borderRadius: "4px" }}
-                      >
-                        <span className="tm-action-label flex items-center gap-2">
-                          {confirmMutation.isPending ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <CheckCircle2 className="h-4 w-4" />
-                          )}
-                          Confirmar Llegada
-                        </span>
-                        <span className="tm-action-sub">Registrar recepción</span>
                       </button>
                     )}
                   {(selectedTransfer.status === "completed" ||

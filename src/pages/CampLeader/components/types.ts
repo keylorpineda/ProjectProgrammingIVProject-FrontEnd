@@ -51,7 +51,6 @@ export interface TransfersViewProps {
   onCreateTransferRequest: (data: any) => Promise<void>
   onApproveTransferRequest: (id: number, approved: boolean) => Promise<void>
   onCancelTransferRequest: (id: number) => Promise<void>
-  onArriveTransferRequest: (id: number) => Promise<void>
 }
 
 export interface SidebarProps {

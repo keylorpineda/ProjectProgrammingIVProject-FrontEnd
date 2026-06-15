@@ -10,7 +10,6 @@ import { useAuthStore } from "@/store/useAuthStore"
 const mutationMocks = vi.hoisted(() => ({
   create: vi.fn(),
   cancel: vi.fn(),
-  confirm: vi.fn(),
   invalidateQueries: vi.fn(),
 }))
 
@@ -46,7 +45,6 @@ vi.mock("@/features/persons/services/persons.service", () => ({
 
 vi.mock("@/features/transfers/services/transfers.service", () => ({
   cancelTransfer: vi.fn(),
-  confirmTransferArrival: vi.fn(),
   createTransferRequest: vi.fn(),
   getCampTransfers: vi.fn(() => []),
 }))
@@ -287,14 +285,10 @@ describe("TravelTransfers", () => {
     )
     ;(reactQuery.useMutation as ReturnType<typeof vi.fn>).mockImplementation((config) => {
       const mutationSource = String(config.mutationFn)
-      const isCreate =
-        !mutationSource.includes("cancelTransfer") &&
-        !mutationSource.includes("confirmTransferArrival")
+      const isCreate = !mutationSource.includes("cancelTransfer")
       const target = mutationSource.includes("cancelTransfer")
         ? mutationMocks.cancel
-        : mutationSource.includes("confirmTransferArrival")
-          ? mutationMocks.confirm
-          : mutationMocks.create
+        : mutationMocks.create
       return {
         mutate: vi.fn((variables) => {
           config.mutationFn?.(variables)
@@ -708,16 +702,6 @@ describe("TravelTransfers", () => {
     fireEvent.click(screen.getByText("Aceptar"))
 
     expect(mutationMocks.cancel).toHaveBeenCalledWith("t1")
-  })
-
-  it("handles receiving a transfer", () => {
-    renderTransfers()
-
-    fireEvent.click(screen.getAllByText(/BASE CAMP-3/i)[0])
-    fireEvent.click(screen.getByText(/Confirmar Llegada/i))
-    fireEvent.click(screen.getByText("Aceptar"))
-
-    expect(mutationMocks.confirm).toHaveBeenCalledWith("t2")
   })
 
   it("shows the archived message for completed transfers", () => {

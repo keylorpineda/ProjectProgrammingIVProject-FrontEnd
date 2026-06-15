@@ -107,7 +107,6 @@ vi.mock("../lib/services", () => ({
     createTransferRequest: vi.fn().mockResolvedValue({}),
     handleTransferApproval: vi.fn().mockResolvedValue({}),
     cancelTransferRequest: vi.fn().mockResolvedValue({}),
-    arriveTransferRequest: vi.fn().mockResolvedValue({}),
   },
   resourcesService: {
     getCampInventory: vi.fn().mockResolvedValue([]),
@@ -300,12 +299,6 @@ describe("CampLeaderLayout Page", () => {
       await capturedTransfersProps!.onCancelTransferRequest(100)
     })
     expect(transfersService.cancelTransferRequest).toHaveBeenCalledWith(100)
-
-    // 4. Arrive Transfer
-    await act(async () => {
-      await capturedTransfersProps!.onArriveTransferRequest(100)
-    })
-    expect(transfersService.arriveTransferRequest).toHaveBeenCalledWith(100)
   })
 
   it("handles inactivity logout", async () => {

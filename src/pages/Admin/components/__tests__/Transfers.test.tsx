@@ -16,7 +16,6 @@ vi.mock("@/features/transfers/services/transfers.service", () => ({
   getTransferById: vi.fn(),
   approveOrRejectTransfer: vi.fn(),
   cancelTransfer: vi.fn(),
-  confirmTransferArrival: vi.fn(),
   getTransferStatistics: vi.fn(),
 }))
 vi.mock("@/features/inventory/services/inventory.service", () => ({
@@ -55,7 +54,6 @@ const mockedGetResources = getResources as unknown as ReturnType<typeof vi.fn>
 const mockedGetPersons = getPersons as unknown as ReturnType<typeof vi.fn>
 const mockedApprove = approveOrRejectTransfer as unknown as ReturnType<typeof vi.fn>
 const mockedCancel = cancelTransfer as unknown as ReturnType<typeof vi.fn>
-const mockedArrive = confirmTransferArrival as unknown as ReturnType<typeof vi.fn>
 
 import { getCamps } from "@/features/camps/services/camps.service"
 import { getResources } from "@/features/inventory/services/inventory.service"
@@ -63,7 +61,6 @@ import { getPersons } from "@/features/persons/services/persons.service"
 import {
   approveOrRejectTransfer,
   cancelTransfer,
-  confirmTransferArrival,
   getCampTransfers,
 } from "@/features/transfers/services/transfers.service"
 import { useAuthStore, useTokenStore } from "@/store/useAuthStore"
@@ -96,7 +93,6 @@ describe("Admin → Transfers (read + approve/reject + cancel)", () => {
     mockedGetPersons.mockReset()
     mockedApprove.mockReset()
     mockedCancel.mockReset()
-    mockedArrive.mockReset()
     mockedGetCamps.mockReset()
 
     mockedGetCamps.mockResolvedValue(camps)
@@ -253,7 +249,7 @@ describe("Admin → Transfers (read + approve/reject + cancel)", () => {
   })
 
   describe("transfer status branches", () => {
-    it("shows CONFIRMAR LLEGADA when status=approved and admin is destination", async () => {
+    it("shows CONVOY EN RUTA when status=approved and admin is destination", async () => {
       mockedGetTransfers.mockResolvedValue([
         {
           ...transfers[0],
@@ -264,7 +260,7 @@ describe("Admin → Transfers (read + approve/reject + cancel)", () => {
         },
       ])
       renderTransfers()
-      expect(await screen.findByRole("button", { name: /CONFIRMAR LLEGADA/i })).toBeInTheDocument()
+      expect(await screen.findByText(/CONVOY EN RUTA/i)).toBeInTheDocument()
     })
 
     it("shows CONVOY EN RUTA when status=approved and admin is origin", async () => {
@@ -297,43 +293,6 @@ describe("Admin → Transfers (read + approve/reject + cancel)", () => {
       mockedGetTransfers.mockResolvedValue([{ ...transfers[0], id: "204", status: "cancelled" }])
       renderTransfers()
       expect(await screen.findByText(/CONVOY CANCELADO/i)).toBeInTheDocument()
-    })
-
-    it("CONFIRMAR LLEGADA calls confirmTransferArrival with the transfer id", async () => {
-      const user = userEvent.setup()
-      mockedArrive.mockResolvedValue(transfers[0])
-      mockedGetTransfers.mockResolvedValue([
-        {
-          ...transfers[0],
-          id: "205",
-          status: "approved",
-          camp_origin_id: "2",
-          camp_destination_id: "1",
-        },
-      ])
-      renderTransfers()
-      await user.click(await screen.findByRole("button", { name: /CONFIRMAR LLEGADA/i }))
-      await waitFor(() => expect(mockedArrive).toHaveBeenCalledWith("205"))
-    })
-
-    it("keeps the approved destination card visible when arrival confirmation rejects", async () => {
-      const user = userEvent.setup()
-      mockedArrive.mockRejectedValue(new Error("500"))
-      mockedGetTransfers.mockResolvedValue([
-        {
-          ...transfers[0],
-          id: "206",
-          status: "approved",
-          camp_origin_id: "2",
-          camp_destination_id: "1",
-        },
-      ])
-      renderTransfers()
-
-      await user.click(await screen.findByRole("button", { name: /CONFIRMAR LLEGADA/i }))
-
-      await waitFor(() => expect(mockedArrive).toHaveBeenCalledWith("206"))
-      expect(screen.getByRole("button", { name: /CONFIRMAR LLEGADA/i })).toBeInTheDocument()
     })
 
     it("keeps the pending origin card visible when cancellation rejects", async () => {

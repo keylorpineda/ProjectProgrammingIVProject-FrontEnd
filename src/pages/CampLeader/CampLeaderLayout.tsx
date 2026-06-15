@@ -199,16 +199,6 @@ export default function CampLeaderLayout() {
     }
   }
 
-  const handleArriveTransferRequest = async (id: number) => {
-    setActionLoading(true)
-    try {
-      await transfersService.arriveTransferRequest(id)
-      await reloadData()
-    } finally {
-      setActionLoading(false)
-    }
-  }
-
   // ── Active people filter ──────────────────────────────────────────────────
   const activeHealthyResidents = residents.filter((p) => p.status === "active" && p.can_work)
 
@@ -252,7 +242,6 @@ export default function CampLeaderLayout() {
             onCreateTransferRequest={handleCreateTransferRequest}
             onApproveTransferRequest={handleApproveTransferRequest}
             onCancelTransferRequest={handleCancelTransferRequest}
-            onArriveTransferRequest={handleArriveTransferRequest}
           />
         )
       case "inventory":

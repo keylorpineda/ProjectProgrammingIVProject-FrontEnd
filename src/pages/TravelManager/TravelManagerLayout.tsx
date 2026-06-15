@@ -15,6 +15,7 @@ import { Outlet, useNavigate, NavLink } from "react-router-dom"
 import AlertsBanner from "@/components/ui/AlertsBanner"
 import InactivityGuard from "@/components/ui/InactivityGuard"
 import Camp3DOverlay from "@/features/camp-3d/components/Camp3DOverlay"
+import Open3DButton from "@/features/camp-3d/components/Open3DButton"
 import { useAlertSocket } from "@/hooks/useAlertSocket"
 import { useAuthStore } from "@/store/useAuthStore"
 import "./TravelManagerViews.css"
@@ -192,12 +193,11 @@ export default function TravelManagerLayout() {
                 </div>
               </div>
 
-              <div className="hidden lg:flex items-center gap-8 text-center px-6">
-                <div className="flex items-center gap-2 text-left text-sm">
-                  <span className="tracking-widest text-zinc-300 font-bold font-mono">
-                    {utcTime}
-                  </span>
-                </div>
+              <div className="flex items-center gap-6 px-6">
+                <span className="hidden lg:inline tracking-widest text-zinc-300 font-bold font-mono text-sm">
+                  {utcTime}
+                </span>
+                <Open3DButton />
               </div>
 
               <div className="flex items-center self-end sm:self-center border-2 border-[#3b4d3e] bg-[#0d0c0b] p-3 rounded-sm">

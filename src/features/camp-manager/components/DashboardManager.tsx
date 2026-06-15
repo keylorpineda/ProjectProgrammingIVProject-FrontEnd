@@ -29,6 +29,7 @@ import { useAuthStore } from "../store/useAuthStore"
 import AlertsBanner from "@/components/ui/AlertsBanner"
 import InactivityGuard from "@/components/ui/InactivityGuard"
 import Camp3DOverlay from "@/features/camp-3d/components/Camp3DOverlay"
+import Open3DButton from "@/features/camp-3d/components/Open3DButton"
 import { useAlertSocket } from "@/hooks/useAlertSocket"
 import { useAuthStore as useGlobalAuthStore } from "@/store/useAuthStore"
 
@@ -300,6 +301,8 @@ export default function DashboardManager() {
                   </div>
                 </div>
               </div>
+
+              <Open3DButton />
 
               <div className="flex items-center self-end sm:self-center border-2 border-[#3b4d3e] bg-[#0d0c0b] p-3 rounded-sm">
                 <div className="flex items-center gap-5 px-4">

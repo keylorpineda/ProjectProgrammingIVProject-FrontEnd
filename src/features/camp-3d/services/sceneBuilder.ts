@@ -461,7 +461,10 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
     postPositions.push([19, pz])
   }
   for (let px2 = -19; px2 <= -5; px2 += 2.1) postPositions.push([px2, 14])
-  for (let px3 = 5; px3 <= 19; px3 += 2.1) postPositions.push([px3, 14])
+  // Salta los postes del carril del garaje (x≈9..18) para dejar libre la salida.
+  for (let px3 = 5; px3 <= 19; px3 += 2.1) {
+    if (px3 < 9 || px3 > 18) postPositions.push([px3, 14])
+  }
   const iPosts = new THREE.InstancedMesh(postGeo, M.wood, postPositions.length)
   postPositions.forEach((p, i) => {
     tmpM.identity()
@@ -477,7 +480,9 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
   box(0.25, 2.8, 30, M.plank, -19, 1.4, 0)
   box(0.25, 2.8, 30, M.plank, 19, 1.4, 0)
   box(14, 2.8, 0.25, M.plank, -12, 1.4, 14)
-  box(14, 2.8, 0.25, M.plank, 12, 1.4, 14)
+  // Tablero derecho partido: deja un hueco (x≈9..18) para la salida del garaje.
+  box(4, 2.8, 0.25, M.plank, 7, 1.4, 14)
+  box(1, 2.8, 0.25, M.plank, 18.5, 1.4, 14)
   // rails
   box(40, 0.1, 0.1, M.wood, 0, 2.7, -15)
   box(40, 0.1, 0.1, M.wood, 0, 0.7, -15)
@@ -1214,10 +1219,10 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
   portonPanelL.castShadow = true
   portonPivotL.add(portonPanelL)
   root.add(portonPivotL)
-  // Travesaños horizontales — z=12.22 (delante de los portones) para evitar z-fighting
+  // Dintel superior del portón — z=12.22 (delante de los portones) para evitar
+  // z-fighting. Los travesaños bajos se quitaron para dejar libre el carril de
+  // salida del camión.
   box(7.2, 0.22, 0.14, M.metal, 13.5, 3.6, 12.22)
-  box(7.2, 0.22, 0.14, M.metal, 13.5, 1.4, 12.22)
-  box(3.2, 0.14, 0.12, mat(0xddcc00, 0xbbaa00, 0.3), 13.5, 0.8, 12.1)
   box(2.0, 0.5, 0.08, mat(0x0a0808, 0, 0, 0.98), 13.5, 4.5, 12.08)
   box(1.85, 0.36, 0.07, mat(0xdd2200, 0xaa1100, 0.65), 13.5, 4.5, 12.07)
   // Valla a ambos lados de la carretera exterior
@@ -2945,6 +2950,15 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
       } else if (tk >= 8.0) {
         gjDoorPivot.position.y = doorUp * Math.max(1 - (tk - 8.0) / 1.2, 0)
       }
+
+      // ── Portón vehicular del garaje: las dos hojas abren hacia afuera (0.4-1.4s)
+      // y vuelven a cerrar al final, para que el camión salga por el hueco de la
+      // valla en vez de atravesar una pared.
+      const gateOpening = Math.min(Math.max((tk - 0.4) / 1.0, 0), 1)
+      const gateClosing = tk >= 8.0 ? Math.max(1 - (tk - 8.0) / 1.2, 0) : 1
+      const gateSwing = Math.min(gateOpening, gateClosing) * (Math.PI * 0.55)
+      portonPivotR.rotation.y = gateSwing
+      portonPivotL.rotation.y = -gateSwing
 
       // ── Faros + luces traseras (secuencia de encendido realista) ──
       const headProg = Math.min(Math.max((tk - 0.5) / 0.6, 0), 1)
