@@ -290,7 +290,7 @@ function driveCinematicCamera(ct: number, cam: CameraState) {
  * construye la escena en `onReady`, la anima cada frame, dibuja el minimapa y
  * conecta el raycaster (hover + click → navegación). Limpia todo al desmontar.
  */
-export default function CampScene3D({ campId, onClose, onReady }: Props) {
+export default function CampScene3D({ campId, onClose, onReady, embedded }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const minimapRef = useRef<HTMLCanvasElement | null>(null)
   const posRef = useRef<HTMLDivElement | null>(null)
@@ -540,7 +540,10 @@ export default function CampScene3D({ campId, onClose, onReady }: Props) {
         showDenied(building)
         return
       }
-      onClose()
+      // En modo embebido la escena es el FONDO del panel: navegar abre la
+      // sección como ventana encima sin desmontar el campamento. En modo overlay
+      // a pantalla completa se cierra la escena antes de navegar.
+      if (!embedded) onClose()
       navigate(resolveBuildingRoute(role, building))
     },
     onHoverChange: (building) => {
@@ -574,9 +577,11 @@ export default function CampScene3D({ campId, onClose, onReady }: Props) {
     <div className="camp3d-root" data-camp-id={campId}>
       <canvas ref={canvasRef} className="camp3d-canvas" />
 
-      <button type="button" className="camp3d-back" onClick={onClose}>
-        ◄ Ir al Panel
-      </button>
+      {!embedded && (
+        <button type="button" className="camp3d-back" onClick={onClose}>
+          ◄ Ir al Panel
+        </button>
+      )}
 
       {showCine ? (
         <div className="camp3d-cine">

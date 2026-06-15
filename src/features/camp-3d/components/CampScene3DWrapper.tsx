@@ -62,7 +62,7 @@ function LoadingSkeleton() {
  * de WebGL. La escena se mantiene montada bajo el skeleton para que su `onReady`
  * pueda apagarlo.
  */
-export default function CampScene3DWrapper({ campId, onClose }: CampScene3DProps) {
+export default function CampScene3DWrapper({ campId, onClose, embedded }: CampScene3DProps) {
   const [loading, setLoading] = useState(true)
 
   return (
@@ -70,7 +70,12 @@ export default function CampScene3DWrapper({ campId, onClose }: CampScene3DProps
       {/* El skeleton vive DENTRO del boundary: si la escena falla, el fallback
           de error reemplaza a ambos y el mensaje nunca queda tapado. */}
       <SceneErrorBoundary onClose={onClose}>
-        <CampScene3D campId={campId} onClose={onClose} onReady={() => setLoading(false)} />
+        <CampScene3D
+          campId={campId}
+          onClose={onClose}
+          embedded={embedded}
+          onReady={() => setLoading(false)}
+        />
         {loading ? <LoadingSkeleton /> : null}
       </SceneErrorBoundary>
     </div>
