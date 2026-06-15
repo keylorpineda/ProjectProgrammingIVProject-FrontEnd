@@ -79,9 +79,9 @@ export function useThreeScene(
     const initialW = canvas.clientWidth || window.innerWidth
     const initialH = canvas.clientHeight || window.innerHeight
     renderer.setSize(initialW, initialH, false)
-    // Cap at 1.5 — on retina screens going to 2 doubles the pixel fill with
-    // near-zero perceptible difference on a post-apoc scene.
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5))
+    // Cap at 1.25 — on retina screens going beyond this doubles fill cost
+    // with near-zero perceptible difference on a dark/foggy scene.
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.25))
     renderer.shadowMap.enabled = true
     // PCFShadowMap is ~40% faster than PCFSoft with imperceptible quality delta
     // on a scene with fog this dense.

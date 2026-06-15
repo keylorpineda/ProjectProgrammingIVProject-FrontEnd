@@ -28,6 +28,10 @@ export const SCENE_SCALE = 1.4
  * partículas) y `dispose()`.
  */
 export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHandles {
+  // Detectar dispositivos de gama media/baja para reducir conteo de instancias.
+  // hardwareConcurrency <= 4 cubre la mayoría de móviles presupuestarios.
+  const isLowEnd = (navigator.hardwareConcurrency ?? 8) <= 4
+
   const visuals = getCampVisuals(campId)
   const { seed, weathering } = visuals
   const C = visuals.colors
@@ -99,23 +103,23 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
 
   // Pre-built shared mats — colors driven by per-camp theme
   const M = {
-    ground: matTex(TX.ground, C.ground, 0, 0, 0.96, 0, 1.6),
-    dirt: matTex(TX.ground, C.dirt, 0, 0, 0.98, 0, 1.3),
-    mud: mat(C.ground),
+    ground: matTex(TX.ground, C.ground, 0, 0, 0.94, 0.02, 2.0), // más textura, mínimo wet-look
+    dirt: matTex(TX.ground, C.dirt, 0, 0, 0.96, 0.01, 1.6),
+    mud: mat(C.ground, 0, 0, 0.98, 0.04), // barro con micro-reflejo
     grass: mat(C.grass),
     wood: matTex(TX.wood, C.wood, 0, 0, 0.9, 0, 1.2),
     woodD: matTex(TX.wood, C.woodDark, 0, 0, 0.93, 0, 1.0),
     plank: matTex(TX.wood, C.wood, 0, 0, 0.88, 0, 1.1),
-    metal: mat(C.metal, 0, 0, 0.6, 0.7),
-    rust: matTex(TX.rust, C.rust, 0, 0, 0.88, 0.18, 1.4),
-    rust2: matTex(TX.rust, C.rust, 0, 0, 0.84, 0.12, 1.2),
+    metal: mat(C.metal, 0, 0, 0.52, 0.76), // más metálico, refleja mejor la luz
+    rust: matTex(TX.rust, C.rust, 0, 0, 0.9, 0.22, 1.6), // óxido más prominente
+    rust2: matTex(TX.rust, C.rust, 0, 0, 0.86, 0.16, 1.4),
     brl_g: mat(0x1e3818, 0x002200, 0.08),
     brl_r: mat(0x481808, 0x280000, 0.08),
     brl_y: mat(0x383008, 0x180a00, 0.06),
     tire: mat(0x101010, 0, 0, 1, 0),
     sandbag: matTex(TX.sandbag, 0x524830, 0, 0, 0.92, 0, 1.0),
-    corrugat: matTex(TX.corrugat, C.metal, 0, 0, 0.62, 0.38, 2.8),
-    corrugD: matTex(TX.corrugat, C.metal, 0, 0, 0.68, 0.32, 2.5),
+    corrugat: matTex(TX.corrugat, C.metal, 0, 0, 0.58, 0.44, 3.2), // ondas más marcadas y metálicas
+    corrugD: matTex(TX.corrugat, C.metal, 0, 0, 0.64, 0.38, 2.8),
     brick: matTex(TX.brick, C.brick, 0, 0, 0.84, 0, 2.2),
     chain: mat(C.metal, 0, 0, 0.5, 0.7),
     pipe: mat(C.metal, 0, 0, 0.4, 0.6),
@@ -123,18 +127,19 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
     gravel: mat(C.concrete),
     sign: mat(0x0a0a0a),
     glass: new THREE.MeshStandardMaterial({
-      color: 0x334455,
+      color: 0x0a0f12,
       transparent: true,
-      opacity: 0.45,
-      roughness: 0.05,
-      metalness: 0.4,
+      opacity: 0.65,
+      roughness: 0.1,
+      metalness: 0.7,
+      envMapIntensity: 0.6,
     }),
     puddle: new THREE.MeshStandardMaterial({
-      color: 0x0e1c10,
+      color: 0x080e0a,
       transparent: true,
-      opacity: 0.8,
-      roughness: 0.01,
-      metalness: 0.8,
+      opacity: 0.92,
+      roughness: 0.0, // espejo perfecto
+      metalness: 0.95,
     }),
     tarp: mat(0x3d3828, 0, 0, 1),
     tarpR: mat(0x3c1010, 0, 0, 1),
@@ -303,8 +308,9 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
     roughness: 0.9,
     side: THREE.DoubleSide,
   })
-  const iRdGrs = new THREE.InstancedMesh(rdGrsGeo, rdGrsMat, 260)
-  for (let rgi = 0; rgi < 260; rgi++) {
+  const RD_GRS_N = isLowEnd ? 130 : 260
+  const iRdGrs = new THREE.InstancedMesh(rdGrsGeo, rdGrsMat, RD_GRS_N)
+  for (let rgi = 0; rgi < RD_GRS_N; rgi++) {
     const side = rgi % 2 === 0 ? 1 : -1
     const rgx = side * (6.5 + Math.random() * 6.5)
     const rgz = 14.5 + Math.random() * 38
@@ -356,7 +362,7 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
     roughness: 1.0,
     side: THREE.DoubleSide,
   })
-  const GRASS_N = 520
+  const GRASS_N = isLowEnd ? 280 : 520
   const iGrass = new THREE.InstancedMesh(grassGeo, grassMat, GRASS_N)
   iGrass.receiveShadow = true
   // Zonas con edificios — el pasto se evita en estos rectángulos aproximados
@@ -379,7 +385,7 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
 
   let gi = 0
   let attempts = 0
-  while (gi < GRASS_N && attempts < GRASS_N * 4) {
+  while (gi < GRASS_N && attempts < GRASS_N * 5) {
     attempts++
     const gx = (Math.random() - 0.5) * 44
     const gz = (Math.random() - 0.5) * 34
@@ -1369,8 +1375,34 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
   box(0.52, 4.2, 0.42, gjWall, GJX - 3.76, 2.1, GJZ + 3.58) // pilar izq
   box(0.52, 4.2, 0.42, gjWall, GJX + 3.76, 2.1, GJZ + 3.58) // pilar der
   box(8.2, 0.72, 0.42, gjWall, GJX, 3.86, GJZ + 3.58) // dintel
-  // Suelo interior (aceite/cemento) — offset al techo
-  pln(7.2, 6.6, mat(0x0c0c0a, 0, 0, 0.3, 0.4), GJX, 0.014, GJZ)
+  // Suelo interior — cemento oscuro con reflejo de aceite
+  pln(
+    7.2,
+    6.6,
+    new THREE.MeshStandardMaterial({
+      color: 0x0e0e0c,
+      roughness: 0.18, // semi-brillante como cemento húmedo / aceite
+      metalness: 0.55,
+    }),
+    GJX,
+    0.014,
+    GJZ,
+  )
+  // Mancha de aceite debajo de donde reposa el camión
+  pln(
+    1.4,
+    2.2,
+    new THREE.MeshStandardMaterial({
+      color: 0x050508,
+      roughness: 0.04,
+      metalness: 0.85,
+      transparent: true,
+      opacity: 0.88,
+    }),
+    GJX,
+    0.016,
+    GJZ - 0.8,
+  )
   // Refuerzo de esquinas interior
   for (let ri2 = 0; ri2 < 3; ri2++) {
     box(0.32, 0.1, 6.8, M.metal, GJX, 1.0 + ri2 * 1.2, GJZ - 0.1)
@@ -1427,13 +1459,13 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
   // y otro la pared del fondo. Así el interior se lee como un garaje real (con su
   // fuente de luz a la vista) y no como una caja gris cuando la puerta se abre.
   const gjLampHousing = mat(0x171715, 0, 0, 0.7, 0.3)
-  const gjLampTube = mat(0xfff4dc, 0xffeec0, 5.5, 0.2)
+  const gjLampTube = mat(0xfff4dc, 0xffeec0, 8.5, 0.2) // fluorescentes más brillantes
   for (const lz of [GJZ + 0.4, GJZ - 1.9]) {
     box(3.0, 0.12, 0.36, gjLampHousing, GJX, 4.0, lz) // carcasa metálica
     box(2.7, 0.06, 0.24, gjLampTube, GJX, 3.92, lz) // tubo fluorescente encendido
   }
-  ptL(0xffd9a0, 6.5, 13, GJX, 3.4, GJZ + 0.2) // foco cálido sobre el camión
-  ptL(0xffc890, 4.2, 11, GJX, 2.6, GJZ - 2.7) // foco que baña la pared del fondo
+  ptL(0xffd9a0, 11.0, 16, GJX, 3.4, GJZ + 0.2) // foco cálido sobre el camión (potenciado para visibilidad)
+  ptL(0xffc890, 7.5, 14, GJX, 2.6, GJZ - 2.7) // foco pared del fondo
   box(7, 0.12, 0.18, gjWall, GJX, 0.06, GJZ + 3.62)
   // Camioneta vieja en el interior (cabina + ruedas).
   const gjVanX = GJX - 1.8
@@ -2647,15 +2679,19 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
 
   // ── CAMIÓN MILITAR DE TRASLADO — modelo detallado (oculto hasta animación) ──
   const truckGroup = new THREE.Group()
-  const tkBodyMat = matTex(TX.rust, 0x4a3318, 0, 0, 0.9, 0.14, 1.2) // chapa oxidada
-  const tkCabMat = mat(0x35270e, 0, 0, 0.88, 0.18)
-  const tkMetMat = mat(C.metal, 0, 0, 0.45, 0.72)
+  // Olive drab con textura óxido — camión militar envejecido pero identificable
+  const tkBodyMat = matTex(TX.rust, 0x5c6442, 0, 0, 0.84, 0.1, 1.6)
+  const tkCabMat = matTex(TX.rust, 0x4a5234, 0, 0, 0.8, 0.15, 1.2)
+  // Chasis y piezas metálicas con reflectividad alta para captarla luz de los faros
+  const tkMetMat = mat(C.metal, 0, 0, 0.38, 0.78)
+  // Cristal con tinte oscuro + reflejo
   const tkGlsMat = new THREE.MeshStandardMaterial({
-    color: 0x445566,
+    color: 0x3a5060,
     transparent: true,
-    opacity: 0.48,
-    roughness: 0.06,
-    metalness: 0.35,
+    opacity: 0.55,
+    roughness: 0.04,
+    metalness: 0.45,
+    envMapIntensity: 1.2,
   })
 
   // Chasis (largueros longitudinales)
@@ -2889,6 +2925,7 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
     tmpM.identity().setPosition(tmpV)
     iTSmoke.setMatrixAt(i, tmpM)
   }
+  iTSmoke.count = 0 // no dibujar nada hasta que arranque la animación
   iTSmoke.instanceMatrix.needsUpdate = true
   root.add(iTSmoke)
 
@@ -2915,6 +2952,7 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
   const tkTargetQuat = new THREE.Quaternion()
   let tkTurnRate = 0
   const playTransferAnimation = () => {
+    if (transferStart >= 0 || transferQueued) return // ya corriendo, ignorar
     transferQueued = true
   }
 
@@ -3057,6 +3095,8 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
       tkSteerQuat.setFromEuler(tmpEuler.set(0, initAngle, 0))
       truckGroup.quaternion.copy(tkSteerQuat)
       tkTurnRate = 0
+      // Puerta del garaje: abrir de inmediato para mostrar el camión desde el primer frame
+      gjDoorPivot.position.y = 3.6
       // Portón de traslados: abrir de inmediato (sin animación gradual)
       portonPivotR.rotation.y = Math.PI * 0.55
       portonPivotL.rotation.y = -(Math.PI * 0.55)
@@ -3071,7 +3111,8 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
       }
       iTSmoke.instanceMatrix.needsUpdate = true
     }
-    // TIRE SMOKE UPDATE — el humo crece y sube mientras vive
+    // TIRE SMOKE UPDATE — solo procesar cuando la animación está activa
+    iTSmoke.count = transferStart >= 0 ? NUM_TSMOKE : 0
     let updatedTSmoke = false
     for (let i = 0; i < NUM_TSMOKE; i++) {
       if (tSmokeLife[i] > 0) {
@@ -3109,22 +3150,21 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
       const DRIVE_DUR = 5.0
       const DRIVE_END = DRIVE_START + DRIVE_DUR
 
-      // ── Puerta garaje: roll-up (sube verticalmente) ──
-      const doorUp = 3.6 // cuánto sube para desaparecer en el techo
+      // ── Puerta garaje: ya está abierta (se abrió en transferQueued); solo animamos el cierre ──
+      const doorUp = 3.6
       const doorCloseStart = DRIVE_END - 0.8
-      if (tk <= DRIVE_START) {
-        gjDoorPivot.position.y = doorUp * Math.min(tk / DRIVE_START, 1)
-      } else if (tk >= doorCloseStart) {
+      if (tk >= doorCloseStart) {
         gjDoorPivot.position.y = doorUp * Math.max(1 - (tk - doorCloseStart) / 1.2, 0)
       }
 
       // Portón de traslados: ya abierto desde el inicio (sin animación gradual)
 
-      // ── Faros + luces traseras — encendido dramático ──
-      const headProg = Math.min(Math.max((tk - 0.5) / 0.6, 0), 1)
-      const tailProg = Math.min(Math.max((tk - 0.3) / 0.4, 0), 1)
-      // Parpadeo sutil de ignición en los primeros 0.1s
-      const ignitionFlicker = headProg < 0.15 ? 0.5 + Math.random() * 0.5 : 1.0
+      // ── Faros + luces traseras — encendido desde frame 0 para visibilidad inmediata ──
+      // headProg arranca en 0.20 (20% brillante desde t=0) y llega a 1.0 en ~0.48s
+      const headProg = Math.min(Math.max((tk + 0.12) / 0.6, 0), 1)
+      const tailProg = Math.min(Math.max((tk + 0.08) / 0.4, 0), 1)
+      // Parpadeo de ignición mientras headProg < 0.55 (el rango de arranque)
+      const ignitionFlicker = headProg < 0.55 ? 0.5 + Math.random() * 0.5 : 1.0
       if (truckGroup.visible) {
         tkLight.intensity = headProg * ignitionFlicker * 22
         tkSpotL.intensity = headProg * ignitionFlicker * 18
@@ -3185,9 +3225,9 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
 
         // HUMO DE RUEDAS — emisión continua durante la marcha, muy densa en curvas
         if (tk >= DRIVE_START && tk < DRIVE_END) {
-          // En curva pronunciada: humo muy denso; en recta: tenue
+          // En curva pronunciada: humo muy denso; en recta: visible pero moderado
           const isDrifting = tkTurnRate > 0.08
-          const smokeProbPerFrame = isDrifting ? 0.95 : 0.35
+          const smokeProbPerFrame = isDrifting ? 0.95 : 0.55
           const smokeLife = isDrifting ? 1.8 : 1.1
 
           if (Math.random() < smokeProbPerFrame) {
@@ -3196,21 +3236,21 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
             // Emitir 2-4 partículas por rueda en curvas para nube más densa
             const emitCount = isDrifting ? 3 : 1
             for (let ec = 0; ec < emitCount; ec++) {
-              // Rueda izquierda trasera
+              // Rueda izquierda trasera — spawn a 0.32 de altura para quedar sobre el suelo
               tSmokeLife[tSmokeIdx] = smokeLife * (0.7 + Math.random() * 0.6)
               tSmokeMaxLife[tSmokeIdx] = tSmokeLife[tSmokeIdx]
-              tmpV2.set(-0.82 + (Math.random() - 0.5) * 0.15, 0.12 + Math.random() * 0.1, -1.5)
+              tmpV2.set(-0.82 + (Math.random() - 0.5) * 0.15, 0.32 + Math.random() * 0.12, -1.5)
               tmpV2.applyMatrix4(truckGroup.matrix)
-              tmpM.identity().makeScale(0.6, 0.6, 0.6).setPosition(tmpV2)
+              tmpM.identity().makeScale(1.0, 1.0, 1.0).setPosition(tmpV2)
               iTSmoke.setMatrixAt(tSmokeIdx, tmpM)
               tSmokeIdx = (tSmokeIdx + 1) % NUM_TSMOKE
 
               // Rueda derecha trasera
               tSmokeLife[tSmokeIdx] = smokeLife * (0.7 + Math.random() * 0.6)
               tSmokeMaxLife[tSmokeIdx] = tSmokeLife[tSmokeIdx]
-              tmpV2.set(0.82 + (Math.random() - 0.5) * 0.15, 0.12 + Math.random() * 0.1, -1.5)
+              tmpV2.set(0.82 + (Math.random() - 0.5) * 0.15, 0.32 + Math.random() * 0.12, -1.5)
               tmpV2.applyMatrix4(truckGroup.matrix)
-              tmpM.identity().makeScale(0.6, 0.6, 0.6).setPosition(tmpV2)
+              tmpM.identity().makeScale(1.0, 1.0, 1.0).setPosition(tmpV2)
               iTSmoke.setMatrixAt(tSmokeIdx, tmpM)
               tSmokeIdx = (tSmokeIdx + 1) % NUM_TSMOKE
             }

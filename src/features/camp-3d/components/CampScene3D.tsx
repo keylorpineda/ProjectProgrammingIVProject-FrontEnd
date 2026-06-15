@@ -45,7 +45,7 @@ const PROFILE_MARKERS: Record<Camp3DRole, { pos: [number, number, number]; route
   admin: { pos: [0, 3.3, -6.6], route: "/admin/profile" }, // ventana 2do piso CG
   camp_leader: { pos: [-4.4, 1.8, -10], route: "/campleader/dashboard" }, // ala lateral CG
   resource_manager: { pos: [-8.3, 2.2, 4], route: "/camp-manager" }, // oficina del almacén
-  travel_manager: { pos: [10.2, 2, 11.6], route: "/travel-manager/dashboard" }, // despacho garaje
+  travel_manager: { pos: [11.0, 1.5, 6.2], route: "/travel-manager/dashboard" }, // fondo del garaje (lejos de la entrada)
   worker: { pos: [12.8, 1.5, -3.1], route: "/worker/dashboard" }, // default: apartamentos
 }
 
@@ -232,8 +232,8 @@ const drawMinimap = (mmX: CanvasRenderingContext2D, cam: CameraState) => {
 // Keyframes de cámara en coordenadas de MUNDO (raw × SCENE_SCALE). La cámara
 // orbital se reconstruye cada frame desde camState, así que basta con interpolar
 // theta/phi/radius/target a lo largo de estos puntos para "guionar" el plano.
-// Sincronizado con playTransferAnimation (puerta 0-1.4s, recorrido 1.4-9.4s):
-// arranca pegado al garaje y va siguiendo al camión hasta el portón principal.
+// Keyframe 0: cámara frente a la entrada del garaje (exterior, z>19.6 world),
+// mirando hacia el interior donde el camión está aparcado — la puerta ya abrió.
 interface CineKey {
   t: number
   target: [number, number, number]
@@ -242,11 +242,18 @@ interface CineKey {
   radius: number
 }
 const CINE_KEYS: CineKey[] = [
-  { t: 0.0, target: [18.9, 2.0, 13.0], theta: 1.9, phi: 1.14, radius: 13 },
-  { t: 1.8, target: [18.0, 1.6, 19.0], theta: 2.1, phi: 1.06, radius: 16 },
-  { t: 3.5, target: [11.0, 1.6, 22.5], theta: 2.4, phi: 1.0, radius: 20 },
-  { t: 5.5, target: [2.0, 2.0, 23.5], theta: 2.7, phi: 0.95, radius: 26 },
-  { t: 7.2, target: [0.0, 2.0, 22.0], theta: 2.9, phi: 0.95, radius: 30 },
+  // t=0: cámara casi en la entrada del garaje (radius=7 → z≈18.8 world, entrada en z=16.9).
+  // El camión llena el frame desde dentro — sus faros encendidos son lo primero que se ve.
+  // phi=1.40 pone y≈2.2, exactamente a altura de los faros del camión.
+  { t: 0.0, target: [18.9, 1.0, 11.9], theta: 1.571, phi: 1.4, radius: 7 },
+  // t=1.8: retrocede y sube levemente para encuadrar la salida completa
+  { t: 1.8, target: [18.0, 1.6, 19.5], theta: 2.05, phi: 1.12, radius: 20 },
+  // t=3.5: seguimiento al giro en la carretera de acceso
+  { t: 3.5, target: [11.0, 1.6, 22.5], theta: 2.4, phi: 1.0, radius: 23 },
+  // t=5.5: camión pasando el portón principal, plano amplio
+  { t: 5.5, target: [2.0, 2.0, 23.5], theta: 2.7, phi: 0.95, radius: 29 },
+  // t=7.2: plano panorámico de despedida
+  { t: 7.2, target: [0.0, 2.0, 22.0], theta: 2.9, phi: 0.95, radius: 34 },
 ]
 const CINE_DURATION = 7.8
 // Nonce del store ya consumido; module-level para sobrevivir remounts del overlay.
@@ -376,7 +383,9 @@ export default function CampScene3D({ campId, onClose, onReady }: Props) {
   const [showCine, setShowCine] = useState(false)
 
   const startCinematic = useCallback(() => {
-    if (!handlesRef.current) return
+    if (!handlesRef.current || cineActiveRef.current) return // ya activa, ignorar
+    // Ocultar el marcador de perfil para que no aparezca en la cinemática
+    if (profileRef.current) profileRef.current.group.visible = false
     handlesRef.current.playTransferAnimation()
     cineActiveRef.current = true
     cineStartRef.current = null
@@ -474,6 +483,8 @@ export default function CampScene3D({ campId, onClose, onReady }: Props) {
         driveCinematicCamera(ct, ctx.camState)
         if (ct > CINE_DURATION) {
           cineActiveRef.current = false
+          // Restaurar marcador de perfil al terminar la cinemática
+          if (profileRef.current) profileRef.current.group.visible = true
           setShowCine(false)
         }
       }
