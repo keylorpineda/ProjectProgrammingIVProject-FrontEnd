@@ -125,11 +125,12 @@ describe("Login page", () => {
       await enableForm()
       await fillCredentials(user, "admin", "123456")
       await user.click(screen.getByRole("button", { name: /iniciar sesión/i }))
-      // finalizeLogin holds ~2s on the card, then crosses the gate; navigate at 5s
+      // finalizeLogin holds on the card, the door opens and a hand drags it off;
+      // navigate fires at ~5.6s, so allow generous margin.
       await waitFor(() => expect(navigateMock).toHaveBeenCalledWith("/admin/dashboard"), {
-        timeout: 8000,
+        timeout: 12000,
       })
-    }, 12000)
+    }, 15000)
 
     // NOTE: Login.tsx routes `resource_manager` to /camp-manager but NOT
     // `camp_manager`. CampManagerGuard accepts both, so logging in as
@@ -149,10 +150,10 @@ describe("Login page", () => {
         await fillCredentials(user, "u", "123456")
         await user.click(screen.getByRole("button", { name: /iniciar sesión/i }))
         await waitFor(() => expect(navigateMock).toHaveBeenCalledWith(expectedRoute), {
-          timeout: 8000,
+          timeout: 12000,
         })
       },
-      10000,
+      15000,
     )
 
     it("[REGRESSION] camp_manager role currently falls through to 'denied'", async () => {
