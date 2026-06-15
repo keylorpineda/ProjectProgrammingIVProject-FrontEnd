@@ -1393,10 +1393,47 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
     drib.position.set(0, 0.3 + dp * 0.7, 0.06)
     gjDoorPivot.add(drib)
   }
+  // Hilera de ventanas superiores "iluminadas" desde dentro (paneles emisivos
+  // cálidos). Hace que el portón —lo que se ve la mayor parte del tiempo, cerrado—
+  // se lea como un taller con luz y vida adentro, en vez de una chapa gris.
+  // Offset en Z > 0.13: las costillas del portón sobresalen ~0.12, así estos
+  // detalles quedan POR DELANTE y no sufren z-fighting (antes desaparecían).
+  const gjWinMat = mat(0xffcc77, 0xffbb55, 2.2, 0.3)
+  const gjWinFrame = mat(0x141312, 0, 0, 0.6, 0.4)
+  for (let w = 0; w < 4; w++) {
+    const wx = -2.55 + w * 1.7
+    const frame = new THREE.Mesh(gBox(1.42, 0.72, 0.06), gjWinFrame)
+    frame.position.set(wx, 2.9, 0.14)
+    const pane = new THREE.Mesh(gBox(1.26, 0.56, 0.06), gjWinMat)
+    pane.position.set(wx, 2.9, 0.17)
+    gjDoorPivot.add(frame, pane)
+  }
+  // Franja de precaución pintada en el tramo inferior del portón: base amarilla
+  // con galones negros diagonales.
+  const gjHazardBase = new THREE.Mesh(gBox(6.7, 0.6, 0.05), mat(0xb89a1e, 0xb89a1e, 0.12))
+  gjHazardBase.position.set(0, 0.9, 0.14)
+  gjDoorPivot.add(gjHazardBase)
+  const gjChevron = mat(0x161410, 0, 0, 0.7)
+  for (let cv = 0; cv < 9; cv++) {
+    const ch = new THREE.Mesh(gBox(0.22, 0.78, 0.04), gjChevron)
+    ch.position.set(-2.8 + cv * 0.72, 0.9, 0.17)
+    ch.rotation.z = Math.PI / 5
+    gjDoorPivot.add(ch)
+  }
   gjDoorPivot.add(gjDoor)
   root.add(gjDoorPivot)
-  // Luz interior del garaje — más cálida e intensa para iluminar el camión
-  ptL(0xffbb66, 5.5, 12, GJX, 3.0, GJZ - 1.0)
+  // Iluminación interior del garaje — dos lámparas de taller colgantes (fixtures
+  // EMISIVOS visibles) bajo el cielo raso + dos focos cálidos: uno baña al camión
+  // y otro la pared del fondo. Así el interior se lee como un garaje real (con su
+  // fuente de luz a la vista) y no como una caja gris cuando la puerta se abre.
+  const gjLampHousing = mat(0x171715, 0, 0, 0.7, 0.3)
+  const gjLampTube = mat(0xfff4dc, 0xffeec0, 5.5, 0.2)
+  for (const lz of [GJZ + 0.4, GJZ - 1.9]) {
+    box(3.0, 0.12, 0.36, gjLampHousing, GJX, 4.0, lz) // carcasa metálica
+    box(2.7, 0.06, 0.24, gjLampTube, GJX, 3.92, lz) // tubo fluorescente encendido
+  }
+  ptL(0xffd9a0, 6.5, 13, GJX, 3.4, GJZ + 0.2) // foco cálido sobre el camión
+  ptL(0xffc890, 4.2, 11, GJX, 2.6, GJZ - 2.7) // foco que baña la pared del fondo
   box(7, 0.12, 0.18, gjWall, GJX, 0.06, GJZ + 3.62)
   // Camioneta vieja en el interior (cabina + ruedas).
   const gjVanX = GJX - 1.8
@@ -1411,8 +1448,61 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
     mk(gCyl(0.42, 0.42, 0.22, 10), M.tire, wx2, 0.42, wz2, 0, 0, Math.PI / 2)
   // Herramientas colgadas, cables, bidones de aceite y manchas en el suelo.
   box(0.04, 2, 0.04, cgCable, GJX + 3.9, 2, GJZ - 2)
-  for (let gti = 0; gti < 4; gti++)
-    box(0.25, 0.3, 0.04, gjTools, GJX + 1 + gti * 0.6, 2.2, GJZ - 3.4)
+
+  // ---- DISEÑO INTERIOR DEL TALLER ----
+  // Lo que la cámara encuadra cuando el camión sale del garaje es el CENTRO de la
+  // pared trasera (x≈GJX) — antes quedaba gris porque la decoración estaba en los
+  // costados. Ahora la decoración de PARED va centrada en GJX (planos finos contra
+  // el muro), y el MOBILIARIO de piso se arrima a la pared DERECHA para no chocar
+  // con el camión, que ocupa el centro del garaje.
+  const BW = GJZ - 3.28 // cara interior de la pared trasera
+  const RW = GJX + 3.05 // carril de piso junto a la pared derecha
+  // -- Pared trasera (centrada en x = GJX) --
+  // Pegboard ancho — su azul rompe el gris liso del muro del fondo.
+  box(4.6, 1.7, 0.07, mat(0x35506b, 0, 0, 0.78, 0.2), GJX, 2.55, BW)
+  // Herramientas colgadas a lo ancho del pegboard.
+  for (let h = 0; h < 8; h++)
+    box(0.07, 0.4 + (h % 3) * 0.22, 0.05, gjTools, GJX - 2.0 + h * 0.57, 2.6, BW + 0.08)
+  // Letrero descolorido grande sobre el pegboard.
+  box(2.4, 1.0, 0.05, mat(0x8a6f30, 0x1a1308, 0.18), GJX, 3.55, BW + 0.04)
+  // Franja de precaución amarilla pintada en el zócalo del muro.
+  box(5.0, 0.42, 0.06, mat(0xb8a02a, 0x141200, 0.12), GJX, 0.5, BW + 0.04)
+  // Conductos eléctricos verticales sobre el muro.
+  for (const cx of [GJX - 2.5, GJX + 2.5])
+    box(0.09, 3.4, 0.09, mat(0x2a2a28, 0, 0, 0.6, 0.5), cx, 1.9, BW + 0.05)
+  // Reloj de pared (disco vertical) para detalle en el centro-alto.
+  mk(
+    gCyl(0.32, 0.32, 0.06, 16),
+    mat(0xe8e4d8, 0x1a1a16, 0.1),
+    GJX + 1.6,
+    3.5,
+    BW + 0.06,
+    0,
+    Math.PI / 2,
+  )
+  // -- Mobiliario de piso contra la pared DERECHA (despejado del camión) --
+  const gjBenchTop = mat(0x6e5636, 0, 0, 0.85)
+  const gjLeg = mat(0x262624, 0, 0, 0.6, 0.5)
+  box(0.8, 0.13, 3.4, gjBenchTop, RW, 1.05, GJZ - 0.6) // banco a lo largo del muro derecho
+  for (const lz of [GJZ - 2.1, GJZ + 0.9])
+    for (const lx of [RW - 0.3, RW + 0.3]) box(0.1, 1.0, 0.1, gjLeg, lx, 0.52, lz)
+  // Tornillo de banco y lata de aceite sobre el tablero.
+  cyl(0.13, 0.13, 0.28, 8, mat(0x4a4d50, 0, 0, 0.4, 0.7), RW, 1.26, GJZ - 1.6)
+  cyl(0.15, 0.15, 0.32, 10, mat(0xb5651d, 0, 0, 0.5, 0.3), RW, 1.28, GJZ + 0.4)
+  // Caja de herramientas roja rodante en la esquina trasera derecha.
+  box(0.7, 1.25, 1.1, mat(0x8a1f18, 0x2a0604, 0.12, 0.5, 0.3), RW, 0.63, GJZ - 2.4)
+  for (let dch = 0; dch < 4; dch++)
+    box(0.04, 0.03, 0.96, mat(0x120505), RW - 0.37, 0.32 + dch * 0.26, GJZ - 2.4)
+  // Estantería metálica alta a la izquierda (sobre la camioneta) con cajas y latas.
+  const gjShelf = mat(0x47433c, 0, 0, 0.7, 0.4)
+  for (let s = 0; s < 2; s++) box(2.2, 0.05, 0.55, gjShelf, GJX - 2.6, 2.5 + s * 0.8, BW + 0.2)
+  box(0.5, 0.45, 0.4, mat(0x6e5a32), GJX - 3.2, 2.78, BW + 0.2)
+  box(0.42, 0.4, 0.38, mat(0x5a4d6e), GJX - 2.4, 2.76, BW + 0.2)
+  cyl(0.16, 0.16, 0.38, 10, mat(0x2f6d3a, 0, 0, 0.5, 0.3), GJX - 1.7, 2.76, BW + 0.2)
+  box(0.5, 0.45, 0.4, mat(0x6e5a32), GJX - 2.7, 3.55, BW + 0.2)
+  // Pila de neumáticos de repuesto contra la pared derecha (zona delantera).
+  for (let ts = 0; ts < 3; ts++)
+    mk(gCyl(0.48, 0.48, 0.28, 12), M.tire, RW, 0.16 + ts * 0.28, GJZ + 2.0)
   cyl(0.2, 0.22, 0.5, 8, M.brl_y, GJX + 3.2, 0.25, GJZ + 2.5)
   cyl(0.2, 0.22, 0.5, 8, M.brl_y, GJX + 2.7, 0.25, GJZ + 2.8)
   cyl(0.2, 0.22, 0.5, 8, M.brl_y, GJX + 2.95, 0.75, GJZ + 2.65)
@@ -1424,7 +1514,8 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
     [GJX + 1.8, GJZ + 4.3],
   ])
     pln(0.8, 0.6, gjOil, ox, 0.018, oz, Math.random() * Math.PI)
-  ptL(0xff9944, 4.0, 10, GJX, 2.5, GJZ)
+  // (las dos lámparas de taller de arriba ya iluminan el interior; se eliminó
+  // el punto de luz redundante del centro para mantener el conteo estable)
 
   // ---- FIRE PIT ----
   cyl(0.62, 0.72, 0.18, 10, mat(0x2a2a20), -3, 0.09, 8)
@@ -2443,6 +2534,9 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
   // ---- ANIMACIONES PROGRAMADAS (exploración y traslado) ----
   const tmpV = new THREE.Vector3()
   const tmpV2 = new THREE.Vector3()
+  // Euler reutilizable para la dirección del camión: evita alocar uno por frame
+  // (la presión de GC era una de las causas del micro-tirón al iniciar).
+  const tmpEuler = new THREE.Euler()
 
   // Figuras humanoides realistas — torso, cabeza, cuello, extremidades articuladas
   // con brazo/pierna swing durante el caminar.
@@ -2960,7 +3054,7 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
       // Orientación inicial: atan2 sobre coordenadas locales evita confusión world/local
       transferCurve.getPoint(0.015, tmpV2)
       const initAngle = Math.atan2(tmpV2.x - tmpV.x, tmpV2.z - tmpV.z)
-      tkSteerQuat.setFromEuler(new THREE.Euler(0, initAngle, 0))
+      tkSteerQuat.setFromEuler(tmpEuler.set(0, initAngle, 0))
       truckGroup.quaternion.copy(tkSteerQuat)
       tkTurnRate = 0
       // Portón de traslados: abrir de inmediato (sin animación gradual)
@@ -3071,7 +3165,7 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
         const lookAhead = Math.min(tu + 0.06, 1)
         transferCurve.getPoint(lookAhead, tmpV2)
         const tAngle = Math.atan2(tmpV2.x - truckGroup.position.x, tmpV2.z - truckGroup.position.z)
-        tkTargetQuat.setFromEuler(new THREE.Euler(0, tAngle, 0))
+        tkTargetQuat.setFromEuler(tmpEuler.set(0, tAngle, 0))
         tkTurnRate = tkSteerQuat.angleTo(tkTargetQuat)
         // slerp más alto: curvas más suaves y responsivas
         const slerpFactor = Math.min(0.18 + frameSpeed * 55, 0.45)

@@ -130,7 +130,7 @@ const BUILDING_INFO: Record<string, { desc: string; icon: string; color: string 
   hq: { desc: "Comando y Operaciones", icon: "⌂", color: "#44aaff" },
   gate: { desc: "Control de Admisiones", icon: "⊕", color: "#ffaa22" },
   barracks: { desc: "Gestión de Personal", icon: "▲", color: "#44aaff" },
-  watchtower: { desc: "Misiones y Vigilancia", icon: "◎", color: "#ff4444" },
+  watchtower: { desc: "Misiones y Vigilancia", icon: "◎", color: "#bb66ff" },
   warehouse: { desc: "Inventario y Recursos", icon: "▪", color: "#6eff44" },
   garage: { desc: "Traslados y Logística", icon: "⚙", color: "#ffdd00" },
   profile: { desc: "Tu Espacio Personal", icon: "✦", color: "#aaddff" },
@@ -387,6 +387,13 @@ export default function CampScene3D({ campId, onClose, onReady }: Props) {
     onReady: (ctx) => {
       const handles = buildCampScene(ctx.scene, campId)
       handlesRef.current = handles
+
+      // Precompila TODOS los shaders de la escena antes de arrancar el loop.
+      // Sin esto, la primera vez que la cámara cinemática enfoca el garaje y el
+      // camión, Three.js compila esos shaders de forma síncrona y "congela" un
+      // par de frames justo al inicio de la animación. Pagarlo aquí (mientras el
+      // overlay aún se abre) hace que el traslado arranque fluido.
+      ctx.renderer.compile(ctx.scene, ctx.camera)
       // Exponer en window para pruebas desde consola del navegador
       ;(window as unknown as Record<string, unknown>).__playTransfer = () => startCinematic()
 
@@ -500,7 +507,8 @@ export default function CampScene3D({ campId, onClose, onReady }: Props) {
   })
 
   // Paso Reactivo — conecta endpoints del backend con las refs visuales.
-  useSceneReactiveData(campId, handlesRef)
+  // Pasamos el rol para no pedir endpoints que el backend deniega (403) al worker.
+  useSceneReactiveData(campId, handlesRef, role)
 
   // Cuando la escena YA está abierta y se crea un traslado, el store incrementa
   // `transferCinematic`; aquí lo detectamos y disparamos la cinemática.

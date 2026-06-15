@@ -193,23 +193,30 @@ body {
   }
 }
 
-button {
-  cursor: pointer;
-  border: none;
-  background: none;
-  font-family: inherit;
-  transition: all 0.2s ease;
-}
+/* Resets de elementos en @layer base: en Tailwind v4 el CSS sin capa gana
+   sobre las utilidades (que viven en @layer utilities). Sin esta capa, este
+   `background: none` anulaba clases como `bg-[#4c6351]` y dejaba botones
+   "invisibles" (texto blanco sobre fondo transparente). Dentro de base, las
+   utilidades vuelven a poder sobreescribirlo. */
+@layer base {
+  button {
+    cursor: pointer;
+    border: none;
+    background: none;
+    font-family: inherit;
+    transition: all 0.2s ease;
+  }
 
-a {
-  color: var(--primary-color);
-  text-decoration: none;
-  transition: color 0.2s ease;
-}
+  a {
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
 
-a:hover {
-  color: #ffb703;
-  text-shadow: 0 0 8px var(--primary-glow);
+  a:hover {
+    color: #ffb703;
+    text-shadow: 0 0 8px var(--primary-glow);
+  }
 }
 
 /* Thematic Animations */

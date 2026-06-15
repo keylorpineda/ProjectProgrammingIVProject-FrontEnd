@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react"
 
-import type { SceneHandles } from "../types/scene.types"
+import type { Camp3DRole, SceneHandles } from "../types/scene.types"
 import type * as THREE from "three"
 
 import { getPendingAdmissions } from "@/features/admissions/services/admissions.service"
@@ -14,6 +14,15 @@ import { getCampTransfers } from "@/features/transfers/services/transfers.servic
 const POLL_MS = 8_000
 
 /**
+ * Endpoints que cada source reactivo consulta están protegidos por rol en el
+ * backend. `worker` no tiene acceso a dashboard, admisiones, traslados ni al
+ * listado de personas (devuelven 403); sí puede leer exploraciones e
+ * inventario. El resto de roles puede consultar todo. Gateamos aquí para no
+ * disparar requests que el backend va a rechazar (y ensucian la consola).
+ */
+const isManagerRole = (role: Camp3DRole): boolean => role !== "worker"
+
+/**
  * Reactive data bridge: polls backend endpoints and drives the 3D scene's
  * visual cues (lights, colors, animations) based on real camp state.
  *
@@ -23,6 +32,7 @@ const POLL_MS = 8_000
 export function useSceneReactiveData(
   campId: string,
   handlesRef: React.RefObject<SceneHandles | null>,
+  role: Camp3DRole,
 ) {
   // Track previous state to avoid re-triggering animations.
   const prevExploActive = useRef(false)
@@ -39,61 +49,69 @@ export function useSceneReactiveData(
 
       const refs = handles.reactiveRefs
 
+      // worker solo puede consultar exploraciones e inventario; el resto de
+      // sources devuelven 403 para ese rol, así que ni los pedimos.
+      const canPollManagerData = isManagerRole(role)
+
       // ---- 1. DASHBOARD → Cuartel General (danger_level) ----
-      try {
-        const metrics = await getDashboardMetrics(campId)
-        // Derive danger_level heuristic: critical resources or high unavailable people
-        const criticalResources = metrics.warehouse?.resources_with_alerts ?? 0
-        const occupancy = metrics.camp?.occupancy_rate ?? 0
-        const unavailable = metrics.camp?.unavailable_people ?? 0
-        const total = metrics.camp?.total_people ?? 1
+      // worker no tiene acceso (403); deja la bandera/luz en su estado default.
+      if (canPollManagerData)
+        try {
+          const metrics = await getDashboardMetrics(campId)
+          // Derive danger_level heuristic: critical resources or high unavailable people
+          const criticalResources = metrics.warehouse?.resources_with_alerts ?? 0
+          const occupancy = metrics.camp?.occupancy_rate ?? 0
+          const unavailable = metrics.camp?.unavailable_people ?? 0
+          const total = metrics.camp?.total_people ?? 1
 
-        let dangerLevel: "critical" | "high" | "low" = "low"
-        if (criticalResources >= 3 || occupancy > 95) dangerLevel = "critical"
-        else if (criticalResources >= 1 || unavailable / total > 0.3) dangerLevel = "high"
+          let dangerLevel: "critical" | "high" | "low" = "low"
+          if (criticalResources >= 3 || occupancy > 95) dangerLevel = "critical"
+          else if (criticalResources >= 1 || unavailable / total > 0.3) dangerLevel = "high"
 
-        // Flag color: CRITICAL → red, else blue (original)
-        const flagMat = refs.hqFlag.material as THREE.MeshStandardMaterial
-        if (dangerLevel === "critical") {
-          flagMat.color.setHex(0xff1100)
-          flagMat.emissive.setHex(0xff1100)
-          flagMat.emissiveIntensity = 0.6
-        } else {
-          flagMat.color.setHex(0x223388)
-          flagMat.emissive.setHex(0x112266)
-          flagMat.emissiveIntensity = 0.1
+          // Flag color: CRITICAL → red, else blue (original)
+          const flagMat = refs.hqFlag.material as THREE.MeshStandardMaterial
+          if (dangerLevel === "critical") {
+            flagMat.color.setHex(0xff1100)
+            flagMat.emissive.setHex(0xff1100)
+            flagMat.emissiveIntensity = 0.6
+          } else {
+            flagMat.color.setHex(0x223388)
+            flagMat.emissive.setHex(0x112266)
+            flagMat.emissiveIntensity = 0.1
+          }
+
+          // Interior light: HIGH → reduced intensity (flicker handled in animate loop);
+          // LOW → stable warm glow.
+          if (dangerLevel === "high") {
+            refs.hqInteriorLight.intensity = 1.2
+          } else if (dangerLevel === "critical") {
+            refs.hqInteriorLight.intensity = 0.6
+          } else {
+            refs.hqInteriorLight.intensity = 2.5
+          }
+        } catch {
+          /* Dashboard API may 404 on some roles — leave defaults */
         }
-
-        // Interior light: HIGH → reduced intensity (flicker handled in animate loop);
-        // LOW → stable warm glow.
-        if (dangerLevel === "high") {
-          refs.hqInteriorLight.intensity = 1.2
-        } else if (dangerLevel === "critical") {
-          refs.hqInteriorLight.intensity = 0.6
-        } else {
-          refs.hqInteriorLight.intensity = 2.5
-        }
-      } catch {
-        /* Dashboard API may 404 on some roles — leave defaults */
-      }
 
       // ---- 2. ADMISSIONS → Garita del Guardia ----
-      try {
-        const admissions = await getPendingAdmissions({ campId })
-        const pendingCount = admissions.total ?? admissions.data?.length ?? 0
+      // worker no tiene acceso (403); deja la lámpara en su estado default.
+      if (canPollManagerData)
+        try {
+          const admissions = await getPendingAdmissions({ campId })
+          const pendingCount = admissions.total ?? admissions.data?.length ?? 0
 
-        if (pendingCount > 0) {
-          // Red emergency lamp
-          refs.gateEmergencyLamp.color.setHex(0xff2200)
-          refs.gateEmergencyLamp.intensity = 3.0
-        } else {
-          // Green stable
-          refs.gateEmergencyLamp.color.setHex(0x44ff44)
-          refs.gateEmergencyLamp.intensity = 1.5
+          if (pendingCount > 0) {
+            // Red emergency lamp
+            refs.gateEmergencyLamp.color.setHex(0xff2200)
+            refs.gateEmergencyLamp.intensity = 3.0
+          } else {
+            // Green stable
+            refs.gateEmergencyLamp.color.setHex(0x44ff44)
+            refs.gateEmergencyLamp.intensity = 1.5
+          }
+        } catch {
+          /* silent */
         }
-      } catch {
-        /* silent */
-      }
 
       // ---- 3. EXPLORATIONS → Torre de Vigilancia ----
       try {
@@ -173,34 +191,38 @@ export function useSceneReactiveData(
       }
 
       // ---- 5. TRANSFERS → Garaje ----
-      try {
-        const transfers = await getCampTransfers(campId)
-        // El camión sale físicamente cuando el traslado pasa a in_transit
-        // (pending → approved → in_transit → completed en el backend).
-        const hasInTransit = transfers.some((t) => t.status === "in_transit")
+      // worker no tiene acceso (403); el camión solo se anima para gestores.
+      if (canPollManagerData)
+        try {
+          const transfers = await getCampTransfers(campId)
+          // El camión sale físicamente cuando el traslado pasa a in_transit
+          // (pending → approved → in_transit → completed en el backend).
+          const hasInTransit = transfers.some((t) => t.status === "in_transit")
 
-        // Dispara la animación del camión solo en la transición false → true.
-        if (hasInTransit && !prevTransferActive.current) {
-          handles.playTransferAnimation()
+          // Dispara la animación del camión solo en la transición false → true.
+          if (hasInTransit && !prevTransferActive.current) {
+            handles.playTransferAnimation()
+          }
+          prevTransferActive.current = hasInTransit
+        } catch {
+          /* silent */
         }
-        prevTransferActive.current = hasInTransit
-      } catch {
-        /* silent */
-      }
 
       // ---- 6. PERSONS → Apartamentos (ventanas iluminadas) ----
-      try {
-        const persons = await getPersons({ campId, limit: 9999 })
-        const allPeople = persons.data ?? []
-        const total = allPeople.length || 1
-        const canWork = allPeople.filter((p) => p.can_work).length
-        const ratio = canWork / total
+      // worker no tiene acceso (403); deja las ventanas en su brillo default.
+      if (canPollManagerData)
+        try {
+          const persons = await getPersons({ campId, limit: 9999 })
+          const allPeople = persons.data ?? []
+          const total = allPeople.length || 1
+          const canWork = allPeople.filter((p) => p.can_work).length
+          const ratio = canWork / total
 
-        // emissiveIntensity 0.0–1.2 proportional to active worker ratio
-        refs.apartmentsLitWindows.emissiveIntensity = 0.1 + ratio * 1.1
-      } catch {
-        /* silent */
-      }
+          // emissiveIntensity 0.0–1.2 proportional to active worker ratio
+          refs.apartmentsLitWindows.emissiveIntensity = 0.1 + ratio * 1.1
+        } catch {
+          /* silent */
+        }
     }
 
     // Initial poll
@@ -213,5 +235,5 @@ export function useSceneReactiveData(
       cancelled = true
       window.clearInterval(id)
     }
-  }, [campId, handlesRef])
+  }, [campId, handlesRef, role])
 }
