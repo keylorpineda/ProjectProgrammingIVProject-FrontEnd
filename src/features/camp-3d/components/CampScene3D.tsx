@@ -268,7 +268,11 @@ function driveCinematicCamera(ct: number, cam: CameraState) {
   const span = b.t - a.t || 1
   const k = smoothstep(Math.max(0, Math.min(1, (ct - a.t) / span)))
   const mix = (x: number, y: number) => x + (y - x) * k
-  cam.target.set(mix(a.target[0], b.target[0]), mix(a.target[1], b.target[1]), mix(a.target[2], b.target[2]))
+  cam.target.set(
+    mix(a.target[0], b.target[0]),
+    mix(a.target[1], b.target[1]),
+    mix(a.target[2], b.target[2]),
+  )
   cam.theta = mix(a.theta, b.theta)
   cam.phi = mix(a.phi, b.phi)
   cam.radius = mix(a.radius, b.radius)
@@ -496,13 +500,13 @@ export default function CampScene3D({ campId, onClose, onReady }: Props) {
   // Cuando la escena YA está abierta y se crea un traslado, el store incrementa
   // `transferCinematic`; aquí lo detectamos y disparamos la cinemática.
   useEffect(() => {
-    const unsub = use3DStore.subscribe((state) => {
+    const unsubscribe = use3DStore.subscribe((state) => {
       if (state.transferCinematic > lastConsumedCinematic && handlesRef.current) {
         lastConsumedCinematic = state.transferCinematic
         startCinematic()
       }
     })
-    return unsub
+    return unsubscribe
   }, [startCinematic])
 
   useRaycaster(canvasRef, contextRef, targetsRef, {

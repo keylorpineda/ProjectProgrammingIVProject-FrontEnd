@@ -191,7 +191,9 @@
     "gpry",
     "embr",
     "Srcs",
-    "crossfade"
+    "crossfade",
+    "unsub",
+    "guionada"
   ],
   "ignorePaths": [
     "node_modules",

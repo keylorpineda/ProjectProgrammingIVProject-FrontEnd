@@ -109,7 +109,7 @@ export interface Scene3DState {
   /**
    * Contador que se incrementa cada vez que se pide la cinemática de salida del
    * camión (al crear un traslado). La escena observa el cambio para reproducir
-   * la animación con cámara guionada y letterbox. 0 = ninguna aún.
+   * la animación con cámara scripted y letterbox. 0 = ninguna aún.
    */
   transferCinematic: number
   /**
