@@ -5,10 +5,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { BadgeLogin } from "../BadgeLogin"
 
+import type * as ReactRouterDom from "react-router-dom"
+
 const navigate = vi.fn()
 
 vi.mock("react-router-dom", async (importOriginal) => {
-  const actual = (await importOriginal()) as Record<string, unknown>
+  const actual = await importOriginal<typeof ReactRouterDom>()
   return {
     ...actual,
     useNavigate: () => navigate,

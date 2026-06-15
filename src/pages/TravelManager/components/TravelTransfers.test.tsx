@@ -753,7 +753,7 @@ describe("TravelTransfers", () => {
       {
         pathname: "/travel/transfers",
         state: { openNewTransfer: true, selectedTransferId: "t2" },
-      } as unknown as string,
+      } as any,
     ])
 
     await waitFor(() => {

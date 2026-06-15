@@ -102,12 +102,12 @@ describe("Worker → Dashboard", () => {
   })
 
   it("refreshes the board clock on interval", async () => {
-    const setIntervalSpy = vi.spyOn(window, "setInterval").mockImplementation((callback) => {
+    const setIntervalSpy = vi.spyOn(window, "setInterval").mockImplementation(((callback: any) => {
       act(() => {
         callback()
       })
-      return 1 as unknown as ReturnType<typeof setInterval>
-    })
+      return 1 as any
+    }) as any)
     const clearIntervalSpy = vi.spyOn(window, "clearInterval").mockImplementation(() => {})
 
     const { unmount } = renderPage()
