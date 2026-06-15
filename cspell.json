@@ -200,7 +200,8 @@
     "isDrifting",
     "emitCount",
     "slerpFactor",
-    "lifeRatio"
+    "lifeRatio",
+    "scanline"
   ],
   "ignorePaths": [
     "node_modules",
