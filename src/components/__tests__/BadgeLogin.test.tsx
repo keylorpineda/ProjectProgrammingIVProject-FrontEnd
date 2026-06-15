@@ -1,4 +1,5 @@
-import { act, fireEvent, render, screen } from "@testing-library/react"
+﻿import { fireEvent } from "@testing-library/dom"
+import { act, render, screen } from "@testing-library/react"
 import { MemoryRouter } from "react-router-dom"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -7,7 +8,7 @@ import { BadgeLogin } from "../BadgeLogin"
 const navigate = vi.fn()
 
 vi.mock("react-router-dom", async (importOriginal) => {
-  const actual = await importOriginal()
+  const actual = (await importOriginal()) as Record<string, unknown>
   return {
     ...actual,
     useNavigate: () => navigate,

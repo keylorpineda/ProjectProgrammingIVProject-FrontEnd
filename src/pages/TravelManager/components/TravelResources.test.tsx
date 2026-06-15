@@ -1,5 +1,6 @@
-import * as reactQuery from "@tanstack/react-query"
-import { render, screen, fireEvent } from "@testing-library/react"
+﻿import * as reactQuery from "@tanstack/react-query"
+import { fireEvent } from "@testing-library/dom"
+import { render, screen } from "@testing-library/react"
 import { MemoryRouter } from "react-router-dom"
 import { vi, describe, it, expect, beforeEach } from "vitest"
 

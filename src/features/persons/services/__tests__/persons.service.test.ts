@@ -23,6 +23,8 @@ import {
   updatePersonStatus,
 } from "../persons.service"
 
+import type { PersonStatus } from "@/types/api.types"
+
 import api from "@/config/api"
 
 vi.mock("@/config/api", () => ({
@@ -63,7 +65,9 @@ describe("persons service", () => {
     })
 
     mockedApi.put.mockResolvedValueOnce({ data: { status: "injured" } })
-    await expect(updatePersonStatus("person-2", { status: "injured" })).resolves.toEqual({
+    await expect(
+      updatePersonStatus("person-2", { status: "injured" as PersonStatus }),
+    ).resolves.toEqual({
       status: "injured",
     })
 

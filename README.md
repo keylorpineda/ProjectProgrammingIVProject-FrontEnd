@@ -149,6 +149,5 @@ Playwright will launch headless browsers and perform full login sequences, dashb
 
 - 🌐 **Live Demo:** [Doomsday System UI](https://doomsday-system-ui.vercel.app/login)
 - 🔙 **Backend System Repository:** [Doomsday System API](https://github.com/keylorpineda/ProjectProgrammingIV-BackEnd)
-- 🎨 **Figma Design:** [View Designs (Placeholder)](#)
 - 📚 **React Documentation:** [React Docs](https://react.dev/)
 - ⚡ **Vite Documentation:** [Vite Docs](https://vitejs.dev/guide/)

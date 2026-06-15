@@ -1,4 +1,5 @@
-import { fireEvent, render, screen } from "@testing-library/react"
+﻿import { fireEvent } from "@testing-library/dom"
+import { render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 
 import RankingView from "../RankingView"

@@ -106,7 +106,7 @@ describe("Worker → Dashboard", () => {
       act(() => {
         callback()
       })
-      return 1
+      return 1 as unknown as ReturnType<typeof setInterval>
     })
     const clearIntervalSpy = vi.spyOn(window, "clearInterval").mockImplementation(() => {})
 

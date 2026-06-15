@@ -14,7 +14,7 @@ import { getCamps } from "@/features/camps/services/camps.service"
 import { getDashboardMetrics } from "@/features/dashboard/services/dashboard.service"
 import { useAuthStore, useTokenStore } from "@/store/useAuthStore"
 
-vi.mock("react-leaflet-cluster", () => ({ default: () => null }), { virtual: true })
+vi.mock("react-leaflet-cluster", () => ({ default: () => null }))
 vi.mock("@/features/map-test/components/ExplorationZoneMap", () => ({
   ExplorationZoneMap: () => <div data-testid="exploration-zone-map" />,
 }))
