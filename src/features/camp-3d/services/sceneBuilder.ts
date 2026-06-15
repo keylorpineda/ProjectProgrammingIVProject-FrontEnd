@@ -461,9 +461,9 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
     postPositions.push([19, pz])
   }
   for (let px2 = -19; px2 <= -5; px2 += 2.1) postPositions.push([px2, 14])
-  // Salta los postes del carril del garaje (x≈9..18) para dejar libre la salida.
+  // Eliminamos los postes de la derecha (x >= 5) para que el camión no atraviese al derrapar.
   for (let px3 = 5; px3 <= 19; px3 += 2.1) {
-    if (px3 < 9 || px3 > 18) postPositions.push([px3, 14])
+    if (px3 > 19) postPositions.push([px3, 14])
   }
   const iPosts = new THREE.InstancedMesh(postGeo, M.wood, postPositions.length)
   postPositions.forEach((p, i) => {
@@ -480,9 +480,7 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
   box(0.25, 2.8, 30, M.plank, -19, 1.4, 0)
   box(0.25, 2.8, 30, M.plank, 19, 1.4, 0)
   box(14, 2.8, 0.25, M.plank, -12, 1.4, 14)
-  // Tablero derecho partido: deja un hueco (x≈9..18) para la salida del garaje.
-  box(4, 2.8, 0.25, M.plank, 7, 1.4, 14)
-  box(1, 2.8, 0.25, M.plank, 18.5, 1.4, 14)
+  // Tableros derechos eliminados para dar espacio al derrape del camión.
   // rails
   box(40, 0.1, 0.1, M.wood, 0, 2.7, -15)
   box(40, 0.1, 0.1, M.wood, 0, 0.7, -15)
@@ -2772,16 +2770,40 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
   truckGroup.add(tkLight, tkSpotL, tkSpotR, tkRearLight)
   truckGroup.visible = false
   root.add(truckGroup)
+
+  // --- TIRE SMOKE (Drift) ---
+  const tireSmokeGeo = new THREE.SphereGeometry(0.2, 8, 8)
+  const tireSmokeMat = new THREE.MeshBasicMaterial({
+    color: 0x999999,
+    transparent: true,
+    opacity: 0.15,
+    depthWrite: false,
+  })
+  const NUM_TSMOKE = 120
+  const iTSmoke = new THREE.InstancedMesh(tireSmokeGeo, tireSmokeMat, NUM_TSMOKE)
+  const tSmokeLife: number[] = new Array(NUM_TSMOKE).fill(0)
+  let tSmokeIdx = 0
+  for (let i = 0; i < NUM_TSMOKE; i++) {
+    tmpV.set(0, -100, 0)
+    tmpM.identity().setPosition(tmpV)
+    iTSmoke.setMatrixAt(i, tmpM)
+  }
+  iTSmoke.instanceMatrix.needsUpdate = true
+  root.add(iTSmoke)
+
   // Curva suave: garaje → acceso → giro gradual a la principal → niebla
+  // Usamos puntos meticulosamente calculados para evitar overshoot (que se desvíe a la izquierda)
   const transferCurve = new THREE.CatmullRomCurve3([
-    new THREE.Vector3(GJX, 0, GJZ - 1.0), // dentro del garaje esperando
-    new THREE.Vector3(GJX, 0, GJZ + 5.0), // sale por la puerta
-    new THREE.Vector3(GJX, 0, GJZ + 10), // recto por carretera de acceso
-    new THREE.Vector3(GJX - 1, 0, GJZ + 13), // inicio del giro (gradual)
-    new THREE.Vector3(10, 0, 23.5), // giro medio
+    new THREE.Vector3(GJX, 0, GJZ - 1.0), // dentro del garaje
+    new THREE.Vector3(GJX, 0, GJZ + 6.0), // cruza la valla recto
+    new THREE.Vector3(GJX, 0, GJZ + 12.0), // mantiene recto en carretera de acceso
+    new THREE.Vector3(GJX, 0, GJZ + 14.0), // justo antes de empezar el giro
+    new THREE.Vector3(GJX - 0.2, 0, GJZ + 15.0), // giro muy sutil a la derecha
+    new THREE.Vector3(GJX - 1.0, 0, GJZ + 16.5), // acelerando el giro
+    new THREE.Vector3(GJX - 3.5, 0, GJZ + 19.0), // giro medio (drift)
     new THREE.Vector3(5, 0, 24.5), // giro avanzado
     new THREE.Vector3(2, 0, 25.5), // casi en la principal
-    new THREE.Vector3(0, 0, 28), // en la carretera principal
+    new THREE.Vector3(0, 0, 28), // recta en la principal
     new THREE.Vector3(0, 0, 38), // avanzando
     new THREE.Vector3(0.2, 0, 51), // desaparece en niebla
   ])
@@ -2916,12 +2938,6 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
     // 1.4-9.4s: camión avanza por curva (8s para recorrer toda la carretera)
     //   ├─ 0-30%  : sale del garaje, gira hacia el portón
     //   ├─ 40-55%: portón del campamento se abre
-    //   ├─ 55-65%: cruza el portón
-    //   ├─ 65-70%: portón se cierra
-    //   └─ 75%+ : se desvanece en la niebla
-    // 8.0s: puerta del garaje baja
-    // 9.4s: camión invisible (en la niebla)
-    // 11s : reset
     if (transferQueued) {
       transferQueued = false
       transferStart = t
@@ -2937,6 +2953,32 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
       truckGroup.lookAt(tmpV2.x, 0, tmpV2.z)
       truckGroup.rotateY(Math.PI)
     }
+    // TIRE SMOKE UPDATE
+    let updatedTSmoke = false
+    for (let i = 0; i < NUM_TSMOKE; i++) {
+      if (tSmokeLife[i] > 0) {
+        tSmokeLife[i] -= 0.016
+        if (tSmokeLife[i] <= 0) {
+          tmpV.set(0, -100, 0)
+          tmpM.identity().setPosition(tmpV)
+          iTSmoke.setMatrixAt(i, tmpM)
+        } else {
+          const l = tSmokeLife[i]
+          const sc = 1.0 + (1.0 - l) * 2.5
+          iTSmoke.getMatrixAt(i, tmpM)
+          const px = tmpM.elements[12]
+          let py = tmpM.elements[13]
+          const pz = tmpM.elements[14]
+          py += 0.04 // el humo sube
+          tmpV.set(px, py, pz)
+          tmpM.identity().makeScale(sc, sc, sc).setPosition(tmpV)
+          iTSmoke.setMatrixAt(i, tmpM)
+        }
+        updatedTSmoke = true
+      }
+    }
+    if (updatedTSmoke) iTSmoke.instanceMatrix.needsUpdate = true
+
     if (transferStart >= 0) {
       const tk = t - transferStart
       const DRIVE_START = 1.4
@@ -2952,8 +2994,6 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
       }
 
       // ── Portón vehicular del garaje: las dos hojas abren hacia afuera (0.4-1.4s)
-      // y vuelven a cerrar al final, para que el camión salga por el hueco de la
-      // valla en vez de atravesar una pared.
       const gateOpening = Math.min(Math.max((tk - 0.4) / 1.0, 0), 1)
       const gateClosing = tk >= 8.0 ? Math.max(1 - (tk - 8.0) / 1.2, 0) : 1
       const gateSwing = Math.min(gateOpening, gateClosing) * (Math.PI * 0.55)
@@ -2988,7 +3028,7 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
 
         // Velocidad real por fotograma (para rotar ruedas)
         const frameSpeed = tmpV.distanceTo(tkPrevPos)
-        tkWheelAngle += frameSpeed / 0.52 // circunferencia ≈ 2π×0.52, simplificado
+        tkWheelAngle += frameSpeed / 0.52
         tkPrevPos.copy(tmpV)
 
         // Suspensión: pequeño rebote vertical proporcional a la velocidad
@@ -3003,8 +3043,31 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
 
         // Rotación de ruedas (rodan en función de la distancia recorrida)
         tkWheels.forEach((w) => {
-          w.rotation.x = -tkWheelAngle // negativo porque el frente está en +Z
+          w.rotation.x = -tkWheelAngle
         })
+
+        // Humo constante en ambas ruedas traseras mientras se mueve
+        if (tk >= DRIVE_START && tk < DRIVE_END && Math.random() > 0.4) {
+          truckGroup.updateMatrix()
+
+          // Rueda izquierda
+          tSmokeLife[tSmokeIdx] = 1.0
+          tmpV2.set(-0.8, 0.15, -1.2)
+          tmpV2.applyMatrix4(truckGroup.matrix)
+          tmpV.copy(tmpV2)
+          tmpM.identity().setPosition(tmpV)
+          iTSmoke.setMatrixAt(tSmokeIdx, tmpM)
+          tSmokeIdx = (tSmokeIdx + 1) % NUM_TSMOKE
+
+          // Rueda derecha
+          tSmokeLife[tSmokeIdx] = 1.0
+          tmpV2.set(0.8, 0.15, -1.2)
+          tmpV2.applyMatrix4(truckGroup.matrix)
+          tmpV.copy(tmpV2)
+          tmpM.identity().setPosition(tmpV)
+          iTSmoke.setMatrixAt(tSmokeIdx, tmpM)
+          tSmokeIdx = (tSmokeIdx + 1) % NUM_TSMOKE
+        }
       }
 
       // ── El camión se desvanece en la niebla a partir del 80% de la curva ──
