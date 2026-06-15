@@ -170,6 +170,8 @@ export default function TravelTransfers() {
     message: string
     type: "warning" | "danger" | "info"
     hideCancel?: boolean
+    isLoading?: boolean
+    loadingLabel?: string
     onConfirm: () => void
   }>({
     isOpen: false,
@@ -177,6 +179,7 @@ export default function TravelTransfers() {
     message: "",
     type: "warning",
     hideCancel: false,
+    isLoading: false,
     onConfirm: () => {},
   })
 
@@ -268,10 +271,20 @@ export default function TravelTransfers() {
         message: "El traslado ha sido registrado y programado exitosamente en el sistema.",
         type: "info",
         hideCancel: true,
+        isLoading: false,
         onConfirm: () => {
-          setConfirmDialog((prev) => ({ ...prev, isOpen: false }))
-          // Cinemática del camión saliendo del campamento al crear el traslado.
-          if (campId) use3DStore.getState().startTransferCinematic(String(campId))
+          setConfirmDialog((prev) => ({
+            ...prev,
+            isLoading: true,
+            loadingLabel: "Asegurando rutas seguras...",
+          }))
+
+          // Simulamos una demora de red/coordinación inmersiva antes de cerrar la ventana e iniciar la cinemática
+          setTimeout(() => {
+            setConfirmDialog((prev) => ({ ...prev, isOpen: false, isLoading: false }))
+            // Cinemática del camión saliendo del campamento
+            if (campId) use3DStore.getState().startTransferCinematic(String(campId))
+          }, 1800)
         },
       })
     },
@@ -523,6 +536,8 @@ export default function TravelTransfers() {
         message={confirmDialog.message}
         type={confirmDialog.type}
         hideCancel={confirmDialog.hideCancel}
+        isLoading={confirmDialog.isLoading}
+        loadingLabel={confirmDialog.loadingLabel}
         onConfirm={confirmDialog.onConfirm}
         onCancel={() => setConfirmDialog((prev) => ({ ...prev, isOpen: false }))}
       />

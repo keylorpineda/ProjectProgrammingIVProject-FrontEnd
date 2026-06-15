@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion"
-import { AlertTriangle, Info, X } from "lucide-react"
+import { AlertTriangle, Info, X, Loader2 } from "lucide-react"
 
 import type { ReactNode } from "react"
 
@@ -13,6 +13,8 @@ interface ConfirmDialogProps {
   confirmLabel?: string
   cancelLabel?: string
   hideCancel?: boolean
+  isLoading?: boolean
+  loadingLabel?: string
   onConfirm: () => void
   onCancel: () => void
 }
@@ -25,6 +27,8 @@ export function ConfirmDialog({
   confirmLabel = "Aceptar",
   cancelLabel = "Cancelar",
   hideCancel = false,
+  isLoading = false,
+  loadingLabel = "Cargando...",
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
@@ -70,13 +74,15 @@ export function ConfirmDialog({
               <h3 className="flex-1 text-lg font-typewriter font-black text-white uppercase tracking-wider">
                 {title}
               </h3>
-              <button
-                type="button"
-                onClick={onCancel}
-                className="text-white/50 hover:text-white transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              {!isLoading && (
+                <button
+                  type="button"
+                  onClick={onCancel}
+                  className="text-white/50 hover:text-white transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              )}
             </div>
 
             <div className="p-6">
@@ -88,7 +94,8 @@ export function ConfirmDialog({
                 <button
                   type="button"
                   onClick={onCancel}
-                  className="px-4 py-2 font-mono text-xs font-bold uppercase tracking-wider text-white/70 border border-white/20 hover:bg-white/10 hover:text-white transition-colors"
+                  disabled={isLoading}
+                  className="px-4 py-2 font-mono text-xs font-bold uppercase tracking-wider text-white/70 border border-white/20 hover:bg-white/10 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {cancelLabel}
                 </button>
@@ -96,9 +103,11 @@ export function ConfirmDialog({
               <button
                 type="button"
                 onClick={onConfirm}
-                className={`px-5 py-2 font-mono text-xs font-bold uppercase tracking-wider transition-colors shadow-lg ${buttonClasses[type]}`}
+                disabled={isLoading}
+                className={`flex items-center gap-2 px-5 py-2 font-mono text-xs font-bold uppercase tracking-wider transition-colors shadow-lg disabled:opacity-70 disabled:cursor-not-allowed ${buttonClasses[type]}`}
               >
-                {confirmLabel}
+                {isLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                {isLoading ? loadingLabel : confirmLabel}
               </button>
             </div>
           </motion.div>
