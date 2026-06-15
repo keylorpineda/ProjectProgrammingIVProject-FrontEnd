@@ -125,11 +125,11 @@ describe("Login page", () => {
       await enableForm()
       await fillCredentials(user, "admin", "123456")
       await user.click(screen.getByRole("button", { name: /iniciar sesión/i }))
-      // finalizeLogin chains setTimeout(1500) + setTimeout(3500) before navigate
+      // finalizeLogin holds ~2s on the card, then crosses the gate; navigate at 5s
       await waitFor(() => expect(navigateMock).toHaveBeenCalledWith("/admin/dashboard"), {
-        timeout: 6000,
+        timeout: 8000,
       })
-    }, 10000)
+    }, 12000)
 
     // NOTE: Login.tsx routes `resource_manager` to /camp-manager but NOT
     // `camp_manager`. CampManagerGuard accepts both, so logging in as

@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 
+import { AccessGrantedOverlay } from "../../components/AccessGrantedOverlay"
 import { BadgeLogin } from "../../components/BadgeLogin"
 import { ParticleCanvas } from "../../components/ui/ParticleCanvas"
 
@@ -15,7 +16,8 @@ export default function Login() {
   const navigate = useNavigate()
   const setAuth = useAuthStore((state) => state.setAuth)
   const [loginStatus, setLoginStatus] = useState<LoginStatus>("waiting")
-  const [isGateOpen, setIsGateOpen] = useState(false)
+  // Credentials the operator typed — shown on the granted ID card.
+  const [enteredCredentials, setEnteredCredentials] = useState({ username: "", password: "" })
   const rafRef = useRef<number | null>(null)
 
   // MotionValues bypass React state â€” zero re-renders on mouse move
@@ -56,22 +58,21 @@ export default function Login() {
     }
 
     setLoginStatus("granted")
+    // La secuencia <AccessGrantedOverlay> dibuja la tarjeta de reconocimiento con
+    // las credenciales, las puertas abriéndose con luz verde y el fundido final.
     setTimeout(() => {
-      setIsGateOpen(true)
-      setTimeout(() => {
-        // Cualquier rol aterriza directamente en la vista 3D del campamento: se
-        // enciende el store antes de navegar para que el Camp3DOverlay del
-        // layout correspondiente monte la escena y reproduzca la animación de
-        // entrada. El store no persiste, así que esto solo ocurre al iniciar
-        // sesión, no en recargas posteriores.
-        const campId = useAuthStore.getState().user?.camp_id
-        if (campId) {
-          use3DStore.getState().setActiveCamp(campId)
-          use3DStore.getState().setIs3DActive(true)
-        }
-        navigate(destination)
-      }, 3500)
-    }, 1500)
+      // Cualquier rol aterriza directamente en la vista 3D del campamento: se
+      // enciende el store antes de navegar para que el Camp3DOverlay del
+      // layout correspondiente monte la escena y reproduzca la animación de
+      // entrada. El store no persiste, así que esto solo ocurre al iniciar
+      // sesión, no en recargas posteriores.
+      const campId = useAuthStore.getState().user?.camp_id
+      if (campId) {
+        use3DStore.getState().setActiveCamp(campId)
+        use3DStore.getState().setIs3DActive(true)
+      }
+      navigate(destination)
+    }, 5300)
   }
 
   const handleLogin = async (u: string, p: string) => {
@@ -86,6 +87,7 @@ export default function Login() {
     try {
       const response = await login({ username: u, password: p })
       setAuth(response.access_token, response.user, response.refresh_token)
+      setEnteredCredentials({ username: u, password: p })
       finalizeLogin(response.user.role)
     } catch {
       setLoginStatus("denied")
@@ -246,8 +248,8 @@ export default function Login() {
           <motion.div
             className="absolute top-0 bottom-0 left-0 w-1/2 flex flex-col justify-end overflow-hidden pb-[5%]"
             initial={{ x: "0%" }}
-            animate={{ x: isGateOpen ? "-100%" : "0%" }}
-            transition={{ type: "tween", ease: [0.5, 0.0, 0.1, 1], duration: 5, delay: 0.5 }}
+            animate={{ x: "0%" }}
+            transition={{ type: "tween", ease: [0.5, 0.0, 0.1, 1], duration: 2.6, delay: 0.1 }}
           >
             {/* Chainlink mesh pattern */}
             <div
@@ -304,8 +306,8 @@ export default function Login() {
           <motion.div
             className="absolute top-0 bottom-0 right-0 w-1/2 flex flex-col justify-end overflow-hidden pb-[5%]"
             initial={{ x: "0%" }}
-            animate={{ x: isGateOpen ? "100%" : "0%" }}
-            transition={{ type: "tween", ease: [0.5, 0.0, 0.1, 1], duration: 5, delay: 0.5 }}
+            animate={{ x: "0%" }}
+            transition={{ type: "tween", ease: [0.5, 0.0, 0.1, 1], duration: 2.6, delay: 0.1 }}
           >
             {/* Chainlink mesh pattern */}
             <div
@@ -412,13 +414,14 @@ export default function Login() {
       {/* Cinematic Vignette overlay for depth replacing boxy shadow */}
       <div className="absolute inset-0 z-40 pointer-events-none bg-[radial-gradient(circle_at_center,rgba(0,0,0,0)_30%,rgba(2,2,2,0.9)_100%)] mix-blend-multiply" />
 
-      {/* Fade to Black transition overlay */}
-      <motion.div
-        className="absolute inset-0 bg-black z-[100] pointer-events-none flex items-center justify-center flex-col"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: isGateOpen ? 1 : 0 }}
-        transition={{ duration: 3, delay: 1 }}
-      ></motion.div>
+      {/* Access-granted cinematic: ID card with the entered credentials + blast
+          doors opening onto green safe-zone light. Self-contained, full-screen. */}
+      {loginStatus === "granted" && (
+        <AccessGrantedOverlay
+          username={enteredCredentials.username}
+          password={enteredCredentials.password}
+        />
+      )}
 
       {/* Badge Login placed within the 3d environment */}
       <div className="relative z-50">
