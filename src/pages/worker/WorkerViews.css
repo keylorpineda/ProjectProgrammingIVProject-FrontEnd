@@ -2806,9 +2806,9 @@
 }
 
 .wv-profile-page .wv-badge-card {
+  height: auto;
   min-height: 204px;
   padding: 15px 12px 13px;
-  overflow: hidden;
   background:
     radial-gradient(circle at 50% 32%, rgba(179, 133, 54, 0.22), transparent 42%), #161513 !important;
   border: 2px solid #b38536 !important;
