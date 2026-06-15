@@ -290,7 +290,13 @@ function driveCinematicCamera(ct: number, cam: CameraState) {
  * construye la escena en `onReady`, la anima cada frame, dibuja el minimapa y
  * conecta el raycaster (hover + click → navegación). Limpia todo al desmontar.
  */
-export default function CampScene3D({ campId, onClose, onReady, embedded }: Props) {
+export default function CampScene3D({
+  campId,
+  onClose,
+  onReady,
+  embedded,
+  onBuildingSelect,
+}: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const minimapRef = useRef<HTMLCanvasElement | null>(null)
   const posRef = useRef<HTMLDivElement | null>(null)
@@ -538,6 +544,11 @@ export default function CampScene3D({ campId, onClose, onReady, embedded }: Prop
       // El perfil siempre es accesible; los demás se validan contra el rol.
       if (building.id !== "profile" && !allowedIds.has(building.id)) {
         showDenied(building)
+        return
+      }
+      // Layouts por pestañas: abrir la pestaña en vez de navegar por router.
+      if (onBuildingSelect) {
+        onBuildingSelect(building.id)
         return
       }
       // En modo embebido la escena es el FONDO del panel: navegar abre la

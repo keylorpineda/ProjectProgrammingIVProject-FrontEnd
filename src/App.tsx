@@ -60,13 +60,14 @@ function App() {
             </TravelManagerGuard>
           }
         >
+          <Route path="camp" element={null} />
           <Route path="dashboard" element={<TravelDashboard />} />
           <Route path="expeditions" element={<TravelExplorations />} />
           <Route path="personnel" element={<TravelTeam />} />
           <Route path="transfers" element={<TravelTransfers />} />
           <Route path="inventory" element={<TravelResources />} />
           <Route path="profile" element={<TravelProfile />} />
-          <Route path="" element={<Navigate to="dashboard" replace />} />
+          <Route path="" element={<Navigate to="camp" replace />} />
         </Route>
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard" element={<Navigate to="/admin/dashboard" replace />} />

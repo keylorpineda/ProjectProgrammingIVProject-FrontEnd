@@ -118,7 +118,7 @@ describe("Login page", () => {
       expect(useAuthStore.getState().isAuthenticated).toBe(true)
     })
 
-    it("navigates to /admin/dashboard after admin login completes", async () => {
+    it("navigates to /admin/camp after admin login completes", async () => {
       const user = userEvent.setup()
       mockedLogin.mockResolvedValueOnce({ access_token: "admin-token", user: adminUser })
       renderLogin()
@@ -127,7 +127,7 @@ describe("Login page", () => {
       await user.click(screen.getByRole("button", { name: /iniciar sesión/i }))
       // finalizeLogin holds on the card, the door opens and a hand drags it off;
       // navigate fires at ~5.6s, so allow generous margin.
-      await waitFor(() => expect(navigateMock).toHaveBeenCalledWith("/admin/dashboard"), {
+      await waitFor(() => expect(navigateMock).toHaveBeenCalledWith("/admin/camp"), {
         timeout: 12000,
       })
     }, 15000)
