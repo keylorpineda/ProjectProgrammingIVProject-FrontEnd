@@ -1,5 +1,6 @@
 import * as reactQuery from "@tanstack/react-query"
-import { fireEvent, render, screen, waitFor } from "@testing-library/react"
+import { fireEvent } from "@testing-library/dom"
+import { render, screen, waitFor } from "@testing-library/react"
 import { MemoryRouter } from "react-router-dom"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -562,7 +563,9 @@ describe("TravelExplorations", () => {
         id: "past-scheduled",
         name: "Past Scheduled",
         departure_date: "2020-01-01T00:00:00.000Z",
-      },
+        target_latitude: 15,
+        target_longitude: 25,
+      } as (typeof baseExplorations)[number],
     ]
 
     renderExplorations()

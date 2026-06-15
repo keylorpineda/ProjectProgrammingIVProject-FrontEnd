@@ -1,4 +1,5 @@
-import { fireEvent, render, screen, within } from "@testing-library/react"
+﻿import { fireEvent } from "@testing-library/dom"
+import { render, screen, within } from "@testing-library/react"
 import { beforeEach, describe, expect, it } from "vitest"
 
 import AlertsBanner from "../AlertsBanner"
