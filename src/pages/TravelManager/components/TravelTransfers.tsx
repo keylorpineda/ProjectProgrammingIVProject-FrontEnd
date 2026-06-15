@@ -259,8 +259,6 @@ export default function TravelTransfers() {
     mutationFn: createTransferRequest,
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["transfers", campId] })
-      // Cinemática del camión saliendo del campamento al crear el traslado.
-      if (campId) use3DStore.getState().startTransferCinematic(String(campId))
       resetForm()
       setIsNewModalOpen(false)
 
@@ -272,6 +270,8 @@ export default function TravelTransfers() {
         hideCancel: true,
         onConfirm: () => {
           setConfirmDialog((prev) => ({ ...prev, isOpen: false }))
+          // Cinemática del camión saliendo del campamento al crear el traslado.
+          if (campId) use3DStore.getState().startTransferCinematic(String(campId))
         },
       })
     },
