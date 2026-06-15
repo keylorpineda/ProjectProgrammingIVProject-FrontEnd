@@ -33,6 +33,12 @@ export function BadgeLogin({ onLogin, isProcessing, loginStatus }: BadgeLoginPro
     }
   }, [loginStatus])
 
+  // On a granted login, reveal the password so the operator's entered
+  // credentials are fully readable on the card before it crosses the gate.
+  useEffect(() => {
+    if (loginStatus === "granted") setShowPassword(true)
+  }, [loginStatus])
+
   const handleClick = () => {
     if (!isHanging) setIsHanging(true)
   }
@@ -101,17 +107,30 @@ export function BadgeLogin({ onLogin, isProcessing, loginStatus }: BadgeLoginPro
       },
     },
     granted: {
-      y: "-150vh",
+      // 1) Pop forward — big, bright, front-and-center — so the entered
+      //    credentials are clearly readable (password revealed) with the GREEN
+      //    approval stamp. 2) Hold ~2s to read. 3) Drift toward the opening
+      //    gate. 4) Float through it into the green safe-zone light.
       x: "-50%",
-      rotateX: -40,
-      rotateZ: 5,
-      rotateY: 10,
-      scale: 1.3,
-      z: 300,
-      filter: "brightness(1.5) contrast(1.3) drop-shadow(0px 100px 50px rgba(0,0,0,0.5))",
+      y: ["0vh", "0vh", "-2vh", "2vh", "6vh"],
+      rotateX: [0, 0, -6, 10, 28],
+      rotateY: [0, 0, 5, -16, -42],
+      rotateZ: [0, 0, -2, 3, 7],
+      scale: [1.12, 1.15, 1.18, 0.78, 0.16],
+      z: [120, 120, 280, -80, -760],
+      opacity: [1, 1, 1, 1, 0],
+      filter: [
+        "brightness(1.3) contrast(1.12) drop-shadow(0px 30px 40px rgba(0,0,0,0.95))",
+        "brightness(1.3) contrast(1.12) drop-shadow(0px 30px 40px rgba(0,0,0,0.95))",
+        "brightness(1.5) contrast(1.2) drop-shadow(0px 40px 50px rgba(40,200,90,0.45))",
+        "brightness(1.75) contrast(1.25) blur(1px) drop-shadow(0px 0px 45px rgba(40,220,110,0.65))",
+        "brightness(2.3) contrast(1.05) blur(8px) drop-shadow(0px 0px 0px rgba(0,0,0,0))",
+      ],
       transition: {
-        duration: 1.2,
-        ease: [0.6, 0.01, 0.05, 1.2], // slight anticipation, then swoosh up
+        duration: 4.8,
+        // hold 0–0.42 (≈2s) readable, then cross the gate into the green light
+        times: [0, 0.42, 0.6, 0.82, 1],
+        ease: [0.4, 0, 0.2, 1],
       },
     },
   }
@@ -483,11 +502,58 @@ export function BadgeLogin({ onLogin, isProcessing, loginStatus }: BadgeLoginPro
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="absolute inset-0 pointer-events-none z-50 flex items-center justify-center bg-green-500/20 mix-blend-multiply"
+                className="absolute inset-0 pointer-events-none z-50 overflow-hidden"
               >
-                <div className="border-[8px] border-[#0a4a0a] text-[#0a4a0a] px-6 py-4 font-black text-[32px] sm:text-[36px] tracking-widest rotate-[-15deg] mix-blend-multiply">
-                  APROBADO
-                </div>
+                {/* Green "approved" wash — pulses on while the card is read, then
+                    blooms as it floats through the gate into the safe-zone light. */}
+                <motion.div
+                  className="absolute inset-0 bg-[#22c55e] mix-blend-screen"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: [0, 0.18, 0.1, 0.12, 0.55] }}
+                  transition={{ duration: 4.8, times: [0, 0.12, 0.42, 0.6, 1] }}
+                />
+
+                {/* Green authorization stamp — angled and placed low over the
+                    barcode so the entered USUARIO / CONTRASEÑA stay legible. */}
+                <motion.div
+                  className="absolute left-1/2 bottom-[19%] flex flex-col items-center gap-1"
+                  style={{ mixBlendMode: "multiply", x: "-50%" }}
+                  initial={{ scale: 2.6, opacity: 0, rotate: -16 }}
+                  animate={{
+                    scale: [2.6, 0.92, 1],
+                    opacity: [0, 0.95, 0.9],
+                    rotate: [-16, -13, -14],
+                  }}
+                  transition={{
+                    duration: 0.55,
+                    delay: 0.45,
+                    times: [0, 0.7, 1],
+                    ease: [0.2, 0.8, 0.2, 1],
+                  }}
+                >
+                  <div className="w-[54px] h-[54px] rounded-full border-[4px] border-[#15803d] flex items-center justify-center text-[#15803d] text-[30px] font-black leading-none">
+                    ✓
+                  </div>
+                  <div className="border-[5px] border-[#15803d] text-[#15803d] px-4 py-1.5 font-sans font-black text-[22px] sm:text-[26px] tracking-[0.12em] uppercase whitespace-nowrap">
+                    ACCESO PERMITIDO
+                  </div>
+                </motion.div>
+
+                {/* Green confirmation scan sweeping down the card as it is approved */}
+                <motion.div
+                  className="absolute left-0 right-0 h-[5px] bg-[#4ade80] shadow-[0_0_22px_10px_rgba(74,222,128,0.6)]"
+                  initial={{ top: "-8%", opacity: 0 }}
+                  animate={{ top: ["-8%", "108%"], opacity: [0, 1, 1, 0] }}
+                  transition={{ duration: 1.0, delay: 0.45, ease: "easeInOut" }}
+                />
+
+                {/* Green flash as the stamp lands */}
+                <motion.div
+                  className="absolute inset-0 bg-[#22c55e] mix-blend-screen"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: [0, 0.5, 0, 0.25, 0] }}
+                  transition={{ duration: 0.7, delay: 0.4, times: [0, 0.15, 0.3, 0.5, 1] }}
+                />
               </motion.div>
             )}
 
