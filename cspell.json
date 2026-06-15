@@ -195,7 +195,12 @@
     "unsub",
     "guionada",
     "TSMOKE",
-    "slerp"
+    "slerp",
+    "suspensionAmp",
+    "isDrifting",
+    "emitCount",
+    "slerpFactor",
+    "lifeRatio"
   ],
   "ignorePaths": [
     "node_modules",

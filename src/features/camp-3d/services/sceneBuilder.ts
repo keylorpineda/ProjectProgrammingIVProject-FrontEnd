@@ -1395,6 +1395,8 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
   }
   gjDoorPivot.add(gjDoor)
   root.add(gjDoorPivot)
+  // Luz interior del garaje — más cálida e intensa para iluminar el camión
+  ptL(0xffbb66, 5.5, 12, GJX, 3.0, GJZ - 1.0)
   box(7, 0.12, 0.18, gjWall, GJX, 0.06, GJZ + 3.62)
   // Camioneta vieja en el interior (cabina + ruedas).
   const gjVanX = GJX - 1.8
@@ -2765,20 +2767,28 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
   const tkRearLight = new THREE.PointLight(0xff2200, 0, 8)
   tkRearLight.position.set(0, 0.9, -3.2)
   truckGroup.add(tkLight, tkSpotL, tkSpotR, tkRearLight)
-  truckGroup.visible = false
+  // El camión comienza VISIBLE dentro del garaje en su posición de reposo
+  // (espera la animación de traslado). Así cuando la puerta se abre, se ve el camión.
+  truckGroup.visible = true
+  // Posición de reposo: dentro del garaje, apuntando hacia la puerta (z positivo)
+  truckGroup.position.set(GJX - 0.2, 0, GJZ - 0.8)
+  truckGroup.rotation.y = 0 // mirando hacia la puerta (z+)
   root.add(truckGroup)
 
   // --- TIRE SMOKE (Drift) ---
-  const tireSmokeGeo = new THREE.SphereGeometry(0.28, 6, 6)
+  // Partículas instanciadas de humo de ruedas — más grandes y con opacidad variable
+  const tireSmokeGeo = new THREE.SphereGeometry(0.38, 6, 4)
   const tireSmokeMat = new THREE.MeshBasicMaterial({
-    color: 0x777777,
+    color: 0x999090,
     transparent: true,
-    opacity: 0.55,
+    opacity: 0.62,
     depthWrite: false,
   })
-  const NUM_TSMOKE = 160
+  const NUM_TSMOKE = 240 // más partículas para nube más densa
   const iTSmoke = new THREE.InstancedMesh(tireSmokeGeo, tireSmokeMat, NUM_TSMOKE)
+  // Guardamos vida normalizada [0,1] para cada partícula
   const tSmokeLife: number[] = new Array(NUM_TSMOKE).fill(0)
+  const tSmokeMaxLife: number[] = new Array(NUM_TSMOKE).fill(1)
   let tSmokeIdx = 0
   for (let i = 0; i < NUM_TSMOKE; i++) {
     tmpV.set(0, -100, 0)
@@ -2958,26 +2968,40 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
       portonPivotL.rotation.y = -(Math.PI * 0.55)
       // Barrera vehicular: levantarla para despejar el camino
       gtBarrierArm.rotation.z = -(Math.PI * 0.45)
+      // Limpiar humo residual de la animación anterior
+      for (let si = 0; si < NUM_TSMOKE; si++) {
+        tSmokeLife[si] = 0
+        tmpV.set(0, -100, 0)
+        tmpM.identity().setPosition(tmpV)
+        iTSmoke.setMatrixAt(si, tmpM)
+      }
+      iTSmoke.instanceMatrix.needsUpdate = true
     }
-    // TIRE SMOKE UPDATE
+    // TIRE SMOKE UPDATE — el humo crece y sube mientras vive
     let updatedTSmoke = false
     for (let i = 0; i < NUM_TSMOKE; i++) {
       if (tSmokeLife[i] > 0) {
-        tSmokeLife[i] -= 0.016
+        tSmokeLife[i] -= 0.014 // algo más lento para que sea más visible
         if (tSmokeLife[i] <= 0) {
+          // Mandar bajo tierra
           tmpV.set(0, -100, 0)
           tmpM.identity().setPosition(tmpV)
           iTSmoke.setMatrixAt(i, tmpM)
         } else {
-          const l = tSmokeLife[i]
-          const sc = 1.0 + (1.0 - l) * 2.5
+          const lifeRatio = tSmokeLife[i] / tSmokeMaxLife[i] // 1→0 a medida que muere
+          // Escala crece conforme el humo envejece (nube más grande al disiparse)
+          const sc = 0.7 + (1.0 - lifeRatio) * 3.8
           iTSmoke.getMatrixAt(i, tmpM)
           const px = tmpM.elements[12]
           let py = tmpM.elements[13]
           const pz = tmpM.elements[14]
-          py += 0.04 // el humo sube
-          tmpV.set(px, py, pz)
-          tmpM.identity().makeScale(sc, sc, sc).setPosition(tmpV)
+          // Deriva lateral suave + sube
+          py += 0.055
+          tmpV.set(px + (Math.random() - 0.5) * 0.02, py, pz + (Math.random() - 0.5) * 0.02)
+          tmpM
+            .identity()
+            .makeScale(sc, sc * 0.72, sc)
+            .setPosition(tmpV)
           iTSmoke.setMatrixAt(i, tmpM)
         }
         updatedTSmoke = true
@@ -3032,62 +3056,106 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
 
         // Velocidad real por fotograma (para rotar ruedas)
         const frameSpeed = tmpV.distanceTo(tkPrevPos)
-        tkWheelAngle += frameSpeed / 0.52
+        // Factor de ruedas aumentado: /0.17 = giro 3× más visible (radio neumático ~0.52)
+        tkWheelAngle += frameSpeed / 0.17
         tkPrevPos.copy(tmpV)
 
-        // Suspensión: pequeño rebote vertical proporcional a la velocidad
-        const suspension = Math.sin(tkWheelAngle * 2.8) * 0.018 * Math.min(frameSpeed * 60, 1)
+        // Suspensión: rebote más pronunciado — oscilación ligera que da sensación de peso
+        const suspensionAmp = 0.038 * Math.min(frameSpeed * 80, 1.0)
+        const suspension = Math.sin(tkWheelAngle * 1.8) * suspensionAmp
+        // Bamboleo lateral leve (cabeceo de camión cargado)
+        const sway = Math.sin(tkWheelAngle * 0.9 + 0.8) * suspensionAmp * 0.4
         truckGroup.position.set(tmpV.x, tmpV.y + suspension, tmpV.z)
 
-        // Dirección: atan2 en espacio local → slerp → inercia de volante realista
-        const lookAhead = Math.min(tu + 0.08, 1)
+        // Dirección: slerp más ágil para curvas fluidas pero con inercia real
+        const lookAhead = Math.min(tu + 0.06, 1)
         transferCurve.getPoint(lookAhead, tmpV2)
         const tAngle = Math.atan2(tmpV2.x - truckGroup.position.x, tmpV2.z - truckGroup.position.z)
         tkTargetQuat.setFromEuler(new THREE.Euler(0, tAngle, 0))
         tkTurnRate = tkSteerQuat.angleTo(tkTargetQuat)
-        tkSteerQuat.slerp(tkTargetQuat, 0.1 + Math.min(frameSpeed * 30, 0.08))
+        // slerp más alto: curvas más suaves y responsivas
+        const slerpFactor = Math.min(0.18 + frameSpeed * 55, 0.45)
+        tkSteerQuat.slerp(tkTargetQuat, slerpFactor)
         truckGroup.quaternion.copy(tkSteerQuat)
 
-        // Rotación de ruedas (rodan en función de la distancia recorrida)
+        // Bamboleo Z (roll) proporcional al giro + X (pitch) del sway de la suspensión
+        const rollAngle =
+          tkTurnRate * 0.12 * Math.sign(Math.sin(tAngle - (truckGroup.rotation.y || 0)))
+        truckGroup.rotation.z = rollAngle + sway * 0.15
+        truckGroup.rotation.x = sway * 0.04
+
+        // Rotación de ruedas más rápida y visible
         tkWheels.forEach((w) => {
           w.rotation.x = -tkWheelAngle
         })
 
-        // Humo: más denso en curvas pronunciadas (tkTurnRate alto)
-        const smokeThr = tkTurnRate > 0.05 ? 0.12 : 0.58
-        const smokeLife = tkTurnRate > 0.05 ? 1.5 : 1.0
-        if (tk >= DRIVE_START && tk < DRIVE_END && Math.random() > smokeThr) {
-          truckGroup.updateMatrix()
+        // HUMO DE RUEDAS — emisión continua durante la marcha, muy densa en curvas
+        if (tk >= DRIVE_START && tk < DRIVE_END) {
+          // En curva pronunciada: humo muy denso; en recta: tenue
+          const isDrifting = tkTurnRate > 0.08
+          const smokeProbPerFrame = isDrifting ? 0.95 : 0.35
+          const smokeLife = isDrifting ? 1.8 : 1.1
 
-          // Rueda izquierda
-          tSmokeLife[tSmokeIdx] = smokeLife
-          tmpV2.set(-0.8, 0.15, -1.2)
-          tmpV2.applyMatrix4(truckGroup.matrix)
-          tmpV.copy(tmpV2)
-          tmpM.identity().setPosition(tmpV)
-          iTSmoke.setMatrixAt(tSmokeIdx, tmpM)
-          tSmokeIdx = (tSmokeIdx + 1) % NUM_TSMOKE
+          if (Math.random() < smokeProbPerFrame) {
+            truckGroup.updateMatrix()
 
-          // Rueda derecha
-          tSmokeLife[tSmokeIdx] = smokeLife
-          tmpV2.set(0.8, 0.15, -1.2)
-          tmpV2.applyMatrix4(truckGroup.matrix)
-          tmpV.copy(tmpV2)
-          tmpM.identity().setPosition(tmpV)
-          iTSmoke.setMatrixAt(tSmokeIdx, tmpM)
-          tSmokeIdx = (tSmokeIdx + 1) % NUM_TSMOKE
+            // Emitir 2-4 partículas por rueda en curvas para nube más densa
+            const emitCount = isDrifting ? 3 : 1
+            for (let ec = 0; ec < emitCount; ec++) {
+              // Rueda izquierda trasera
+              tSmokeLife[tSmokeIdx] = smokeLife * (0.7 + Math.random() * 0.6)
+              tSmokeMaxLife[tSmokeIdx] = tSmokeLife[tSmokeIdx]
+              tmpV2.set(-0.82 + (Math.random() - 0.5) * 0.15, 0.12 + Math.random() * 0.1, -1.5)
+              tmpV2.applyMatrix4(truckGroup.matrix)
+              tmpM.identity().makeScale(0.6, 0.6, 0.6).setPosition(tmpV2)
+              iTSmoke.setMatrixAt(tSmokeIdx, tmpM)
+              tSmokeIdx = (tSmokeIdx + 1) % NUM_TSMOKE
+
+              // Rueda derecha trasera
+              tSmokeLife[tSmokeIdx] = smokeLife * (0.7 + Math.random() * 0.6)
+              tSmokeMaxLife[tSmokeIdx] = tSmokeLife[tSmokeIdx]
+              tmpV2.set(0.82 + (Math.random() - 0.5) * 0.15, 0.12 + Math.random() * 0.1, -1.5)
+              tmpV2.applyMatrix4(truckGroup.matrix)
+              tmpM.identity().makeScale(0.6, 0.6, 0.6).setPosition(tmpV2)
+              iTSmoke.setMatrixAt(tSmokeIdx, tmpM)
+              tSmokeIdx = (tSmokeIdx + 1) % NUM_TSMOKE
+            }
+            iTSmoke.instanceMatrix.needsUpdate = true
+          }
         }
       }
 
-      // ── El camión se desvanece en la niebla a partir del 80% de la curva ──
+      // ── El camión se desvanece en la niebla a partir del final de la curva ──
       if (tk >= DRIVE_END) {
-        if (truckGroup.visible) truckGroup.visible = false
+        if (truckGroup.visible) {
+          truckGroup.visible = false
+          // Restablecer la posición de reposo dentro del garaje para la próxima vez
+          truckGroup.position.set(GJX - 0.2, 0, GJZ - 0.8)
+          truckGroup.rotation.set(0, 0, 0)
+          truckGroup.quaternion.identity()
+        }
         // Cerrar portón y bajar barrera
         portonPivotR.rotation.y = 0
         portonPivotL.rotation.y = 0
         gtBarrierArm.rotation.z = 0
       }
-      if (tk >= 8.5) transferStart = -1
+      // Restaurar visibilidad del camión en reposo una vez terminada la animación
+      if (tk >= 8.5) {
+        transferStart = -1
+        // Volver a mostrar el camión estacionado en el garaje
+        truckGroup.visible = true
+        truckGroup.position.set(GJX - 0.2, 0, GJZ - 0.8)
+        truckGroup.rotation.set(0, 0, 0)
+        truckGroup.quaternion.identity()
+        // Apagar luces del camión en reposo
+        tkLight.intensity = 0
+        tkSpotL.intensity = 0
+        tkSpotR.intensity = 0
+        tkRearLight.intensity = 0
+        tkHLMat.emissiveIntensity = 0
+        tkHRMat.emissiveIntensity = 0
+        tkTailMat.emissiveIntensity = 0
+      }
     }
 
     lampLights.forEach((ll, li) => {
