@@ -63,7 +63,7 @@ describe("persons service", () => {
     })
 
     mockedApi.put.mockResolvedValueOnce({ data: { status: "injured" } })
-    await expect(updatePersonStatus("person-2", { status: "injured" })).resolves.toEqual({
+    await expect(updatePersonStatus("person-2", { status: "injured" as any })).resolves.toEqual({
       status: "injured",
     })
 

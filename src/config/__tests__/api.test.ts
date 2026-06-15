@@ -108,7 +108,7 @@ describe("api client interceptors", () => {
   it("refreshes an expired token and retries the original request", async () => {
     await importClient()
     axiosPost.mockResolvedValueOnce({ data: { access_token: "fresh-token" } })
-    const originalRequest = { headers: {} }
+    const originalRequest: { headers: Record<string, string> } = { headers: {} }
 
     await expect(
       responseErrorHandler({ config: originalRequest, response: { status: 401 } }),
@@ -126,8 +126,8 @@ describe("api client interceptors", () => {
     await importClient()
     let resolveRefresh: (value: unknown) => void = () => {}
     axiosPost.mockReturnValueOnce(new Promise((resolve) => (resolveRefresh = resolve)))
-    const firstRequest = { headers: {} }
-    const secondRequest = { headers: {} }
+    const firstRequest: { headers: Record<string, string> } = { headers: {} }
+    const secondRequest: { headers: Record<string, string> } = { headers: {} }
 
     const firstPromise = responseErrorHandler({
       config: firstRequest,

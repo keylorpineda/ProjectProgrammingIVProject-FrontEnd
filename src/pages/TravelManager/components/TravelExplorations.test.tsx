@@ -149,7 +149,7 @@ const baseExplorations = [
     explorationPersons: [],
     explorationResources: [],
   },
-]
+] as any[]
 
 let explorationsData = baseExplorations
 let explorationsError: Error | null = null
@@ -586,7 +586,7 @@ describe("TravelExplorations", () => {
   })
 
   it("opens a selected exploration from router state", () => {
-    renderExplorations([{ pathname: "/", state: { selectedExpeditionId: "e2" } }])
+    renderExplorations([{ pathname: "/", state: { selectedExpeditionId: "e2" } } as any])
 
     expect(screen.getAllByText(/Mountain Recon/i).length).toBeGreaterThan(0)
   })

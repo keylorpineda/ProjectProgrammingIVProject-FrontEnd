@@ -266,7 +266,7 @@ export default function Explorations() {
       const body: CreateExplorationBody = {
         camp_id: Number(activeCampId),
         name: formName.trim(),
-        destination_description: formDestination.trim() || undefined,
+        destination_description: formDestination.trim(),
         departure_date: `${formDepartureDate}T00:00:00.000Z`,
         estimated_days: Number(formEstimatedDays),
         grace_days: formGraceDays ? Number(formGraceDays) : undefined,
