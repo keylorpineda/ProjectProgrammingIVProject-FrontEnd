@@ -38,7 +38,7 @@ export default function Login() {
     const normalizedRole = role?.toLowerCase()
     const destination =
       normalizedRole === "admin"
-        ? "/admin/dashboard"
+        ? "/admin/camp"
         : normalizedRole === "worker"
           ? "/worker"
           : normalizedRole === "camp_leader"

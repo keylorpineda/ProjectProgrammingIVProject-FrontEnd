@@ -1,16 +1,23 @@
 import { motion, AnimatePresence } from "framer-motion"
+import {
+  LayoutDashboard,
+  Users,
+  Briefcase,
+  MapPin,
+  Package,
+  ArrowLeftRight,
+  Trophy,
+} from "lucide-react"
 import { useCallback, useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
 
 import DashboardView from "./components/DashboardView"
 import ExplorationsView from "./components/ExplorationsView"
-import Footer from "./components/Footer"
 import InventoryView from "./components/InventoryView"
 import MembersView from "./components/MembersView"
 import OccupationsView from "./components/OccupationsView"
 import ProfileView from "./components/ProfileView"
 import RankingView from "./components/RankingView"
-import Sidebar from "./components/Sidebar"
-import Topbar from "./components/Topbar"
 import TransfersView from "./components/TransfersView"
 import {
   explorationsService,
@@ -31,22 +38,66 @@ import type {
   Transfer,
 } from "./types"
 
+import RoleShell, { type RoleNavItem } from "@/components/layouts/RoleShell"
 import AlertsBanner from "@/components/ui/AlertsBanner"
 import InactivityGuard from "@/components/ui/InactivityGuard"
-import Camp3DOverlay from "@/features/camp-3d/components/Camp3DOverlay"
 import { useAlertSocket } from "@/hooks/useAlertSocket"
 import { use3DStore } from "@/store/use3DStore"
 import { useAuthStore, useTokenStore } from "@/store/useAuthStore"
 
 import "./campleader.css"
 
+const NAV_ITEMS: RoleNavItem[] = [
+  { key: "dashboard", label: "TABLERO", icon: LayoutDashboard },
+  { key: "members", label: "MIEMBROS", icon: Users },
+  { key: "occupations", label: "OCUPACIONES", icon: Briefcase },
+  { key: "explorations", label: "EXPLORACIONES", icon: MapPin },
+  { key: "inventory", label: "INVENTARIO", icon: Package },
+  { key: "transfers", label: "TRASLADOS", icon: ArrowLeftRight },
+  { key: "ranking", label: "RANKING", icon: Trophy },
+]
+
+const TITLES: Record<string, string> = {
+  dashboard: "TABLERO DE CONTROL",
+  members: "MIEMBROS",
+  occupations: "OCUPACIONES",
+  explorations: "EXPLORACIONES",
+  inventory: "INVENTARIO",
+  transfers: "TRASLADOS",
+  ranking: "RANKING",
+  profile: "MI EXPEDIENTE",
+}
+
+// Clic en un edificio 3D → pestaña del líder de campamento.
+const BUILDING_TO_TAB: Record<string, string> = {
+  hq: "dashboard",
+  gate: "members",
+  barracks: "members",
+  watchtower: "explorations",
+  warehouse: "inventory",
+  garage: "transfers",
+  profile: "profile",
+}
+
 export default function CampLeaderLayout() {
   const { user, logout } = useAuthStore()
   const campId = String(user?.camp_id ?? "")
   useAlertSocket(campId)
-  const [activeTab, setActiveTab] = useState("dashboard")
+  const navigate = useNavigate()
+  const [activeTab, setActiveTab] = useState("camp")
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(false)
+
+  const [utcTime, setUtcTime] = useState("")
+  useEffect(() => {
+    const update = () =>
+      setUtcTime(new Date().toISOString().replace("T", " ").slice(0, 19) + " UTC")
+    update()
+    const i = setInterval(update, 1000)
+    return () => clearInterval(i)
+  }, [])
+
+  const showWindow = activeTab !== "camp"
 
   // Core App states
   const [explorations, setExplorations] = useState<Exploration[]>([])
@@ -262,84 +313,76 @@ export default function CampLeaderLayout() {
     }
   }
 
+  const handleLogout = () => {
+    logout()
+    navigate("/login")
+  }
+
   return (
-    <InactivityGuard
-      isAuthenticated={!!user}
-      onLogout={() => {
-        logout()
-        window.location.href = "/login"
-      }}
-    >
-      <div className="campleader-view h-screen max-h-screen bg-[#161513] text-white relative overflow-hidden flex flex-col select-none">
-        {/* CRT SCANLINES OVERLAY */}
-        <div className="crt-overlay" />
-
-        {/* MAIN FLEX ROW */}
-        <div className="flex-1 flex overflow-hidden">
-          {/* SIDEBAR */}
-          <Sidebar
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            survivalScore={statistics.survival_score}
-          />
-
-          {/* RIGHT CONTENT COLUMN */}
-          <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-            {/* TOPBAR */}
-            <Topbar survivalScore={statistics.survival_score} />
-
-            {/* SCROLLABLE MAIN AREA */}
-            <main className="flex-1 overflow-y-auto overflow-x-hidden relative px-6 pt-4 pb-4">
-              {loading ? (
-                <div className="flex flex-col items-center justify-center p-10 h-64">
-                  <div className="relative flex h-8 w-8 mb-4">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#fca311] opacity-75" />
-                    <span className="relative inline-flex rounded-full h-8 w-8 bg-[#c27c2f]" />
-                  </div>
-                  <h3 className="font-typewriter text-sm tracking-widest text-[#fca311] animate-pulse">
-                    CARGANDO DATOS DEL CAMPAMENTO...
-                  </h3>
-                </div>
-              ) : (
+    <InactivityGuard isAuthenticated={!!user} onLogout={handleLogout}>
+      <RoleShell
+        brandTitle="LÍDER DE BASE"
+        brandSubtitle={`BASE :: ${user?.camp_id || "N/A"}`}
+        navItems={NAV_ITEMS}
+        activeKey={activeTab}
+        onSelect={setActiveTab}
+        windowTitle={TITLES[activeTab] ?? "PANEL"}
+        showWindow={showWindow}
+        onCloseWindow={() => setActiveTab("camp")}
+        campId={campId}
+        userInitial={user?.username?.[0]?.toUpperCase() || String(user?.id ?? "L")[0]}
+        userName={user?.username?.toUpperCase() || String(user?.id ?? "LÍDER")}
+        roleLabel="LÍDER DE CAMPAMENTO"
+        onLogout={handleLogout}
+        onViewProfile={() => setActiveTab("profile")}
+        utcTime={utcTime}
+        onBuildingSelect={(id) => setActiveTab(BUILDING_TO_TAB[id] ?? "dashboard")}
+        extras={
+          <>
+            <AlertsBanner campId={campId} />
+            <AnimatePresence>
+              {actionLoading && (
                 <motion.div
-                  key={activeTab}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ duration: 0.12 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 bg-neutral-950/80 backdrop-blur-sm flex flex-col items-center justify-center z-[100] font-mono text-center"
                 >
-                  {getActiveView()}
+                  <div className="border border-[#c27c2f] max-w-xs w-full bg-[#161513] p-5 shadow-[4px_4px_0_#000] rounded">
+                    <span className="animate-spin inline-block w-8 h-8 rounded-full border-2 border-[#c27c2f] border-t-transparent mb-4" />
+                    <p className="font-typewriter text-xs text-white font-bold uppercase tracking-wider">
+                      ACTUALIZANDO REGISTRO CENTRAL...
+                    </p>
+                  </div>
                 </motion.div>
               )}
-            </main>
-
-            {/* FOOTER */}
-            <Footer />
-          </div>
-        </div>
-
-        <AlertsBanner campId={campId} />
-
-        <Camp3DOverlay />
-
-        {/* ACTION LOADING OVERLAY */}
-        <AnimatePresence>
-          {actionLoading && (
+            </AnimatePresence>
+          </>
+        }
+      >
+        <div className="campleader-view px-6 pt-4 pb-4" style={{ minHeight: "100%" }}>
+          {loading ? (
+            <div className="flex flex-col items-center justify-center p-10 h-64">
+              <div className="relative flex h-8 w-8 mb-4">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#fca311] opacity-75" />
+                <span className="relative inline-flex rounded-full h-8 w-8 bg-[#c27c2f]" />
+              </div>
+              <h3 className="font-typewriter text-sm tracking-widest text-[#fca311] animate-pulse">
+                CARGANDO DATOS DEL CAMPAMENTO...
+              </h3>
+            </div>
+          ) : (
             <motion.div
+              key={activeTab}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-neutral-950/80 backdrop-blur-sm flex flex-col items-center justify-center z-[100] font-mono text-center"
+              transition={{ duration: 0.12 }}
             >
-              <div className="border border-[#c27c2f] max-w-xs w-full bg-[#161513] p-5 shadow-[4px_4px_0_#000] rounded">
-                <span className="animate-spin inline-block w-8 h-8 rounded-full border-2 border-[#c27c2f] border-t-transparent mb-4" />
-                <p className="font-typewriter text-xs text-white font-bold uppercase tracking-wider">
-                  ACTUALIZANDO REGISTRO CENTRAL...
-                </p>
-              </div>
+              {getActiveView()}
             </motion.div>
           )}
-        </AnimatePresence>
-      </div>
+        </div>
+      </RoleShell>
     </InactivityGuard>
   )
 }

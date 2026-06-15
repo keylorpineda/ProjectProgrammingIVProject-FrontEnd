@@ -7,7 +7,6 @@ import DashboardManager from "../DashboardManager"
 
 import { useAuthStore as useGlobalAuthStore } from "@/store/useAuthStore"
 
-// Mock zustand stores
 vi.mock("../../store/useAuthStore", () => ({
   useAuthStore: vi.fn(),
 }))
@@ -21,6 +20,11 @@ vi.mock("@/hooks/useAlertSocket", () => ({
   useAlertSocket: vi.fn(),
 }))
 
+// El campamento 3D (three.js) no corre en jsdom; se reemplaza por un stub.
+vi.mock("@/features/camp-3d/components/CampScene3DWrapper", () => ({
+  default: () => <div data-testid="camp-3d-wrapper" />,
+}))
+
 const mockNavigate = vi.fn()
 vi.mock("react-router-dom", async () => {
   const actual = await vi.importActual("react-router-dom")
@@ -30,7 +34,6 @@ vi.mock("react-router-dom", async () => {
   }
 })
 
-// Mock nested components to simplify
 vi.mock("../ManagerOverview", () => ({
   default: () => <div data-testid="mock-overview">Overview</div>,
 }))
@@ -46,7 +49,6 @@ vi.mock("../ManagerRanking", () => ({
 vi.mock("../ManagerWorkforce", () => ({
   default: () => <div data-testid="mock-workforce">Workforce</div>,
 }))
-
 vi.mock("../ManagerLogistics", () => ({
   default: ({ onModalClose, onDataChanged }: any) => (
     <div data-testid="mock-logistics">
@@ -64,6 +66,18 @@ vi.mock("@/components/ui/InactivityGuard", () => ({
     </div>
   ),
 }))
+
+const renderManager = () =>
+  render(
+    <BrowserRouter>
+      <DashboardManager />
+    </BrowserRouter>,
+  )
+
+const openTab = (label: string) => fireEvent.click(screen.getByRole("button", { name: label }))
+
+const openAvatarMenu = () =>
+  fireEvent.click(screen.getByRole("button", { name: /opciones de perfil/i }))
 
 describe("DashboardManager", () => {
   let mockStore: {
@@ -84,7 +98,6 @@ describe("DashboardManager", () => {
       logout: vi.fn(),
     }
 
-    // Setup default mock implementation
     vi.mocked(useAuthStore).mockImplementation((selector: any) => selector(mockStore))
     vi.mocked(useGlobalAuthStore).mockImplementation((selector: any) => selector({ user: null }))
   })
@@ -97,11 +110,7 @@ describe("DashboardManager", () => {
     if (mockStore.user) {
       mockStore.user.campId = null
     }
-    render(
-      <BrowserRouter>
-        <DashboardManager />
-      </BrowserRouter>,
-    )
+    renderManager()
 
     expect(screen.getByText((content) => content.includes("INTERRUMPIDA"))).toBeInTheDocument()
 
@@ -110,31 +119,30 @@ describe("DashboardManager", () => {
     expect(mockStore.setCampId).toHaveBeenCalledWith("Bunker-04")
   })
 
-  it("renders main dashboard when campId exists", () => {
-    render(
-      <BrowserRouter>
-        <DashboardManager />
-      </BrowserRouter>,
-    )
+  it("renders the navbar and opens the overview window", () => {
+    renderManager()
 
-    expect(screen.getByText(/DOOMSDAY CENTRAL CONTROL PORTAL/i)).toBeInTheDocument()
+    expect(screen.getByText("DOOMSDAY")).toBeInTheDocument()
     expect(screen.getByText(/COMMANDER/i)).toBeInTheDocument()
+    // Home = campamento 3D; ninguna ventana abierta por defecto.
+    expect(screen.queryByTestId("mock-overview")).not.toBeInTheDocument()
+
+    openTab("BALANCE")
     expect(screen.getByTestId("mock-overview")).toBeInTheDocument()
 
-    fireEvent.click(screen.getByText("BODEGA"))
+    openTab("BODEGA")
     expect(screen.getByTestId("mock-inventory")).toBeInTheDocument()
   })
 
   it("syncs global store user to local store if user is missing but global is present", () => {
-    // global user present but local user is null
     mockStore.user = null
     const globalUser = { id: 2, username: "", email: "admin@test.com", camp_id: null }
 
-    let callCount = 0
     vi.mocked(useGlobalAuthStore).mockImplementation((selector: any) =>
       selector({ user: globalUser }),
     )
 
+    let callCount = 0
     vi.mocked(useAuthStore).mockImplementation((selector: any) => {
       const selStr = selector.toString()
       if (selStr.includes("state.user")) {
@@ -147,11 +155,7 @@ describe("DashboardManager", () => {
       return null
     })
 
-    render(
-      <BrowserRouter>
-        <DashboardManager />
-      </BrowserRouter>,
-    )
+    renderManager()
 
     expect(mockStore.login).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -163,111 +167,70 @@ describe("DashboardManager", () => {
 
   it("renders with fallback user data", () => {
     mockStore.user = { id: "1", name: "", role: "other", campId: "Bunker-01" }
-    render(
-      <BrowserRouter>
-        <DashboardManager />
-      </BrowserRouter>,
-    )
+    renderManager()
 
-    expect(screen.getByText(/ADMINISTRADOR/)).toBeInTheDocument()
+    expect(screen.getByText(/GESTOR DE RECURSOS/)).toBeInTheDocument()
     expect(screen.getByText("M")).toBeInTheDocument() // Fallback avatar letter
   })
 
-  it("navigates between tabs correctly", () => {
-    render(
-      <BrowserRouter>
-        <DashboardManager />
-      </BrowserRouter>,
-    )
+  it("navigates between section windows correctly", () => {
+    renderManager()
 
+    openTab("BALANCE")
     expect(screen.getByText("TABLERO DE COMBATE")).toBeInTheDocument()
 
-    // Click Inventory tab
-    fireEvent.click(screen.getByText("BODEGA"))
+    openTab("BODEGA")
     expect(screen.getByText("BODEGA CENTRAL")).toBeInTheDocument()
 
-    // Click Catalog tab
-    fireEvent.click(screen.getByText("CATÁLOGO"))
+    openTab("CATÁLOGO")
     expect(screen.getByText("CATÁLOGO DE RECURSOS")).toBeInTheDocument()
 
-    // Click Ranking tab
-    fireEvent.click(screen.getByText("RANKING"))
+    openTab("RANKING")
     expect(screen.getByText("RANKING DE PRODUCTIVIDAD")).toBeInTheDocument()
 
-    // Click Workforce tab
-    fireEvent.click(screen.getByText("PERSONAL"))
+    openTab("PERSONAL")
     expect(screen.getByText("ADMINISTRACIÓN DE PERSONAL")).toBeInTheDocument()
 
-    // Click Logistics tab
-    fireEvent.click(screen.getByText("TRASLADOS"))
+    openTab("TRASLADOS")
     expect(screen.getByText("CONTROL DE TRASLADOS")).toBeInTheDocument()
-
-    // Open Logistics modal
-    const plusBtn = screen.getByText("PEDIR REFUERZO")
-    fireEvent.click(plusBtn)
-    // The modal state gets set to true (we can't easily assert the internal state without checking mock props, but we can hit the line)
+    fireEvent.click(screen.getByText("PEDIR REFUERZO"))
   })
 
-  it("handles logout click", () => {
-    render(
-      <BrowserRouter>
-        <DashboardManager />
-      </BrowserRouter>,
-    )
+  it("handles logout from the avatar menu", () => {
+    renderManager()
 
-    const logoutBtn = screen.getByTitle("CERRAR SESIÓN")
-    fireEvent.click(logoutBtn)
+    openAvatarMenu()
+    fireEvent.click(screen.getByRole("menuitem", { name: /cerrar sesión/i }))
 
     expect(mockStore.logout).toHaveBeenCalled()
     expect(mockNavigate).toHaveBeenCalledWith("/login")
   })
 
   it("updates UTC time on interval", () => {
-    render(
-      <BrowserRouter>
-        <DashboardManager />
-      </BrowserRouter>,
-    )
+    renderManager()
 
     act(() => {
       vi.advanceTimersByTime(2000)
     })
 
-    // We just verify it doesn't crash on unmount or interval updates.
-    // Use findAllByText for safety if it gets recreated
     expect(
       screen.getByText((content) => content.includes("UTC") || content.includes("INTERRUMPIDA")),
     ).toBeInTheDocument()
   })
 
   it("handles logistics modal close and onDataChanged triggers", () => {
-    render(
-      <BrowserRouter>
-        <DashboardManager />
-      </BrowserRouter>,
-    )
+    renderManager()
 
-    fireEvent.click(screen.getByText("TRASLADOS"))
+    openTab("TRASLADOS")
+    fireEvent.click(screen.getByText("PEDIR REFUERZO"))
+    fireEvent.click(screen.getByText("Cerrar Modal"))
+    fireEvent.click(screen.getByText("Trigger Data Changed"))
 
-    const plusBtn = screen.getByText("PEDIR REFUERZO")
-    fireEvent.click(plusBtn)
-
-    const closeBtn = screen.getByText("Cerrar Modal")
-    fireEvent.click(closeBtn)
-
-    const triggerBtn = screen.getByText("Trigger Data Changed")
-    fireEvent.click(triggerBtn)
-
-    // We just ensure it doesn't crash
     expect(screen.getByTestId("mock-logistics")).toBeInTheDocument()
   })
 
   it("handles InactivityGuard logout", () => {
-    render(
-      <BrowserRouter>
-        <DashboardManager />
-      </BrowserRouter>,
-    )
+    renderManager()
 
     fireEvent.click(screen.getByText("Trigger Guard Logout"))
     expect(mockNavigate).toHaveBeenCalledWith("/login")

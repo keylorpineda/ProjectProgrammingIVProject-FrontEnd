@@ -51,6 +51,19 @@ export interface CampScene3DProps {
   onClose: () => void
   /** Si true, dispara la cinemática del camión en cuanto la escena esté lista. */
   startWithCinematic?: boolean
+  /**
+   * Modo embebido: la escena vive como FONDO de un layout (no como overlay a
+   * pantalla completa). Oculta el botón "Ir al Panel" y al tocar un edificio
+   * navega sin desmontar la escena (la sección se abre como ventana encima).
+   */
+  embedded?: boolean
+  /**
+   * Si se provee, al tocar un edificio se llama con su id (hq, gate, barracks,
+   * watchtower, warehouse, garage, profile) EN LUGAR de navegar por router. Lo
+   * usan los layouts por pestañas (camp_leader, resource_manager) para abrir la
+   * pestaña/ventana correspondiente sin cambiar de ruta.
+   */
+  onBuildingSelect?: (buildingId: string) => void
 }
 
 /**

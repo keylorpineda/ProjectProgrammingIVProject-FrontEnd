@@ -4,43 +4,258 @@
   background: #040804;
 }
 
+/* ============================================================
+   LOADING SCREEN — pantalla de carga inmersiva del campamento
+   ============================================================ */
 .camp3d-loading {
   position: absolute;
   inset: 0;
-  background: #040804;
+  background: #020502;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  gap: 12px;
+  gap: 0;
   z-index: 99;
   font-family: "Courier New", monospace;
-}
-.camp3d-loading-text {
-  color: #6eff44;
-  font-size: 9px;
-  letter-spacing: 4px;
-  text-shadow: 0 0 6px #6eff44;
-}
-.camp3d-loading-bar {
-  width: 200px;
-  height: 1px;
-  background: rgba(100, 255, 60, 0.12);
   overflow: hidden;
 }
-.camp3d-loading-fill {
-  height: 100%;
-  width: 40%;
-  background: #6eff44;
-  animation: camp3d-boot 1s linear infinite;
+
+/* Scanlines sobre toda la pantalla de carga */
+.camp3d-loading::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(0, 0, 0, 0.18) 3px,
+    rgba(0, 0, 0, 0.18) 4px
+  );
+  pointer-events: none;
+  z-index: 1;
 }
+
+/* Viñeta en los bordes */
+.camp3d-loading::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 80% 70% at 50% 50%,
+    transparent 50%,
+    rgba(0, 0, 0, 0.75) 100%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Contenido centrado (sobre los pseudoelementos) */
+.camp3d-loading-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+  padding: 48px 56px;
+  border: 1px solid rgba(110, 255, 68, 0.18);
+  background: rgba(4, 10, 4, 0.82);
+  box-shadow:
+    0 0 60px rgba(110, 255, 68, 0.06),
+    inset 0 0 40px rgba(0, 0, 0, 0.6);
+  min-width: 380px;
+  max-width: 520px;
+}
+
+/* Banda de peligro superior del panel */
+.camp3d-loading-content::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: repeating-linear-gradient(
+    90deg,
+    #6eff44 0px,
+    #6eff44 14px,
+    transparent 14px,
+    transparent 22px
+  );
+  opacity: 0.45;
+}
+
+/* Insignia/ícono del campamento */
+.camp3d-loading-emblem {
+  font-size: 48px;
+  line-height: 1;
+  color: #6eff44;
+  text-shadow:
+    0 0 20px rgba(110, 255, 68, 0.9),
+    0 0 60px rgba(110, 255, 68, 0.4);
+  animation: camp3d-emblem-pulse 2.4s ease-in-out infinite;
+  filter: drop-shadow(0 0 12px rgba(110, 255, 68, 0.6));
+}
+
+@keyframes camp3d-emblem-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.75;
+    transform: scale(0.97);
+  }
+}
+
+/* Separador de línea */
+.camp3d-loading-divider {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(110, 255, 68, 0.5) 30%,
+    rgba(110, 255, 68, 0.5) 70%,
+    transparent
+  );
+}
+
+/* Título principal */
+.camp3d-loading-title {
+  text-align: center;
+}
+.camp3d-loading-kicker {
+  font-size: 9px;
+  letter-spacing: 5px;
+  color: rgba(110, 255, 68, 0.55);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.camp3d-loading-main {
+  font-size: 20px;
+  font-weight: bold;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  color: #e8fbe0;
+  text-shadow:
+    0 0 12px rgba(110, 255, 68, 0.5),
+    0 0 30px rgba(110, 255, 68, 0.2);
+}
+
+/* Mensajes de estado que cambian */
+.camp3d-loading-status {
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: rgba(110, 255, 68, 0.6);
+  text-transform: uppercase;
+  min-height: 14px;
+  animation: camp3d-status-flicker 0.08s linear infinite;
+  text-align: center;
+}
+
+@keyframes camp3d-status-flicker {
+  0%,
+  94% {
+    opacity: 1;
+  }
+  95% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Barra de progreso indeterminada */
+.camp3d-loading-bar-wrap {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.camp3d-loading-bar-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 7.5px;
+  letter-spacing: 2px;
+  color: rgba(110, 255, 68, 0.45);
+  text-transform: uppercase;
+}
+.camp3d-loading-bar {
+  width: 100%;
+  height: 3px;
+  background: rgba(110, 255, 68, 0.1);
+  overflow: hidden;
+  position: relative;
+}
+.camp3d-loading-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 35%;
+  background: linear-gradient(90deg, transparent, #6eff44 40%, #afffaa, #6eff44 60%, transparent);
+  box-shadow: 0 0 8px rgba(110, 255, 68, 0.8);
+  animation: camp3d-boot 1.4s ease-in-out infinite;
+}
+
 @keyframes camp3d-boot {
   0% {
     transform: translateX(-100%);
   }
   100% {
-    transform: translateX(350%);
+    transform: translateX(320%);
   }
+}
+
+/* Tres puntos de sub-estado */
+.camp3d-loading-dots {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.camp3d-loading-dot {
+  width: 5px;
+  height: 5px;
+  background: #6eff44;
+  box-shadow: 0 0 6px rgba(110, 255, 68, 0.8);
+  border-radius: 0; /* cuadrado = estético militar */
+  animation: camp3d-dot-blink 1.2s ease-in-out infinite;
+}
+.camp3d-loading-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.camp3d-loading-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes camp3d-dot-blink {
+  0%,
+  80%,
+  100% {
+    opacity: 0.2;
+    transform: scale(0.85);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+/* Texto de sub-estado abajo del panel */
+.camp3d-loading-footnote {
+  position: relative;
+  z-index: 2;
+  font-size: 7.5px;
+  letter-spacing: 3px;
+  color: rgba(110, 255, 68, 0.25);
+  text-transform: uppercase;
+  margin-top: 4px;
+  text-align: center;
 }
 
 .camp3d-error {

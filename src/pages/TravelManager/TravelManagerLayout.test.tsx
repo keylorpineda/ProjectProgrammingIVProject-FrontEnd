@@ -6,7 +6,6 @@ import TravelManagerLayout from "./TravelManagerLayout"
 
 import { useAuthStore } from "@/store/useAuthStore"
 
-// Mock the InactivityGuard component to just render its children
 vi.mock("@/components/ui/InactivityGuard", () => ({
   default: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }))
@@ -15,7 +14,11 @@ vi.mock("@/hooks/useAlertSocket", () => ({
   useAlertSocket: vi.fn(),
 }))
 
-// Mock the Auth Store
+// El campamento 3D (three.js) no corre en jsdom; se reemplaza por un stub.
+vi.mock("@/features/camp-3d/components/CampScene3DWrapper", () => ({
+  default: () => <div data-testid="camp-3d-wrapper" />,
+}))
+
 vi.mock("@/store/useAuthStore", () => ({
   useAuthStore: vi.fn(),
   useTokenStore: vi.fn((selector) => selector({ token: "fake-token" })),
@@ -23,12 +26,19 @@ vi.mock("@/store/useAuthStore", () => ({
 
 const mockLogout = vi.fn()
 
+const renderLayout = (route = "/travel-manager/dashboard") =>
+  render(
+    <MemoryRouter initialEntries={[route]}>
+      <TravelManagerLayout />
+    </MemoryRouter>,
+  )
+
+const openMenu = () => fireEvent.click(screen.getByRole("button", { name: /opciones de perfil/i }))
+
 describe("TravelManagerLayout", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.useFakeTimers()
-
-    // Mock implementation of useAuthStore
     ;(useAuthStore as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
       user: {
         id: "TM-001",
@@ -44,99 +54,43 @@ describe("TravelManagerLayout", () => {
     vi.useRealTimers()
   })
 
-  it("renders the layout correctly for authenticated user", () => {
-    render(
-      <MemoryRouter initialEntries={["/travel-manager/dashboard"]}>
-        <TravelManagerLayout />
-      </MemoryRouter>,
-    )
-
-    // Check if the title exists
-    expect(screen.getAllByText(/GESTIÓN VIAJES/i).length).toBeGreaterThan(0)
-
-    // Check if username/role elements appear
+  it("renders the navbar chrome for an authenticated user", () => {
+    renderLayout()
+    expect(screen.getByText(/GESTIÓN VIAJES/i)).toBeInTheDocument()
     expect(screen.getByText("TEST_MANAGER")).toBeInTheDocument()
-    expect(screen.getByText("BASE::CAMP-A1")).toBeInTheDocument()
-    expect(screen.getByText("TRAVEL MANAGER")).toBeInTheDocument()
+    expect(screen.getByText("BASE :: CAMP-A1")).toBeInTheDocument()
+    expect(screen.getByText("GESTOR DE VIAJES")).toBeInTheDocument()
   })
 
   it("displays the navigation menu items", () => {
-    render(
-      <MemoryRouter>
-        <TravelManagerLayout />
-      </MemoryRouter>,
-    )
-
-    // Check if navigation links exist
+    // En la home (camp) no hay ventana, así que las etiquetas del nav son únicas.
+    renderLayout("/travel-manager/camp")
     expect(screen.getByText("TABLERO")).toBeInTheDocument()
     expect(screen.getByText("EXPEDICIONES")).toBeInTheDocument()
     expect(screen.getByText("EQUIPO")).toBeInTheDocument()
     expect(screen.getByText("TRASLADOS")).toBeInTheDocument()
     expect(screen.getByText("RECURSOS")).toBeInTheDocument()
-    expect(screen.getByText("PERFIL")).toBeInTheDocument()
   })
 
-  it("calls logout when logout button is clicked", () => {
-    render(
-      <MemoryRouter>
-        <TravelManagerLayout />
-      </MemoryRouter>,
-    )
-
-    // Find the desktop logout button
-    const logoutButtons = screen.getAllByRole("button", { name: /CERRAR SESIÓN/i })
-
-    // Click the desktop logout button
-    fireEvent.click(logoutButtons[0])
-
+  it("calls logout from the avatar menu", () => {
+    renderLayout()
+    openMenu()
+    fireEvent.click(screen.getByRole("menuitem", { name: /cerrar sesión/i }))
     expect(mockLogout).toHaveBeenCalledTimes(1)
   })
 
-  it("updates UTC time correctly", () => {
-    render(
-      <MemoryRouter>
-        <TravelManagerLayout />
-      </MemoryRouter>,
-    )
+  it("exposes the profile option in the avatar menu", () => {
+    renderLayout()
+    openMenu()
+    expect(screen.getByRole("menuitem", { name: /ver perfil/i })).toBeInTheDocument()
+  })
 
-    // Fast-forward time
+  it("updates UTC time without crashing", () => {
+    renderLayout()
     act(() => {
       vi.advanceTimersByTime(2000)
     })
-
-    // There isn't an easy way to check the exact time string without matching the format,
-    // but the test confirms the interval logic doesn't crash the component
     expect(screen.getAllByText(/UTC/).length).toBeGreaterThan(0)
-  })
-
-  it("opens mobile sidebar when menu button is clicked", () => {
-    render(
-      <MemoryRouter>
-        <TravelManagerLayout />
-      </MemoryRouter>,
-    )
-
-    // Click the open menu button (visible only in mobile view typically, but in JSDOM it exists in DOM)
-    const menuButton = screen.getByLabelText("Abrir menú")
-    fireEvent.click(menuButton)
-
-    // Check if the close sidebar button appears
-    expect(screen.getAllByLabelText("Cerrar menú").length).toBeGreaterThan(0)
-  })
-
-  it("closes the mobile sidebar from the backdrop keyboard handler", () => {
-    render(
-      <MemoryRouter>
-        <TravelManagerLayout />
-      </MemoryRouter>,
-    )
-
-    fireEvent.click(screen.getByLabelText(/Abrir/i))
-    const closeBackdrop = screen.getAllByLabelText(/Cerrar/i)[1]
-
-    fireEvent.keyDown(closeBackdrop, { key: "Enter" })
-
-    expect(screen.queryAllByLabelText(/Cerrar/i)).toHaveLength(1)
   })
 
   it("renders fallback identity values when user data is partial", () => {
@@ -144,46 +98,9 @@ describe("TravelManagerLayout", () => {
       user: { id: "tm-fallback" },
       logout: mockLogout,
     })
-
-    render(
-      <MemoryRouter>
-        <TravelManagerLayout />
-      </MemoryRouter>,
-    )
-
-    expect(screen.getAllByText("BASE::N/A").length).toBeGreaterThan(0)
+    renderLayout()
+    expect(screen.getByText("BASE :: N/A")).toBeInTheDocument()
     expect(screen.getByText("TM-FALLBACK")).toBeInTheDocument()
-    expect(screen.getByText("T")).toBeInTheDocument()
-  })
-
-  it("closes the mobile sidebar from the backdrop space key", () => {
-    render(
-      <MemoryRouter>
-        <TravelManagerLayout />
-      </MemoryRouter>,
-    )
-
-    fireEvent.click(screen.getByLabelText(/Abrir/i))
-    const closeBackdrop = screen.getAllByLabelText(/Cerrar/i)[1]
-
-    fireEvent.keyDown(closeBackdrop, { key: " " })
-
-    expect(screen.queryAllByLabelText(/Cerrar/i)).toHaveLength(1)
-  })
-
-  it("keeps the mobile sidebar open for unrelated backdrop keys", () => {
-    render(
-      <MemoryRouter>
-        <TravelManagerLayout />
-      </MemoryRouter>,
-    )
-
-    fireEvent.click(screen.getByLabelText(/Abrir/i))
-    const closeBackdrop = screen.getAllByLabelText(/Cerrar/i)[1]
-
-    fireEvent.keyDown(closeBackdrop, { key: "Escape" })
-
-    expect(screen.queryAllByLabelText(/Cerrar/i)).toHaveLength(3)
   })
 
   it("renders anonymous identity fallbacks without user data", () => {
@@ -191,15 +108,8 @@ describe("TravelManagerLayout", () => {
       user: null,
       logout: mockLogout,
     })
-
-    render(
-      <MemoryRouter>
-        <TravelManagerLayout />
-      </MemoryRouter>,
-    )
-
-    expect(screen.getAllByText("BASE::N/A").length).toBeGreaterThan(0)
+    renderLayout()
+    expect(screen.getByText("BASE :: N/A")).toBeInTheDocument()
     expect(screen.getByText("TRAVEL MGR")).toBeInTheDocument()
-    expect(screen.getByText("T")).toBeInTheDocument()
   })
 })
