@@ -256,6 +256,17 @@ const CINE_KEYS: CineKey[] = [
   { t: 7.2, target: [0.0, 2.0, 22.0], theta: 2.9, phi: 0.95, radius: 34 },
 ]
 const CINE_DURATION = 7.8
+// Duración del blend-out al terminar la cinemática (transición suave de vuelta
+// a la cámara orbital para evitar el tirón al cortar el control guionado).
+const CINE_BLEND_OUT = 1.5
+// Posición de reposo a la que vuelve la cámara al terminar la cinemática —
+// coincide con camState inicial de useThreeScene para que la transición sea natural.
+const CINE_REST: Omit<CineKey, "t"> = {
+  target: [0, 0.5, 13],
+  theta: Math.PI * 0.48,
+  phi: 1.28,
+  radius: 40,
+}
 // Nonce del store ya consumido; module-level para sobrevivir remounts del overlay.
 let lastConsumedCinematic = 0
 
@@ -486,12 +497,32 @@ export default function CampScene3D({
       if (cineActiveRef.current) {
         if (cineStartRef.current === null) cineStartRef.current = t
         const ct = t - cineStartRef.current
-        driveCinematicCamera(ct, ctx.camState)
-        if (ct > CINE_DURATION) {
-          cineActiveRef.current = false
-          // Restaurar marcador de perfil al terminar la cinemática
-          if (profileRef.current) profileRef.current.group.visible = true
-          setShowCine(false)
+
+        if (ct <= CINE_DURATION) {
+          // Fase principal: recorre todos los keyframes guionados.
+          driveCinematicCamera(ct, ctx.camState)
+        } else {
+          // Fase blend-out: interpola suavemente desde el último keyframe
+          // hacia la posición de reposo orbital para evitar el tirón.
+          const blendT = Math.min((ct - CINE_DURATION) / CINE_BLEND_OUT, 1)
+          const k = smoothstep(blendT)
+          const mix = (x: number, y: number) => x + (y - x) * k
+          const lastKey = CINE_KEYS[CINE_KEYS.length - 1]
+          ctx.camState.target.set(
+            mix(lastKey.target[0], CINE_REST.target[0]),
+            mix(lastKey.target[1], CINE_REST.target[1]),
+            mix(lastKey.target[2], CINE_REST.target[2]),
+          )
+          ctx.camState.theta = mix(lastKey.theta, CINE_REST.theta)
+          ctx.camState.phi = mix(lastKey.phi, CINE_REST.phi)
+          ctx.camState.radius = mix(lastKey.radius, CINE_REST.radius)
+
+          if (blendT >= 1) {
+            cineActiveRef.current = false
+            // Restaurar marcador de perfil al terminar el blend
+            if (profileRef.current) profileRef.current.group.visible = true
+            setShowCine(false)
+          }
         }
       }
       handlesRef.current?.animate(t)

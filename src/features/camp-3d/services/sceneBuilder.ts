@@ -3111,8 +3111,10 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
       }
       iTSmoke.instanceMatrix.needsUpdate = true
     }
-    // TIRE SMOKE UPDATE — solo procesar cuando la animación está activa
-    iTSmoke.count = transferStart >= 0 ? NUM_TSMOKE : 0
+    // TIRE SMOKE UPDATE — procesar siempre que haya partículas con vida restante
+    // (no depender solo de transferStart para no cortar el humo en seco al terminar)
+    const hasSmokeActive = tSmokeLife.some((l) => l > 0)
+    iTSmoke.count = hasSmokeActive || transferStart >= 0 ? NUM_TSMOKE : 0
     let updatedTSmoke = false
     for (let i = 0; i < NUM_TSMOKE; i++) {
       if (tSmokeLife[i] > 0) {
