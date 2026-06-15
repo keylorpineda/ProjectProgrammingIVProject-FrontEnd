@@ -1,6 +1,7 @@
 import { LogOut } from "lucide-react"
 import { useEffect, useState } from "react"
 
+import Open3DButton from "@/features/camp-3d/components/Open3DButton"
 import { useMyBadges } from "@/features/worker/hooks/useWorkerAPI"
 import { useAuth } from "@/pages/Admin/context/AuthContext"
 
@@ -53,13 +54,12 @@ export default function WorkerTopBar({ campName, activeLabel, onLogout }: Worker
         </div>
       </div>
 
-      {/* Center Clock */}
-      <div className="hidden lg:flex items-center gap-8 text-center px-6">
-        <div className="flex items-center gap-2 text-left text-sm">
-          <span className="tracking-widest text-zinc-300 font-bold font-mono">
-            {utcTime}
-          </span>
-        </div>
+      {/* Center Clock + acceso 3D */}
+      <div className="flex items-center gap-6 px-6">
+        <span className="hidden lg:inline tracking-widest text-zinc-300 font-bold font-mono text-sm">
+          {utcTime}
+        </span>
+        <Open3DButton />
       </div>
 
       <div className="flex items-center self-end sm:self-center border-2 border-[#3b4d3e] bg-[#0d0c0b] p-3 rounded-sm">
@@ -100,9 +100,7 @@ export default function WorkerTopBar({ campName, activeLabel, onLogout }: Worker
           title="CERRAR SESIÓN"
         >
           <LogOut className="h-6 w-6 shrink-0" />
-          <span className="text-sm font-bold tracking-widest whitespace-nowrap">
-            CERRAR SESIÓN
-          </span>
+          <span className="text-sm font-bold tracking-widest whitespace-nowrap">CERRAR SESIÓN</span>
         </button>
       </div>
     </header>
