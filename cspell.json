@@ -193,7 +193,9 @@
     "Srcs",
     "crossfade",
     "unsub",
-    "guionada"
+    "guionada",
+    "TSMOKE",
+    "slerp"
   ],
   "ignorePaths": [
     "node_modules",

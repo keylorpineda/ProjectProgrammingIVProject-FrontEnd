@@ -49,6 +49,8 @@ export interface CampScene3DProps {
   campId: string
   /** Cierra la vista 3D y vuelve a la vista anterior. */
   onClose: () => void
+  /** Si true, dispara la cinemática del camión en cuanto la escena esté lista. */
+  startWithCinematic?: boolean
 }
 
 /**

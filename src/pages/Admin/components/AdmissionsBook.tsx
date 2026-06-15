@@ -36,6 +36,7 @@ type AdmissionDetail = AdmissionSummary & {
   aiRecommendation: AiRecommendation
   contactEmail: string | null
   admissionStatus: string
+  photoUrl?: string | null
 }
 
 // Default role assigned to newly admitted survivors. Matches `worker` role in
@@ -430,6 +431,7 @@ const mapAdmissionDetail = (admission: AiAdmission): AdmissionDetail => {
     campId: admission.camp_id ?? "",
     appearanceNotes: appearanceNotes || "Sin observaciones adicionales.",
     fingerprintsScanned: Boolean(candidate.id_card_url),
+    photoUrl: candidate.photo_url ?? null,
     aiScore: admission.score ?? 0,
     suggestedDecision,
     aiAnalysis: analysis,
@@ -849,11 +851,35 @@ export default function AdmissionsBook() {
               <div className="portfolio-page left-page">
                 <div className="binder-header">PERFIL DE INTELIGENCIA</div>
                 <div className="profile-photo">
-                  <div className="photo-placeholder">
-                    <svg viewBox="0 0 24 24" fill="#000" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z" />
-                    </svg>
-                  </div>
+                  {detailData.photoUrl ? (
+                    <img
+                      src={detailData.photoUrl}
+                      alt="Foto del solicitante"
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        display: "block",
+                      }}
+                    />
+                  ) : (
+                    <div className="photo-placeholder">
+                      <svg viewBox="0 0 24 24" fill="#000" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z" />
+                      </svg>
+                      <span
+                        style={{
+                          fontSize: "0.55rem",
+                          color: "#666",
+                          fontFamily: "var(--font-mono)",
+                          marginTop: "4px",
+                          display: "block",
+                        }}
+                      >
+                        SIN FOTO
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <div className="form-field">
                   <span>EXPEDIENTE:</span> <span>{detailData.fileNumber}</span>

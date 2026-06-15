@@ -242,13 +242,13 @@ interface CineKey {
   radius: number
 }
 const CINE_KEYS: CineKey[] = [
-  { t: 0.0, target: [18.9, 2.0, 13.0], theta: 1.9, phi: 1.16, radius: 15 },
-  { t: 2.6, target: [18.0, 1.6, 19.0], theta: 2.1, phi: 1.06, radius: 17 },
-  { t: 5.5, target: [11.0, 1.6, 23.5], theta: 2.4, phi: 1.0, radius: 21 },
-  { t: 8.5, target: [2.0, 2.0, 23.5], theta: 2.7, phi: 0.95, radius: 28 },
-  { t: 10.6, target: [0.0, 2.0, 22.0], theta: 2.9, phi: 0.95, radius: 30 },
+  { t: 0.0, target: [18.9, 2.0, 13.0], theta: 1.9, phi: 1.14, radius: 13 },
+  { t: 1.8, target: [18.0, 1.6, 19.0], theta: 2.1, phi: 1.06, radius: 16 },
+  { t: 3.5, target: [11.0, 1.6, 22.5], theta: 2.4, phi: 1.0, radius: 20 },
+  { t: 5.5, target: [2.0, 2.0, 23.5], theta: 2.7, phi: 0.95, radius: 26 },
+  { t: 7.2, target: [0.0, 2.0, 22.0], theta: 2.9, phi: 0.95, radius: 30 },
 ]
-const CINE_DURATION = 10.8
+const CINE_DURATION = 7.8
 // Nonce del store ya consumido; module-level para sobrevivir remounts del overlay.
 let lastConsumedCinematic = 0
 
@@ -388,8 +388,7 @@ export default function CampScene3D({ campId, onClose, onReady }: Props) {
       const handles = buildCampScene(ctx.scene, campId)
       handlesRef.current = handles
       // Exponer en window para pruebas desde consola del navegador
-      ;(window as unknown as Record<string, unknown>).__playTransfer = () =>
-        handles.playTransferAnimation()
+      ;(window as unknown as Record<string, unknown>).__playTransfer = () => startCinematic()
 
       // Paso 09 — filtro por rol: los edificios sin acceso se oscurecen pero
       // SIGUEN siendo clickeables; al tocarlos se muestra el aviso de acceso
@@ -446,12 +445,18 @@ export default function CampScene3D({ campId, onClose, onReady }: Props) {
       targetsRef.current = targets
       onReady?.()
 
-      // Si se pidió la cinemática del camión antes de que la escena estuviera
-      // lista (p. ej. al crear el traslado desde otra vista), dispárala ahora.
+      // Detecta cinemática pendiente al montar. Se usa setTimeout(0) para diferir
+      // el disparo al siguiente ciclo de macrotareas: en React 18 StrictMode el
+      // primer mount (descartado) ejecuta onReady, incrementa lastConsumedCinematic
+      // y lanza el timeout; el cleanup cancela el RAF de ese mount, pero el timeout
+      // ya está en cola. Cuando dispara, handlesRef.current apunta a los handles del
+      // segundo mount (el real), así que playTransferAnimation() opera sobre la
+      // escena viva. El segundo mount ve lastConsumedCinematic ya consumido y no
+      // agenda otro timeout, evitando duplicados.
       const pendingCine = use3DStore.getState().transferCinematic
       if (pendingCine > lastConsumedCinematic) {
         lastConsumedCinematic = pendingCine
-        startCinematic()
+        setTimeout(() => startCinematic(), 0)
       }
     },
     onFrame: (t, ctx) => {

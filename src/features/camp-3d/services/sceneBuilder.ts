@@ -213,7 +213,7 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
 
   // ---- GROUND ----
   // Extended outer terrain (visible beyond fence when camera pans)
-  pln(180, 160, mat(C.dirt, 0, 0, 0.99), 0, -0.04, 0)
+  pln(180, 160, matTex(TX.ground, 0x1a2c09, 0, 0, 0.98, 0, 1.4), 0, -0.04, 0)
   pln(56, 44, M.ground, 0, 0, 0)
   pln(4, 26, M.gravel, 0, 0.01, -1)
   pln(22, 4, M.gravel, 0, 0.01, 5)
@@ -280,14 +280,14 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
   ])
     mk(gCyl(0.36, 0.36, 0.22, 8), M.tire, wkx2 + 7.0, 0.22, wkz2, 0, 0, Math.PI / 2)
   pln(1.5, 0.9, M.puddle, 7.2, 0.022, 38.6)
-  // Postes eléctricos lado derecho
-  for (let pp = 0; pp < 5; pp++) {
-    const ppz = 19 + pp * 7.8
+  // Postes eléctricos lado derecho — empiezan en z=32 (después del punto de fusión del camión)
+  for (let pp = 0; pp < 4; pp++) {
+    const ppz = 32 + pp * 8.0
     box(0.16, 7.5, 0.16, mat(0x2a2418, 0, 0, 0.88), 10.0, 3.75, ppz)
     box(2.8, 0.1, 0.1, mat(0x1e1812, 0, 0, 0.6, 0.25), 10.0, 7.1, ppz)
-    if (pp < 4) {
-      box(0.04, 0.22, 7.8, mat(0x181408, 0, 0, 0.75), 8.8, 6.88, ppz + 3.9)
-      box(0.04, 0.22, 7.8, mat(0x181408, 0, 0, 0.75), 11.2, 6.88, ppz + 3.9)
+    if (pp < 3) {
+      box(0.04, 0.22, 8.0, mat(0x181408, 0, 0, 0.75), 8.8, 6.88, ppz + 4.0)
+      box(0.04, 0.22, 8.0, mat(0x181408, 0, 0, 0.75), 11.2, 6.88, ppz + 4.0)
     }
   }
   // Señal de carretera verde (tipo distancia)
@@ -297,14 +297,16 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
   // Pasto de arcén (instanciado, 260 briznas a los costados de la carretera)
   const rdGrsGeo = new THREE.PlaneGeometry(0.13, 0.88)
   const rdGrsMat = new THREE.MeshStandardMaterial({
-    color: 0x3c4018,
-    roughness: 1,
+    color: 0x4a5c18,
+    emissive: 0x182004,
+    emissiveIntensity: 0.12,
+    roughness: 0.9,
     side: THREE.DoubleSide,
   })
   const iRdGrs = new THREE.InstancedMesh(rdGrsGeo, rdGrsMat, 260)
   for (let rgi = 0; rgi < 260; rgi++) {
     const side = rgi % 2 === 0 ? 1 : -1
-    const rgx = side * (5.2 + Math.random() * 7.5)
+    const rgx = side * (6.5 + Math.random() * 6.5)
     const rgz = 14.5 + Math.random() * 38
     const rsc = 0.5 + Math.random() * 0.85
     const rLean = (Math.random() - 0.5) * 0.38
@@ -1185,12 +1187,7 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
   // Marcas de rodada
   for (let rm = 0; rm < 5; rm++)
     box(0.18, 0.02, 1.4, mat(0x4a4230, 0, 0, 0.92), 13.5, 0.022, 14 + rm * 4.2)
-  // Postes del portón (hormigón + metal)
-  box(0.55, 5.8, 0.55, matTex(TX.conc, C.concrete, 0, 0, 0.88), 9.7, 2.9, 12.1)
-  box(0.55, 5.8, 0.55, matTex(TX.conc, C.concrete, 0, 0, 0.88), 17.3, 2.9, 12.1)
-  box(0.72, 0.22, 0.72, M.metal, 9.7, 5.9, 12.1)
-  box(0.72, 0.22, 0.72, M.metal, 17.3, 5.9, 12.1)
-  // Luces rojas de advertencia
+  // Luces rojas de advertencia (postes ya los proveen los pilares del garaje)
   sph(0.18, 7, mat(0xff2200, 0xff2200, 4.0), 9.7, 5.7, 11.9)
   sph(0.18, 7, mat(0xff2200, 0xff2200, 4.0), 17.3, 5.7, 11.9)
   ptL(0xff1100, 3.0, 8, 9.7, 5.5, 11.8)
@@ -2772,14 +2769,14 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
   root.add(truckGroup)
 
   // --- TIRE SMOKE (Drift) ---
-  const tireSmokeGeo = new THREE.SphereGeometry(0.2, 8, 8)
+  const tireSmokeGeo = new THREE.SphereGeometry(0.28, 6, 6)
   const tireSmokeMat = new THREE.MeshBasicMaterial({
-    color: 0x999999,
+    color: 0x777777,
     transparent: true,
-    opacity: 0.15,
+    opacity: 0.55,
     depthWrite: false,
   })
-  const NUM_TSMOKE = 120
+  const NUM_TSMOKE = 160
   const iTSmoke = new THREE.InstancedMesh(tireSmokeGeo, tireSmokeMat, NUM_TSMOKE)
   const tSmokeLife: number[] = new Array(NUM_TSMOKE).fill(0)
   let tSmokeIdx = 0
@@ -2791,26 +2788,28 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
   iTSmoke.instanceMatrix.needsUpdate = true
   root.add(iTSmoke)
 
-  // Curva suave: garaje → acceso → giro gradual a la principal → niebla
-  // Usamos puntos meticulosamente calculados para evitar overshoot (que se desvíe a la izquierda)
+  // Curva de salida: garaje → acceso → giro progresivo (Z siempre creciente) → carretera principal
+  // GJX=13.5, GJZ=8.5 → el giro empieza antes para que el camión no choque con los postes
   const transferCurve = new THREE.CatmullRomCurve3([
-    new THREE.Vector3(GJX, 0, GJZ - 1.0), // dentro del garaje
-    new THREE.Vector3(GJX, 0, GJZ + 6.0), // cruza la valla recto
-    new THREE.Vector3(GJX, 0, GJZ + 12.0), // mantiene recto en carretera de acceso
-    new THREE.Vector3(GJX, 0, GJZ + 14.0), // justo antes de empezar el giro
-    new THREE.Vector3(GJX - 0.2, 0, GJZ + 15.0), // giro muy sutil a la derecha
-    new THREE.Vector3(GJX - 1.0, 0, GJZ + 16.5), // acelerando el giro
-    new THREE.Vector3(GJX - 3.5, 0, GJZ + 19.0), // giro medio (drift)
-    new THREE.Vector3(5, 0, 24.5), // giro avanzado
-    new THREE.Vector3(2, 0, 25.5), // casi en la principal
-    new THREE.Vector3(0, 0, 28), // recta en la principal
-    new THREE.Vector3(0, 0, 38), // avanzando
-    new THREE.Vector3(0.2, 0, 51), // desaparece en niebla
+    new THREE.Vector3(GJX, 0, GJZ - 1.0), // (13.5, 7.5)  dentro del garaje
+    new THREE.Vector3(GJX, 0, GJZ + 5.5), // (13.5, 14.0) sale por la puerta
+    new THREE.Vector3(GJX, 0, GJZ + 11.0), // (13.5, 19.5) carretera de acceso recta
+    new THREE.Vector3(GJX - 1.5, 0, GJZ + 13.5), // (12.0, 22.0) inicia giro suave
+    new THREE.Vector3(GJX - 4.5, 0, GJZ + 16.5), // (9.0, 25.0)  giro medio — z<26.8 (no choca)
+    new THREE.Vector3(5.5, 0, 27.0), // giro avanzado — ya en x<6, claro de postes
+    new THREE.Vector3(1.5, 0, 29.5), // casi en la principal
+    new THREE.Vector3(0, 0, 31.5), // incorporado a carretera principal
+    new THREE.Vector3(0, 0, 41), // avanzando
+    new THREE.Vector3(0.2, 0, 52), // desaparece en niebla
   ])
   let transferStart = -1
   let transferQueued = false
   let tkWheelAngle = 0 // acumulador de rotación de ruedas
   const tkPrevPos = new THREE.Vector3() // para calcular velocidad real
+  // Quaternion slerp para inercia de dirección (evita el drift instantáneo)
+  const tkSteerQuat = new THREE.Quaternion()
+  const tkTargetQuat = new THREE.Quaternion()
+  let tkTurnRate = 0
   const playTransferAnimation = () => {
     transferQueued = true
   }
@@ -2948,10 +2947,17 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
       transferCurve.getPoint(0, tmpV)
       tkPrevPos.copy(tmpV)
       truckGroup.position.copy(tmpV)
-      // El frente del camión es +Z — lookAt apunta -Z al objetivo, entonces rotamos 180°
+      // Orientación inicial: atan2 sobre coordenadas locales evita confusión world/local
       transferCurve.getPoint(0.015, tmpV2)
-      truckGroup.lookAt(tmpV2.x, 0, tmpV2.z)
-      truckGroup.rotateY(Math.PI)
+      const initAngle = Math.atan2(tmpV2.x - tmpV.x, tmpV2.z - tmpV.z)
+      tkSteerQuat.setFromEuler(new THREE.Euler(0, initAngle, 0))
+      truckGroup.quaternion.copy(tkSteerQuat)
+      tkTurnRate = 0
+      // Portón de traslados: abrir de inmediato (sin animación gradual)
+      portonPivotR.rotation.y = Math.PI * 0.55
+      portonPivotL.rotation.y = -(Math.PI * 0.55)
+      // Barrera vehicular: levantarla para despejar el camino
+      gtBarrierArm.rotation.z = -(Math.PI * 0.45)
     }
     // TIRE SMOKE UPDATE
     let updatedTSmoke = false
@@ -2982,35 +2988,33 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
     if (transferStart >= 0) {
       const tk = t - transferStart
       const DRIVE_START = 1.4
-      const DRIVE_DUR = 8.0
+      const DRIVE_DUR = 5.0
       const DRIVE_END = DRIVE_START + DRIVE_DUR
 
       // ── Puerta garaje: roll-up (sube verticalmente) ──
       const doorUp = 3.6 // cuánto sube para desaparecer en el techo
+      const doorCloseStart = DRIVE_END - 0.8
       if (tk <= DRIVE_START) {
         gjDoorPivot.position.y = doorUp * Math.min(tk / DRIVE_START, 1)
-      } else if (tk >= 8.0) {
-        gjDoorPivot.position.y = doorUp * Math.max(1 - (tk - 8.0) / 1.2, 0)
+      } else if (tk >= doorCloseStart) {
+        gjDoorPivot.position.y = doorUp * Math.max(1 - (tk - doorCloseStart) / 1.2, 0)
       }
 
-      // ── Portón vehicular del garaje: las dos hojas abren hacia afuera (0.4-1.4s)
-      const gateOpening = Math.min(Math.max((tk - 0.4) / 1.0, 0), 1)
-      const gateClosing = tk >= 8.0 ? Math.max(1 - (tk - 8.0) / 1.2, 0) : 1
-      const gateSwing = Math.min(gateOpening, gateClosing) * (Math.PI * 0.55)
-      portonPivotR.rotation.y = gateSwing
-      portonPivotL.rotation.y = -gateSwing
+      // Portón de traslados: ya abierto desde el inicio (sin animación gradual)
 
-      // ── Faros + luces traseras (secuencia de encendido realista) ──
+      // ── Faros + luces traseras — encendido dramático ──
       const headProg = Math.min(Math.max((tk - 0.5) / 0.6, 0), 1)
       const tailProg = Math.min(Math.max((tk - 0.3) / 0.4, 0), 1)
+      // Parpadeo sutil de ignición en los primeros 0.1s
+      const ignitionFlicker = headProg < 0.15 ? 0.5 + Math.random() * 0.5 : 1.0
       if (truckGroup.visible) {
-        tkLight.intensity = headProg * 14
-        tkSpotL.intensity = headProg * 8
-        tkSpotR.intensity = headProg * 8
-        tkRearLight.intensity = tailProg * 4
-        tkHLMat.emissiveIntensity = headProg * 4.5
-        tkHRMat.emissiveIntensity = headProg * 4.5
-        tkTailMat.emissiveIntensity = tailProg * 3.0
+        tkLight.intensity = headProg * ignitionFlicker * 22
+        tkSpotL.intensity = headProg * ignitionFlicker * 18
+        tkSpotR.intensity = headProg * ignitionFlicker * 18
+        tkRearLight.intensity = tailProg * 8
+        tkHLMat.emissiveIntensity = headProg * ignitionFlicker * 9
+        tkHRMat.emissiveIntensity = headProg * ignitionFlicker * 9
+        tkTailMat.emissiveIntensity = tailProg * 5.5
       } else {
         tkLight.intensity = 0
         tkSpotL.intensity = 0
@@ -3035,23 +3039,28 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
         const suspension = Math.sin(tkWheelAngle * 2.8) * 0.018 * Math.min(frameSpeed * 60, 1)
         truckGroup.position.set(tmpV.x, tmpV.y + suspension, tmpV.z)
 
-        // Dirección: lookAt con punto más lejano en curva → giros más suaves
-        const lookAhead = Math.min(tu + 0.06, 1)
+        // Dirección: atan2 en espacio local → slerp → inercia de volante realista
+        const lookAhead = Math.min(tu + 0.08, 1)
         transferCurve.getPoint(lookAhead, tmpV2)
-        truckGroup.lookAt(tmpV2.x, suspension, tmpV2.z)
-        truckGroup.rotateY(Math.PI)
+        const tAngle = Math.atan2(tmpV2.x - truckGroup.position.x, tmpV2.z - truckGroup.position.z)
+        tkTargetQuat.setFromEuler(new THREE.Euler(0, tAngle, 0))
+        tkTurnRate = tkSteerQuat.angleTo(tkTargetQuat)
+        tkSteerQuat.slerp(tkTargetQuat, 0.1 + Math.min(frameSpeed * 30, 0.08))
+        truckGroup.quaternion.copy(tkSteerQuat)
 
         // Rotación de ruedas (rodan en función de la distancia recorrida)
         tkWheels.forEach((w) => {
           w.rotation.x = -tkWheelAngle
         })
 
-        // Humo constante en ambas ruedas traseras mientras se mueve
-        if (tk >= DRIVE_START && tk < DRIVE_END && Math.random() > 0.4) {
+        // Humo: más denso en curvas pronunciadas (tkTurnRate alto)
+        const smokeThr = tkTurnRate > 0.05 ? 0.12 : 0.58
+        const smokeLife = tkTurnRate > 0.05 ? 1.5 : 1.0
+        if (tk >= DRIVE_START && tk < DRIVE_END && Math.random() > smokeThr) {
           truckGroup.updateMatrix()
 
           // Rueda izquierda
-          tSmokeLife[tSmokeIdx] = 1.0
+          tSmokeLife[tSmokeIdx] = smokeLife
           tmpV2.set(-0.8, 0.15, -1.2)
           tmpV2.applyMatrix4(truckGroup.matrix)
           tmpV.copy(tmpV2)
@@ -3060,7 +3069,7 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
           tSmokeIdx = (tSmokeIdx + 1) % NUM_TSMOKE
 
           // Rueda derecha
-          tSmokeLife[tSmokeIdx] = 1.0
+          tSmokeLife[tSmokeIdx] = smokeLife
           tmpV2.set(0.8, 0.15, -1.2)
           tmpV2.applyMatrix4(truckGroup.matrix)
           tmpV.copy(tmpV2)
@@ -3073,11 +3082,12 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
       // ── El camión se desvanece en la niebla a partir del 80% de la curva ──
       if (tk >= DRIVE_END) {
         if (truckGroup.visible) truckGroup.visible = false
-        // Reset portón si quedó abierto
+        // Cerrar portón y bajar barrera
         portonPivotR.rotation.y = 0
         portonPivotL.rotation.y = 0
+        gtBarrierArm.rotation.z = 0
       }
-      if (tk >= 11.0) transferStart = -1
+      if (tk >= 8.5) transferStart = -1
     }
 
     lampLights.forEach((ll, li) => {
