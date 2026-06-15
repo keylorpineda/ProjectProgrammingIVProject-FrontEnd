@@ -1,10 +1,14 @@
 import { AnimatePresence, motion } from "framer-motion"
-import { useCallback, useEffect, useRef, useState } from "react"
-
-import Camp3DEntryTransition from "./Camp3DEntryTransition"
-import CampScene3DWrapper from "./CampScene3DWrapper"
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react"
 
 import { use3DStore } from "@/store/use3DStore"
+
+// Lazy-load the heavy 3D chunk (three.js ~600 KB) only when the user opens the
+// 3D view for the first time. CampScene3DWrapper owns its own loading skeleton so
+// the Suspense fallback is just null — the wrapper already shows "BOOT..." while
+// Three.js initialises, and the entry transition covers the transition.
+const CampScene3DWrapper = lazy(() => import("./CampScene3DWrapper"))
+const Camp3DEntryTransition = lazy(() => import("./Camp3DEntryTransition"))
 
 /**
  * Punto de montaje ÚNICO de la vista 3D (Paso 08). Vive en el layout de cada
@@ -50,13 +54,15 @@ export default function Camp3DOverlay() {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <CampScene3DWrapper campId={activeCamp3DId} onClose={() => setIs3DActive(false)} />
+          <Suspense fallback={null}>
+            <CampScene3DWrapper campId={activeCamp3DId} onClose={() => setIs3DActive(false)} />
 
-          <AnimatePresence>
-            {showIntro ? (
-              <Camp3DEntryTransition key="camp3d-intro" onComplete={handleIntroComplete} />
-            ) : null}
-          </AnimatePresence>
+            <AnimatePresence>
+              {showIntro ? (
+                <Camp3DEntryTransition key="camp3d-intro" onComplete={handleIntroComplete} />
+              ) : null}
+            </AnimatePresence>
+          </Suspense>
         </motion.div>
       ) : null}
     </AnimatePresence>

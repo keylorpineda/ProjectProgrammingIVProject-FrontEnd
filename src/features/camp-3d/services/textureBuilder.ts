@@ -5,6 +5,10 @@ export interface TexPair {
   normalMap: THREE.CanvasTexture
 }
 
+// Module-level cache: avoid regenerating expensive procedural textures when the
+// 3D overlay is closed and reopened. Key encodes all parameters that affect output.
+const _texCache = new Map<string, TexPair>()
+
 // ---- Noise helpers ----
 
 // Deterministic hash — shifted by seed so each camp gets different patterns
@@ -94,6 +98,9 @@ function sobelNormal(src: ImageData, W: number, H: number, str = 2): ImageData {
 // ---- BRICK ----
 // Realistic English-bond brick with seed-varied color + weathering level
 export function makeBrickTex(rep = 2, seed = 0, weathering = 0.5): TexPair {
+  const key = `brick:${rep}:${seed}:${weathering}`
+  const cached = _texCache.get(key)
+  if (cached) return cached
   const W = 512,
     H = 512
   const [c, ctx] = makeCtx(W, H)
@@ -160,12 +167,17 @@ export function makeBrickTex(rep = 2, seed = 0, weathering = 0.5): TexPair {
 
   const [nc, nctx] = makeCtx(W, H)
   nctx.putImageData(sobelNormal(ctx.getImageData(0, 0, W, H), W, H, 6.5), 0, 0)
-  return { map: toTex(c, rep), normalMap: toTex(nc, rep) }
+  const result: TexPair = { map: toTex(c, rep), normalMap: toTex(nc, rep) }
+  _texCache.set(key, result)
+  return result
 }
 
 // ---- CORRUGATED METAL ----
 // Horizontal ridges, seed-placed rust streaks + dents, metallic sheen
 export function makeCorrugateTex(rep = 3, seed = 0, weathering = 0.5): TexPair {
+  const key = `corrugate:${rep}:${seed}:${weathering}`
+  const cached = _texCache.get(key)
+  if (cached) return cached
   const W = 256,
     H = 512
   const [c, ctx] = makeCtx(W, H)
@@ -244,12 +256,17 @@ export function makeCorrugateTex(rep = 3, seed = 0, weathering = 0.5): TexPair {
 
   const [nc, nctx] = makeCtx(W, H)
   nctx.putImageData(sobelNormal(ctx.getImageData(0, 0, W, H), W, H, 7), 0, 0)
-  return { map: toTex(c, rep), normalMap: toTex(nc, rep) }
+  const result: TexPair = { map: toTex(c, rep), normalMap: toTex(nc, rep) }
+  _texCache.set(key, result)
+  return result
 }
 
 // ---- WOOD ----
 // Organic grain with fbm, realistic knots with annual rings
 export function makeWoodTex(rep = 2, seed = 0, weathering = 0.5): TexPair {
+  const key = `wood:${rep}:${seed}:${weathering}`
+  const cached = _texCache.get(key)
+  if (cached) return cached
   const W = 256,
     H = 512
   const [c, ctx] = makeCtx(W, H)
@@ -342,12 +359,17 @@ export function makeWoodTex(rep = 2, seed = 0, weathering = 0.5): TexPair {
 
   const [nc, nctx] = makeCtx(W, H)
   nctx.putImageData(sobelNormal(ctx.getImageData(0, 0, W, H), W, H, 2), 0, 0)
-  return { map: toTex(c, rep), normalMap: toTex(nc, rep) }
+  const result: TexPair = { map: toTex(c, rep), normalMap: toTex(nc, rep) }
+  _texCache.set(key, result)
+  return result
 }
 
 // ---- CONCRETE ----
 // Multi-layer fbm noise, realistic crack network, aggregate pebbles visible
 export function makeConcreteTex(rep = 2, seed = 0, weathering = 0.5): TexPair {
+  const key = `concrete:${rep}:${seed}:${weathering}`
+  const cached = _texCache.get(key)
+  if (cached) return cached
   const W = 512,
     H = 512
   const [c, ctx] = makeCtx(W, H)
@@ -436,12 +458,17 @@ export function makeConcreteTex(rep = 2, seed = 0, weathering = 0.5): TexPair {
 
   const [nc, nctx] = makeCtx(W, H)
   nctx.putImageData(sobelNormal(ctx.getImageData(0, 0, W, H), W, H, 3.5), 0, 0)
-  return { map: toTex(c, rep), normalMap: toTex(nc, rep) }
+  const result: TexPair = { map: toTex(c, rep), normalMap: toTex(nc, rep) }
+  _texCache.set(key, result)
+  return result
 }
 
 // ---- RUST ----
 // Layered oxidation patterns, dark metal showing through
 export function makeRustTex(rep = 3, seed = 0, weathering = 0.5): TexPair {
+  const key = `rust:${rep}:${seed}:${weathering}`
+  const cached = _texCache.get(key)
+  if (cached) return cached
   const W = 256,
     H = 256
   const [c, ctx] = makeCtx(W, H)
@@ -511,12 +538,17 @@ export function makeRustTex(rep = 3, seed = 0, weathering = 0.5): TexPair {
 
   const [nc, nctx] = makeCtx(W, H)
   nctx.putImageData(sobelNormal(ctx.getImageData(0, 0, W, H), W, H, 3), 0, 0)
-  return { map: toTex(c, rep), normalMap: toTex(nc, rep) }
+  const result: TexPair = { map: toTex(c, rep), normalMap: toTex(nc, rep) }
+  _texCache.set(key, result)
+  return result
 }
 
 // ---- GROUND ----
 // 6-octave fbm terrain with stronger contrast, more pebbles, mud ruts, vegetation patches
 export function makeGroundTex(rep = 8, seed = 0, _weathering = 0.5): TexPair {
+  const key = `ground:${rep}:${seed}`
+  const cached = _texCache.get(key)
+  if (cached) return cached
   const W = 512,
     H = 512
   const [c, ctx] = makeCtx(W, H)
@@ -606,12 +638,17 @@ export function makeGroundTex(rep = 8, seed = 0, _weathering = 0.5): TexPair {
 
   const [nc, nctx] = makeCtx(W, H)
   nctx.putImageData(sobelNormal(ctx.getImageData(0, 0, W, H), W, H, 7), 0, 0)
-  return { map: toTex(c, rep), normalMap: toTex(nc, rep) }
+  const result: TexPair = { map: toTex(c, rep), normalMap: toTex(nc, rep) }
+  _texCache.set(key, result)
+  return result
 }
 
 // ---- SANDBAG ----
 // Burlap weave pattern with dirt, compact variation
 export function makeSandbagTex(rep = 4, seed = 0): TexPair {
+  const key = `sandbag:${rep}:${seed}`
+  const cached = _texCache.get(key)
+  if (cached) return cached
   const W = 128,
     H = 128
   const [c, ctx] = makeCtx(W, H)
@@ -667,5 +704,7 @@ export function makeSandbagTex(rep = 4, seed = 0): TexPair {
 
   const [nc, nctx] = makeCtx(W, H)
   nctx.putImageData(sobelNormal(ctx.getImageData(0, 0, W, H), W, H, 1.5), 0, 0)
-  return { map: toTex(c, rep), normalMap: toTex(nc, rep) }
+  const result: TexPair = { map: toTex(c, rep), normalMap: toTex(nc, rep) }
+  _texCache.set(key, result)
+  return result
 }

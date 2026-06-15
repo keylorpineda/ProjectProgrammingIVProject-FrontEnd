@@ -79,9 +79,13 @@ export function useThreeScene(
     const initialW = canvas.clientWidth || window.innerWidth
     const initialH = canvas.clientHeight || window.innerHeight
     renderer.setSize(initialW, initialH, false)
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    // Cap at 1.5 — on retina screens going to 2 doubles the pixel fill with
+    // near-zero perceptible difference on a post-apoc scene.
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5))
     renderer.shadowMap.enabled = true
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap
+    // PCFShadowMap is ~40% faster than PCFSoft with imperceptible quality delta
+    // on a scene with fog this dense.
+    renderer.shadowMap.type = THREE.PCFShadowMap
     renderer.toneMapping = THREE.ACESFilmicToneMapping
     renderer.toneMappingExposure = 0.88
 
@@ -194,23 +198,32 @@ export function useThreeScene(
     window.addEventListener("resize", resize)
 
     // ---- LOOP ----
+    // Use actual RAF timestamp (ms → s) so animations run at correct speed
+    // regardless of monitor refresh rate (60 / 120 / 144 Hz).
+    // Movement speed is normalised by delta so WASD feels identical at any Hz.
     let rafId = 0
-    let t = 0
+    let lastTs = -1
     const fw = new THREE.Vector3()
     const rt = new THREE.Vector3()
 
-    const loop = () => {
+    const loop = (timestamp: DOMHighResTimeStamp) => {
       rafId = requestAnimationFrame(loop)
-      t += 0.016
+      const t = timestamp * 0.001 // seconds, monotonically increasing
+      const dt = lastTs < 0 ? 0.016 : Math.min(timestamp * 0.001 - lastTs, 0.05)
+      lastTs = t
 
+      // Scale movement by actual frame time so speed is Hz-independent.
+      const move = SPEED * (dt / 0.016)
       fw.set(Math.sin(camState.theta), 0, -Math.cos(camState.theta))
       rt.set(Math.cos(camState.theta), 0, Math.sin(camState.theta))
-      if (keys["w"] || keys["W"] || keys["ArrowUp"]) camState.target.addScaledVector(fw, SPEED)
-      if (keys["s"] || keys["S"] || keys["ArrowDown"]) camState.target.addScaledVector(fw, -SPEED)
-      if (keys["a"] || keys["A"] || keys["ArrowLeft"]) camState.target.addScaledVector(rt, -SPEED)
-      if (keys["d"] || keys["D"] || keys["ArrowRight"]) camState.target.addScaledVector(rt, SPEED)
-      if (keys["q"] || keys["Q"]) camState.radius = Math.max(8, camState.radius - 0.25)
-      if (keys["e"] || keys["E"]) camState.radius = Math.min(54, camState.radius + 0.25)
+      if (keys["w"] || keys["W"] || keys["ArrowUp"]) camState.target.addScaledVector(fw, move)
+      if (keys["s"] || keys["S"] || keys["ArrowDown"]) camState.target.addScaledVector(fw, -move)
+      if (keys["a"] || keys["A"] || keys["ArrowLeft"]) camState.target.addScaledVector(rt, -move)
+      if (keys["d"] || keys["D"] || keys["ArrowRight"]) camState.target.addScaledVector(rt, move)
+      if (keys["q"] || keys["Q"])
+        camState.radius = Math.max(8, camState.radius - 0.25 * (dt / 0.016))
+      if (keys["e"] || keys["E"])
+        camState.radius = Math.min(54, camState.radius + 0.25 * (dt / 0.016))
       camState.target.x = Math.max(-32, Math.min(32, camState.target.x))
       camState.target.z = Math.max(-24, Math.min(24, camState.target.z))
 
@@ -224,11 +237,25 @@ export function useThreeScene(
       onFrameRef.current?.(t, ctx)
       renderer.render(scene, camera)
     }
-    loop()
+
+    // ---- VISIBILITY — pause RAF when tab is hidden to save GPU/battery ----
+    const onVisibility = () => {
+      if (document.hidden) {
+        cancelAnimationFrame(rafId)
+        rafId = 0
+        lastTs = -1 // reset so next frame doesn't spike dt
+      } else if (rafId === 0) {
+        rafId = requestAnimationFrame(loop)
+      }
+    }
+    document.addEventListener("visibilitychange", onVisibility)
+
+    rafId = requestAnimationFrame(loop)
 
     // ---- CLEANUP ----
     return () => {
       cancelAnimationFrame(rafId)
+      document.removeEventListener("visibilitychange", onVisibility)
       resizeObserver.disconnect()
       window.removeEventListener("resize", resize)
       canvas.removeEventListener("mousedown", onMouseDown)

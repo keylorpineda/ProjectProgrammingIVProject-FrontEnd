@@ -2272,7 +2272,7 @@ export function buildCampScene(scene: THREE.Scene, campId = "default"): SceneHan
   const moon = new THREE.DirectionalLight(L.moonColor, L.moonIntensity)
   moon.position.set(5, 20, 8)
   moon.castShadow = true
-  moon.shadow.mapSize.set(1024, 1024)
+  moon.shadow.mapSize.set(512, 512)
   moon.shadow.camera.left = -45
   moon.shadow.camera.right = 45
   moon.shadow.camera.top = 45

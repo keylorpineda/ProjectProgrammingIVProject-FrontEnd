@@ -14,6 +14,26 @@ export default defineConfig({
   server: {
     port: 5173,
   },
+  build: {
+    // ES2020 so three.js native optional-chaining etc. isn't polyfilled away.
+    target: "es2020",
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // three.js is ~600 KB and lazy-loaded via Camp3DOverlay — own cache entry.
+          "vendor-three": ["three"],
+          // Map / geo stack only loaded on map route.
+          "vendor-leaflet": ["leaflet", "react-leaflet", "react-leaflet-cluster"],
+          // Framer Motion is large; isolate so layout pages don't re-download it.
+          "vendor-motion": ["framer-motion"],
+          // Data fetching & global state
+          "vendor-query": ["@tanstack/react-query"],
+          // Socket.io client
+          "vendor-socket": ["socket.io-client"],
+        },
+      },
+    },
+  },
   test: {
     globals: true,
     environment: "jsdom",
