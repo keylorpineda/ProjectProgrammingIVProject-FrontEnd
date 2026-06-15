@@ -22,6 +22,8 @@ export default function CampSelector() {
     }
   }
 
+  // El campamento 3D es el fondo permanente del panel admin: siempre está
+  // visible, así que ya no hay botón "Ver Campamento" (sería redundante).
   return (
     <div className="camp-selector-wrapper">
       <span className="camp-selector-label">UBICACIÓN:</span>

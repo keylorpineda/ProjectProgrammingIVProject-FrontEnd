@@ -51,7 +51,7 @@ export interface IntercampRequest {
   amount: number
   camp_source_id: string
   camp_destination_id: string
-  status: "pending" | "approved" | "denied" | "arrived"
+  status: "pending" | "approved" | "denied" | "in_transit"
   requested_at: string
   notes?: string
 }

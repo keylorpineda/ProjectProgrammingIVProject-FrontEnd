@@ -68,13 +68,12 @@ const mockTransfers: Transfer[] = [
 ]
 
 describe("TransfersView Component", () => {
-  let onCreate: any, onApprove: any, onCancel: any, onArrive: any
+  let onCreate: any, onApprove: any, onCancel: any
 
   beforeEach(() => {
     onCreate = vi.fn()
     onApprove = vi.fn()
     onCancel = vi.fn()
-    onArrive = vi.fn()
   })
 
   it("renders transfers and handles filters", () => {
@@ -88,7 +87,6 @@ describe("TransfersView Component", () => {
         onCreateTransferRequest={onCreate}
         onApproveTransferRequest={onApprove}
         onCancelTransferRequest={onCancel}
-        onArriveTransferRequest={onArrive}
       />,
     )
 
@@ -103,15 +101,7 @@ describe("TransfersView Component", () => {
     expect(screen.getByText("TRASLADO #102")).toBeInTheDocument()
 
     // Click all status filter buttons to cover setFilterStatus branches
-    const statuses = [
-      "PENDIENTE",
-      "APROBADO",
-      "EN TRÁNSITO",
-      "COMPLETADO",
-      "RECHAZADO",
-      "CANCELADO",
-      "VER TODOS",
-    ]
+    const statuses = ["PENDIENTE", "APROBADO", "EN TRÁNSITO", "RECHAZADO", "CANCELADO", "VER TODOS"]
     statuses.forEach((statusName) => {
       fireEvent.click(screen.getByRole("button", { name: new RegExp(`^${statusName}$`, "i") }))
     })
@@ -128,7 +118,6 @@ describe("TransfersView Component", () => {
         onCreateTransferRequest={onCreate}
         onApproveTransferRequest={onApprove}
         onCancelTransferRequest={onCancel}
-        onArriveTransferRequest={onArrive}
       />,
     )
 
@@ -156,7 +145,6 @@ describe("TransfersView Component", () => {
         onCreateTransferRequest={onCreate}
         onApproveTransferRequest={onApprove}
         onCancelTransferRequest={onCancel}
-        onArriveTransferRequest={onArrive}
       />,
     )
 
@@ -165,7 +153,7 @@ describe("TransfersView Component", () => {
     expect(onCancel).toHaveBeenCalledWith(102)
   })
 
-  it("triggers arrive confirmation on incoming in-transit requests", () => {
+  it("shows CONVOY EN RUTA on incoming in-transit requests (no receive action)", () => {
     // Make 102 incoming in_transit
     const incomingTransit = [
       {
@@ -185,13 +173,11 @@ describe("TransfersView Component", () => {
         onCreateTransferRequest={onCreate}
         onApproveTransferRequest={onApprove}
         onCancelTransferRequest={onCancel}
-        onArriveTransferRequest={onArrive}
       />,
     )
 
-    const arriveBtn = screen.getByRole("button", { name: /confirmar llegada/i })
-    fireEvent.click(arriveBtn)
-    expect(onArrive).toHaveBeenCalledWith(102)
+    expect(screen.getByText(/convoy en ruta/i)).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: /confirmar llegada/i })).not.toBeInTheDocument()
   })
 
   it("opens request modal and handles validation", async () => {
@@ -205,7 +191,6 @@ describe("TransfersView Component", () => {
         onCreateTransferRequest={onCreate}
         onApproveTransferRequest={onApprove}
         onCancelTransferRequest={onCancel}
-        onArriveTransferRequest={onArrive}
       />,
     )
 
@@ -263,7 +248,6 @@ describe("TransfersView Component", () => {
         onCreateTransferRequest={onCreate}
         onApproveTransferRequest={onApprove}
         onCancelTransferRequest={onCancel}
-        onArriveTransferRequest={onArrive}
       />,
     )
     fireEvent.click(screen.getByRole("button", { name: /solicitar traslado/i }))
@@ -334,7 +318,6 @@ describe("TransfersView Component", () => {
         onCreateTransferRequest={onCreate}
         onApproveTransferRequest={onApprove}
         onCancelTransferRequest={onCancel}
-        onArriveTransferRequest={onArrive}
       />,
     )
     expect(screen.getByText("ENTREGADO — ARCHIVADO")).toBeInTheDocument()
@@ -343,7 +326,7 @@ describe("TransfersView Component", () => {
     expect(screen.getByText("CONVOY EN RUTA")).toBeInTheDocument()
   })
 
-  it("shows CONFIRMAR LLEGADA for approved incoming transfer", () => {
+  it("shows CONVOY EN RUTA for approved incoming transfer (no receive action)", () => {
     const approvedIncoming: Transfer[] = [
       {
         id: 205,
@@ -368,10 +351,10 @@ describe("TransfersView Component", () => {
         onCreateTransferRequest={onCreate}
         onApproveTransferRequest={onApprove}
         onCancelTransferRequest={onCancel}
-        onArriveTransferRequest={onArrive}
       />,
     )
-    expect(screen.getByRole("button", { name: /confirmar llegada/i })).toBeInTheDocument()
+    expect(screen.getByText("CONVOY EN RUTA")).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: /confirmar llegada/i })).not.toBeInTheDocument()
   })
 
   it("shows BASE DESCONOCIDA when camp not found in camps array and t.origin_camp is absent", () => {
@@ -397,7 +380,6 @@ describe("TransfersView Component", () => {
         onCreateTransferRequest={onCreate}
         onApproveTransferRequest={onApprove}
         onCancelTransferRequest={onCancel}
-        onArriveTransferRequest={onArrive}
       />,
     )
     expect(screen.getByText("BASE DESCONOCIDA")).toBeInTheDocument()
@@ -429,7 +411,6 @@ describe("TransfersView Component", () => {
         onCreateTransferRequest={onCreate}
         onApproveTransferRequest={onApprove}
         onCancelTransferRequest={onCancel}
-        onArriveTransferRequest={onArrive}
       />,
     )
     expect(screen.getByText("Medicamentos")).toBeInTheDocument()
@@ -447,7 +428,6 @@ describe("TransfersView Component", () => {
         onCreateTransferRequest={onCreate}
         onApproveTransferRequest={onApprove}
         onCancelTransferRequest={onCancel}
-        onArriveTransferRequest={onArrive}
       />,
     )
     fireEvent.click(screen.getByRole("button", { name: /solicitar traslado/i }))

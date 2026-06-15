@@ -266,13 +266,13 @@ export default function Explorations() {
       const body: CreateExplorationBody = {
         camp_id: Number(activeCampId),
         name: formName.trim(),
-        destination_description: formDestination.trim(),
-        departure_date: formDepartureDate,
+        destination_description: formDestination.trim() || undefined,
+        departure_date: `${formDepartureDate}T00:00:00.000Z`,
         estimated_days: Number(formEstimatedDays),
         grace_days: formGraceDays ? Number(formGraceDays) : undefined,
         persons: validPersons.map((p) => ({
           person_id: Number(p.person_id),
-          is_leader: p.is_leader,
+          is_leader: Boolean(p.is_leader),
         })),
         resources: validResources.length > 0 ? validResources : undefined,
       }

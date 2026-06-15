@@ -16,7 +16,6 @@ interface TransfersViewProps {
   onCreateTransferRequest: (data: any) => Promise<void>
   onApproveTransferRequest: (id: number, approved: boolean) => Promise<void>
   onCancelTransferRequest: (id: number) => Promise<void>
-  onArriveTransferRequest: (id: number) => Promise<void>
 }
 
 const DEFAULT_COORDS: [number, number] = [9.9281, -84.0907]
@@ -40,7 +39,6 @@ export default function TransfersView({
   onCreateTransferRequest,
   onApproveTransferRequest,
   onCancelTransferRequest,
-  onArriveTransferRequest,
 }: TransfersViewProps) {
   const [filterRole, setFilterRole] = useState<"ALL" | "origin" | "destination">("ALL")
   const [filterStatus, setFilterStatus] = useState<TransferStatus | "ALL">("ALL")
@@ -170,21 +168,19 @@ export default function TransfersView({
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {["ALL", "pending", "approved", "in_transit", "completed", "rejected", "cancelled"].map(
-            (st) => (
-              <button
-                key={st}
-                onClick={() => setFilterStatus(st as TransferStatus | "ALL")}
-                className={`px-3 py-1.5 font-mono text-xs uppercase border-2 cursor-pointer transition-all ${
-                  filterStatus === st
-                    ? "bg-[#c27c2f] text-white border-[#c27c2f] shadow-[2px_2px_0_rgba(0,0,0,0.6)] font-bold"
-                    : "bg-transparent border-[#9a8a74]/60 text-[#c8bfae] hover:border-[#c27c2f] hover:text-[#fca311]"
-                }`}
-              >
-                {STATUS_LABELS[st] ?? st}
-              </button>
-            ),
-          )}
+          {["ALL", "pending", "approved", "in_transit", "rejected", "cancelled"].map((st) => (
+            <button
+              key={st}
+              onClick={() => setFilterStatus(st as TransferStatus | "ALL")}
+              className={`px-3 py-1.5 font-mono text-xs uppercase border-2 cursor-pointer transition-all ${
+                filterStatus === st
+                  ? "bg-[#c27c2f] text-white border-[#c27c2f] shadow-[2px_2px_0_rgba(0,0,0,0.6)] font-bold"
+                  : "bg-transparent border-[#9a8a74]/60 text-[#c8bfae] hover:border-[#c27c2f] hover:text-[#fca311]"
+              }`}
+            >
+              {STATUS_LABELS[st] ?? st}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -337,17 +333,7 @@ export default function TransfersView({
                     </button>
                   )}
 
-                  {(t.status === "in_transit" || t.status === "approved") && !isOriginUs && (
-                    <button
-                      onClick={() => onArriveTransferRequest(t.id)}
-                      className="w-full bg-[#c27c2f] hover:bg-[#df8120] text-black font-typewriter text-sm font-bold py-3 px-4 border-2 border-black cursor-pointer flex items-center justify-center gap-2 uppercase"
-                    >
-                      <Check className="w-4 h-4 shrink-0" />
-                      CONFIRMAR LLEGADA
-                    </button>
-                  )}
-
-                  {(t.status === "in_transit" || t.status === "approved") && isOriginUs && (
+                  {(t.status === "in_transit" || t.status === "approved") && (
                     <div className="text-center py-3 bg-black/10 text-black/60 font-typewriter text-sm uppercase font-bold tracking-wider border-2 border-black/15">
                       CONVOY EN RUTA
                     </div>

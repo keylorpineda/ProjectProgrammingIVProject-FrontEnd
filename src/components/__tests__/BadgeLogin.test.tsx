@@ -83,7 +83,7 @@ describe("BadgeLogin", () => {
         <BadgeLogin onLogin={vi.fn()} isProcessing={false} loginStatus="granted" />
       </MemoryRouter>,
     )
-    expect(screen.getByText("APROBADO")).toBeInTheDocument()
+    expect(screen.getByText("ACCESO PERMITIDO")).toBeInTheDocument()
 
     rerender(
       <MemoryRouter>

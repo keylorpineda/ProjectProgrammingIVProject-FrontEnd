@@ -45,11 +45,4 @@ test.describe("Camp Leader - Transfers", () => {
       // Test mock handles the action, we just expect no errors.
     }
   })
-
-  test("should confirm arrival of an in-transit transfer", async ({ page }) => {
-    const confirmBtn = page.getByRole("button", { name: "CONFIRMAR LLEGADA" }).first()
-    if (await confirmBtn.isVisible()) {
-      await confirmBtn.click()
-    }
-  })
 })

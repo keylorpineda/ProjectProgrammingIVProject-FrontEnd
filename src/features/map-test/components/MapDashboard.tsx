@@ -15,7 +15,7 @@ import {
   X,
   Zap,
 } from "lucide-react"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Circle, MapContainer, Polyline, TileLayer, useMap, useMapEvents } from "react-leaflet"
 import MarkerClusterGroup from "react-leaflet-cluster"
 
@@ -25,6 +25,9 @@ import { useCamps } from "../context/CampContext"
 import { aiEvaluationService } from "../services/aiEvaluationService"
 
 import type { Camp, ExpeditionEvent, HazardArea, TransferLine } from "../types/camp"
+
+import { use3DStore } from "@/store/use3DStore"
+
 import "leaflet/dist/leaflet.css"
 import "../styles/map-effects.css"
 
@@ -41,6 +44,28 @@ const MapController = ({ selectedCoords }: { selectedCoords: [number, number] | 
       map.flyTo(selectedCoords, 15)
     }
   }, [map, selectedCoords])
+
+  return null
+}
+
+/**
+ * Paso 08 — al "entrar" a un campamento hace un flyTo cinematográfico hacia
+ * sus coordenadas (zoom 17, 1.2s); cuando la vista 3D se cierra (target null)
+ * restaura el encuadre previo del mapa.
+ */
+const Enter3DController = ({ target }: { target: Camp | null }) => {
+  const map = useMap()
+  const prevView = useRef<{ center: L.LatLng; zoom: number } | null>(null)
+
+  useEffect(() => {
+    if (target) {
+      prevView.current = { center: map.getCenter(), zoom: map.getZoom() }
+      map.flyTo(target.coords, 17, { duration: 1.2 })
+    } else if (prevView.current) {
+      map.flyTo(prevView.current.center, prevView.current.zoom, { duration: 1.0 })
+      prevView.current = null
+    }
+  }, [map, target])
 
   return null
 }
@@ -179,6 +204,27 @@ export const MapDashboard = () => {
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null)
   const [analyzing, setAnalyzing] = useState(false)
 
+  // Paso 08 — entrada al campamento 3D: flyTo cinematográfico y, a los 800ms,
+  // crossfade hacia la escena (el overlay 3D vive en Admin.tsx).
+  const setActiveCamp3D = use3DStore((s) => s.setActiveCamp)
+  const setIs3DActive = use3DStore((s) => s.setIs3DActive)
+  const is3DActive = use3DStore((s) => s.is3DActive)
+  const [enter3DTarget, setEnter3DTarget] = useState<Camp | null>(null)
+
+  const handleEnter3D = useCallback(
+    (camp: Camp) => {
+      setEnter3DTarget(camp) // dispara el flyTo en Enter3DController
+      setActiveCamp3D(camp.id)
+      window.setTimeout(() => setIs3DActive(true), 800)
+    },
+    [setActiveCamp3D, setIs3DActive],
+  )
+
+  // Al cerrar la escena 3D, restaura el encuadre previo del mapa.
+  useEffect(() => {
+    if (!is3DActive) setEnter3DTarget(null)
+  }, [is3DActive])
+
   const handleAiAnalysis = async (camp: Camp) => {
     setAnalyzing(true)
     setAiAnalysis(null)
@@ -214,6 +260,8 @@ export const MapDashboard = () => {
             attribution="&copy; Map Data"
             url="https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png"
           />
+
+          <Enter3DController target={enter3DTarget} />
 
           <MapInner
             camps={camps}
@@ -383,7 +431,13 @@ export const MapDashboard = () => {
                 </section>
               </div>
 
-              <footer className="mt-8 pt-4 border-t-2 border-[var(--ink)]">
+              <footer className="mt-8 pt-4 border-t-2 border-[var(--ink)] space-y-3">
+                <button
+                  onClick={() => handleEnter3D(selectedCamp)}
+                  className="w-full py-4 bg-[var(--accent-approved,#3b7a3b)] text-white text-xs font-bold uppercase tracking-[0.2em] hover:brightness-125 transition-all flex items-center justify-center gap-3 shadow-lg border-2 border-[var(--ink)]"
+                >
+                  <MapIcon size={16} /> ENTRAR AL CAMPAMENTO (3D)
+                </button>
                 <button
                   onClick={() => {
                     void handleAiAnalysis(selectedCamp)

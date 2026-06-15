@@ -167,11 +167,6 @@ export const transfersService = {
     return data
   },
 
-  async arriveTransferRequest(id: number) {
-    const { data } = await api.patch(`/transfers/requests/${id}/arrive`)
-    return data
-  },
-
   async getTransferStatistics(campId: number) {
     const { data } = await api.get(`/transfers/statistics/${campId}`)
     return data

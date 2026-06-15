@@ -859,7 +859,7 @@
 .tm-paper-dark .vintage-input {
   background: #faf4e6 !important;
   border: 2px solid var(--tm-ink) !important;
-  color: var(--tm-ink) !important;
+  color: #1a0f05 !important;
   border-radius: 2px !important;
 }
 
@@ -871,19 +871,19 @@
 
 .tm-paper select.vintage-input,
 .tm-paper-dark select.vintage-input {
-  color: var(--tm-ink) !important;
+  color: #1a0f05 !important;
 }
 
 .tm-paper select.vintage-input option,
 .tm-paper-dark select.vintage-input option {
   background: #faf4e6 !important;
-  color: var(--tm-ink) !important;
+  color: #1a0f05 !important;
 }
 
 .tm-paper .vintage-input::placeholder,
 .tm-paper-dark .vintage-input::placeholder {
-  color: var(--tm-ink-soft) !important;
-  opacity: 0.7;
+  color: rgba(26, 15, 5, 0.5) !important;
+  opacity: 1;
 }
 
 @media (max-width: 1280px) {

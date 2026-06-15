@@ -5,7 +5,6 @@ import {
   ArrowLeftRight,
   Search,
   X,
-  CheckCircle2,
   AlertCircle,
   Loader2,
   ChevronRight,
@@ -41,8 +40,8 @@ import {
   getCampTransfers,
   createTransferRequest,
   cancelTransfer,
-  confirmTransferArrival,
 } from "@/features/transfers/services/transfers.service"
+import { use3DStore } from "@/store/use3DStore"
 import { useAuthStore, useTokenStore } from "@/store/useAuthStore"
 
 // ── Status helpers ──────────────────────────────────────────────────────────
@@ -171,6 +170,8 @@ export default function TravelTransfers() {
     message: string
     type: "warning" | "danger" | "info"
     hideCancel?: boolean
+    isLoading?: boolean
+    loadingLabel?: string
     onConfirm: () => void
   }>({
     isOpen: false,
@@ -178,6 +179,7 @@ export default function TravelTransfers() {
     message: "",
     type: "warning",
     hideCancel: false,
+    isLoading: false,
     onConfirm: () => {},
   })
 
@@ -269,8 +271,20 @@ export default function TravelTransfers() {
         message: "El traslado ha sido registrado y programado exitosamente en el sistema.",
         type: "info",
         hideCancel: true,
+        isLoading: false,
         onConfirm: () => {
-          setConfirmDialog((prev) => ({ ...prev, isOpen: false }))
+          setConfirmDialog((prev) => ({
+            ...prev,
+            isLoading: true,
+            loadingLabel: "Asegurando rutas seguras...",
+          }))
+
+          // Simulamos una demora de red/coordinación inmersiva antes de cerrar la ventana e iniciar la cinemática
+          setTimeout(() => {
+            setConfirmDialog((prev) => ({ ...prev, isOpen: false, isLoading: false }))
+            // Cinemática del camión saliendo del campamento
+            if (campId) use3DStore.getState().startTransferCinematic(String(campId))
+          }, 1800)
         },
       })
     },
@@ -289,11 +303,6 @@ export default function TravelTransfers() {
 
   const cancelMutation = useMutation({
     mutationFn: (id: string) => cancelTransfer(id),
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["transfers", campId] }),
-  })
-
-  const confirmMutation = useMutation({
-    mutationFn: (id: string) => confirmTransferArrival(id),
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["transfers", campId] }),
   })
 
@@ -445,19 +454,6 @@ export default function TravelTransfers() {
     })
   }
 
-  function handleConfirmArrival(id: string) {
-    setConfirmDialog({
-      isOpen: true,
-      title: "Confirmar Llegada",
-      message: "¿Confirmar la llegada exitosa de este traslado a la base de destino?",
-      type: "info",
-      onConfirm: () => {
-        setConfirmDialog((prev) => ({ ...prev, isOpen: false }))
-        confirmMutation.mutate(id)
-      },
-    })
-  }
-
   function handleDiscardDraft() {
     setConfirmDialog({
       isOpen: true,
@@ -540,6 +536,8 @@ export default function TravelTransfers() {
         message={confirmDialog.message}
         type={confirmDialog.type}
         hideCancel={confirmDialog.hideCancel}
+        isLoading={confirmDialog.isLoading}
+        loadingLabel={confirmDialog.loadingLabel}
         onConfirm={confirmDialog.onConfirm}
         onCancel={() => setConfirmDialog((prev) => ({ ...prev, isOpen: false }))}
       />
@@ -623,7 +621,6 @@ export default function TravelTransfers() {
               <option value="pending">PENDIENTE</option>
               <option value="approved">APROBADO</option>
               <option value="in_transit">EN TRÁNSITO</option>
-              <option value="completed">COMPLETADO</option>
               <option value="rejected">RECHAZADO</option>
               <option value="cancelled">CANCELADO</option>
             </select>
@@ -1082,25 +1079,6 @@ export default function TravelTransfers() {
                         <span className="tm-action-sub">Abortar orden</span>
                       </button>
                     )}
-                  {selectedTransfer.status === "in_transit" &&
-                    selectedTransfer.camp_destination_id === campId && (
-                      <button
-                        onClick={() => handleConfirmArrival(selectedTransfer.id)}
-                        disabled={confirmMutation.isPending}
-                        className="tm-action-btn tm-action-btn-primary"
-                        style={{ padding: "8px 16px", borderRadius: "4px" }}
-                      >
-                        <span className="tm-action-label flex items-center gap-2">
-                          {confirmMutation.isPending ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <CheckCircle2 className="h-4 w-4" />
-                          )}
-                          Confirmar Llegada
-                        </span>
-                        <span className="tm-action-sub">Registrar recepción</span>
-                      </button>
-                    )}
                   {(selectedTransfer.status === "completed" ||
                     selectedTransfer.status === "rejected" ||
                     selectedTransfer.status === "cancelled") && (
@@ -1139,21 +1117,28 @@ export default function TravelTransfers() {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="tm-paper tm-paper-texture w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl relative p-0 border-4 border-double border-ink/40"
+              className="tm-paper tm-paper-texture w-full max-w-4xl max-h-[94vh] flex flex-col overflow-hidden shadow-2xl relative p-0 border-4 border-double border-ink/40"
             >
               {/* Modal header */}
-              <div className="flex items-center justify-between p-6 border-b-2 border-dashed border-ink/20 bg-black/5">
-                <div className="flex items-center gap-4">
-                  <ArrowLeftRight className="h-8 w-8 text-[#df8120] animate-pulse" />
-                  <h3 className="font-typewriter font-black text-ink uppercase text-xl md:text-2xl tracking-widest leading-none">
-                    Nueva Solicitud de Traslado
-                  </h3>
+              <div className="flex items-center justify-between px-8 py-6 border-b-2 border-dashed border-ink/20 bg-black/5">
+                <div className="flex items-center gap-5">
+                  <div className="p-2.5 bg-[#df8120]/10 border border-[#df8120]/30">
+                    <ArrowLeftRight className="h-9 w-9 text-[#df8120]" />
+                  </div>
+                  <div>
+                    <div className="text-[10px] font-mono font-black tracking-[0.3em] text-[#df8120]/60 uppercase mb-1">
+                      {"// ORDEN LOGÍSTICA"}
+                    </div>
+                    <h3 className="font-typewriter font-black text-ink uppercase text-2xl tracking-widest leading-none">
+                      Nueva Solicitud de Traslado
+                    </h3>
+                  </div>
                 </div>
                 <button
                   onClick={handleDiscardDraft}
-                  className="text-ink-soft hover:text-ink transition-colors"
+                  className="p-2 text-ink-soft hover:text-ink hover:bg-ink/10 transition-colors"
                 >
-                  <X className="h-5 w-5" />
+                  <X className="h-6 w-6" />
                 </button>
               </div>
 
@@ -1162,28 +1147,34 @@ export default function TravelTransfers() {
                 onSubmit={handleCreateTransfer}
                 className="flex-1 overflow-y-auto custom-scrollbar"
               >
-                <div className="p-8 space-y-6">
+                <div className="p-8 space-y-7">
                   {formError && (
-                    <div className="bg-red-950/40 border border-red-500/50 p-4 font-mono text-sm text-red-400 uppercase flex items-center gap-2 shadow-lg mb-4">
-                      <AlertCircle className="w-5 h-5 shrink-0" />
-                      <span>{formError}</span>
+                    <div className="bg-red-950/40 border-2 border-red-500/50 p-5 font-mono text-sm text-red-300 uppercase flex items-start gap-3 shadow-lg">
+                      <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 text-red-400" />
+                      <span className="leading-relaxed">{formError}</span>
                     </div>
                   )}
-                  {/* Origin indicator */}
-                  <div className="bg-[#f5ecd7] border-2 border-dashed border-ink/20 p-4 flex items-center gap-4">
-                    <span className="text-xs font-mono text-ink-soft uppercase font-black tracking-widest">
-                      Campamento Origen:
+
+                  {/* Origin → Destination header */}
+                  <div className="flex items-center gap-3 bg-ink/6 border-2 border-dashed border-ink/25 px-5 py-4">
+                    <Truck className="h-5 w-5 text-[#df8120] shrink-0" />
+                    <span className="text-sm font-mono font-black text-ink-soft uppercase tracking-widest">
+                      Base Origen:
                     </span>
-                    <span className="text-sm font-mono font-black text-ink uppercase">
+                    <span className="text-base font-mono font-black text-ink uppercase px-3 py-0.5 bg-ink/10 border border-ink/20">
                       {campId}
                     </span>
-                    <span className="text-ink-soft/40 text-sm">➔</span>
+                    <ArrowLeftRight className="h-4 w-4 text-ink/40 mx-1" />
+                    <span className="text-sm font-mono font-black text-ink-soft uppercase tracking-widest">
+                      Destino →
+                    </span>
                   </div>
 
+                  {/* Destination camp */}
                   <div>
                     <label
                       htmlFor="destCampId"
-                      className="text-xs font-mono font-black text-ink uppercase tracking-widest block mb-2"
+                      className="text-xs font-mono font-black text-ink uppercase tracking-widest block mb-3"
                     >
                       Campamento Destino *
                     </label>
@@ -1191,7 +1182,7 @@ export default function TravelTransfers() {
                       id="destCampId"
                       value={destCampId}
                       onChange={(e) => setDestCampId(e.target.value)}
-                      className="vintage-input w-full p-3 text-base"
+                      className="vintage-input w-full py-3.5 px-4 text-base"
                     >
                       <option value="" disabled>
                         Seleccione un destino...
@@ -1206,11 +1197,12 @@ export default function TravelTransfers() {
                     </select>
                   </div>
 
+                  {/* Type + Days */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label
                         htmlFor="transferType"
-                        className="text-xs font-mono font-black text-ink uppercase tracking-widest block mb-2"
+                        className="text-xs font-mono font-black text-ink uppercase tracking-widest block mb-3"
                       >
                         Tipo de Traslado *
                       </label>
@@ -1220,7 +1212,7 @@ export default function TravelTransfers() {
                         onChange={(e) =>
                           setTransferType(e.target.value as "resources" | "people" | "both")
                         }
-                        className="vintage-input w-full p-3 text-base"
+                        className="vintage-input w-full py-3.5 px-4 text-base"
                       >
                         <option value="resources">RECURSOS</option>
                         <option value="people">PERSONAS</option>
@@ -1230,9 +1222,9 @@ export default function TravelTransfers() {
                     <div>
                       <label
                         htmlFor="travelDays"
-                        className="text-xs font-mono font-black text-ink uppercase tracking-widest block mb-2"
+                        className="text-xs font-mono font-black text-ink uppercase tracking-widest block mb-3"
                       >
-                        Días de Viaje
+                        Días de Viaje Estimados
                       </label>
                       <input
                         id="travelDays"
@@ -1240,39 +1232,49 @@ export default function TravelTransfers() {
                         min={1}
                         value={travelDays}
                         onChange={(e) => setTravelDays(Number(e.target.value))}
-                        className="vintage-input w-full p-3"
+                        className="vintage-input w-full py-3.5 px-4 text-base"
                       />
                     </div>
                   </div>
 
+                  {/* Notes */}
                   <div>
                     <label
                       htmlFor="notes"
-                      className="text-xs font-mono font-black text-ink uppercase tracking-widest block mb-2"
+                      className="text-xs font-mono font-black text-ink uppercase tracking-widest block mb-3"
                     >
-                      Notas / Motivo
+                      Notas / Motivo del Traslado
                     </label>
                     <textarea
                       id="notes"
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
-                      placeholder="Razón del traslado, instrucciones especiales..."
+                      placeholder="Razón del traslado, instrucciones especiales para el convoy..."
                       rows={3}
-                      className="vintage-input w-full resize-none p-3"
+                      className="vintage-input w-full resize-none py-3.5 px-4 text-sm leading-relaxed"
                     />
                   </div>
 
                   {/* Resources section */}
                   {(transferType === "resources" || transferType === "both") && (
                     <div>
-                      <label className="text-xs font-mono font-black text-ink uppercase tracking-widest block mb-2">
-                        Recursos a Transferir * ({selectedResources.length} seleccionado(s))
-                      </label>
-                      <div className="max-h-40 overflow-y-auto custom-scrollbar space-y-1 border border-ink/20 p-2 bg-black/5 rounded-sm">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="text-xs font-mono font-black text-ink uppercase tracking-widest flex items-center gap-2">
+                          <Package className="h-4 w-4 text-[#c27c2f]" />
+                          Recursos a Transferir *
+                        </div>
+                        <span className="text-xs font-mono font-black text-[#c27c2f] bg-[#c27c2f]/10 px-3 py-1 border border-[#c27c2f]/30">
+                          {selectedResources.length} SELECCIONADO(S)
+                        </span>
+                      </div>
+                      <div className="max-h-64 overflow-y-auto custom-scrollbar space-y-1.5 border-2 border-ink/20 p-3 bg-black/8 rounded-sm">
                         {inventory.length === 0 ? (
-                          <p className="text-xs font-mono text-ink-soft/40 uppercase text-center py-4">
-                            Cargando inventario...
-                          </p>
+                          <div className="flex items-center justify-center gap-2 py-8 text-ink-soft/40">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span className="text-sm font-mono uppercase">
+                              Cargando inventario...
+                            </span>
+                          </div>
                         ) : (
                           inventory
                             .filter((item) => item.current_quantity > 0)
@@ -1284,54 +1286,60 @@ export default function TravelTransfers() {
                               return (
                                 <div
                                   key={item.resource_id}
-                                  className={`flex items-center justify-between p-2 border transition-all rounded-sm ${
+                                  className={`flex items-center justify-between p-3 border transition-all ${
                                     isSelected
-                                      ? "bg-ink/5 border-ink/40"
-                                      : "bg-transparent border-dashed border-ink/15 hover:border-ink/30"
+                                      ? "bg-[#c27c2f]/8 border-[#c27c2f]/40"
+                                      : "bg-transparent border-dashed border-ink/15 hover:border-ink/35 hover:bg-ink/4"
                                   }`}
                                 >
                                   <button
                                     type="button"
-                                    className="flex items-center gap-2 cursor-pointer flex-1 bg-transparent border-none text-left p-0 outline-none focus:outline-none"
+                                    className="flex items-center gap-3 cursor-pointer flex-1 bg-transparent border-none text-left p-0 outline-none focus:outline-none"
                                     onClick={() => handleToggleResource(item.resource_id)}
                                   >
                                     <div
-                                      className={`h-3.5 w-3.5 border flex items-center justify-center shrink-0 rounded-sm ${
-                                        isSelected ? "border-ink bg-ink/10" : "border-ink/20"
+                                      className={`h-5 w-5 border-2 flex items-center justify-center shrink-0 transition-colors ${
+                                        isSelected
+                                          ? "border-[#c27c2f] bg-[#c27c2f]/15"
+                                          : "border-ink/25"
                                       }`}
                                     >
-                                      {isSelected && <Check className="h-2.5 w-2.5 text-ink" />}
+                                      {isSelected && <Check className="h-3 w-3 text-[#c27c2f]" />}
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                      <div className="w-6 h-6 rounded bg-black/5 border border-ink/10 flex items-center justify-center">
-                                        <Package className="w-3 h-3 text-ink-soft" />
-                                      </div>
-                                      <div className="flex flex-col">
-                                        <span className="text-xs font-mono font-bold text-ink uppercase">
-                                          {item.resource?.name || "Desconocido"}
-                                        </span>
-                                        <span className="text-[10px] font-mono text-ink-soft/60 uppercase leading-none mt-1">
-                                          {item.resource?.category || "N/A"} {"//"}{" "}
-                                          {item.current_quantity} {item.resource?.unit || "U"}
-                                        </span>
-                                      </div>
+                                    <div className="w-8 h-8 rounded-sm bg-black/10 border border-ink/15 flex items-center justify-center shrink-0">
+                                      {getCategoryIcon(item.resource?.category)}
+                                    </div>
+                                    <div className="flex flex-col min-w-0">
+                                      <span className="text-sm font-mono font-bold text-ink uppercase truncate">
+                                        {item.resource?.name || "Desconocido"}
+                                      </span>
+                                      <span className="text-xs font-mono text-ink-soft/60 uppercase leading-none mt-0.5">
+                                        {item.resource?.category || "N/A"} · Disponible:{" "}
+                                        <strong>{item.current_quantity}</strong>{" "}
+                                        {item.resource?.unit || "U"}
+                                      </span>
                                     </div>
                                   </button>
                                   {isSelected && (
-                                    <input
-                                      type="number"
-                                      min={1}
-                                      max={item.current_quantity}
-                                      value={sel.requested_quantity}
-                                      onClick={(ev) => ev.stopPropagation()}
-                                      onChange={(e) =>
-                                        handleResourceQtyChange(
-                                          item.resource_id,
-                                          Number(e.target.value),
-                                        )
-                                      }
-                                      className="vintage-input w-16 text-xs ml-2"
-                                    />
+                                    <div className="flex items-center gap-2 ml-3 shrink-0">
+                                      <span className="text-[10px] font-mono text-ink-soft uppercase">
+                                        Cant:
+                                      </span>
+                                      <input
+                                        type="number"
+                                        min={1}
+                                        max={item.current_quantity}
+                                        value={sel.requested_quantity}
+                                        onClick={(ev) => ev.stopPropagation()}
+                                        onChange={(e) =>
+                                          handleResourceQtyChange(
+                                            item.resource_id,
+                                            Number(e.target.value),
+                                          )
+                                        }
+                                        className="vintage-input w-20 text-sm py-1.5 px-2 text-center"
+                                      />
+                                    </div>
                                   )}
                                 </div>
                               )
@@ -1344,14 +1352,23 @@ export default function TravelTransfers() {
                   {/* Persons section */}
                   {(transferType === "people" || transferType === "both") && (
                     <div>
-                      <label className="text-xs font-mono font-black text-ink uppercase tracking-widest block mb-2">
-                        Personas a Transferir * ({selectedPersons.length} seleccionada(s))
-                      </label>
-                      <div className="max-h-40 overflow-y-auto custom-scrollbar space-y-1 border border-ink/20 p-2 bg-black/5 rounded-sm">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="text-xs font-mono font-black text-ink uppercase tracking-widest flex items-center gap-2">
+                          <Users className="h-4 w-4 text-[#4c6351]" />
+                          Personal a Transferir *
+                        </div>
+                        <span className="text-xs font-mono font-black text-[#4c6351] bg-[#4c6351]/10 px-3 py-1 border border-[#4c6351]/30">
+                          {selectedPersons.length} SELECCIONADO(S)
+                        </span>
+                      </div>
+                      <div className="max-h-64 overflow-y-auto custom-scrollbar space-y-1.5 border-2 border-ink/20 p-3 bg-black/8 rounded-sm">
                         {persons.length === 0 ? (
-                          <p className="text-xs font-mono text-ink-soft/40 uppercase text-center py-4">
-                            Cargando personas...
-                          </p>
+                          <div className="flex items-center justify-center gap-2 py-8 text-ink-soft/40">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span className="text-sm font-mono uppercase">
+                              Cargando personal...
+                            </span>
+                          </div>
                         ) : (
                           persons
                             .filter(
@@ -1369,27 +1386,43 @@ export default function TravelTransfers() {
                                   type="button"
                                   key={person.id}
                                   onClick={() => handleTogglePerson(person.id)}
-                                  className={`flex items-center gap-2 p-2 border cursor-pointer transition-all text-left w-full rounded-sm bg-transparent outline-none focus:outline-none ${
+                                  className={`flex items-center gap-3 p-3 border cursor-pointer transition-all text-left w-full outline-none focus:outline-none ${
                                     isSelected
-                                      ? "bg-ink/5 border-ink/40"
-                                      : "bg-transparent border-dashed border-ink/15 hover:border-ink/30"
+                                      ? "bg-[#4c6351]/8 border-[#4c6351]/40"
+                                      : "bg-transparent border-dashed border-ink/15 hover:border-ink/35 hover:bg-ink/4"
                                   }`}
                                 >
                                   <div
-                                    className={`h-3.5 w-3.5 border flex items-center justify-center shrink-0 rounded-sm ${
-                                      isSelected ? "border-ink bg-ink/10" : "border-ink/20"
+                                    className={`h-5 w-5 border-2 flex items-center justify-center shrink-0 transition-colors ${
+                                      isSelected
+                                        ? "border-[#4c6351] bg-[#4c6351]/15"
+                                        : "border-ink/25"
                                     }`}
                                   >
-                                    {isSelected && <Check className="h-2.5 w-2.5 text-ink" />}
+                                    {isSelected && <Check className="h-3 w-3 text-[#4c6351]" />}
                                   </div>
-                                  <span className="text-xs font-mono text-ink font-bold uppercase">
-                                    {person.first_name} {person.last_name}
-                                  </span>
-                                  {person.profession && (
-                                    <span className="text-[10px] font-mono text-ink-soft/60">
-                                      [{person.profession.name.toUpperCase()}]
+                                  <div className="w-8 h-8 rounded-sm bg-[#4c6351]/10 border border-[#4c6351]/20 flex items-center justify-center shrink-0">
+                                    <Users className="h-4 w-4 text-[#4c6351]/70" />
+                                  </div>
+                                  <div className="flex flex-col min-w-0 flex-1">
+                                    <span className="text-sm font-mono text-ink font-bold uppercase truncate">
+                                      {person.first_name} {person.last_name}
                                     </span>
-                                  )}
+                                    {person.profession && (
+                                      <span className="text-xs font-mono text-ink-soft/60 uppercase mt-0.5">
+                                        {person.profession.name}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <span
+                                    className={`text-[10px] font-mono font-black px-2 py-0.5 shrink-0 ${
+                                      person.status === "active"
+                                        ? "text-[#4c6351] bg-[#4c6351]/10 border border-[#4c6351]/25"
+                                        : "text-ink-soft/60 bg-ink/5 border border-ink/15"
+                                    }`}
+                                  >
+                                    {person.status?.toUpperCase()}
+                                  </span>
                                 </button>
                               )
                             })
@@ -1397,24 +1430,21 @@ export default function TravelTransfers() {
                       </div>
                     </div>
                   )}
-
-                  {/* End Persons section */}
                 </div>
 
                 {/* Modal footer */}
-                <div className="p-6 border-t-2 border-dashed border-ink/20 flex justify-end gap-4 bg-black/5">
+                <div className="px-8 py-6 border-t-2 border-dashed border-ink/20 flex items-center justify-between gap-4 bg-black/8">
                   <button
                     type="button"
                     onClick={handleDiscardDraft}
-                    className="tm-action-btn tm-action-btn-danger"
-                    style={{ padding: "10px 20px" }}
+                    className="px-6 py-3 font-mono text-sm font-bold uppercase tracking-widest text-ink-soft/70 border-2 border-ink/20 hover:bg-ink/8 hover:text-ink hover:border-ink/40 transition-all"
                   >
-                    Cancelar
+                    Descartar Borrador
                   </button>
                   <button
                     type="submit"
                     disabled={createMutation.isPending}
-                    className="px-6 py-3 md:px-8 md:py-4 bg-accent-approved text-black text-base font-mono font-black uppercase hover:bg-white transition-all disabled:opacity-50 flex items-center gap-3"
+                    className="flex items-center gap-3 px-10 py-3.5 bg-[#4c6351] hover:bg-[#3d5041] text-white text-sm font-mono font-black uppercase tracking-widest transition-all disabled:opacity-50 shadow-[0_0_12px_rgba(76,99,81,0.35)] hover:shadow-[0_0_20px_rgba(76,99,81,0.5)]"
                   >
                     {createMutation.isPending ? (
                       <Loader2 className="h-5 w-5 animate-spin" />

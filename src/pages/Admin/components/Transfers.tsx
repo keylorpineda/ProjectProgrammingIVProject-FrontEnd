@@ -12,7 +12,6 @@ import { TransferRouteMap } from "@/features/map-test/components/TransferRouteMa
 import {
   approveOrRejectTransfer,
   cancelTransfer,
-  confirmTransferArrival,
   getCampTransfers,
 } from "@/features/transfers/services/transfers.service"
 import "./Transfers.css"
@@ -231,18 +230,6 @@ export default function Transfers() {
     }
   }
 
-  const handleArrive = async (t: TransferView) => {
-    setIsSaving(true)
-    try {
-      await confirmTransferArrival(t.id)
-      reload()
-    } catch {
-      // silently fail
-    } finally {
-      setIsSaving(false)
-    }
-  }
-
   // ─── Render ────────────────────────────────────────────────────────────────
 
   return (
@@ -284,21 +271,19 @@ export default function Transfers() {
 
         {/* Filtro de estado */}
         <div className="flex flex-wrap gap-2">
-          {["ALL", "pending", "approved", "in_transit", "completed", "rejected", "cancelled"].map(
-            (st) => (
-              <button
-                key={st}
-                onClick={() => setFilterStatus(st)}
-                className={`px-3 py-1.5 font-mono text-xs uppercase border-2 cursor-pointer transition-all ${
-                  filterStatus === st
-                    ? "bg-[#c27c2f] text-white border-[#c27c2f] shadow-[2px_2px_0_rgba(0,0,0,0.6)] font-bold"
-                    : "bg-transparent border-[#9a8a74]/60 text-[#c8bfae] hover:border-[#c27c2f] hover:text-[#fca311]"
-                }`}
-              >
-                {STATUS_LABELS[st] ?? st}
-              </button>
-            ),
-          )}
+          {["ALL", "pending", "approved", "in_transit", "rejected", "cancelled"].map((st) => (
+            <button
+              key={st}
+              onClick={() => setFilterStatus(st)}
+              className={`px-3 py-1.5 font-mono text-xs uppercase border-2 cursor-pointer transition-all ${
+                filterStatus === st
+                  ? "bg-[#c27c2f] text-white border-[#c27c2f] shadow-[2px_2px_0_rgba(0,0,0,0.6)] font-bold"
+                  : "bg-transparent border-[#9a8a74]/60 text-[#c8bfae] hover:border-[#c27c2f] hover:text-[#fca311]"
+              }`}
+            >
+              {STATUS_LABELS[st] ?? st}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -458,20 +443,8 @@ export default function Transfers() {
                       </button>
                     ) : null}
 
-                    {/* En tránsito/aprobado + somos destino → CONFIRMAR LLEGADA */}
-                    {(t.statusKey === "in_transit" || t.statusKey === "approved") && !isOrigin ? (
-                      <button
-                        onClick={() => void handleArrive(t)}
-                        disabled={isSaving}
-                        className="w-full bg-[#c27c2f] hover:bg-[#df8120] disabled:opacity-50 text-black font-typewriter text-sm font-bold py-3 px-4 border-2 border-black cursor-pointer flex items-center justify-center gap-2 uppercase"
-                      >
-                        <Check className="w-4 h-4 shrink-0" />
-                        CONFIRMAR LLEGADA
-                      </button>
-                    ) : null}
-
-                    {/* En tránsito/aprobado + somos origen */}
-                    {(t.statusKey === "in_transit" || t.statusKey === "approved") && isOrigin ? (
+                    {/* En tránsito/aprobado → convoy en ruta (sin recepción) */}
+                    {t.statusKey === "in_transit" || t.statusKey === "approved" ? (
                       <div className="text-center py-3 bg-black/10 text-black/60 font-typewriter text-sm uppercase font-bold tracking-wider border-2 border-black/15">
                         CONVOY EN RUTA
                       </div>

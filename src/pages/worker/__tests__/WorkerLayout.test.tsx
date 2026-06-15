@@ -41,6 +41,11 @@ vi.mock("@/components/ui/InactivityGuard", () => ({
   ),
 }))
 
+// El campamento 3D (three.js) no corre en jsdom; se reemplaza por un stub.
+vi.mock("@/features/camp-3d/components/CampScene3DWrapper", () => ({
+  default: () => <div data-testid="camp-3d-wrapper" />,
+}))
+
 vi.mock("@/features/worker/services/workerService", () => ({
   default: svc,
   workerService: svc,
@@ -56,6 +61,9 @@ const renderLayout = (route = "/worker/dashboard") =>
     { user: workerUser, token: "tk", route },
   )
 
+const openProfileMenu = async () =>
+  userEvent.click(await screen.findByRole("button", { name: /opciones de perfil/i }))
+
 describe("Worker → Layout", () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -68,53 +76,49 @@ describe("Worker → Layout", () => {
     svc.getMyBadges.mockResolvedValue(workerBadges)
   })
 
-  it("renders the sidebar, top bar and footer chrome", () => {
+  it("renders the navbar chrome with the operator brand and avatar", () => {
     renderLayout()
-    expect(screen.getByText("GESTIÓN DEL FIN")).toBeInTheDocument()
+    expect(screen.getAllByText("OPERARIO").length).toBeGreaterThan(0)
     expect(screen.getByText("ID-AUTH: VALIDADO")).toBeInTheDocument()
-    expect(screen.getByText(/ENLACE ESTABLECIDO/)).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: /opciones de perfil/i })).toBeInTheDocument()
   })
 
-  it("mounts the nested dashboard route inside the layout", async () => {
+  it("mounts the nested dashboard route inside the layout window", async () => {
     renderLayout()
     expect(await screen.findByText(/TABLERO - Campamento Alpha/i)).toBeInTheDocument()
   })
 
-  it("navigates from the sidebar to another worker section", async () => {
+  it("navigates from the navbar to another worker section", async () => {
     svc.getInventoryMovements.mockResolvedValue([])
-
     renderLayout()
-
-    await userEvent.click(screen.getByRole("button", { name: /ALMACEN/i }))
+    // cspell:disable-next-line
+    await userEvent.click(screen.getByRole("button", { name: /ALMAC[EÉ]N/i }))
     expect(
       await screen.findByRole("heading", { name: /MANIFIESTO DE ALMACÉN/i }),
     ).toBeInTheDocument()
   })
 
-  it("redirects unknown worker routes to the dashboard", async () => {
+  it("redirects unknown worker routes to the camp home", async () => {
     renderLayout("/worker/unknown")
-    expect(await screen.findByText(/TABLERO - Campamento Alpha/i)).toBeInTheDocument()
+    // La home es el campamento 3D (stub); no se abre ninguna ventana de sección.
+    expect(await screen.findByTestId("camp-3d-wrapper")).toBeInTheDocument()
   })
 
-  it("uses the camp id fallback when camp details are unavailable", async () => {
-    svc.getCampById.mockResolvedValue({ camp: null, metrics: workerCamp.metrics })
-
-    renderLayout("/worker/profile")
-
-    expect(await screen.findByText("CAMPAMENTO #1")).toBeInTheDocument()
-    expect(await screen.findByText("#1")).toBeInTheDocument()
-  })
-
-  it("handles topbar logout", async () => {
+  it("opens the profile from the avatar menu", async () => {
     renderLayout()
+    await openProfileMenu()
+    expect(screen.getByRole("menuitem", { name: /ver perfil/i })).toBeInTheDocument()
+  })
 
-    await userEvent.click(screen.getByRole("button", { name: /CERRAR/i }))
+  it("handles logout from the avatar menu", async () => {
+    renderLayout()
+    await openProfileMenu()
+    await userEvent.click(screen.getByRole("menuitem", { name: /cerrar sesión/i }))
     await waitFor(() => expect(screen.queryByText("ID-AUTH: VALIDADO")).not.toBeInTheDocument())
   })
 
   it("handles inactivity logout", async () => {
     renderLayout()
-
     await userEvent.click(screen.getByRole("button", { name: "IDLE LOGOUT" }))
     await waitFor(() => expect(screen.queryByText("ID-AUTH: VALIDADO")).not.toBeInTheDocument())
   })

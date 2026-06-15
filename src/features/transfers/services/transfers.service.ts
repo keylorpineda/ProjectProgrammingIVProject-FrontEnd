@@ -77,11 +77,6 @@ export const cancelTransfer = async (id: string): Promise<IntercampRequest> => {
   return data
 }
 
-export const confirmTransferArrival = async (id: string): Promise<IntercampRequest> => {
-  const { data } = await api.patch<IntercampRequest>(`/transfers/requests/${id}/arrive`)
-  return data
-}
-
 export const getTransferStatistics = async (campId: string): Promise<TransferStatistics> => {
   const { data } = await api.get<TransferStatistics>(`/transfers/statistics/${campId}`)
   return data

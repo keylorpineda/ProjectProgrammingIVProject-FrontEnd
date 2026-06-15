@@ -24,6 +24,9 @@ vi.mock("@/features/map-test/components/MapCoordPicker", () => ({
 vi.mock("@/features/map-test/components/MapDashboardWrapper", () => ({
   default: () => <div data-testid="map-dashboard-wrapper" />,
 }))
+vi.mock("@/features/camp-3d/components/CampScene3DWrapper", () => ({
+  default: () => <div data-testid="camp-3d-wrapper" />,
+}))
 vi.mock("@/features/map-test/components/TransferRouteMap", () => ({
   TransferRouteMap: () => <div data-testid="transfer-route-map" />,
 }))
@@ -108,13 +111,13 @@ describe("Admin shell", () => {
     it("renders the layout when authenticated as admin", async () => {
       useAuthStore.getState().setAuth("tk", adminUser)
       renderAdminAt("/admin/dashboard")
-      expect(await screen.findByText(/cerrar sesión/i)).toBeInTheDocument()
+      expect(await screen.findByRole("button", { name: /opciones de perfil/i })).toBeInTheDocument()
     })
 
     it("redirects (renders no layout) when authenticated but role != admin", () => {
       useAuthStore.getState().setAuth("tk", workerUser)
       renderAdminAt("/admin/dashboard")
-      expect(screen.queryByText(/cerrar sesión/i)).not.toBeInTheDocument()
+      expect(screen.queryByRole("button", { name: /opciones de perfil/i })).not.toBeInTheDocument()
     })
   })
 
@@ -123,15 +126,18 @@ describe("Admin shell", () => {
       useAuthStore.getState().setAuth("tk", adminUser)
     })
 
-    it("shows the user's username and ADMIN rank in the header", async () => {
+    it("shows the user's username and ADMIN rank in the profile menu", async () => {
+      const user = userEvent.setup()
       renderAdminAt("/admin/dashboard")
-      expect(await screen.findByText(/rango: administrador/i)).toBeInTheDocument()
+      await user.click(await screen.findByRole("button", { name: /opciones de perfil/i }))
+      expect(screen.getByRole("menuitem", { name: /ver perfil/i })).toBeInTheDocument()
+      expect(screen.getAllByText(/administrador/i).length).toBeGreaterThan(0)
       expect(screen.getAllByText(/admin/i).length).toBeGreaterThan(0)
     })
 
-    it("renders all admin sidebar tabs", async () => {
+    it("renders all admin navbar tabs", async () => {
       renderAdminAt("/admin/dashboard")
-      await waitFor(() => expect(screen.getByText(/cerrar sesión/i)).toBeInTheDocument())
+      await screen.findByRole("button", { name: /opciones de perfil/i })
       ;[
         /tablero/i,
         /admisiones/i,
@@ -153,7 +159,8 @@ describe("Admin shell", () => {
     it("logs out and navigates to /login when 'CERRAR SESIÓN' is clicked", async () => {
       const user = userEvent.setup()
       renderAdminAt("/admin/dashboard")
-      const logoutBtn = await screen.findByRole("button", { name: /cerrar sesión/i })
+      await user.click(await screen.findByRole("button", { name: /opciones de perfil/i }))
+      const logoutBtn = await screen.findByRole("menuitem", { name: /cerrar sesión/i })
       await user.click(logoutBtn)
       await waitFor(() => expect(navigateMock).toHaveBeenCalledWith("/login"))
       expect(useAuthStore.getState().isAuthenticated).toBe(false)

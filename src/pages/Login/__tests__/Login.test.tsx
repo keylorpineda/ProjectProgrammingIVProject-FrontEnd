@@ -118,18 +118,19 @@ describe("Login page", () => {
       expect(useAuthStore.getState().isAuthenticated).toBe(true)
     })
 
-    it("navigates to /admin/dashboard after admin login completes", async () => {
+    it("navigates to /admin/camp after admin login completes", async () => {
       const user = userEvent.setup()
       mockedLogin.mockResolvedValueOnce({ access_token: "admin-token", user: adminUser })
       renderLogin()
       await enableForm()
       await fillCredentials(user, "admin", "123456")
       await user.click(screen.getByRole("button", { name: /iniciar sesión/i }))
-      // finalizeLogin chains setTimeout(1500) + setTimeout(3500) before navigate
-      await waitFor(() => expect(navigateMock).toHaveBeenCalledWith("/admin/dashboard"), {
-        timeout: 6000,
+      // finalizeLogin holds on the card, the door opens and a hand drags it off;
+      // navigate fires at ~5.6s, so allow generous margin.
+      await waitFor(() => expect(navigateMock).toHaveBeenCalledWith("/admin/camp"), {
+        timeout: 12000,
       })
-    }, 10000)
+    }, 15000)
 
     // NOTE: Login.tsx routes `resource_manager` to /camp-manager but NOT
     // `camp_manager`. CampManagerGuard accepts both, so logging in as
@@ -149,10 +150,10 @@ describe("Login page", () => {
         await fillCredentials(user, "u", "123456")
         await user.click(screen.getByRole("button", { name: /iniciar sesión/i }))
         await waitFor(() => expect(navigateMock).toHaveBeenCalledWith(expectedRoute), {
-          timeout: 8000,
+          timeout: 12000,
         })
       },
-      10000,
+      15000,
     )
 
     it("[REGRESSION] camp_manager role currently falls through to 'denied'", async () => {

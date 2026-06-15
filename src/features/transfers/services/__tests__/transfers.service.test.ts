@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import {
   approveOrRejectTransfer,
   cancelTransfer,
-  confirmTransferArrival,
   createTransferRequest,
   getCampTransfers,
   getPendingCampTransfers,
@@ -73,8 +72,5 @@ describe("transfers service", () => {
 
     mockedApi.patch.mockResolvedValueOnce({ data: { status: "cancelled" } })
     await expect(cancelTransfer("transfer-1")).resolves.toEqual({ status: "cancelled" })
-
-    mockedApi.patch.mockResolvedValueOnce({ data: { status: "completed" } })
-    await expect(confirmTransferArrival("transfer-1")).resolves.toEqual({ status: "completed" })
   })
 })

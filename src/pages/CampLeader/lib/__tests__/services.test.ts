@@ -260,13 +260,6 @@ describe("CampLeader Services", () => {
       expect(res).toEqual({ status: "cancelled" })
     })
 
-    it("arriveTransferRequest calls patch with correct URL", async () => {
-      mockAxiosInstance.patch.mockResolvedValueOnce({ data: { status: "completed" } })
-      const res = await transfersService.arriveTransferRequest(100)
-      expect(mockAxiosInstance.patch).toHaveBeenCalledWith("/transfers/requests/100/arrive")
-      expect(res).toEqual({ status: "completed" })
-    })
-
     it("getTransferStatistics calls get with correct URL", async () => {
       mockAxiosInstance.get.mockResolvedValueOnce({ data: { count: 5 } })
       const res = await transfersService.getTransferStatistics(1)

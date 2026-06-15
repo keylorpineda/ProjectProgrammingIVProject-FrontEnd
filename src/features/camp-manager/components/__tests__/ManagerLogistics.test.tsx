@@ -189,11 +189,7 @@ describe("ManagerLogistics", () => {
     expect(await screen.findByText(/Error al autorizar/i)).toBeInTheDocument()
   })
 
-  it("handles error on arrive action", async () => {
-    const mockPatch = api.patch as ReturnType<typeof vi.fn>
-    mockPatch.mockRejectedValue(new Error("API Error on Arrive"))
-    const user = userEvent.setup()
-
+  it("shows CONVOY EN RUTA for an approved transfer (no receive action)", async () => {
     const approvedTransfer = { ...mockIncoming[0], id: "req2", status: "approved" }
     mockGet.mockResolvedValue({ data: [approvedTransfer] })
 
@@ -203,32 +199,8 @@ describe("ManagerLogistics", () => {
 
     await waitFor(() => screen.getByText("AUTORIZADO"))
 
-    const arriveBtn = screen.getByText(/REGISTRAR LLEGADA FÍSICA Y TRANSBORDO/i)
-    await user.click(arriveBtn)
-
-    expect(await screen.findByText(/API Error on Arrive/i)).toBeInTheDocument()
-  })
-
-  it("registers physical arrival for approved transfer", async () => {
-    const mockPatch = api.patch as ReturnType<typeof vi.fn>
-    mockPatch.mockResolvedValue({ data: {} })
-    const user = userEvent.setup()
-
-    const approvedTransfer = { ...mockIncoming[0], id: "req2", status: "approved" }
-    mockGet.mockResolvedValue({ data: [approvedTransfer] })
-
-    render(<ManagerLogistics campId="7" onDataChanged={vi.fn()} refreshTrigger={0} />, {
-      wrapper: wrapper(),
-    })
-
-    await waitFor(() => screen.getByText("AUTORIZADO"))
-
-    const arriveBtn = screen.getByText(/REGISTRAR LLEGADA FÍSICA Y TRANSBORDO/i)
-    await user.click(arriveBtn)
-
-    await waitFor(() => {
-      expect(mockPatch).toHaveBeenCalledWith("/transfers/requests/req2/arrive")
-    })
+    expect(screen.getByText(/CONVOY EN RUTA/i)).toBeInTheDocument()
+    expect(screen.queryByText(/REGISTRAR LLEGADA/i)).not.toBeInTheDocument()
   })
 
   it("opens modal and submits new request", async () => {
@@ -416,11 +388,7 @@ describe("ManagerLogistics", () => {
     expect(await screen.findByText(/Error al autorizar/i)).toBeInTheDocument()
   })
 
-  it("handles error on arrive action", async () => {
-    const mockPatch = api.patch as ReturnType<typeof vi.fn>
-    mockPatch.mockRejectedValue(new Error("API Error on Arrive"))
-    const user = userEvent.setup()
-
+  it("shows CONVOY EN RUTA for an approved transfer (no receive action)", async () => {
     const approvedTransfer = { ...mockIncoming[0], id: "req2", status: "approved" }
     mockGet.mockResolvedValue({ data: [approvedTransfer] })
 
@@ -430,32 +398,8 @@ describe("ManagerLogistics", () => {
 
     await waitFor(() => screen.getByText("AUTORIZADO"))
 
-    const arriveBtn = screen.getByText(/REGISTRAR LLEGADA FÍSICA Y TRANSBORDO/i)
-    await user.click(arriveBtn)
-
-    expect(await screen.findByText(/API Error on Arrive/i)).toBeInTheDocument()
-  })
-
-  it("registers physical arrival for approved transfer", async () => {
-    const mockPatch = api.patch as ReturnType<typeof vi.fn>
-    mockPatch.mockResolvedValue({ data: {} })
-    const user = userEvent.setup()
-
-    const approvedTransfer = { ...mockIncoming[0], id: "req2", status: "approved" }
-    mockGet.mockResolvedValue({ data: [approvedTransfer] })
-
-    render(<ManagerLogistics campId="7" onDataChanged={vi.fn()} refreshTrigger={0} />, {
-      wrapper: wrapper(),
-    })
-
-    await waitFor(() => screen.getByText("AUTORIZADO"))
-
-    const arriveBtn = screen.getByText(/REGISTRAR LLEGADA FÍSICA Y TRANSBORDO/i)
-    await user.click(arriveBtn)
-
-    await waitFor(() => {
-      expect(mockPatch).toHaveBeenCalledWith("/transfers/requests/req2/arrive")
-    })
+    expect(screen.getByText(/CONVOY EN RUTA/i)).toBeInTheDocument()
+    expect(screen.queryByText(/REGISTRAR LLEGADA/i)).not.toBeInTheDocument()
   })
 
   it("opens modal and submits new request", async () => {
